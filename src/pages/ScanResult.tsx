@@ -29,7 +29,7 @@ interface TokenData {
   coingecko_id: string;
   launch_date: string;
   created_at: string;
-  // Add the missing price data properties
+  // Price data properties
   current_price_usd?: number;
   price_usd?: number;
   price_change_24h?: number;
@@ -289,9 +289,9 @@ export default function ScanResult() {
       console.log("Rescanning token:", tokenAddress);
       const { data, error } = await supabase.functions.invoke("run-token-scan", {
         body: { 
-          token_address: tokenAddress, // Fixed parameter name to match what the edge function expects
+          token_address: tokenAddress,
           user_id: user?.id,
-          coingecko_id: coinGeckoId // Pass coingecko_id if available
+          coingecko_id: coinGeckoId
         }
       });
       
@@ -418,7 +418,6 @@ export default function ScanResult() {
                       price={tokenData.price_usd || 0}
                       priceChange={tokenData.price_change_24h || 0}
                       marketCap={tokenData.market_cap_usd?.toString() || "0"}
-                      tvl={tokenData.total_value_locked_usd || "N/A"}
                       score={calculateOverallScore()}
                       launchDate={tokenData.launch_date}
                       website={tokenData.website_url}
@@ -466,7 +465,7 @@ export default function ScanResult() {
                   </div>
                   
                   <CategoryTabs
-                    activeTab={activeTab} 
+                    activeTab={activeTab}
                     securityData={securityData}
                     tokenomicsData={tokenomicsData}
                     liquidityData={liquidityData}

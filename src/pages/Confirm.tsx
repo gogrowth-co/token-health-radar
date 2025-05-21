@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Search, ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TokenResult {
   id: string;
@@ -18,6 +19,9 @@ interface TokenResult {
   thumb: string;
   large?: string;
   platforms?: Record<string, string>;
+  market_cap?: number;
+  price_usd?: number;
+  price_change_24h?: number;
 }
 
 export default function Confirm() {
@@ -50,6 +54,8 @@ export default function Confirm() {
       setError(null);
       
       try {
+        console.log("Searching for token:", searchTerm);
+        
         // Call CoinGecko API to search for tokens
         const response = await fetch(
           `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(searchTerm)}`
@@ -62,20 +68,37 @@ export default function Confirm() {
         const data = await response.json();
         
         if (data && data.coins) {
+          // Sort results by market cap rank (if available)
+          const sortedCoins = data.coins
+            .filter((coin: any) => coin) // Filter out any null/undefined entries
+            .sort((a: any, b: any) => {
+              // Sort by market cap rank (lower rank = higher market cap)
+              const rankA = a.market_cap_rank || Infinity;
+              const rankB = b.market_cap_rank || Infinity;
+              return rankA - rankB;
+            });
+            
+          // Take only top results (limit to 5)
+          const topCoins = sortedCoins.slice(0, 5);
+          
           // Enhanced results with full token data
           const enhancedResults = await Promise.all(
-            data.coins.slice(0, 5).map(async (coin: any) => {
+            topCoins.map(async (coin: any) => {
               try {
-                // Get detailed coin data including platform addresses
+                // Get detailed coin data including platform addresses and price information
                 const detailResponse = await fetch(
-                  `https://api.coingecko.com/api/v3/coins/${coin.id}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`
+                  `https://api.coingecko.com/api/v3/coins/${coin.id}?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false`
                 );
                 
                 if (detailResponse.ok) {
                   const detailData = await detailResponse.json();
+                  // Return enhanced coin data with platforms, price and market cap
                   return {
                     ...coin,
-                    platforms: detailData.platforms || {}
+                    platforms: detailData.platforms || {},
+                    price_usd: detailData.market_data?.current_price?.usd || 0,
+                    price_change_24h: detailData.market_data?.price_change_percentage_24h || 0,
+                    market_cap: detailData.market_data?.market_cap?.usd || 0
                   };
                 }
                 return coin;
@@ -85,6 +108,7 @@ export default function Confirm() {
               }
             })
           );
+          console.log("Enhanced token results:", enhancedResults);
           setResults(enhancedResults);
         } else {
           setResults([]);
@@ -116,7 +140,7 @@ export default function Confirm() {
     navigate(`/confirm?token=${encodeURIComponent(searchTerm)}`);
   };
 
-  const handleSelectToken = (token: TokenResult) => {
+  const handleSelectToken = async (token: TokenResult) => {
     // Get Ethereum address if available
     let tokenAddress = "";
     
@@ -135,16 +159,71 @@ export default function Confirm() {
     
     console.log(`Selected token: ${token.name}, address: ${tokenAddress}, id: ${token.id}`);
     
-    // Save token info to localStorage for persistence
-    localStorage.setItem("selectedToken", JSON.stringify({
-      address: tokenAddress,
-      id: token.id,
-      name: token.name,
-      symbol: token.symbol,
-      logo: token.large || token.thumb
-    }));
-    
-    navigate(`/scan-loading?token=${tokenAddress}&id=${token.id}`);
+    try {
+      // Check if the token already exists in our database
+      const { data: existingToken } = await supabase
+        .from("token_data_cache")
+        .select("*")
+        .eq("token_address", tokenAddress)
+        .maybeSingle();
+
+      // Save or update token info in token_data_cache
+      if (existingToken) {
+        // Update existing token
+        await supabase
+          .from("token_data_cache")
+          .update({
+            name: token.name,
+            symbol: token.symbol,
+            logo_url: token.large || token.thumb,
+            coingecko_id: token.id,
+          })
+          .eq("token_address", tokenAddress);
+      } else {
+        // Insert new token
+        await supabase
+          .from("token_data_cache")
+          .insert({
+            token_address: tokenAddress,
+            name: token.name,
+            symbol: token.symbol,
+            logo_url: token.large || token.thumb,
+            coingecko_id: token.id,
+            current_price_usd: token.price_usd,
+            market_cap_usd: token.market_cap
+          });
+      }
+
+      // Add a scan record
+      if (user) {
+        await supabase.from("token_scans").insert({
+          user_id: user.id,
+          token_address: tokenAddress,
+          pro_scan: true
+        });
+      }
+      
+      // Save token info to localStorage for persistence
+      localStorage.setItem("selectedToken", JSON.stringify({
+        address: tokenAddress,
+        id: token.id,
+        name: token.name,
+        symbol: token.symbol,
+        logo: token.large || token.thumb,
+        price_usd: token.price_usd,
+        price_change_24h: token.price_change_24h,
+        market_cap_usd: token.market_cap
+      }));
+      
+      // Navigate to scan loading page
+      navigate(`/scan-loading?token=${tokenAddress}&id=${token.id}`);
+      
+    } catch (error) {
+      console.error("Error saving token data:", error);
+      toast.error("Error", {
+        description: "Failed to save token data. Please try again."
+      });
+    }
   };
 
   // Show loading while auth is checking
@@ -227,7 +306,8 @@ export default function Confirm() {
                   symbol={token.symbol.toUpperCase()}
                   logo={token.large || token.thumb}
                   marketCap={token.market_cap_rank ? `Rank #${token.market_cap_rank}` : "Unranked"}
-                  price={undefined}
+                  price={token.price_usd || 0}
+                  priceChange={token.price_change_24h || 0}
                   onClick={() => handleSelectToken(token)}
                 />
               ))}

@@ -49,7 +49,6 @@ export default function TokenSearchInput({
       return;
     }
     
-    // Continue with the existing flow for authenticated users
     // Check if input looks like an address (simple validation)
     const isAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(tokenInput);
     
