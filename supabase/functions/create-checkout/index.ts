@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@12.18.0?dts";
@@ -37,13 +38,15 @@ serve(async (req) => {
     // Validate Stripe key is set
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
-      throw new Error("STRIPE_SECRET_KEY is not configured");
+      logStep("ERROR: Missing Stripe secret key");
+      throw new Error("STRIPE_SECRET_KEY is not configured in Supabase secrets. Please add it in the Supabase dashboard under Settings > API > Edge Function Secrets.");
     }
     logStep("Stripe key verified");
 
     // Get the authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      logStep("ERROR: Missing authorization header");
       throw new Error("No authorization header provided");
     }
     logStep("Authorization header found");
@@ -66,6 +69,7 @@ serve(async (req) => {
     const { priceId, successUrl, cancelUrl } = requestBody;
     
     if (!priceId || !successUrl || !cancelUrl) {
+      logStep("ERROR: Missing required parameters");
       throw new Error("Missing required parameters: priceId, successUrl, or cancelUrl");
     }
     logStep("Request parameters validated", { priceId, successUrl, cancelUrl });
@@ -117,6 +121,16 @@ serve(async (req) => {
         logStep("Error creating Stripe customer", { error: stripeError });
         throw new Error(`Stripe error: ${stripeError instanceof Error ? stripeError.message : 'Unknown error'}`);
       }
+    }
+
+    // Validate the price ID before creating a checkout session
+    try {
+      logStep("Validating price ID", { priceId });
+      await stripe.prices.retrieve(priceId);
+      logStep("Price ID is valid");
+    } catch (priceError) {
+      logStep("Invalid price ID", { error: priceError });
+      throw new Error(`Invalid price ID: ${priceId}. Please check your Stripe dashboard for the correct price IDs.`);
     }
 
     // Create a checkout session

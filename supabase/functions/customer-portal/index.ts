@@ -20,6 +20,12 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper function for logging
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[CUSTOMER-PORTAL] ${step}${detailsStr}`);
+};
+
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
@@ -27,29 +33,47 @@ serve(async (req) => {
   }
 
   try {
+    logStep("Function started");
+    
+    // Validate Stripe key is set
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      logStep("ERROR: Missing Stripe secret key");
+      throw new Error("STRIPE_SECRET_KEY is not configured in Supabase secrets");
+    }
+    logStep("Stripe key verified");
+
     // Get the authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      logStep("ERROR: Missing authorization header");
       throw new Error("No authorization header");
     }
+    logStep("Authorization header found");
 
     // Extract the token
     const token = authHeader.replace("Bearer ", "");
     
     // Get user information from the token
+    logStep("Authenticating user with token");
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !user) {
+      logStep("Authentication error", { error: userError });
       throw new Error("Invalid user token");
     }
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
     const { returnUrl } = await req.json();
     
     if (!returnUrl) {
+      logStep("ERROR: Missing return URL");
       throw new Error("Missing return URL");
     }
+    logStep("Return URL validated", { returnUrl });
 
     // Get the user's Stripe customer ID
+    logStep("Fetching Stripe customer ID");
     const { data: subscriberData, error: subscriberError } = await supabase
       .from("subscribers")
       .select("stripe_customer_id")
@@ -57,25 +81,36 @@ serve(async (req) => {
       .single();
 
     if (subscriberError || !subscriberData?.stripe_customer_id) {
+      logStep("ERROR: No Stripe customer ID found", { error: subscriberError });
       throw new Error("User does not have a Stripe customer ID");
     }
+    logStep("Found Stripe customer ID", { customerId: subscriberData.stripe_customer_id });
 
     const customerId = subscriberData.stripe_customer_id;
 
     // Create a billing portal session
-    const session = await stripe.billingPortal.sessions.create({
-      customer: customerId,
-      return_url: returnUrl,
-    });
+    logStep("Creating billing portal session");
+    try {
+      const session = await stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: returnUrl,
+      });
+      logStep("Billing portal session created", { sessionId: session.id, url: session.url });
 
-    return new Response(
-      JSON.stringify({ url: session.url }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-    );
+      return new Response(
+        JSON.stringify({ url: session.url }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    } catch (stripeError) {
+      logStep("Error creating billing portal session", { error: stripeError });
+      throw new Error(`Stripe error: ${stripeError instanceof Error ? stripeError.message : 'Unknown error'}`);
+    }
   } catch (error) {
-    console.error(`Error creating portal session: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error(`Error creating portal session: ${errorMessage}`);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
     );
   }

@@ -18,10 +18,10 @@ export default function Pricing() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const { isAuthenticated, user } = useAuth();
 
-  // Define price IDs for the different plans - these need to be replaced with actual Stripe price IDs
+  // Define price IDs for the different plans - these are the correct price IDs
   const pricePlans = {
-    monthly: "price_1PriceMonthly", // Replace with your actual Stripe price ID
-    annual: "price_1PriceAnnual"    // Replace with your actual Stripe price ID
+    monthly: "price_1RQK5tD41aNWIHmd4YspKxDi", // Monthly price ID
+    annual: "price_1RQK5tD41aNWIHmd1p46UCwl"   // Annual price ID
   };
 
   // Check for query parameters to show success/failure messages

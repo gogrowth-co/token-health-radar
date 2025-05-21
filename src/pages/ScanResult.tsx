@@ -29,7 +29,7 @@ interface TokenData {
   coingecko_id: string;
   launch_date: string;
   created_at: string;
-  // Price data properties
+  // Add price data properties as optional
   current_price_usd?: number;
   price_usd?: number;
   price_change_24h?: number;
@@ -364,8 +364,18 @@ export default function ScanResult() {
                 <>
                   <div className="mb-8">
                     <TokenCard 
-                      token={tokenData} 
+                      name={tokenData.name}
+                      symbol={tokenData.symbol}
+                      logo={tokenData.logo_url}
+                      price={tokenData.price_usd || 0}
+                      priceChange={tokenData.price_change_24h || 0}
+                      marketCap={tokenData.market_cap_usd || 0}
+                      tvl={tokenData.total_value_locked_usd || "N/A"}
                       score={calculateOverallScore()}
+                      launchDate={tokenData.launch_date}
+                      website={tokenData.website_url}
+                      twitter={tokenData.twitter_handle}
+                      github={tokenData.github_url}
                     />
                   </div>
                   
@@ -373,45 +383,39 @@ export default function ScanResult() {
                     <CategoryScoreCard
                       category="Security"
                       score={securityData?.score ?? 0}
-                      isActive={activeTab === ScanCategory.Security}
                       onClick={() => setActiveTab(ScanCategory.Security)}
                     />
                     <CategoryScoreCard
                       category="Tokenomics"
                       score={tokenomicsData?.score ?? 0}
-                      isActive={activeTab === ScanCategory.Tokenomics}
                       onClick={() => setActiveTab(ScanCategory.Tokenomics)}
                     />
                     <CategoryScoreCard
                       category="Liquidity"
                       score={liquidityData?.score ?? 0}
-                      isActive={activeTab === ScanCategory.Liquidity}
                       onClick={() => setActiveTab(ScanCategory.Liquidity)}
                     />
                     <CategoryScoreCard
                       category="Community"
                       score={communityData?.score ?? 0}
-                      isActive={activeTab === ScanCategory.Community}
                       onClick={() => setActiveTab(ScanCategory.Community)}
                     />
                     <CategoryScoreCard
                       category="Development"
                       score={developmentData?.score ?? 0}
-                      isActive={activeTab === ScanCategory.Development}
                       onClick={() => setActiveTab(ScanCategory.Development)}
                     />
                   </div>
                   
                   <CategoryTabs
-                    tokenAddress={tokenAddress}
+                    activeCategory={activeTab}
                     securityData={securityData}
                     tokenomicsData={tokenomicsData}
                     liquidityData={liquidityData}
                     communityData={communityData}
                     developmentData={developmentData}
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
                     isPro={isPro}
+                    onCategoryChange={setActiveTab}
                   />
                 </>
               )}
