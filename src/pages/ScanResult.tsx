@@ -29,7 +29,7 @@ interface TokenData {
   coingecko_id: string;
   launch_date: string;
   created_at: string;
-  // Add price data properties as optional
+  // Add price data properties
   current_price_usd?: number;
   price_usd?: number;
   price_change_24h?: number;
@@ -106,6 +106,20 @@ enum ScanCategory {
   Community = "community",
   Development = "development"
 }
+
+// Helper function to determine score level
+const getScoreLevel = (score: number): 'low' | 'medium' | 'high' => {
+  if (score >= 70) return 'high';
+  if (score >= 40) return 'medium';
+  return 'low';
+};
+
+// Helper function to determine score color
+const getScoreColor = (score: number): 'red' | 'amber' | 'green' => {
+  if (score >= 70) return 'green';
+  if (score >= 40) return 'amber';
+  return 'red';
+};
 
 // The main component
 export default function ScanResult() {
@@ -208,7 +222,7 @@ export default function ScanResult() {
       // Create the enhanced TokenData that includes price data
       const enhancedTokenData: TokenData = {
         ...basicData,
-        price_usd: basicData.current_price_usd !== undefined ? Number(basicData.current_price_usd) : 0,
+        price_usd: basicData.current_price_usd || 0,
         price_change_24h: 0, // Will be updated when real data is available
         total_value_locked_usd: "N/A" // Will be updated when real data is available
       };
@@ -256,7 +270,10 @@ export default function ScanResult() {
     try {
       console.log("Rescanning token:", tokenAddress);
       const { data, error } = await supabase.functions.invoke("run-token-scan", {
-        body: { tokenAddress }
+        body: { 
+          tokenAddress,
+          user_id: user?.id
+        }
       });
       
       if (error) throw error;
@@ -383,32 +400,42 @@ export default function ScanResult() {
                     <CategoryScoreCard
                       category="Security"
                       score={securityData?.score ?? 0}
+                      level={getScoreLevel(securityData?.score ?? 0)}
+                      color={getScoreColor(securityData?.score ?? 0)}
                       onClick={() => setActiveTab(ScanCategory.Security)}
                     />
                     <CategoryScoreCard
                       category="Tokenomics"
                       score={tokenomicsData?.score ?? 0}
+                      level={getScoreLevel(tokenomicsData?.score ?? 0)}
+                      color={getScoreColor(tokenomicsData?.score ?? 0)}
                       onClick={() => setActiveTab(ScanCategory.Tokenomics)}
                     />
                     <CategoryScoreCard
                       category="Liquidity"
                       score={liquidityData?.score ?? 0}
+                      level={getScoreLevel(liquidityData?.score ?? 0)}
+                      color={getScoreColor(liquidityData?.score ?? 0)}
                       onClick={() => setActiveTab(ScanCategory.Liquidity)}
                     />
                     <CategoryScoreCard
                       category="Community"
                       score={communityData?.score ?? 0}
+                      level={getScoreLevel(communityData?.score ?? 0)}
+                      color={getScoreColor(communityData?.score ?? 0)}
                       onClick={() => setActiveTab(ScanCategory.Community)}
                     />
                     <CategoryScoreCard
                       category="Development"
                       score={developmentData?.score ?? 0}
+                      level={getScoreLevel(developmentData?.score ?? 0)}
+                      color={getScoreColor(developmentData?.score ?? 0)}
                       onClick={() => setActiveTab(ScanCategory.Development)}
                     />
                   </div>
                   
                   <CategoryTabs
-                    activeCategory={activeTab}
+                    active={activeTab}
                     securityData={securityData}
                     tokenomicsData={tokenomicsData}
                     liquidityData={liquidityData}

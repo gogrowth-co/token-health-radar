@@ -1037,10 +1037,10 @@ serve(async (req: Request) => {
   try {
     // Parse request body
     const body = await req.json();
-    const { token_address, user_id } = body;
+    const { token_address, user_id, coingecko_id } = body;
     
     if (!token_address) {
-      throw new Error("Token address/symbol is required");
+      throw new Error("Token address is required");
     }
     
     if (!user_id) {
@@ -1050,7 +1050,11 @@ serve(async (req: Request) => {
     // Normalize token address to lowercase
     const normalizedTokenAddress = normalizeTokenAddress(token_address);
     
-    logStep("Starting token scan", { token_address: normalizedTokenAddress, user_id });
+    logStep("Starting token scan", { 
+      token_address: normalizedTokenAddress, 
+      user_id,
+      coingecko_id: coingecko_id || "not provided" 
+    });
     
     // Check if user has access to perform scan
     const accessCheck = await checkScanAccess(user_id);
@@ -1073,7 +1077,7 @@ serve(async (req: Request) => {
     const { data: existingToken } = await supabaseAdmin
       .from("token_data_cache")
       .select("*")
-      .or(`token_address.eq.${normalizedTokenAddress},LOWER(symbol).eq.LOWER('${token_address}')`)
+      .eq("token_address", normalizedTokenAddress)
       .maybeSingle();
     
     // Get token info - either from cache or by resolving from APIs
@@ -1082,7 +1086,13 @@ serve(async (req: Request) => {
       tokenInfo = existingToken;
       logStep("Found token in cache", { token_address: tokenInfo.token_address });
     } else {
-      tokenInfo = await resolveTokenInfo(token_address);
+      // If coingecko_id is provided, use it for better resolution
+      tokenInfo = await resolveTokenInfo(coingecko_id || token_address);
+      
+      // Ensure the token address is set to the one we received (if originally from coingecko_id)
+      if (tokenInfo && normalizedTokenAddress) {
+        tokenInfo.token_address = normalizedTokenAddress;
+      }
       
       // Store token info in the database
       const { error: insertError } = await supabaseAdmin

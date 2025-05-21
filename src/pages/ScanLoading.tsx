@@ -18,11 +18,12 @@ export default function ScanLoading() {
   const [isScanning, setIsScanning] = useState(true);
   const { user } = useAuth();
   
-  // Get token from URL params (either address or symbol)
-  const tokenParam = searchParams.get("token") || searchParams.get("address") || "";
+  // Get token from URL params (either address or id)
+  const tokenAddress = searchParams.get("token") || "";
+  const coinGeckoId = searchParams.get("id") || "";
   
   // Make sure we have a token to scan
-  if (!tokenParam) {
+  if (!tokenAddress) {
     navigate("/");
   }
 
@@ -49,10 +50,13 @@ export default function ScanLoading() {
           return;
         }
 
+        console.log("Starting token scan with address:", tokenAddress, "and CoinGecko ID:", coinGeckoId);
+
         // Call the run-token-scan edge function
         const { data, error } = await supabase.functions.invoke('run-token-scan', {
           body: {
-            token_address: tokenParam,
+            token_address: tokenAddress,
+            coingecko_id: coinGeckoId,
             user_id: user.id
           }
         });
@@ -75,7 +79,7 @@ export default function ScanLoading() {
         // Wait for the progress bar to reach 100%
         setTimeout(() => {
           // Redirect to scan result page with token info
-          navigate(`/scan-result?token=${tokenParam}`);
+          navigate(`/scan-result?token=${tokenAddress}`);
         }, 1000); // Short delay to ensure progress bar completes
       } catch (error) {
         console.error("Error during token scan:", error);
@@ -92,7 +96,7 @@ export default function ScanLoading() {
     return () => {
       clearInterval(interval);
     };
-  }, [navigate, tokenParam, user]);
+  }, [navigate, tokenAddress, coinGeckoId, user]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -103,10 +107,10 @@ export default function ScanLoading() {
           <div className="flex flex-col items-center">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-4">
               <span className="text-2xl text-white">
-                {tokenParam?.substring(0, 2).toUpperCase()}
+                {tokenAddress?.substring(0, 2).toUpperCase()}
               </span>
             </div>
-            <h1 className="text-3xl font-bold">{tokenParam}</h1>
+            <h1 className="text-3xl font-bold">{tokenAddress.slice(0, 8)}...{tokenAddress.slice(-6)}</h1>
             <p className="text-muted-foreground mt-2">Scanning token for health metrics...</p>
           </div>
           

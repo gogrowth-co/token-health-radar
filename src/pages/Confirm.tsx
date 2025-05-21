@@ -17,6 +17,7 @@ interface TokenResult {
   market_cap_rank?: number;
   thumb: string;
   large?: string;
+  platforms?: Record<string, string>;
 }
 
 export default function Confirm() {
@@ -61,7 +62,30 @@ export default function Confirm() {
         const data = await response.json();
         
         if (data && data.coins) {
-          setResults(data.coins);
+          // Enhanced results with full token data
+          const enhancedResults = await Promise.all(
+            data.coins.slice(0, 5).map(async (coin: any) => {
+              try {
+                // Get detailed coin data including platform addresses
+                const detailResponse = await fetch(
+                  `https://api.coingecko.com/api/v3/coins/${coin.id}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`
+                );
+                
+                if (detailResponse.ok) {
+                  const detailData = await detailResponse.json();
+                  return {
+                    ...coin,
+                    platforms: detailData.platforms || {}
+                  };
+                }
+                return coin;
+              } catch (err) {
+                console.error(`Error fetching details for ${coin.id}:`, err);
+                return coin;
+              }
+            })
+          );
+          setResults(enhancedResults);
         } else {
           setResults([]);
         }
@@ -96,9 +120,24 @@ export default function Confirm() {
     navigate(`/confirm?token=${encodeURIComponent(searchTerm)}`);
   };
 
-  const handleSelectToken = (tokenId: string, symbol: string) => {
-    // In a real app, we would use the tokenId from CoinGecko
-    navigate(`/scan-loading?token=${symbol.toLowerCase()}&id=${tokenId}`);
+  const handleSelectToken = (token: TokenResult) => {
+    // Get Ethereum address if available
+    let tokenAddress = "";
+    
+    // Check if platforms is available and has Ethereum address
+    if (token.platforms && token.platforms.ethereum) {
+      tokenAddress = token.platforms.ethereum;
+    }
+    
+    // If no Ethereum address, use a placeholder derived from the token id
+    if (!tokenAddress) {
+      console.warn(`No Ethereum address found for ${token.name}, using placeholder`);
+      tokenAddress = `0x${token.id.replace(/-/g, '').padEnd(40, '0')}`;
+    }
+    
+    console.log(`Selected token: ${token.name}, address: ${tokenAddress}, id: ${token.id}`);
+    
+    navigate(`/scan-loading?token=${tokenAddress}&id=${token.id}`);
   };
 
   // Show loading while auth is checking
@@ -181,8 +220,8 @@ export default function Confirm() {
                   symbol={token.symbol.toUpperCase()}
                   logo={token.large || token.thumb}
                   marketCap={token.market_cap_rank ? `Rank #${token.market_cap_rank}` : "Unranked"}
-                  price={undefined} // Fix: Pass undefined instead of a string "Price data unavailable"
-                  onClick={() => handleSelectToken(token.id, token.symbol)}
+                  price={undefined}
+                  onClick={() => handleSelectToken(token)}
                 />
               ))}
             </div>
