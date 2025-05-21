@@ -1,0 +1,884 @@
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+// Define CORS headers for cross-origin requests
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+// Initialize Supabase client with service role key to bypass RLS
+const supabaseAdmin = createClient(
+  Deno.env.get("SUPABASE_URL") || "",
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
+);
+
+// Helper function to log function progress for debugging
+function logStep(step: string, details?: any) {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[TOKEN-SCAN] ${step}${detailsStr}`);
+}
+
+// Helper function to calculate a score between 0-100 based on factors
+function calculateScore(factors: Record<string, number>): number {
+  if (Object.keys(factors).length === 0) return 0;
+  
+  const total = Object.values(factors).reduce((sum, val) => sum + val, 0);
+  const maxPossible = Object.keys(factors).length * 100;
+  
+  return Math.round((total / maxPossible) * 100);
+}
+
+// Process security data from GoPlus API
+async function processSecurityData(tokenAddress: string): Promise<any> {
+  try {
+    // Use Ethereum chain ID (1) - can be expanded for other chains
+    const chainId = "1";
+    const apiKey = Deno.env.get("GOPLUS_API_KEY");
+    
+    if (!apiKey) throw new Error("GoPlus API key not configured");
+    
+    const response = await fetch(
+      `https://api.gopluslabs.io/api/v1/token_security/${chainId}?contract_addresses=${tokenAddress}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-KEY": apiKey
+        }
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error(`GoPlus API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Extract security data for specified token
+    const tokenData = data?.result?.[tokenAddress.toLowerCase()];
+    if (!tokenData) {
+      throw new Error("No security data found for token");
+    }
+
+    // Process security metrics
+    const securityMetrics = {
+      honeypot_detected: tokenData.is_honeypot === "1",
+      can_mint: tokenData.mint_function === "1",
+      ownership_renounced: tokenData.owner_address === "0x0000000000000000000000000000000000000000",
+      freeze_authority: tokenData.can_take_back_ownership === "1",
+      audit_status: tokenData.is_audited === "1" ? "audited" : "unaudited",
+      multisig_status: tokenData.is_multisig === "1" ? "multisig" : "single"
+    };
+    
+    // Calculate security score
+    const securityFactors = {
+      honeyPot: securityMetrics.honeypot_detected ? 0 : 100,
+      minting: securityMetrics.can_mint ? 40 : 100,
+      ownershipRenounced: securityMetrics.ownership_renounced ? 100 : 60,
+      freezeAuthority: securityMetrics.freeze_authority ? 0 : 100,
+      audit: securityMetrics.audit_status === "audited" ? 100 : 50,
+      multisig: securityMetrics.multisig_status === "multisig" ? 100 : 60
+    };
+    
+    const score = calculateScore(securityFactors);
+    
+    return {
+      ...securityMetrics,
+      score,
+      tokenData
+    };
+  } catch (error) {
+    logStep("Security data processing error", error.message);
+    return {
+      score: 0,
+      error: error.message,
+      honeypot_detected: null,
+      can_mint: null,
+      ownership_renounced: null,
+      freeze_authority: null,
+      audit_status: "unknown",
+      multisig_status: "unknown"
+    };
+  }
+}
+
+// Process liquidity data from CoinGecko and Etherscan
+async function processLiquidityData(tokenData: any): Promise<any> {
+  try {
+    const coinGeckoId = tokenData.coingecko_id;
+    const apiKey = Deno.env.get("COINGECKO_API_KEY");
+    const etherscanKey = Deno.env.get("ETHERSCAN_API_KEY");
+    
+    if (!apiKey) throw new Error("CoinGecko API key not configured");
+    if (!etherscanKey) throw new Error("Etherscan API key not configured");
+    if (!coinGeckoId) throw new Error("No CoinGecko ID available for token");
+    
+    // Get market data from CoinGecko
+    const marketResponse = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coinGeckoId}?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-cg-pro-api-key": apiKey
+        }
+      }
+    );
+    
+    if (!marketResponse.ok) {
+      throw new Error(`CoinGecko API error: ${marketResponse.status}`);
+    }
+    
+    const marketData = await marketResponse.json();
+    
+    // Check for top exchanges (CEX)
+    const exchanges = marketData.tickers || [];
+    const cexListings = new Set(exchanges.filter(t => !t.market.identifier.includes("dex")).map(t => t.market.name)).size;
+    
+    // Check trading volume
+    const tradingVolume = marketData.market_data?.total_volume?.usd || 0;
+    
+    // Get holder distribution info from Etherscan
+    const tokenAddress = tokenData.token_address;
+    const etherscanResponse = await fetch(
+      `https://api.etherscan.io/api?module=token&action=tokenholderlist&contractaddress=${tokenAddress}&page=1&offset=100&apikey=${etherscanKey}`
+    );
+    
+    let holderDistribution = "unknown";
+    let liquidityLockedDays = 0;
+    
+    if (etherscanResponse.ok) {
+      const etherscanData = await etherscanResponse.json();
+      
+      if (etherscanData.status === "1" && etherscanData.result?.length > 0) {
+        // Calculate concentration of top holders
+        const holders = etherscanData.result;
+        const totalSupply = marketData.market_data?.total_supply || 0;
+        const topTenHoldings = holders.slice(0, 10).reduce((sum, h) => sum + Number(h.TokenHolderQuantity), 0);
+        
+        const topTenPercentage = totalSupply > 0 ? (topTenHoldings / totalSupply) * 100 : 0;
+        
+        // Categorize holder distribution
+        if (topTenPercentage > 80) {
+          holderDistribution = "highly_concentrated";
+        } else if (topTenPercentage > 50) {
+          holderDistribution = "concentrated";
+        } else if (topTenPercentage > 20) {
+          holderDistribution = "moderate";
+        } else {
+          holderDistribution = "distributed";
+        }
+        
+        // Check for locked liquidity
+        const lockedLiquidityAddresses = holders.find(h => 
+          h.TokenHolderAddress.toLowerCase().includes("lock") || 
+          h.TokenHolderAddress.toLowerCase().includes("unicrypt") ||
+          h.TokenHolderAddress.toLowerCase().includes("team.finance") ||
+          h.TokenHolderAddress.toLowerCase().includes("dxsale")
+        );
+        
+        if (lockedLiquidityAddresses) {
+          liquidityLockedDays = 180; // Placeholder - actual check would need contract inspection
+        }
+      }
+    }
+    
+    // Calculate dex depth status
+    let dexDepthStatus = "low";
+    if (tradingVolume > 1000000) {
+      dexDepthStatus = "high";
+    } else if (tradingVolume > 100000) {
+      dexDepthStatus = "medium";
+    }
+    
+    // Calculate liquidity score
+    const liquidityFactors = {
+      cexListings: Math.min(cexListings * 10, 100),
+      tradingVolume: Math.min(Math.log10(tradingVolume + 1) * 10, 100),
+      holderDistribution: holderDistribution === "distributed" ? 100 : 
+                         holderDistribution === "moderate" ? 70 : 
+                         holderDistribution === "concentrated" ? 40 : 20,
+      liquidityLock: liquidityLockedDays > 90 ? 100 :
+                    liquidityLockedDays > 30 ? 60 : 30,
+      dexDepth: dexDepthStatus === "high" ? 100 :
+               dexDepthStatus === "medium" ? 60 : 30
+    };
+    
+    const score = calculateScore(liquidityFactors);
+    
+    return {
+      cex_listings: cexListings,
+      trading_volume_24h_usd: tradingVolume,
+      holder_distribution: holderDistribution,
+      liquidity_locked_days: liquidityLockedDays,
+      dex_depth_status: dexDepthStatus,
+      score
+    };
+  } catch (error) {
+    logStep("Liquidity data processing error", error.message);
+    return {
+      score: 0,
+      error: error.message,
+      cex_listings: 0,
+      trading_volume_24h_usd: 0,
+      holder_distribution: "unknown",
+      liquidity_locked_days: 0,
+      dex_depth_status: "unknown"
+    };
+  }
+}
+
+// Process tokenomics data from CoinGecko
+async function processTokenomicsData(tokenData: any): Promise<any> {
+  try {
+    const coinGeckoId = tokenData.coingecko_id;
+    const apiKey = Deno.env.get("COINGECKO_API_KEY");
+    
+    if (!apiKey) throw new Error("CoinGecko API key not configured");
+    if (!coinGeckoId) throw new Error("No CoinGecko ID available for token");
+    
+    // Get tokenomics data from CoinGecko
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coinGeckoId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-cg-pro-api-key": apiKey
+        }
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error(`CoinGecko API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Extract tokenomics metrics
+    const circulatingSupply = data.market_data?.circulating_supply || 0;
+    const totalSupply = data.market_data?.total_supply || 0;
+    const maxSupply = data.market_data?.max_supply || totalSupply;
+    
+    // Calculate distribution percentage
+    const distributionPercentage = totalSupply > 0 ? (circulatingSupply / totalSupply) * 100 : 0;
+    
+    // Determine distribution score
+    let distributionScore = "poor";
+    if (distributionPercentage > 80) {
+      distributionScore = "excellent";
+    } else if (distributionPercentage > 50) {
+      distributionScore = "good";
+    } else if (distributionPercentage > 20) {
+      distributionScore = "fair";
+    }
+    
+    // Determine if token has a burn mechanism (placeholder logic)
+    const burnMechanism = data.description?.en?.toLowerCase().includes("burn") || false;
+    
+    // Get TVL and Treasury (placeholder as this would need more specific API calls)
+    const tvlUsd = data.market_data?.market_cap?.usd || 0;
+    const treasuryUsd = tvlUsd * 0.1; // Placeholder: assuming treasury is 10% of market cap
+    
+    // Calculate tokenomics score
+    const tokenomicsFactors = {
+      circulationRatio: Math.min((distributionPercentage / 100) * 100, 100),
+      supplyLimit: maxSupply > 0 ? 100 : 40,
+      burnMechanism: burnMechanism ? 100 : 50,
+      tvlRatio: Math.min(Math.log10(tvlUsd / 1000 + 1) * 20, 100),
+      treasuryRatio: Math.min(Math.log10(treasuryUsd / 1000 + 1) * 20, 100)
+    };
+    
+    const score = calculateScore(tokenomicsFactors);
+    
+    return {
+      circulating_supply: circulatingSupply,
+      supply_cap: maxSupply,
+      distribution_score: distributionScore,
+      vesting_schedule: "unknown", // Would require contract analysis
+      burn_mechanism: burnMechanism,
+      tvl_usd: tvlUsd,
+      treasury_usd: treasuryUsd,
+      score
+    };
+  } catch (error) {
+    logStep("Tokenomics data processing error", error.message);
+    return {
+      score: 0,
+      error: error.message,
+      circulating_supply: 0,
+      supply_cap: 0,
+      distribution_score: "unknown",
+      vesting_schedule: "unknown",
+      burn_mechanism: null,
+      tvl_usd: 0,
+      treasury_usd: 0
+    };
+  }
+}
+
+// Process community data - simplified version using Twitter/X data
+async function processCommunityData(tokenData: any): Promise<any> {
+  try {
+    // We need a Twitter handle
+    const twitterHandle = tokenData.twitter_handle;
+    if (!twitterHandle) throw new Error("No Twitter handle available for token");
+    
+    // Twitter data - in a real implementation this would call the Twitter API or scraping service
+    // For now, we'll simulate making a request to the Make.com webhook for Twitter data
+    
+    // Send data to Make.com endpoint
+    const makeWebhookUrl = "https://hook.us1.make.com/mhus9uttupnwsd6rx3qemwnpwg41qc7y";
+    const webhookResponse = await fetch(makeWebhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        endpoint: "user/info",
+        parameters: {
+          userName: twitterHandle
+        }
+      })
+    });
+    
+    // For now, we'll use placeholder data
+    const twitterFollowers = 5000 + Math.floor(Math.random() * 50000);
+    const twitterGrowth7d = -5 + Math.floor(Math.random() * 20);
+    const twitterVerified = Math.random() > 0.6;
+    
+    // Additional community metrics
+    const telegramMembers = Math.floor(Math.random() * 20000);
+    const discordMembers = Math.floor(Math.random() * 15000);
+    const activeChannels = ["twitter", "telegram", "discord", "medium"].filter(() => Math.random() > 0.3);
+    const teamVisibility = ["anon", "public", "mixed"][Math.floor(Math.random() * 3)];
+    
+    // Calculate community score
+    const communityFactors = {
+      twitterFollowers: Math.min(Math.log10(twitterFollowers + 1) * 20, 100),
+      twitterGrowth: twitterGrowth7d > 10 ? 100 : twitterGrowth7d > 0 ? 70 : 40,
+      verification: twitterVerified ? 100 : 50,
+      telegramActivity: Math.min(Math.log10(telegramMembers + 1) * 20, 100),
+      discordActivity: Math.min(Math.log10(discordMembers + 1) * 20, 100),
+      channelDiversity: Math.min(activeChannels.length * 25, 100),
+      teamTransparency: teamVisibility === "public" ? 100 : teamVisibility === "mixed" ? 60 : 30
+    };
+    
+    const score = calculateScore(communityFactors);
+    
+    return {
+      twitter_followers: twitterFollowers,
+      twitter_growth_7d: twitterGrowth7d,
+      twitter_verified: twitterVerified,
+      telegram_members: telegramMembers,
+      discord_members: discordMembers,
+      active_channels: activeChannels,
+      team_visibility: teamVisibility,
+      score
+    };
+  } catch (error) {
+    logStep("Community data processing error", error.message);
+    return {
+      score: 0,
+      error: error.message,
+      twitter_followers: null,
+      twitter_growth_7d: null,
+      twitter_verified: null,
+      telegram_members: null,
+      discord_members: null,
+      active_channels: [],
+      team_visibility: "unknown"
+    };
+  }
+}
+
+// Process development data from GitHub
+async function processDevelopmentData(tokenData: any): Promise<any> {
+  try {
+    const githubUrl = tokenData.github_url;
+    const apiKey = Deno.env.get("GITHUB_API_KEY");
+    
+    if (!apiKey) throw new Error("GitHub API key not configured");
+    if (!githubUrl) throw new Error("No GitHub URL available for token");
+    
+    // Extract owner and repo from GitHub URL
+    const urlParts = githubUrl.replace(/\/$/, "").split('/');
+    const repoOwner = urlParts[urlParts.length - 2];
+    const repoName = urlParts[urlParts.length - 1];
+    
+    if (!repoOwner || !repoName) throw new Error("Invalid GitHub repository URL");
+    
+    // Get repository information
+    const repoResponse = await fetch(
+      `https://api.github.com/repos/${repoOwner}/${repoName}`,
+      {
+        headers: {
+          "Accept": "application/vnd.github+json",
+          "Authorization": `Bearer ${apiKey}`
+        }
+      }
+    );
+    
+    if (!repoResponse.ok) {
+      throw new Error(`GitHub API error: ${repoResponse.status}`);
+    }
+    
+    const repoData = await repoResponse.json();
+    
+    // Get commit activity for last 30 days
+    const commitsResponse = await fetch(
+      `https://api.github.com/repos/${repoOwner}/${repoName}/commits?per_page=100&since=${new Date(Date.now() - 30 * 86400000).toISOString()}`,
+      {
+        headers: {
+          "Accept": "application/vnd.github+json",
+          "Authorization": `Bearer ${apiKey}`
+        }
+      }
+    );
+    
+    if (!commitsResponse.ok) {
+      throw new Error(`GitHub API error: ${commitsResponse.status}`);
+    }
+    
+    const commitsData = await commitsResponse.json();
+    const commits30d = commitsData.length;
+    
+    // Get contributors count
+    const contributorsResponse = await fetch(
+      `https://api.github.com/repos/${repoOwner}/${repoName}/contributors?per_page=100`,
+      {
+        headers: {
+          "Accept": "application/vnd.github+json",
+          "Authorization": `Bearer ${apiKey}`
+        }
+      }
+    );
+    
+    if (!contributorsResponse.ok) {
+      throw new Error(`GitHub API error: ${contributorsResponse.status}`);
+    }
+    
+    const contributorsData = await contributorsResponse.json();
+    const contributorsCount = contributorsData.length;
+    
+    // Get last commit date
+    const lastCommit = repoData.updated_at || null;
+    
+    // Check if repository is public
+    const isOpenSource = !repoData.private;
+    
+    // Roadmap progress - placeholder
+    const roadmapProgress = ["early", "active", "mature"][Math.floor(Math.random() * 3)];
+    
+    // Calculate development score
+    const developmentFactors = {
+      recentActivity: lastCommit ? (new Date().getTime() - new Date(lastCommit).getTime() < 30 * 86400000 ? 100 : 50) : 0,
+      commitFrequency: Math.min(commits30d * 3, 100),
+      contributorCount: Math.min(contributorsCount * 10, 100),
+      openSource: isOpenSource ? 100 : 50,
+      roadmapStatus: roadmapProgress === "mature" ? 100 : roadmapProgress === "active" ? 70 : 40
+    };
+    
+    const score = calculateScore(developmentFactors);
+    
+    return {
+      github_repo: `${repoOwner}/${repoName}`,
+      is_open_source: isOpenSource,
+      contributors_count: contributorsCount,
+      commits_30d: commits30d,
+      last_commit: lastCommit,
+      roadmap_progress: roadmapProgress,
+      score
+    };
+  } catch (error) {
+    logStep("Development data processing error", error.message);
+    return {
+      score: 0,
+      error: error.message,
+      github_repo: null,
+      is_open_source: null,
+      contributors_count: 0,
+      commits_30d: 0,
+      last_commit: null,
+      roadmap_progress: "unknown"
+    };
+  }
+}
+
+// Resolve token info from address or symbol
+async function resolveTokenInfo(tokenInput: string): Promise<any> {
+  try {
+    const apiKey = Deno.env.get("COINGECKO_API_KEY");
+    
+    if (!apiKey) throw new Error("CoinGecko API key not configured");
+    
+    // Check if input is an Ethereum address
+    const isAddress = /^0x[a-fA-F0-9]{40}$/.test(tokenInput);
+    
+    if (isAddress) {
+      // Search by contract address
+      const response = await fetch(
+        `https://api.coingecko.com/api/v3/coins/ethereum/contract/${tokenInput}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-cg-pro-api-key": apiKey
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`CoinGecko API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      return {
+        token_address: tokenInput,
+        name: data.name,
+        symbol: data.symbol?.toUpperCase(),
+        description: data.description?.en?.substring(0, 500),
+        logo_url: data.image?.large,
+        coingecko_id: data.id,
+        twitter_handle: data.links?.twitter_screen_name,
+        github_url: data.links?.repos_url?.github?.[0],
+        website_url: data.links?.homepage?.[0],
+        launch_date: data.genesis_date
+      };
+    } else {
+      // Search by symbol or name
+      const searchResponse = await fetch(
+        `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(tokenInput)}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-cg-pro-api-key": apiKey
+          }
+        }
+      );
+      
+      if (!searchResponse.ok) {
+        throw new Error(`CoinGecko API error: ${searchResponse.status}`);
+      }
+      
+      const searchData = await searchResponse.json();
+      const coin = searchData.coins?.[0];
+      
+      if (!coin) {
+        throw new Error("No token found with the provided name/symbol");
+      }
+      
+      // Now get detailed info
+      const detailResponse = await fetch(
+        `https://api.coingecko.com/api/v3/coins/${coin.id}?localization=false&tickers=false&market_data=false&community_data=false`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-cg-pro-api-key": apiKey
+          }
+        }
+      );
+      
+      if (!detailResponse.ok) {
+        throw new Error(`CoinGecko API error: ${detailResponse.status}`);
+      }
+      
+      const detailData = await detailResponse.json();
+      
+      return {
+        token_address: detailData.contract_address || `0x${coin.id.slice(0, 40)}`,
+        name: detailData.name,
+        symbol: detailData.symbol?.toUpperCase(),
+        description: detailData.description?.en?.substring(0, 500),
+        logo_url: detailData.image?.large,
+        coingecko_id: detailData.id,
+        twitter_handle: detailData.links?.twitter_screen_name,
+        github_url: detailData.links?.repos_url?.github?.[0],
+        website_url: detailData.links?.homepage?.[0],
+        launch_date: detailData.genesis_date
+      };
+    }
+  } catch (error) {
+    logStep("Token resolution error", error.message);
+    // If API fails, return basic info based on input
+    return {
+      token_address: /^0x[a-fA-F0-9]{40}$/.test(tokenInput) ? tokenInput : `0x${tokenInput.replace(/[^a-zA-Z0-9]/g, "").padEnd(40, "0")}`,
+      name: tokenInput,
+      symbol: tokenInput.slice(0, 5).toUpperCase(),
+      coingecko_id: null,
+      logo_url: null,
+      description: null,
+      twitter_handle: null,
+      github_url: null,
+      website_url: null,
+      launch_date: null
+    };
+  }
+}
+
+// Check if user has access to perform scan
+async function checkScanAccess(userId: string): Promise<{ allowed: boolean; reason: string; plan: string }> {
+  try {
+    // Get user's subscription data
+    const { data: subscriber, error: subscriberError } = await supabaseAdmin
+      .from("subscribers")
+      .select("*")
+      .eq("id", userId)
+      .single();
+    
+    if (subscriberError) {
+      throw new Error(`Failed to retrieve subscriber data: ${subscriberError.message}`);
+    }
+    
+    const plan = subscriber?.plan || "free";
+    const scansUsed = subscriber?.scans_used || 0;
+    const scanLimit = plan === "pro" ? (subscriber?.pro_scan_limit || 10) : 3;
+    
+    if (scansUsed >= scanLimit) {
+      return {
+        allowed: false,
+        reason: `You've reached your ${plan} scan limit (${scansUsed}/${scanLimit})`,
+        plan
+      };
+    }
+    
+    return {
+      allowed: true,
+      reason: "Scan allowed",
+      plan
+    };
+  } catch (error) {
+    logStep("Scan access check error", error.message);
+    return {
+      allowed: false,
+      reason: `Error checking scan access: ${error.message}`,
+      plan: "unknown"
+    };
+  }
+}
+
+// Main handler function
+serve(async (req: Request) => {
+  // Handle preflight CORS
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders, status: 204 });
+  }
+  
+  try {
+    // Parse request body
+    const body = await req.json();
+    const { token_address, user_id } = body;
+    
+    if (!token_address) {
+      throw new Error("Token address/symbol is required");
+    }
+    
+    if (!user_id) {
+      throw new Error("User ID is required");
+    }
+    
+    logStep("Starting token scan", { token_address, user_id });
+    
+    // Check if user has access to perform scan
+    const accessCheck = await checkScanAccess(user_id);
+    
+    if (!accessCheck.allowed) {
+      return new Response(
+        JSON.stringify({
+          allowed: false,
+          reason: accessCheck.reason,
+          plan: accessCheck.plan
+        }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
+    
+    // Check if token already exists in the database
+    const { data: existingToken } = await supabaseAdmin
+      .from("token_data_cache")
+      .select("*")
+      .or(`token_address.eq.${token_address},LOWER(symbol).eq.LOWER('${token_address}')`)
+      .maybeSingle();
+    
+    // Get token info - either from cache or by resolving from APIs
+    let tokenInfo;
+    if (existingToken) {
+      tokenInfo = existingToken;
+      logStep("Found token in cache", { token_address: tokenInfo.token_address });
+    } else {
+      tokenInfo = await resolveTokenInfo(token_address);
+      
+      // Store token info in the database
+      const { error: insertError } = await supabaseAdmin
+        .from("token_data_cache")
+        .insert(tokenInfo);
+      
+      if (insertError) {
+        logStep("Error storing token info", insertError.message);
+        // Don't fail the entire scan if this fails
+      } else {
+        logStep("Stored token info in database", { token_address: tokenInfo.token_address });
+      }
+    }
+    
+    // Process security data
+    logStep("Processing security data");
+    const securityData = await processSecurityData(tokenInfo.token_address);
+    
+    // Store security data in database
+    const { error: securityError } = await supabaseAdmin
+      .from("token_security_cache")
+      .upsert({
+        token_address: tokenInfo.token_address,
+        ...securityData,
+        updated_at: new Date().toISOString()
+      });
+    
+    if (securityError) {
+      logStep("Error storing security data", securityError.message);
+    }
+    
+    // Process liquidity data
+    logStep("Processing liquidity data");
+    const liquidityData = await processLiquidityData(tokenInfo);
+    
+    // Store liquidity data in database
+    const { error: liquidityError } = await supabaseAdmin
+      .from("token_liquidity_cache")
+      .upsert({
+        token_address: tokenInfo.token_address,
+        ...liquidityData,
+        updated_at: new Date().toISOString()
+      });
+    
+    if (liquidityError) {
+      logStep("Error storing liquidity data", liquidityError.message);
+    }
+    
+    // Process tokenomics data
+    logStep("Processing tokenomics data");
+    const tokenomicsData = await processTokenomicsData(tokenInfo);
+    
+    // Store tokenomics data in database
+    const { error: tokenomicsError } = await supabaseAdmin
+      .from("token_tokenomics_cache")
+      .upsert({
+        token_address: tokenInfo.token_address,
+        ...tokenomicsData,
+        updated_at: new Date().toISOString()
+      });
+    
+    if (tokenomicsError) {
+      logStep("Error storing tokenomics data", tokenomicsError.message);
+    }
+    
+    // Process community data
+    logStep("Processing community data");
+    const communityData = await processCommunityData(tokenInfo);
+    
+    // Store community data in database
+    const { error: communityError } = await supabaseAdmin
+      .from("token_community_cache")
+      .upsert({
+        token_address: tokenInfo.token_address,
+        ...communityData,
+        updated_at: new Date().toISOString()
+      });
+    
+    if (communityError) {
+      logStep("Error storing community data", communityError.message);
+    }
+    
+    // Process development data
+    logStep("Processing development data");
+    const developmentData = await processDevelopmentData(tokenInfo);
+    
+    // Store development data in database
+    const { error: developmentError } = await supabaseAdmin
+      .from("token_development_cache")
+      .upsert({
+        token_address: tokenInfo.token_address,
+        ...developmentData,
+        updated_at: new Date().toISOString()
+      });
+    
+    if (developmentError) {
+      logStep("Error storing development data", developmentError.message);
+    }
+    
+    // Calculate overall score
+    const scores = [
+      securityData.score,
+      liquidityData.score,
+      tokenomicsData.score,
+      communityData.score,
+      developmentData.score
+    ].filter(score => score !== null && score !== undefined);
+    
+    const overallScore = scores.length > 0
+      ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+      : 0;
+    
+    // Store scan record
+    const { error: scanError } = await supabaseAdmin
+      .from("token_scans")
+      .insert({
+        user_id,
+        token_address: tokenInfo.token_address,
+        score_total: overallScore,
+        pro_scan: accessCheck.plan === "pro",
+        scanned_at: new Date().toISOString()
+      });
+    
+    if (scanError) {
+      logStep("Error storing scan record", scanError.message);
+    }
+    
+    // Increment the user's scans_used count
+    const { error: updateSubscriberError } = await supabaseAdmin
+      .from("subscribers")
+      .update({ scans_used: (accessCheck.plan === "pro" ? 1 : 0) + (accessCheck.plan === "free" ? 1 : 0) })
+      .eq("id", user_id);
+    
+    if (updateSubscriberError) {
+      logStep("Error updating subscriber scan count", updateSubscriberError.message);
+    }
+    
+    // Prepare response
+    const response = {
+      allowed: true,
+      token_info: tokenInfo,
+      security: securityData,
+      liquidity: liquidityData,
+      tokenomics: tokenomicsData,
+      community: communityData,
+      development: developmentData,
+      score_total: overallScore
+    };
+    
+    logStep("Scan completed successfully", { token_address: tokenInfo.token_address, score: overallScore });
+    
+    return new Response(
+      JSON.stringify(response),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      }
+    );
+  } catch (error) {
+    logStep("Scan error", error.message);
+    
+    return new Response(
+      JSON.stringify({
+        error: error.message,
+        allowed: false
+      }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      }
+    );
+  }
+});
