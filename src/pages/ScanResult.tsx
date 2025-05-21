@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +33,7 @@ interface TokenData {
   current_price_usd?: number;
   price_usd?: number;
   price_change_24h?: number;
-  market_cap_usd?: number;
+  market_cap_usd?: number | string;
   total_value_locked_usd?: string;
 }
 
@@ -133,6 +134,7 @@ export default function ScanResult() {
   const [communityData, setCommunityData] = useState<CommunityData | null>(null);
   const [developmentData, setDevelopmentData] = useState<DevelopmentData | null>(null);
   const [tokenAddress, setTokenAddress] = useState<string>("");
+  const [coinGeckoId, setCoinGeckoId] = useState<string>("");  
   const [isPro, setIsPro] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<ScanCategory>(ScanCategory.Security);
   const [isRescanning, setIsRescanning] = useState<boolean>(false);
@@ -200,12 +202,26 @@ export default function ScanResult() {
     try {
       console.log("Fetching token scan data for:", tokenAddress);
       
-      // Fetch basic token data first
+      // Try to get data from localStorage first
+      const cachedData = localStorage.getItem("lastScanResult");
+      if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+        console.log("Found cached scan result:", parsedData);
+        
+        if (parsedData.token_address === tokenAddress) {
+          // Use cached data if available
+          setTokenData(parsedData);
+          
+          // Continue with database fetch for other data
+        }
+      }
+      
+      // Fetch basic token data from the database
       const { data: basicData, error: basicError } = await supabase
         .from("token_data_cache")
         .select("*")
         .eq("token_address", tokenAddress)
-        .single();
+        .maybeSingle();
         
       if (basicError) {
         console.error("Error fetching token data:", basicError);
@@ -213,20 +229,23 @@ export default function ScanResult() {
       }
       
       if (!basicData) {
-        throw new Error("Token not found");
+        console.log("Token not found in database, using cached data if available");
+        if (!cachedData) {
+          throw new Error("Token not found");
+        }
+      } else {
+        console.log("Received token data:", basicData);
+        
+        // Create the enhanced TokenData that includes price data
+        const enhancedTokenData: TokenData = {
+          ...basicData,
+          price_usd: basicData.current_price_usd || 0,
+          price_change_24h: 0, // Will be updated when real data is available
+          total_value_locked_usd: "N/A" // Will be updated when real data is available
+        };
+        
+        setTokenData(enhancedTokenData);
       }
-      
-      console.log("Received token data:", basicData);
-      
-      // Create the enhanced TokenData that includes price data
-      const enhancedTokenData: TokenData = {
-        ...basicData,
-        price_usd: basicData.current_price_usd || 0,
-        price_change_24h: 0, // Will be updated when real data is available
-        total_value_locked_usd: "N/A" // Will be updated when real data is available
-      };
-      
-      setTokenData(enhancedTokenData);
       
       // Fetch all category data in parallel
       const [
@@ -236,11 +255,11 @@ export default function ScanResult() {
         communityResult,
         developmentResult
       ] = await Promise.all([
-        supabase.from("token_security_cache").select("*").eq("token_address", tokenAddress).single(),
-        supabase.from("token_tokenomics_cache").select("*").eq("token_address", tokenAddress).single(),
-        supabase.from("token_liquidity_cache").select("*").eq("token_address", tokenAddress).single(),
-        supabase.from("token_community_cache").select("*").eq("token_address", tokenAddress).single(),
-        supabase.from("token_development_cache").select("*").eq("token_address", tokenAddress).single()
+        supabase.from("token_security_cache").select("*").eq("token_address", tokenAddress).maybeSingle(),
+        supabase.from("token_tokenomics_cache").select("*").eq("token_address", tokenAddress).maybeSingle(),
+        supabase.from("token_liquidity_cache").select("*").eq("token_address", tokenAddress).maybeSingle(),
+        supabase.from("token_community_cache").select("*").eq("token_address", tokenAddress).maybeSingle(),
+        supabase.from("token_development_cache").select("*").eq("token_address", tokenAddress).maybeSingle()
       ]);
       
       if (securityResult.data) setSecurityData(securityResult.data);
@@ -272,7 +291,7 @@ export default function ScanResult() {
         body: { 
           token_address: tokenAddress, // Fixed parameter name to match what the edge function expects
           user_id: user?.id,
-          coingecko_id: tokenData?.coingecko_id // Pass coingecko_id if available
+          coingecko_id: coinGeckoId // Pass coingecko_id if available
         }
       });
       
@@ -285,6 +304,13 @@ export default function ScanResult() {
       toast.success("Token rescanned successfully", {
         description: "The latest data has been loaded."
       });
+      
+      // Update localStorage with new scan result
+      if (data.token_info) {
+        localStorage.setItem("lastScanResult", JSON.stringify(data.token_info));
+      } else {
+        localStorage.setItem("lastScanResult", JSON.stringify(data));
+      }
       
       // Reload the data
       await fetchTokenScanData(tokenAddress);
@@ -301,6 +327,7 @@ export default function ScanResult() {
   // Initialize component on load
   useEffect(() => {
     const token = searchParams.get("token");
+    const id = searchParams.get("id");
     
     if (!token) {
       setError("No token address provided");
@@ -309,6 +336,7 @@ export default function ScanResult() {
     }
     
     setTokenAddress(token);
+    if (id) setCoinGeckoId(id);
     
     const loadData = async () => {
       await checkScanAccess(token);
@@ -438,7 +466,7 @@ export default function ScanResult() {
                   </div>
                   
                   <CategoryTabs
-                    activeTab={activeTab} // Renamed from active to activeTab to match component props
+                    activeTab={activeTab} // Matching prop name as expected by the component
                     securityData={securityData}
                     tokenomicsData={tokenomicsData}
                     liquidityData={liquidityData}

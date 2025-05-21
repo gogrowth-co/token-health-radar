@@ -63,29 +63,31 @@ export default function ScanLoading() {
           return;
         }
 
+        // Get token info from localStorage if available
+        const savedTokenInfo = localStorage.getItem("selectedToken");
+        const selectedToken = savedTokenInfo ? JSON.parse(savedTokenInfo) : null;
+        
         // Call the run-token-scan edge function with properly named parameters
         const { data, error } = await supabase.functions.invoke('run-token-scan', {
           body: {
-            token_address: tokenAddress, // Using consistent parameter naming
+            token_address: tokenAddress, // Consistent parameter naming
             coingecko_id: coinGeckoId,
-            user_id: user.id
+            user_id: user.id,
+            token_name: selectedToken?.name,
+            token_symbol: selectedToken?.symbol
           }
         });
 
         if (error) {
           console.error("Edge function error:", error);
-          toast.error("Failed to scan token. Please try again later.");
-          navigate("/");
-          return;
+          throw new Error(error.message || "Failed to scan token");
         }
 
         console.log("Token scan response:", data);
 
         if (!data) {
           console.error("No data returned from token scan");
-          toast.error("No data returned from scan");
-          navigate("/");
-          return;
+          throw new Error("No data returned from scan");
         }
 
         if (!data.allowed) {
@@ -98,12 +100,19 @@ export default function ScanLoading() {
         
         // Wait for the progress bar to reach 100%
         setTimeout(() => {
+          // Save scan result to localStorage for persistence
+          if (data.token_info) {
+            localStorage.setItem("lastScanResult", JSON.stringify(data.token_info));
+          } else {
+            localStorage.setItem("lastScanResult", JSON.stringify(data));
+          }
+          
           // Redirect to scan result page with token info
-          navigate(`/scan-result?token=${tokenAddress}`);
+          navigate(`/scan-result?token=${tokenAddress}&id=${coinGeckoId}`);
         }, 1000); // Short delay to ensure progress bar completes
       } catch (error) {
-        console.error("Error during token scan:", error);
-        toast.error("Something went wrong during the token scan.");
+        console.error("Error during token scan:", error instanceof Error ? error.message : String(error));
+        toast.error("Failed to scan token. Please try again later.");
         navigate("/");
       } finally {
         setIsScanning(false);

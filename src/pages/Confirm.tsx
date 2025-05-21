@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -91,10 +92,8 @@ export default function Confirm() {
       } catch (err) {
         console.error("Error fetching token data:", err);
         setError("Failed to fetch token data. Please try again later.");
-        toast({
-          title: "Search Error",
-          description: "Could not fetch token information. Please try again later.",
-          variant: "destructive",
+        toast.error("Search Error", {
+          description: "Could not fetch token information. Please try again later."
         });
       } finally {
         setIsLoading(false);
@@ -107,10 +106,8 @@ export default function Confirm() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchTerm.trim()) {
-      toast({
-        title: "Empty search",
-        description: "Please enter a token name",
-        variant: "destructive",
+      toast.error("Empty search", {
+        description: "Please enter a token name"
       });
       return;
     }
@@ -137,6 +134,15 @@ export default function Confirm() {
     }
     
     console.log(`Selected token: ${token.name}, address: ${tokenAddress}, id: ${token.id}`);
+    
+    // Save token info to localStorage for persistence
+    localStorage.setItem("selectedToken", JSON.stringify({
+      address: tokenAddress,
+      id: token.id,
+      name: token.name,
+      symbol: token.symbol,
+      logo: token.large || token.thumb
+    }));
     
     navigate(`/scan-loading?token=${tokenAddress}&id=${token.id}`);
   };
