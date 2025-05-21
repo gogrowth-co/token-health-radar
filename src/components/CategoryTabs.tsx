@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,25 +9,40 @@ import { Shield, Droplet, BarChart3, Globe, Code } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface CategoryTabsProps {
-  activeTab?: string;
+  activeTab?: string; // Changed from "active" to "activeTab" to match what's passed from ScanResult
   isProUser?: boolean;
+  isPro?: boolean; // Added this prop to accept what's passed from ScanResult
   securityData?: any;
   liquidityData?: any;
   tokenomicsData?: any;
   communityData?: any;
   developmentData?: any;
+  onCategoryChange?: (category: any) => void; // Added to match what ScanResult passes
 }
 
 export default function CategoryTabs({ 
   activeTab = "security", 
   isProUser = true,
+  isPro, // Added to accept the prop
   securityData = {},
   liquidityData = {},
   tokenomicsData = {},
   communityData = {},
-  developmentData = {}
+  developmentData = {},
+  onCategoryChange // Added to accept the prop
 }: CategoryTabsProps) {
+  // Use isPro if provided, otherwise fall back to isProUser
+  const isUserPro = isPro !== undefined ? isPro : isProUser;
+  
+  // Use onCategoryChange if provided, otherwise handle locally
   const [currentTab, setCurrentTab] = useState(activeTab);
+  
+  const handleTabChange = (value: string) => {
+    setCurrentTab(value);
+    if (onCategoryChange) {
+      onCategoryChange(value);
+    }
+  };
 
   const renderTabContent = (content: React.ReactNode, isBlurred: boolean) => {
     if (isBlurred) {
@@ -168,7 +182,7 @@ export default function CategoryTabs({
   };
 
   return (
-    <Tabs defaultValue={currentTab} onValueChange={setCurrentTab} className="w-full">
+    <Tabs defaultValue={currentTab} onValueChange={handleTabChange} className="w-full">
       <ScrollArea className="w-full">
         <TabsList className="flex w-full h-auto p-1 mb-8">
           <TabsTrigger value="security" className="flex-1 flex items-center gap-1.5 py-2">
@@ -205,8 +219,8 @@ export default function CategoryTabs({
               : "Security analysis data is not available for this token."}
           </AlertDescription>
         </Alert>
-        {renderMetrics(securityData, !isProUser)}
-        {renderBreakdown(securityData, !isProUser)}
+        {renderMetrics(securityData, !isUserPro)} {/* Updated to use the consolidated isUserPro */}
+        {renderBreakdown(securityData, !isUserPro)} {/* Updated to use the consolidated isUserPro */}
       </TabsContent>
 
       <TabsContent value="liquidity" className="space-y-4">
@@ -220,8 +234,8 @@ export default function CategoryTabs({
               : "Liquidity analysis data is not available for this token."}
           </AlertDescription>
         </Alert>
-        {renderMetrics(liquidityData, !isProUser)}
-        {renderBreakdown(liquidityData, !isProUser)}
+        {renderMetrics(liquidityData, !isUserPro)}
+        {renderBreakdown(liquidityData, !isUserPro)}
       </TabsContent>
       
       <TabsContent value="tokenomics" className="space-y-4">
@@ -235,8 +249,8 @@ export default function CategoryTabs({
               : "Tokenomics analysis data is not available for this token."}
           </AlertDescription>
         </Alert>
-        {renderMetrics(tokenomicsData, !isProUser)}
-        {renderBreakdown(tokenomicsData, !isProUser)}
+        {renderMetrics(tokenomicsData, !isUserPro)}
+        {renderBreakdown(tokenomicsData, !isUserPro)}
       </TabsContent>
       
       <TabsContent value="community" className="space-y-4">
@@ -250,8 +264,8 @@ export default function CategoryTabs({
               : "Community analysis data is not available for this token."}
           </AlertDescription>
         </Alert>
-        {renderMetrics(communityData, !isProUser)}
-        {renderBreakdown(communityData, !isProUser)}
+        {renderMetrics(communityData, !isUserPro)}
+        {renderBreakdown(communityData, !isUserPro)}
       </TabsContent>
       
       <TabsContent value="development" className="space-y-4">
@@ -265,8 +279,8 @@ export default function CategoryTabs({
               : "Development analysis data is not available for this token."}
           </AlertDescription>
         </Alert>
-        {renderMetrics(developmentData, !isProUser)}
-        {renderBreakdown(developmentData, !isProUser)}
+        {renderMetrics(developmentData, !isUserPro)}
+        {renderBreakdown(developmentData, !isUserPro)}
       </TabsContent>
     </Tabs>
   );

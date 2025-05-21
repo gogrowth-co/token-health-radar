@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -271,12 +270,16 @@ export default function ScanResult() {
       console.log("Rescanning token:", tokenAddress);
       const { data, error } = await supabase.functions.invoke("run-token-scan", {
         body: { 
-          tokenAddress,
-          user_id: user?.id
+          token_address: tokenAddress, // Fixed parameter name to match what the edge function expects
+          user_id: user?.id,
+          coingecko_id: tokenData?.coingecko_id // Pass coingecko_id if available
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error in rescan function:", error);
+        throw error;
+      }
       
       console.log("Rescan result:", data);
       toast.success("Token rescanned successfully", {
@@ -435,7 +438,7 @@ export default function ScanResult() {
                   </div>
                   
                   <CategoryTabs
-                    active={activeTab}
+                    activeTab={activeTab} // Renamed from active to activeTab to match component props
                     securityData={securityData}
                     tokenomicsData={tokenomicsData}
                     liquidityData={liquidityData}

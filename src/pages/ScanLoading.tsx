@@ -23,9 +23,12 @@ export default function ScanLoading() {
   const coinGeckoId = searchParams.get("id") || "";
   
   // Make sure we have a token to scan
-  if (!tokenAddress) {
-    navigate("/");
-  }
+  useEffect(() => {
+    if (!tokenAddress) {
+      toast.error("No token address provided");
+      navigate("/");
+    }
+  }, [tokenAddress, navigate]);
 
   useEffect(() => {
     // Select random trivia
@@ -52,18 +55,35 @@ export default function ScanLoading() {
 
         console.log("Starting token scan with address:", tokenAddress, "and CoinGecko ID:", coinGeckoId);
 
-        // Call the run-token-scan edge function
+        // Enhanced error logging
+        if (!tokenAddress) {
+          console.error("Token address is missing");
+          toast.error("Token address is required");
+          navigate("/");
+          return;
+        }
+
+        // Call the run-token-scan edge function with properly named parameters
         const { data, error } = await supabase.functions.invoke('run-token-scan', {
           body: {
-            token_address: tokenAddress,
+            token_address: tokenAddress, // Using consistent parameter naming
             coingecko_id: coinGeckoId,
             user_id: user.id
           }
         });
 
         if (error) {
-          console.error("Error running token scan:", error);
+          console.error("Edge function error:", error);
           toast.error("Failed to scan token. Please try again later.");
+          navigate("/");
+          return;
+        }
+
+        console.log("Token scan response:", data);
+
+        if (!data) {
+          console.error("No data returned from token scan");
+          toast.error("No data returned from scan");
           navigate("/");
           return;
         }
@@ -74,7 +94,7 @@ export default function ScanLoading() {
           return;
         }
 
-        setTokenInfo(data.token_info);
+        setTokenInfo(data.token_info || data);
         
         // Wait for the progress bar to reach 100%
         setTimeout(() => {

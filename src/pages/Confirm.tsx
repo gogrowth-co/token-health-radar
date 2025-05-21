@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 interface TokenResult {
   id: string;
@@ -127,12 +126,14 @@ export default function Confirm() {
     // Check if platforms is available and has Ethereum address
     if (token.platforms && token.platforms.ethereum) {
       tokenAddress = token.platforms.ethereum;
+      console.log(`Found Ethereum address: ${tokenAddress} for token ${token.name}`);
     }
     
     // If no Ethereum address, use a placeholder derived from the token id
     if (!tokenAddress) {
       console.warn(`No Ethereum address found for ${token.name}, using placeholder`);
-      tokenAddress = `0x${token.id.replace(/-/g, '').padEnd(40, '0')}`;
+      // Create a more consistent placeholder format for testing
+      tokenAddress = `0x${token.id.replace(/-/g, '').substring(0, 38).padEnd(38, '0')}`;
     }
     
     console.log(`Selected token: ${token.name}, address: ${tokenAddress}, id: ${token.id}`);
