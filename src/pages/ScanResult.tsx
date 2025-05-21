@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -241,8 +240,9 @@ export default function ScanResult() {
           ...basicData,
           current_price_usd: basicData.current_price_usd || 0,
           price_usd: basicData.current_price_usd || 0,
-          price_change_24h: 0, // Will be updated when real data is available
-          total_value_locked_usd: "N/A" // Will be updated when real data is available
+          price_change_24h: basicData.price_change_24h || 0,
+          market_cap_usd: basicData.market_cap_usd || "0",
+          total_value_locked_usd: basicData.total_value_locked_usd || "N/A"
         };
         
         setTokenData(enhancedTokenData);
