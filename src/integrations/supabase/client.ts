@@ -15,12 +15,12 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   },
   global: {
-    fetch: (...args) => {
+    fetch: (url, options) => {
       // Add debug logging for fetch requests in development
       if (process.env.NODE_ENV !== 'production') {
-        console.log('Supabase API request:', args[0]);
+        console.log('Supabase API request:', url);
       }
-      return fetch(...args);
+      return fetch(url, options);
     }
   }
 });
