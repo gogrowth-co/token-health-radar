@@ -239,6 +239,7 @@ export default function ScanResult() {
         // Create the enhanced TokenData that includes price data
         const enhancedTokenData: TokenData = {
           ...basicData,
+          current_price_usd: basicData.current_price_usd || 0,
           price_usd: basicData.current_price_usd || 0,
           price_change_24h: 0, // Will be updated when real data is available
           total_value_locked_usd: "N/A" // Will be updated when real data is available

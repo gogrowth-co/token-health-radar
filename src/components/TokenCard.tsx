@@ -15,6 +15,11 @@ interface TokenCardProps {
   priceChange?: number;
   marketCap?: string;
   address?: string;
+  score?: number;
+  launchDate?: string;
+  website?: string;
+  twitter?: string;
+  github?: string;
   onClick?: () => void;
   showActions?: boolean;
 }
@@ -27,6 +32,11 @@ export default function TokenCard({
   priceChange,
   marketCap,
   address,
+  score,
+  launchDate,
+  website,
+  twitter,
+  github,
   onClick,
   showActions = true
 }: TokenCardProps) {
@@ -101,6 +111,12 @@ export default function TokenCard({
             {marketCap && (
               <div className="text-sm text-muted-foreground mt-1">
                 Market Cap: ${marketCap}
+              </div>
+            )}
+            
+            {score !== undefined && (
+              <div className="text-sm font-semibold mt-1">
+                Health Score: {score}%
               </div>
             )}
           </div>
