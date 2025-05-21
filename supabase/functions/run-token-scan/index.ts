@@ -30,6 +30,14 @@ function calculateScore(factors: Record<string, number>): number {
   return Math.round((total / maxPossible) * 100);
 }
 
+// Helper function to ensure token address is properly formatted
+function normalizeTokenAddress(address: string): string {
+  if (address.startsWith('0x')) {
+    return address.toLowerCase();
+  }
+  return address.toLowerCase();
+}
+
 // Helper function to check if a scan is too recent (within 24h)
 async function isRecentScan(tokenAddress: string, category: string): Promise<boolean> {
   try {
@@ -55,13 +63,16 @@ async function isRecentScan(tokenAddress: string, category: string): Promise<boo
 // Process security data from GoPlus API
 async function processSecurityData(tokenAddress: string): Promise<any> {
   try {
+    // Normalize token address
+    tokenAddress = normalizeTokenAddress(tokenAddress);
+    
     // Check if we have recent data
     const hasRecentData = await isRecentScan(tokenAddress, "security");
     if (hasRecentData) {
       const { data, error } = await supabaseAdmin
         .from('token_security_cache')
         .select('*')
-        .eq('token_address', tokenAddress.toLowerCase())
+        .eq('token_address', tokenAddress)
         .single();
       
       if (!error && data) {
@@ -94,7 +105,7 @@ async function processSecurityData(tokenAddress: string): Promise<any> {
     const data = await response.json();
     
     // Extract security data for specified token
-    const tokenData = data?.result?.[tokenAddress.toLowerCase()];
+    const tokenData = data?.result?.[tokenAddress];
     if (!tokenData) {
       throw new Error("No security data found for token");
     }
@@ -148,7 +159,8 @@ async function processSecurityData(tokenAddress: string): Promise<any> {
     return {
       ...securityMetrics,
       score,
-      raw_data: tokenData // Store raw data for debugging
+      raw_data: tokenData, // Store raw data for debugging
+      token_address: tokenAddress // Ensure token_address is included and normalized
     };
   } catch (error) {
     logStep("Security data processing error", error.message);
@@ -160,7 +172,8 @@ async function processSecurityData(tokenAddress: string): Promise<any> {
       ownership_renounced: null,
       freeze_authority: null,
       audit_status: "unknown",
-      multisig_status: "unknown"
+      multisig_status: "unknown",
+      token_address: tokenAddress // Ensure token_address is included and normalized
     };
   }
 }
@@ -168,17 +181,20 @@ async function processSecurityData(tokenAddress: string): Promise<any> {
 // Process liquidity data from multiple sources (CoinGecko, GeckoTerminal, GoPlus)
 async function processLiquidityData(tokenData: any): Promise<any> {
   try {
+    // Normalize token address
+    const tokenAddress = normalizeTokenAddress(tokenData.token_address);
+    
     // Check if we have recent data
-    const hasRecentData = await isRecentScan(tokenData.token_address, "liquidity");
+    const hasRecentData = await isRecentScan(tokenAddress, "liquidity");
     if (hasRecentData) {
       const { data, error } = await supabaseAdmin
         .from('token_liquidity_cache')
         .select('*')
-        .eq('token_address', tokenData.token_address.toLowerCase())
+        .eq('token_address', tokenAddress)
         .single();
       
       if (!error && data) {
-        logStep("Using cached liquidity data", { token_address: tokenData.token_address });
+        logStep("Using cached liquidity data", { token_address: tokenAddress });
         return data;
       }
     }
@@ -224,7 +240,7 @@ async function processLiquidityData(tokenData: any): Promise<any> {
       try {
         const chainId = "1"; // Ethereum
         const goplusResponse = await fetch(
-          `https://api.gopluslabs.io/api/v1/token_security/${chainId}?contract_addresses=${tokenData.token_address}`,
+          `https://api.gopluslabs.io/api/v1/token_security/${chainId}?contract_addresses=${tokenAddress}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -235,7 +251,7 @@ async function processLiquidityData(tokenData: any): Promise<any> {
         
         if (goplusResponse.ok) {
           const goplusData = await goplusResponse.json();
-          const tokenSecurityData = goplusData?.result?.[tokenData.token_address.toLowerCase()];
+          const tokenSecurityData = goplusData?.result?.[tokenAddress];
           
           if (tokenSecurityData) {
             const holderCount = parseInt(tokenSecurityData.holder_count || "0");
@@ -270,7 +286,7 @@ async function processLiquidityData(tokenData: any): Promise<any> {
     if (holderDistribution === "unknown" && etherscanKey) {
       try {
         const etherscanResponse = await fetch(
-          `https://api.etherscan.io/api?module=token&action=tokenholderlist&contractaddress=${tokenData.token_address}&page=1&offset=100&apikey=${etherscanKey}`
+          `https://api.etherscan.io/api?module=token&action=tokenholderlist&contractaddress=${tokenAddress}&page=1&offset=100&apikey=${etherscanKey}`
         );
         
         if (etherscanResponse.ok) {
@@ -343,7 +359,8 @@ async function processLiquidityData(tokenData: any): Promise<any> {
       holder_distribution: holderDistribution,
       liquidity_locked_days: liquidityLockedDays,
       dex_depth_status: dexDepthStatus,
-      score
+      score,
+      token_address: tokenAddress // Ensure token_address is included and normalized
     };
   } catch (error) {
     logStep("Liquidity data processing error", error.message);
@@ -354,7 +371,8 @@ async function processLiquidityData(tokenData: any): Promise<any> {
       trading_volume_24h_usd: 0,
       holder_distribution: "unknown",
       liquidity_locked_days: 0,
-      dex_depth_status: "unknown"
+      dex_depth_status: "unknown",
+      token_address: normalizeTokenAddress(tokenData.token_address) // Ensure token_address is included and normalized
     };
   }
 }
@@ -362,17 +380,20 @@ async function processLiquidityData(tokenData: any): Promise<any> {
 // Process tokenomics data from CoinGecko
 async function processTokenomicsData(tokenData: any): Promise<any> {
   try {
+    // Normalize token address
+    const tokenAddress = normalizeTokenAddress(tokenData.token_address);
+    
     // Check if we have recent data
-    const hasRecentData = await isRecentScan(tokenData.token_address, "tokenomics");
+    const hasRecentData = await isRecentScan(tokenAddress, "tokenomics");
     if (hasRecentData) {
       const { data, error } = await supabaseAdmin
         .from('token_tokenomics_cache')
         .select('*')
-        .eq('token_address', tokenData.token_address.toLowerCase())
+        .eq('token_address', tokenAddress)
         .single();
       
       if (!error && data) {
-        logStep("Using cached tokenomics data", { token_address: tokenData.token_address });
+        logStep("Using cached tokenomics data", { token_address: tokenAddress });
         return data;
       }
     }
@@ -459,7 +480,8 @@ async function processTokenomicsData(tokenData: any): Promise<any> {
       burn_mechanism: burnMechanism,
       tvl_usd: tvlUsd,
       treasury_usd: treasuryUsd,
-      score
+      score,
+      token_address: tokenAddress // Ensure token_address is included and normalized
     };
   } catch (error) {
     logStep("Tokenomics data processing error", error.message);
@@ -472,7 +494,8 @@ async function processTokenomicsData(tokenData: any): Promise<any> {
       vesting_schedule: "unknown",
       burn_mechanism: null,
       tvl_usd: 0,
-      treasury_usd: 0
+      treasury_usd: 0,
+      token_address: normalizeTokenAddress(tokenData.token_address) // Ensure token_address is included and normalized
     };
   }
 }
@@ -480,17 +503,20 @@ async function processTokenomicsData(tokenData: any): Promise<any> {
 // Process community data using Twitter/X data from Apify API via webhook
 async function processCommunityData(tokenData: any): Promise<any> {
   try {
+    // Normalize token address
+    const tokenAddress = normalizeTokenAddress(tokenData.token_address);
+    
     // Check if we have recent data
-    const hasRecentData = await isRecentScan(tokenData.token_address, "community");
+    const hasRecentData = await isRecentScan(tokenAddress, "community");
     if (hasRecentData) {
       const { data, error } = await supabaseAdmin
         .from('token_community_cache')
         .select('*')
-        .eq('token_address', tokenData.token_address.toLowerCase())
+        .eq('token_address', tokenAddress)
         .single();
       
       if (!error && data) {
-        logStep("Using cached community data", { token_address: tokenData.token_address });
+        logStep("Using cached community data", { token_address: tokenAddress });
         return data;
       }
     }
@@ -623,7 +649,8 @@ async function processCommunityData(tokenData: any): Promise<any> {
       discord_members: discordMembers,
       active_channels: activeChannels,
       team_visibility: teamVisibility,
-      score
+      score,
+      token_address: tokenAddress // Ensure token_address is included and normalized
     };
   } catch (error) {
     logStep("Community data processing error", error.message);
@@ -636,7 +663,8 @@ async function processCommunityData(tokenData: any): Promise<any> {
       telegram_members: null,
       discord_members: null,
       active_channels: [],
-      team_visibility: "unknown"
+      team_visibility: "unknown",
+      token_address: normalizeTokenAddress(tokenData.token_address) // Ensure token_address is included and normalized
     };
   }
 }
@@ -644,17 +672,20 @@ async function processCommunityData(tokenData: any): Promise<any> {
 // Process development data from GitHub
 async function processDevelopmentData(tokenData: any): Promise<any> {
   try {
+    // Normalize token address
+    const tokenAddress = normalizeTokenAddress(tokenData.token_address);
+    
     // Check if we have recent data
-    const hasRecentData = await isRecentScan(tokenData.token_address, "development");
+    const hasRecentData = await isRecentScan(tokenAddress, "development");
     if (hasRecentData) {
       const { data, error } = await supabaseAdmin
         .from('token_development_cache')
         .select('*')
-        .eq('token_address', tokenData.token_address.toLowerCase())
+        .eq('token_address', tokenAddress)
         .single();
       
       if (!error && data) {
-        logStep("Using cached development data", { token_address: tokenData.token_address });
+        logStep("Using cached development data", { token_address: tokenAddress });
         return data;
       }
     }
@@ -766,7 +797,8 @@ async function processDevelopmentData(tokenData: any): Promise<any> {
       commits_30d: commits30d,
       last_commit: lastCommit,
       roadmap_progress: roadmapProgress,
-      score
+      score,
+      token_address: tokenAddress // Ensure token_address is included and normalized
     };
   } catch (error) {
     logStep("Development data processing error", error.message);
@@ -778,7 +810,8 @@ async function processDevelopmentData(tokenData: any): Promise<any> {
       contributors_count: 0,
       commits_30d: 0,
       last_commit: null,
-      roadmap_progress: "unknown"
+      roadmap_progress: "unknown",
+      token_address: normalizeTokenAddress(tokenData.token_address) // Ensure token_address is included and normalized
     };
   }
 }
@@ -792,12 +825,13 @@ async function resolveTokenInfo(tokenInput: string): Promise<any> {
     
     // Check if input is an Ethereum address
     const isAddress = /^0x[a-fA-F0-9]{40}$/.test(tokenInput);
+    const normalizedInput = tokenInput.toLowerCase();
     
     if (isAddress) {
-      logStep("Searching token by contract address", { address: tokenInput });
+      logStep("Searching token by contract address", { address: normalizedInput });
       // Search by contract address
       const response = await fetch(
-        `https://api.coingecko.com/api/v3/coins/ethereum/contract/${tokenInput}`,
+        `https://api.coingecko.com/api/v3/coins/ethereum/contract/${normalizedInput}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -813,7 +847,7 @@ async function resolveTokenInfo(tokenInput: string): Promise<any> {
       const data = await response.json();
       
       return {
-        token_address: tokenInput.toLowerCase(),
+        token_address: normalizedInput,
         name: data.name || "N/A",
         symbol: data.symbol?.toUpperCase() || "N/A",
         description: data.description?.en?.substring(0, 500) || "N/A",
@@ -825,10 +859,10 @@ async function resolveTokenInfo(tokenInput: string): Promise<any> {
         launch_date: data.genesis_date || null
       };
     } else {
-      logStep("Searching token by name/symbol", { input: tokenInput });
+      logStep("Searching token by name/symbol", { input: normalizedInput });
       // Search by symbol or name
       const searchResponse = await fetch(
-        `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(tokenInput)}`,
+        `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(normalizedInput)}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -869,8 +903,17 @@ async function resolveTokenInfo(tokenInput: string): Promise<any> {
       const currentPrice = detailData.market_data?.current_price?.usd;
       const marketCap = detailData.market_data?.market_cap?.usd;
       
+      // Create normalized token address for Ethereum tokens
+      let tokenAddress = detailData.platforms?.ethereum;
+      if (!tokenAddress) {
+        // Generate a placeholder address if actual address is not available
+        tokenAddress = `0x${coin.id.replace(/-/g, '')}`.slice(0, 42).toLowerCase();
+      } else {
+        tokenAddress = tokenAddress.toLowerCase();
+      }
+      
       return {
-        token_address: detailData.platforms?.ethereum || `0x${coin.id.replace(/-/g, '')}`.slice(0, 42),
+        token_address: tokenAddress,
         name: detailData.name || "N/A",
         symbol: detailData.symbol?.toUpperCase() || "N/A",
         description: detailData.description?.en?.substring(0, 500) || "N/A",
@@ -887,10 +930,12 @@ async function resolveTokenInfo(tokenInput: string): Promise<any> {
   } catch (error) {
     logStep("Token resolution error", error.message);
     // If API fails, return basic info based on input
+    const normalizedInput = tokenInput.toLowerCase();
+    
     return {
-      token_address: /^0x[a-fA-F0-9]{40}$/.test(tokenInput) 
-        ? tokenInput.toLowerCase() 
-        : `0x${tokenInput.replace(/[^a-zA-Z0-9]/g, "").padEnd(40, "0")}`.toLowerCase(),
+      token_address: /^0x[a-fA-F0-9]{40}$/.test(normalizedInput) 
+        ? normalizedInput 
+        : `0x${normalizedInput.replace(/[^a-zA-Z0-9]/g, "").padEnd(40, "0")}`.toLowerCase(),
       name: tokenInput,
       symbol: tokenInput.slice(0, 5).toUpperCase(),
       coingecko_id: null,
@@ -903,6 +948,41 @@ async function resolveTokenInfo(tokenInput: string): Promise<any> {
       current_price_usd: null,
       market_cap_usd: null
     };
+  }
+}
+
+// Fixed increment function to use numbers instead of RPC
+async function incrementScansUsed(userId: string, incrementBy: number): Promise<number> {
+  try {
+    // Get current scans_used value
+    const { data: subscriber, error: getError } = await supabaseAdmin
+      .from("subscribers")
+      .select("scans_used")
+      .eq("id", userId)
+      .single();
+    
+    if (getError) {
+      throw new Error(`Failed to get subscriber data: ${getError.message}`);
+    }
+    
+    // Calculate new value
+    const currentScansUsed = subscriber?.scans_used || 0;
+    const newScansUsed = currentScansUsed + incrementBy;
+    
+    // Update the record
+    const { error: updateError } = await supabaseAdmin
+      .from("subscribers")
+      .update({ scans_used: newScansUsed })
+      .eq("id", userId);
+    
+    if (updateError) {
+      throw new Error(`Failed to update scans_used: ${updateError.message}`);
+    }
+    
+    return newScansUsed;
+  } catch (error) {
+    logStep("Error incrementing scans_used", error.message);
+    return 0;
   }
 }
 
@@ -967,7 +1047,10 @@ serve(async (req: Request) => {
       throw new Error("User ID is required");
     }
     
-    logStep("Starting token scan", { token_address, user_id });
+    // Normalize token address to lowercase
+    const normalizedTokenAddress = normalizeTokenAddress(token_address);
+    
+    logStep("Starting token scan", { token_address: normalizedTokenAddress, user_id });
     
     // Check if user has access to perform scan
     const accessCheck = await checkScanAccess(user_id);
@@ -990,7 +1073,7 @@ serve(async (req: Request) => {
     const { data: existingToken } = await supabaseAdmin
       .from("token_data_cache")
       .select("*")
-      .or(`token_address.eq.${token_address.toLowerCase()},LOWER(symbol).eq.LOWER('${token_address}')`)
+      .or(`token_address.eq.${normalizedTokenAddress},LOWER(symbol).eq.LOWER('${token_address}')`)
       .maybeSingle();
     
     // Get token info - either from cache or by resolving from APIs
@@ -1004,7 +1087,10 @@ serve(async (req: Request) => {
       // Store token info in the database
       const { error: insertError } = await supabaseAdmin
         .from("token_data_cache")
-        .insert(tokenInfo);
+        .insert({
+          ...tokenInfo,
+          token_address: normalizeTokenAddress(tokenInfo.token_address)
+        });
       
       if (insertError) {
         logStep("Error storing token info", insertError.message);
@@ -1022,8 +1108,8 @@ serve(async (req: Request) => {
     const { error: securityError } = await supabaseAdmin
       .from("token_security_cache")
       .upsert({
-        token_address: tokenInfo.token_address.toLowerCase(),
         ...securityData,
+        token_address: normalizeTokenAddress(tokenInfo.token_address),
         updated_at: new Date().toISOString()
       });
     
@@ -1039,8 +1125,8 @@ serve(async (req: Request) => {
     const { error: liquidityError } = await supabaseAdmin
       .from("token_liquidity_cache")
       .upsert({
-        token_address: tokenInfo.token_address.toLowerCase(),
         ...liquidityData,
+        token_address: normalizeTokenAddress(tokenInfo.token_address),
         updated_at: new Date().toISOString()
       });
     
@@ -1056,8 +1142,8 @@ serve(async (req: Request) => {
     const { error: tokenomicsError } = await supabaseAdmin
       .from("token_tokenomics_cache")
       .upsert({
-        token_address: tokenInfo.token_address.toLowerCase(),
         ...tokenomicsData,
+        token_address: normalizeTokenAddress(tokenInfo.token_address),
         updated_at: new Date().toISOString()
       });
     
@@ -1073,8 +1159,8 @@ serve(async (req: Request) => {
     const { error: communityError } = await supabaseAdmin
       .from("token_community_cache")
       .upsert({
-        token_address: tokenInfo.token_address.toLowerCase(),
         ...communityData,
+        token_address: normalizeTokenAddress(tokenInfo.token_address),
         updated_at: new Date().toISOString()
       });
     
@@ -1090,8 +1176,8 @@ serve(async (req: Request) => {
     const { error: developmentError } = await supabaseAdmin
       .from("token_development_cache")
       .upsert({
-        token_address: tokenInfo.token_address.toLowerCase(),
         ...developmentData,
+        token_address: normalizeTokenAddress(tokenInfo.token_address),
         updated_at: new Date().toISOString()
       });
     
@@ -1117,7 +1203,7 @@ serve(async (req: Request) => {
       .from("token_scans")
       .insert({
         user_id,
-        token_address: tokenInfo.token_address.toLowerCase(),
+        token_address: normalizeTokenAddress(tokenInfo.token_address),
         score_total: overallScore,
         pro_scan: accessCheck.plan === "pro",
         scanned_at: new Date().toISOString()
@@ -1127,28 +1213,18 @@ serve(async (req: Request) => {
       logStep("Error storing scan record", scanError.message);
     }
     
-    // Increment the user's scans_used count
-    const { error: updateSubscriberError } = await supabaseAdmin
-      .from("subscribers")
-      .update({
-        scans_used: accessCheck.plan === "free" ? 
-          supabaseAdmin.rpc('increment', { row_id: user_id, increment_by: 1 }) : 
-          scansUsed + 1
-      })
-      .eq("id", user_id);
-    
-    if (updateSubscriberError) {
-      logStep("Error updating subscriber scan count", updateSubscriberError.message);
-    }
+    // Increment the user's scans_used count using our fixed function
+    await incrementScansUsed(user_id, 1);
     
     // Prepare response
     const response = {
       allowed: true,
       token_info: {
         ...tokenInfo,
+        token_address: normalizeTokenAddress(tokenInfo.token_address),
         // Add price and market cap if available
-        current_price_usd: tokenInfo.current_price_usd || null,
-        market_cap_usd: tokenInfo.market_cap_usd || null
+        current_price_usd: tokenInfo.current_price_usd || 0,
+        market_cap_usd: tokenInfo.market_cap_usd || 0
       },
       security: {
         ...securityData,

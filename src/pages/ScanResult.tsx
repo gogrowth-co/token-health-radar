@@ -153,8 +153,8 @@ export default function ScanResult() {
         const { data: tokenData, error: tokenError } = await supabase
           .from('token_data_cache')
           .select('*')
-          .or(`token_address.eq.${isAddress ? normalizedTokenAddress : ''},symbol.ilike.${!isAddress ? normalizedTokenAddress : ''}`)
-          .single();
+          .or(`token_address.eq.${isAddress ? normalizedTokenAddress : ''},LOWER(symbol).eq.${!isAddress ? `'${normalizedTokenAddress}'` : ''}`)
+          .maybeSingle();
           
         if (tokenError || !tokenData) {
           console.error("Token not found:", tokenError);
@@ -165,11 +165,14 @@ export default function ScanResult() {
 
         console.log("Found token data:", tokenData);
 
+        // Normalize token address to lowercase
+        const tokenAddress = tokenData.token_address.toLowerCase();
+        
         // Fetch security data
         const { data: securityData, error: securityError } = await supabase
           .from('token_security_cache')
           .select('*')
-          .eq('token_address', tokenData.token_address)
+          .eq('token_address', tokenAddress)
           .maybeSingle();
           
         if (securityError) {
@@ -180,7 +183,7 @@ export default function ScanResult() {
         const { data: liquidityData, error: liquidityError } = await supabase
           .from('token_liquidity_cache')
           .select('*')
-          .eq('token_address', tokenData.token_address)
+          .eq('token_address', tokenAddress)
           .maybeSingle();
           
         if (liquidityError) {
@@ -191,7 +194,7 @@ export default function ScanResult() {
         const { data: tokenomicsData, error: tokenomicsError } = await supabase
           .from('token_tokenomics_cache')
           .select('*')
-          .eq('token_address', tokenData.token_address)
+          .eq('token_address', tokenAddress)
           .maybeSingle();
           
         if (tokenomicsError) {
@@ -202,7 +205,7 @@ export default function ScanResult() {
         const { data: communityData, error: communityError } = await supabase
           .from('token_community_cache')
           .select('*')
-          .eq('token_address', tokenData.token_address)
+          .eq('token_address', tokenAddress)
           .maybeSingle();
           
         if (communityError) {
@@ -213,11 +216,21 @@ export default function ScanResult() {
         const { data: developmentData, error: developmentError } = await supabase
           .from('token_development_cache')
           .select('*')
-          .eq('token_address', tokenData.token_address)
+          .eq('token_address', tokenAddress)
           .maybeSingle();
           
         if (developmentError) {
           console.error("Error fetching development data:", developmentError);
+        }
+        
+        // Check if we're missing too much data
+        const missingDataCount = [securityData, liquidityData, tokenomicsData, communityData, developmentData]
+          .filter(data => !data).length;
+        
+        if (missingDataCount >= 4) {
+          setError("Insufficient data available for this token. Try scanning again.");
+          setIsLoading(false);
+          return;
         }
         
         // Determine category scores
@@ -256,17 +269,15 @@ export default function ScanResult() {
         // Create the enhanced TokenData that includes price data
         const enhancedTokenData: TokenData = {
           ...tokenData,
-          price_usd: 0, // Will be updated when real data is available
+          price_usd: tokenData.current_price_usd || 0,
           price_change_24h: 0, // Will be updated when real data is available
-          market_cap_usd: "N/A", // Will be updated when real data is available
+          market_cap_usd: tokenData.market_cap_usd?.toLocaleString() || "N/A",
           total_value_locked_usd: "N/A" // Will be updated when real data is available
         };
         
         if (tokenomicsData) {
           enhancedTokenData.total_value_locked_usd = tokenomicsData.tvl_usd ? 
             tokenomicsData.tvl_usd.toLocaleString() : "N/A";
-          enhancedTokenData.market_cap_usd = tokenomicsData.circulating_supply ? 
-            (tokenomicsData.circulating_supply * (enhancedTokenData.price_usd || 0)).toLocaleString() : "N/A";
         }
         
         // Assemble the full result
@@ -334,6 +345,27 @@ export default function ScanResult() {
     return userSubscription.scans_used < 3; // Free users get 3 scans
   };
   
+  // Handle rescanning token
+  const handleRescan = async () => {
+    if (!tokenParam) return;
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("You must be logged in to scan tokens");
+        return;
+      }
+      
+      toast.info("Rescanning token...");
+      navigate(`/scan-loading?token=${tokenParam}`);
+      
+    } catch (err) {
+      console.error("Failed to initiate rescan:", err);
+      toast.error("Failed to initiate rescan");
+    }
+  };
+  
   // If loading, show skeleton
   if (isLoading) {
     return (
@@ -376,8 +408,9 @@ export default function ScanResult() {
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error Loading Scan</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
-            <div className="mt-4">
+            <div className="mt-4 flex gap-2">
               <Button onClick={() => navigate("/")}>Return to Home</Button>
+              <Button variant="outline" onClick={handleRescan}>Try Rescanning</Button>
             </div>
           </Alert>
         </main>
@@ -456,7 +489,12 @@ export default function ScanResult() {
             
             {/* Category Tabs */}
             <section id="category-tabs">
-              <h2 className="text-2xl font-bold mb-6">Detailed Analysis</h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Detailed Analysis</h2>
+                <Button variant="outline" size="sm" onClick={handleRescan}>
+                  Rescan Token
+                </Button>
+              </div>
               <CategoryTabs 
                 activeTab={activeTab} 
                 isProUser={hasFullAccess()} 
