@@ -1,26 +1,44 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PricingCard from "@/components/PricingCard";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { faqData } from "@/lib/mock-data";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 
 export default function Pricing() {
   const [isLoading, setIsLoading] = useState(false);
   const [processingPlan, setProcessingPlan] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const { isAuthenticated, user } = useAuth();
 
-  // Define price IDs for the different plans
+  // Define price IDs for the different plans - these need to be replaced with actual Stripe price IDs
   const pricePlans = {
-    monthly: "price_1RQK5tD41aNWIHmd4YspKxDi", // Monthly Pro plan
-    annual: "price_1RQK5tD41aNWIHmd1p46UCwl"   // Annual Pro plan
+    monthly: "price_1PriceMonthly", // Replace with your actual Stripe price ID
+    annual: "price_1PriceAnnual"    // Replace with your actual Stripe price ID
   };
+
+  // Check for query parameters to show success/failure messages
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const subscription = params.get('subscription');
+    
+    if (subscription === 'success') {
+      toast.success("Subscription successful!", {
+        description: "Your account has been upgraded successfully."
+      });
+    } else if (subscription === 'canceled') {
+      toast.info("Checkout canceled", {
+        description: "You can complete your subscription at any time."
+      });
+    }
+  }, []);
 
   const handleUpgrade = async (priceId: string, planType: string) => {
     if (!isAuthenticated) {
@@ -30,10 +48,13 @@ export default function Pricing() {
       return;
     }
 
+    setCheckoutError(null);
     setIsLoading(true);
     setProcessingPlan(planType);
     
     try {
+      console.log(`Creating checkout session for ${planType} plan with priceId: ${priceId}`);
+      
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           priceId,
@@ -43,15 +64,21 @@ export default function Pricing() {
       });
 
       if (error) {
-        throw new Error(error.message);
+        console.error("Error from create-checkout function:", error);
+        throw new Error(error.message || "Error creating checkout session");
       }
 
-      if (data?.url) {
-        // Open Stripe checkout in a new tab
-        window.location.href = data.url;
+      if (!data?.url) {
+        throw new Error("No checkout URL received from Stripe");
       }
+
+      console.log("Received checkout URL:", data.url);
+      
+      // Redirect to Stripe checkout
+      window.location.href = data.url;
     } catch (error) {
       console.error("Error creating checkout session:", error);
+      setCheckoutError(error instanceof Error ? error.message : "Unknown error occurred");
       toast.error("Checkout Error", {
         description: "There was a problem starting the checkout process. Please try again."
       });
@@ -76,6 +103,16 @@ export default function Pricing() {
                 All plans include basic token scans. Upgrade for deeper insights and more scans.
               </p>
             </div>
+
+            {checkoutError && (
+              <Alert variant="destructive" className="mb-6 max-w-3xl mx-auto">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Checkout Error</AlertTitle>
+                <AlertDescription>
+                  {checkoutError}. Please try again or contact support.
+                </AlertDescription>
+              </Alert>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
               <PricingCard 

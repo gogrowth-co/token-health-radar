@@ -1,512 +1,423 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { Check, X, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TokenProfile from "@/components/TokenProfile";
+import TokenCard from "@/components/TokenCard";
 import CategoryScoreCard from "@/components/CategoryScoreCard";
 import CategoryTabs from "@/components/CategoryTabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Shield, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-// Define types for our scan data
-interface TokenScan {
-  id: string;
-  user_id: string;
-  token_address: string;
-  score_total: number;
-  pro_scan: boolean;
-  scanned_at: string;
-}
-
+// Define the types for token data
 interface TokenData {
+  token_address: string;
   name: string;
   symbol: string;
-  logo_url: string;
-  token_address: string;
+  description: string;
   website_url: string;
   twitter_handle: string;
   github_url: string;
+  logo_url: string;
   coingecko_id: string;
   launch_date: string;
-  current_price_usd?: number; // Added property as optional
-  market_cap_usd?: number; // Added property as optional
-  // Add price data properties
+  created_at: string;
+  // Price data properties
+  current_price_usd?: number;
   price_usd?: number;
   price_change_24h?: number;
+  market_cap_usd?: number;
   total_value_locked_usd?: string;
 }
 
-interface CategoryScore {
-  score: number;
-  level: "high" | "medium" | "low";
-  color: "success" | "warning" | "danger" | "info";
+// Define the types for security data
+interface SecurityData {
+  token_address: string;
+  score: number | null;
+  ownership_renounced: boolean | null;
+  audit_status: string | null;
+  multisig_status: string | null;
+  honeypot_detected: boolean | null;
+  freeze_authority: boolean | null;
+  can_mint: boolean | null;
 }
 
-interface ScanResult {
-  tokenData: TokenData;
-  securityData: any;
-  liquidityData: any;
-  tokenomicsData: any;
-  communityData: any;
-  developmentData: any;
-  categoryScores: {
-    security: CategoryScore;
-    liquidity: CategoryScore;
-    tokenomics: CategoryScore;
-    community: CategoryScore;
-    development: CategoryScore;
-  };
-  overallScore: number;
+// Define the types for tokenomics data
+interface TokenomicsData {
+  token_address: string;
+  score: number | null;
+  circulating_supply: number | null;
+  supply_cap: number | null;
+  tvl_usd: number | null;
+  vesting_schedule: string | null;
+  distribution_score: string | null;
+  treasury_usd: number | null;
+  burn_mechanism: boolean | null;
 }
 
-interface UserSubscription {
-  id: string;
-  scans_used: number;
-  pro_scan_limit: number;
-  plan: "free" | "pro";
-  created_at?: string;
-  updated_at?: string;
-  stripe_customer_id?: string;
-  stripe_subscription_id?: string;
+// Define the types for liquidity data
+interface LiquidityData {
+  token_address: string;
+  score: number | null;
+  liquidity_locked_days: number | null;
+  cex_listings: number | null;
+  trading_volume_24h_usd: number | null;
+  holder_distribution: string | null;
+  dex_depth_status: string | null;
 }
 
+// Define the types for community data
+interface CommunityData {
+  token_address: string;
+  score: number | null;
+  twitter_followers: number | null;
+  twitter_verified: boolean | null;
+  twitter_growth_7d: number | null;
+  telegram_members: number | null;
+  discord_members: number | null;
+  active_channels: string[] | null;
+  team_visibility: string | null;
+}
+
+// Define the types for development data
+interface DevelopmentData {
+  token_address: string;
+  score: number | null;
+  github_repo: string | null;
+  is_open_source: boolean | null;
+  contributors_count: number | null;
+  commits_30d: number | null;
+  last_commit: string | null;
+  roadmap_progress: string | null;
+}
+
+// Define the enum for scan category
+enum ScanCategory {
+  Security = "security",
+  Tokenomics = "tokenomics",
+  Liquidity = "liquidity",
+  Community = "community",
+  Development = "development"
+}
+
+// The main component
 export default function ScanResult() {
+  // State management
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("security");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
-  const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
-  const [isProUser, setIsProUser] = useState(false);
+  const [tokenData, setTokenData] = useState<TokenData | null>(null);
+  const [securityData, setSecurityData] = useState<SecurityData | null>(null);
+  const [tokenomicsData, setTokenomicsData] = useState<TokenomicsData | null>(null);
+  const [liquidityData, setLiquidityData] = useState<LiquidityData | null>(null);
+  const [communityData, setCommunityData] = useState<CommunityData | null>(null);
+  const [developmentData, setDevelopmentData] = useState<DevelopmentData | null>(null);
+  const [tokenAddress, setTokenAddress] = useState<string>("");
+  const [isPro, setIsPro] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<ScanCategory>(ScanCategory.Security);
+  const [isRescanning, setIsRescanning] = useState<boolean>(false);
   
-  // Get token from URL params - normalize to lowercase
-  const tokenParam = searchParams.get("token") || "";
-  const normalizedTokenAddress = tokenParam.toLowerCase();
-  
-  useEffect(() => {
-    const fetchUserSubscription = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          setIsProUser(false);
-          return;
-        }
-        
-        const { data, error } = await supabase
-          .from('subscribers')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-          
-        if (error) {
-          console.error("Error fetching user subscription:", error);
-          return;
-        }
-        
-        // Cast the plan to the specific "free" | "pro" type
-        const typedSubscription: UserSubscription = {
-          id: data.id,
-          scans_used: data.scans_used,
-          pro_scan_limit: data.pro_scan_limit,
-          plan: data.plan as "free" | "pro",
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          stripe_customer_id: data.stripe_customer_id,
-          stripe_subscription_id: data.stripe_subscription_id
-        };
-        
-        setUserSubscription(typedSubscription);
-        setIsProUser(typedSubscription.plan === "pro");
-      } catch (err) {
-        console.error("Failed to fetch user subscription:", err);
-      }
-    };
+  // Navigation and authentication
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+
+  // Calculate the overall score
+  const calculateOverallScore = (): number => {
+    const scores = [
+      securityData?.score, 
+      tokenomicsData?.score,
+      liquidityData?.score,
+      communityData?.score,
+      developmentData?.score
+    ];
     
-    fetchUserSubscription();
-  }, []);
-  
-  useEffect(() => {
-    const fetchScanResult = async () => {
-      if (!tokenParam) {
-        setError("No token specified");
-        setIsLoading(false);
-        return;
-      }
-      
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        console.log("Fetching scan result for token:", normalizedTokenAddress);
-        
-        // First check if token is an address or a symbol
-        const isAddress = normalizedTokenAddress.startsWith('0x');
-        
-        // Fetch token data
-        const { data: tokenData, error: tokenError } = await supabase
-          .from('token_data_cache')
-          .select('*')
-          .or(`token_address.eq.${isAddress ? normalizedTokenAddress : ''},LOWER(symbol).eq.${!isAddress ? `'${normalizedTokenAddress}'` : ''}`)
-          .maybeSingle();
-          
-        if (tokenError || !tokenData) {
-          console.error("Token not found:", tokenError);
-          setError("Token not found in our database");
-          setIsLoading(false);
-          return;
-        }
-
-        console.log("Found token data:", tokenData);
-
-        // Normalize token address to lowercase
-        const tokenAddress = tokenData.token_address.toLowerCase();
-        
-        // Fetch security data
-        const { data: securityData, error: securityError } = await supabase
-          .from('token_security_cache')
-          .select('*')
-          .eq('token_address', tokenAddress)
-          .maybeSingle();
-          
-        if (securityError) {
-          console.error("Error fetching security data:", securityError);
-        }
-        
-        // Fetch liquidity data
-        const { data: liquidityData, error: liquidityError } = await supabase
-          .from('token_liquidity_cache')
-          .select('*')
-          .eq('token_address', tokenAddress)
-          .maybeSingle();
-          
-        if (liquidityError) {
-          console.error("Error fetching liquidity data:", liquidityError);
-        }
-        
-        // Fetch tokenomics data
-        const { data: tokenomicsData, error: tokenomicsError } = await supabase
-          .from('token_tokenomics_cache')
-          .select('*')
-          .eq('token_address', tokenAddress)
-          .maybeSingle();
-          
-        if (tokenomicsError) {
-          console.error("Error fetching tokenomics data:", tokenomicsError);
-        }
-        
-        // Fetch community data
-        const { data: communityData, error: communityError } = await supabase
-          .from('token_community_cache')
-          .select('*')
-          .eq('token_address', tokenAddress)
-          .maybeSingle();
-          
-        if (communityError) {
-          console.error("Error fetching community data:", communityError);
-        }
-        
-        // Fetch development data
-        const { data: developmentData, error: developmentError } = await supabase
-          .from('token_development_cache')
-          .select('*')
-          .eq('token_address', tokenAddress)
-          .maybeSingle();
-          
-        if (developmentError) {
-          console.error("Error fetching development data:", developmentError);
-        }
-        
-        // Check if we're missing too much data
-        const missingDataCount = [securityData, liquidityData, tokenomicsData, communityData, developmentData]
-          .filter(data => !data).length;
-        
-        if (missingDataCount >= 4) {
-          setError("Insufficient data available for this token. Try scanning again.");
-          setIsLoading(false);
-          return;
-        }
-        
-        // Determine category scores
-        const getScoreLevel = (score: number | null): "high" | "medium" | "low" => {
-          if (score === null || score === undefined) return "low";
-          if (score >= 70) return "high";
-          if (score >= 50) return "medium";
-          return "low";
-        };
-        
-        const getScoreColor = (level: "high" | "medium" | "low"): "success" | "warning" | "danger" | "info" => {
-          if (level === "high") return "success";
-          if (level === "medium") return "warning";
-          return "danger";
-        };
-        
-        const securityScore = securityData?.score || 0;
-        const liquidityScore = liquidityData?.score || 0;
-        const tokenomicsScore = tokenomicsData?.score || 0;
-        const communityScore = communityData?.score || 0;
-        const developmentScore = developmentData?.score || 0;
-        
-        const securityLevel = getScoreLevel(securityScore);
-        const liquidityLevel = getScoreLevel(liquidityScore);
-        const tokenomicsLevel = getScoreLevel(tokenomicsScore);
-        const communityLevel = getScoreLevel(communityScore);
-        const developmentLevel = getScoreLevel(developmentScore);
-        
-        const scores = [securityScore, liquidityScore, tokenomicsScore, communityScore, developmentScore]
-          .filter(score => score !== null && score !== undefined);
-        
-        const overallScore = scores.length > 0 
-          ? Math.round(scores.reduce((sum, score) => sum + (score || 0), 0) / scores.length) 
-          : 0;
-        
-        // Create the enhanced TokenData that includes price data
-        const enhancedTokenData: TokenData = {
-          ...tokenData,
-          price_usd: tokenData.current_price_usd || 0, // Use optional chaining since it might not exist
-          price_change_24h: 0, // Will be updated when real data is available
-          market_cap_usd: typeof tokenData.market_cap_usd === 'number' ? tokenData.market_cap_usd : undefined,
-          total_value_locked_usd: "N/A" // Will be updated when real data is available
-        };
-        
-        if (tokenomicsData) {
-          enhancedTokenData.total_value_locked_usd = tokenomicsData.tvl_usd ? 
-            tokenomicsData.tvl_usd.toLocaleString() : "N/A";
-        }
-        
-        // Assemble the full result
-        setScanResult({
-          tokenData: enhancedTokenData,
-          securityData: securityData || {},
-          liquidityData: liquidityData || {},
-          tokenomicsData: tokenomicsData || {},
-          communityData: communityData || {},
-          developmentData: developmentData || {},
-          categoryScores: {
-            security: {
-              score: securityScore,
-              level: securityLevel,
-              color: getScoreColor(securityLevel)
-            },
-            liquidity: {
-              score: liquidityScore,
-              level: liquidityLevel,
-              color: getScoreColor(liquidityLevel)
-            },
-            tokenomics: {
-              score: tokenomicsScore,
-              level: tokenomicsLevel,
-              color: getScoreColor(tokenomicsLevel)
-            },
-            community: {
-              score: communityScore,
-              level: communityLevel,
-              color: getScoreColor(communityLevel)
-            },
-            development: {
-              score: developmentScore,
-              level: developmentLevel,
-              color: getScoreColor(developmentLevel)
-            }
-          },
-          overallScore
-        });
-        
-        setIsLoading(false);
-      } catch (err: any) {
-        console.error("Failed to fetch scan result:", err);
-        setError(err.message || "Failed to load scan data");
-        setIsLoading(false);
-      }
-    };
+    // Filter out null and undefined scores
+    const validScores = scores.filter(score => score !== null && score !== undefined) as number[];
     
-    fetchScanResult();
-  }, [tokenParam, normalizedTokenAddress]);
-
-  // Handle category card click
-  const handleCategoryClick = (category: string) => {
-    setActiveTab(category);
-    // Scroll to tab section
-    document.getElementById("category-tabs")?.scrollIntoView({ behavior: "smooth" });
+    if (validScores.length === 0) return 0;
+    
+    // Calculate the average and round to the nearest integer
+    return Math.round(validScores.reduce((acc, curr) => acc + curr, 0) / validScores.length);
   };
 
-  // Determine if user has access to detailed scan data
-  const hasFullAccess = () => {
-    if (!userSubscription) return true; // Default to full access if subscription data not loaded yet
-    
-    if (userSubscription.plan === "pro") return true;
-    
-    return userSubscription.scans_used < 3; // Free users get 3 scans
-  };
-  
-  // Handle rescanning token
-  const handleRescan = async () => {
-    if (!tokenParam) return;
-    
+  // Check if scan access is allowed
+  const checkScanAccess = async (tokenAddress: string): Promise<void> => {
+    if (!isAuthenticated) {
+      console.log("User not authenticated, setting isPro to false");
+      setIsPro(false);
+      return;
+    }
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("You must be logged in to scan tokens");
-        return;
+      console.log("Checking scan access for token:", tokenAddress);
+      const { data, error } = await supabase.functions.invoke("check-scan-access", {
+        body: {
+          token_address: tokenAddress
+        }
+      });
+
+      if (error) {
+        console.error("Error checking scan access:", error);
+        throw error;
       }
       
-      toast.info("Rescanning token...");
-      navigate(`/scan-loading?token=${tokenParam}`);
-      
-    } catch (err) {
-      console.error("Failed to initiate rescan:", err);
-      toast.error("Failed to initiate rescan");
+      console.log("Scan access response:", data);
+      setIsPro(data.hasPro);
+    } catch (error) {
+      console.error("Error checking scan access:", error);
+      toast.error("Error checking access level", {
+        description: "Unable to verify your subscription status. Some features might be limited."
+      });
+      setIsPro(false);
     }
   };
-  
-  // If loading, show skeleton
-  if (isLoading) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        
-        <main className="flex-1 container px-4 py-8">
-          <section className="mb-12">
-            <Skeleton className="h-32 w-full" />
-          </section>
-          
-          <section className="mb-12">
-            <Skeleton className="h-8 w-64 mb-6" />
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-24 w-full" />
-              ))}
-            </div>
-          </section>
-          
-          <section>
-            <Skeleton className="h-8 w-64 mb-6" />
-            <Skeleton className="h-96 w-full" />
-          </section>
-        </main>
-        
-        <Footer />
-      </div>
-    );
-  }
 
-  // If error, show error message
-  if (error) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
+  // Fetch token scan data
+  const fetchTokenScanData = async (tokenAddress: string): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      console.log("Fetching token scan data for:", tokenAddress);
+      
+      // Fetch basic token data first
+      const { data: basicData, error: basicError } = await supabase
+        .from("token_data_cache")
+        .select("*")
+        .eq("token_address", tokenAddress)
+        .single();
         
-        <main className="flex-1 container px-4 py-8 flex items-center justify-center">
-          <Alert className="max-w-lg">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error Loading Scan</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-            <div className="mt-4 flex gap-2">
-              <Button onClick={() => navigate("/")}>Return to Home</Button>
-              <Button variant="outline" onClick={handleRescan}>Try Rescanning</Button>
-            </div>
-          </Alert>
-        </main>
-        
-        <Footer />
-      </div>
-    );
-  }
+      if (basicError) {
+        console.error("Error fetching token data:", basicError);
+        throw new Error("Failed to fetch token data");
+      }
+      
+      if (!basicData) {
+        throw new Error("Token not found");
+      }
+      
+      console.log("Received token data:", basicData);
+      
+      // Create the enhanced TokenData that includes price data
+      const enhancedTokenData: TokenData = {
+        ...basicData,
+        price_usd: basicData.current_price_usd !== undefined ? Number(basicData.current_price_usd) : 0,
+        price_change_24h: 0, // Will be updated when real data is available
+        total_value_locked_usd: "N/A" // Will be updated when real data is available
+      };
+      
+      setTokenData(enhancedTokenData);
+      
+      // Fetch all category data in parallel
+      const [
+        securityResult,
+        tokenomicsResult,
+        liquidityResult,
+        communityResult,
+        developmentResult
+      ] = await Promise.all([
+        supabase.from("token_security_cache").select("*").eq("token_address", tokenAddress).single(),
+        supabase.from("token_tokenomics_cache").select("*").eq("token_address", tokenAddress).single(),
+        supabase.from("token_liquidity_cache").select("*").eq("token_address", tokenAddress).single(),
+        supabase.from("token_community_cache").select("*").eq("token_address", tokenAddress).single(),
+        supabase.from("token_development_cache").select("*").eq("token_address", tokenAddress).single()
+      ]);
+      
+      if (securityResult.data) setSecurityData(securityResult.data);
+      if (tokenomicsResult.data) setTokenomicsData(tokenomicsResult.data);
+      if (liquidityResult.data) setLiquidityData(liquidityResult.data);
+      if (communityResult.data) setCommunityData(communityResult.data);
+      if (developmentResult.data) setDevelopmentData(developmentResult.data);
+      
+    } catch (err) {
+      console.error("Error in fetchTokenScanData:", err);
+      setError(err instanceof Error ? err.message : "An unknown error occurred");
+      toast.error("Failed to load scan results", {
+        description: err instanceof Error ? err.message : "Please try again later"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  // Handle rescan action
+  const handleRescan = async () => {
+    if (!tokenAddress) return;
+    
+    setIsRescanning(true);
+    
+    try {
+      console.log("Rescanning token:", tokenAddress);
+      const { data, error } = await supabase.functions.invoke("run-token-scan", {
+        body: { tokenAddress }
+      });
+      
+      if (error) throw error;
+      
+      console.log("Rescan result:", data);
+      toast.success("Token rescanned successfully", {
+        description: "The latest data has been loaded."
+      });
+      
+      // Reload the data
+      await fetchTokenScanData(tokenAddress);
+    } catch (error) {
+      console.error("Error rescanning token:", error);
+      toast.error("Failed to rescan token", {
+        description: "Please try again later"
+      });
+    } finally {
+      setIsRescanning(false);
+    }
+  };
+
+  // Initialize component on load
+  useEffect(() => {
+    const token = searchParams.get("token");
+    
+    if (!token) {
+      setError("No token address provided");
+      setIsLoading(false);
+      return;
+    }
+    
+    setTokenAddress(token);
+    
+    const loadData = async () => {
+      await checkScanAccess(token);
+      await fetchTokenScanData(token);
+    };
+    
+    loadData();
+  }, [searchParams]);
+
+  // Return the JSX for the component
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       
-      <main className="flex-1 container px-4 py-8">
-        {scanResult && (
-          <>
-            {/* Token Profile */}
-            <section className="mb-12">
-              <TokenProfile 
-                name={scanResult.tokenData.name || "Unknown Token"}
-                symbol={scanResult.tokenData.symbol || "????"}
-                logo={scanResult.tokenData.logo_url || "/placeholder.svg"}
-                address={scanResult.tokenData.token_address}
-                website={scanResult.tokenData.website_url || "#"}
-                twitter={scanResult.tokenData.twitter_handle ? `https://twitter.com/${scanResult.tokenData.twitter_handle}` : "#"}
-                github={scanResult.tokenData.github_url || "#"}
-                price={scanResult.tokenData.price_usd || 0}
-                priceChange={scanResult.tokenData.price_change_24h || 0}
-                marketCap={scanResult.tokenData.market_cap_usd || "N/A"}
-                tvl={scanResult.tokenData.total_value_locked_usd || "N/A"}
-                launchDate={scanResult.tokenData.launch_date || "Unknown"}
-              />
-            </section>
-            
-            {/* Category Score Overview */}
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold mb-6">Health Score Overview</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                <CategoryScoreCard 
-                  category="security" 
-                  score={scanResult.categoryScores.security.score}
-                  level={scanResult.categoryScores.security.level}
-                  color={scanResult.categoryScores.security.color}
-                  onClick={() => handleCategoryClick("security")}
-                />
-                <CategoryScoreCard 
-                  category="liquidity" 
-                  score={scanResult.categoryScores.liquidity.score}
-                  level={scanResult.categoryScores.liquidity.level}
-                  color={scanResult.categoryScores.liquidity.color}
-                  onClick={() => handleCategoryClick("liquidity")}
-                />
-                <CategoryScoreCard 
-                  category="tokenomics" 
-                  score={scanResult.categoryScores.tokenomics.score}
-                  level={scanResult.categoryScores.tokenomics.level}
-                  color={scanResult.categoryScores.tokenomics.color}
-                  onClick={() => handleCategoryClick("tokenomics")}
-                />
-                <CategoryScoreCard 
-                  category="community" 
-                  score={scanResult.categoryScores.community.score}
-                  level={scanResult.categoryScores.community.level}
-                  color={scanResult.categoryScores.community.color}
-                  onClick={() => handleCategoryClick("community")}
-                />
-                <CategoryScoreCard 
-                  category="development" 
-                  score={scanResult.categoryScores.development.score}
-                  level={scanResult.categoryScores.development.level}
-                  color={scanResult.categoryScores.development.color}
-                  onClick={() => handleCategoryClick("development")}
-                />
+      <main className="flex-1 py-8 px-4">
+        <div className="container mx-auto max-w-6xl">
+          {isLoading ? (
+            <div className="space-y-8">
+              <Skeleton className="h-48 w-full" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Skeleton className="h-32" />
+                <Skeleton className="h-32" />
+                <Skeleton className="h-32" />
               </div>
-            </section>
-            
-            {/* Category Tabs */}
-            <section id="category-tabs">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Detailed Analysis</h2>
-                <Button variant="outline" size="sm" onClick={handleRescan}>
-                  Rescan Token
-                </Button>
+              <Skeleton className="h-[500px]" />
+            </div>
+          ) : error ? (
+            <div className="py-16 text-center">
+              <Alert>
+                <AlertDescription className="text-center text-lg">
+                  {error}
+                </AlertDescription>
+              </Alert>
+              <Button 
+                variant="default" 
+                className="mt-6" 
+                onClick={() => navigate("/")}
+              >
+                Try Another Token
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+                <h1 className="text-3xl font-bold tracking-tight mb-4 md:mb-0">
+                  Token Health Scan Results
+                </h1>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={handleRescan}
+                    disabled={isRescanning}
+                  >
+                    {isRescanning ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Rescanning...
+                      </>
+                    ) : (
+                      "Rescan Token"
+                    )}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate("/")}
+                  >
+                    Scan Another Token
+                  </Button>
+                </div>
               </div>
-              <CategoryTabs 
-                activeTab={activeTab} 
-                isProUser={hasFullAccess()} 
-                securityData={scanResult.securityData}
-                liquidityData={scanResult.liquidityData}
-                tokenomicsData={scanResult.tokenomicsData}
-                communityData={scanResult.communityData}
-                developmentData={scanResult.developmentData}
-              />
-            </section>
-          </>
-        )}
+              
+              {tokenData && (
+                <>
+                  <div className="mb-8">
+                    <TokenCard 
+                      token={tokenData} 
+                      score={calculateOverallScore()}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+                    <CategoryScoreCard
+                      category="Security"
+                      score={securityData?.score ?? 0}
+                      isActive={activeTab === ScanCategory.Security}
+                      onClick={() => setActiveTab(ScanCategory.Security)}
+                    />
+                    <CategoryScoreCard
+                      category="Tokenomics"
+                      score={tokenomicsData?.score ?? 0}
+                      isActive={activeTab === ScanCategory.Tokenomics}
+                      onClick={() => setActiveTab(ScanCategory.Tokenomics)}
+                    />
+                    <CategoryScoreCard
+                      category="Liquidity"
+                      score={liquidityData?.score ?? 0}
+                      isActive={activeTab === ScanCategory.Liquidity}
+                      onClick={() => setActiveTab(ScanCategory.Liquidity)}
+                    />
+                    <CategoryScoreCard
+                      category="Community"
+                      score={communityData?.score ?? 0}
+                      isActive={activeTab === ScanCategory.Community}
+                      onClick={() => setActiveTab(ScanCategory.Community)}
+                    />
+                    <CategoryScoreCard
+                      category="Development"
+                      score={developmentData?.score ?? 0}
+                      isActive={activeTab === ScanCategory.Development}
+                      onClick={() => setActiveTab(ScanCategory.Development)}
+                    />
+                  </div>
+                  
+                  <CategoryTabs
+                    tokenAddress={tokenAddress}
+                    securityData={securityData}
+                    tokenomicsData={tokenomicsData}
+                    liquidityData={liquidityData}
+                    communityData={communityData}
+                    developmentData={developmentData}
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    isPro={isPro}
+                  />
+                </>
+              )}
+            </>
+          )}
+        </div>
       </main>
       
       <Footer />
