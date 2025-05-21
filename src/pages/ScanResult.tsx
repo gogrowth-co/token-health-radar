@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,10 +33,11 @@ interface TokenData {
   github_url: string;
   coingecko_id: string;
   launch_date: string;
+  current_price_usd?: number; // Added property as optional
+  market_cap_usd?: number; // Added property as optional
   // Add price data properties
   price_usd?: number;
   price_change_24h?: number;
-  market_cap_usd?: string;
   total_value_locked_usd?: string;
 }
 
@@ -269,9 +269,9 @@ export default function ScanResult() {
         // Create the enhanced TokenData that includes price data
         const enhancedTokenData: TokenData = {
           ...tokenData,
-          price_usd: tokenData.current_price_usd || 0,
+          price_usd: tokenData.current_price_usd || 0, // Use optional chaining since it might not exist
           price_change_24h: 0, // Will be updated when real data is available
-          market_cap_usd: tokenData.market_cap_usd?.toLocaleString() || "N/A",
+          market_cap_usd: typeof tokenData.market_cap_usd === 'number' ? tokenData.market_cap_usd : undefined,
           total_value_locked_usd: "N/A" // Will be updated when real data is available
         };
         
