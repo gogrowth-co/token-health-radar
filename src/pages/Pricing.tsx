@@ -5,9 +5,56 @@ import Footer from "@/components/Footer";
 import PricingCard from "@/components/PricingCard";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { pricingTiers, faqData } from "@/lib/mock-data";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
+import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Pricing() {
   const [billingInterval, setBillingInterval] = useState<"monthly" | "annual">("monthly");
+  const [isLoading, setIsLoading] = useState(false);
+  const { isAuthenticated, user } = useAuth();
+
+  const handleUpgrade = async (priceId: string) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to upgrade your account.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          priceId,
+          successUrl: `${window.location.origin}/dashboard?subscription=success`,
+          cancelUrl: `${window.location.origin}/pricing?subscription=canceled`,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data?.url) {
+        // Open Stripe checkout in a new tab
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      toast({
+        title: "Checkout Error",
+        description: "There was a problem starting the checkout process. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -26,19 +73,65 @@ export default function Pricing() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              {pricingTiers.map((tier) => (
-                <PricingCard 
-                  key={tier.name}
-                  name={tier.name}
-                  price={tier.price}
-                  interval={tier.interval}
-                  discount={tier.discount}
-                  features={tier.features}
-                  limitation={tier.limitation}
-                  cta={tier.cta}
-                  popular={tier.popular}
-                />
-              ))}
+              <PricingCard 
+                name="Free"
+                price="0"
+                interval="forever"
+                features={[
+                  "3 lifetime Pro Scans",
+                  "Basic token security checks",
+                  "Token metadata analysis",
+                  "Shareable scan results"
+                ]}
+                limitation="Limited to 3 total Pro Scans"
+                cta="Get Started Free"
+                onCtaClick={() => {
+                  if (!isAuthenticated) {
+                    toast({
+                      title: "Sign up to get started",
+                      description: "Create a free account to begin scanning tokens."
+                    });
+                  } else {
+                    toast({
+                      title: "Free Plan Active",
+                      description: "You're already on the Free plan."
+                    });
+                  }
+                }}
+              />
+              <PricingCard 
+                name="Pro Monthly"
+                price="20"
+                interval="per month"
+                features={[
+                  "10 Pro Scans per month",
+                  "Advanced security analysis",
+                  "Tokenomics deep dive",
+                  "Community signal tracking",
+                  "Developer activity checks",
+                  "Liquidity analysis"
+                ]}
+                popular={true}
+                cta="Upgrade Now"
+                onCtaClick={() => handleUpgrade("price_1RQK5tD41aNWIHmd4YspKxDi")}
+              />
+              <PricingCard 
+                name="Pro Annual"
+                price="120"
+                interval="per year"
+                discount="Save $120 (50%)"
+                features={[
+                  "10 Pro Scans per month",
+                  "Advanced security analysis",
+                  "Tokenomics deep dive",
+                  "Community signal tracking",
+                  "Developer activity checks",
+                  "Liquidity analysis",
+                  "Priority support"
+                ]}
+                cta="Upgrade & Save"
+                onCtaClick={() => handleUpgrade("price_1RQK5tD41aNWIHmd1p46UCwl")}
+              />
             </div>
           </div>
         </section>

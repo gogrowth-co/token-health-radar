@@ -13,6 +13,7 @@ interface PricingCardProps {
   limitation?: string;
   cta: string;
   popular?: boolean;
+  onCtaClick?: () => void;
 }
 
 export default function PricingCard({
@@ -23,7 +24,8 @@ export default function PricingCard({
   features,
   limitation,
   cta,
-  popular = false
+  popular = false,
+  onCtaClick
 }: PricingCardProps) {
   return (
     <Card className={`relative flex flex-col ${popular ? 'border-primary shadow-lg shadow-primary/20' : ''}`}>
@@ -64,6 +66,7 @@ export default function PricingCard({
         <Button 
           variant={popular ? "default" : "outline"} 
           className={`w-full ${popular ? 'bg-primary hover:bg-primary/90' : ''}`}
+          onClick={onCtaClick}
         >
           {cta}
         </Button>

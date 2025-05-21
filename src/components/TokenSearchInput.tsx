@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface TokenSearchInputProps {
   large?: boolean;
@@ -18,6 +19,14 @@ export default function TokenSearchInput({
   placeholder = "Enter token name or contract address"
 }: TokenSearchInputProps) {
   const [tokenInput, setTokenInput] = useState("");
+  const [isCheckingAccess, setIsCheckingAccess] = useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [scanAccessData, setScanAccessData] = useState<{
+    plan: string;
+    scansUsed: number;
+    scanLimit: number;
+  } | null>(null);
+  
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   
@@ -33,11 +42,47 @@ export default function TokenSearchInput({
       return;
     }
     
+    // Check if user is authenticated before proceeding
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to scan tokens",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Check if input looks like an address (simple validation)
     const isAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(tokenInput);
     
-    // If authenticated, record this search
-    if (isAuthenticated && user) {
+    // Check if user has access to perform a scan
+    setIsCheckingAccess(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('check-scan-access');
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Could not check scan access. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!data.canScan) {
+        // Store the data for the upgrade dialog
+        setScanAccessData({
+          plan: data.plan,
+          scansUsed: data.scansUsed,
+          scanLimit: data.scanLimit
+        });
+        
+        // Show upgrade dialog
+        setShowUpgradeDialog(true);
+        return;
+      }
+      
+      // If authenticated and has access, proceed with the scan
       try {
         // First check if the token exists in our cache
         let tokenAddress = tokenInput;
@@ -68,13 +113,25 @@ export default function TokenSearchInput({
         await supabase.from("token_scans").insert({
           user_id: user.id,
           token_address: tokenAddress,
-          score_total: Math.floor(Math.random() * 100) // Placeholder score
+          score_total: Math.floor(Math.random() * 100), // Placeholder score
+          pro_scan: true // Mark as a pro scan
         });
+        
+        // Increment the user's scans_used count
+        await supabase
+          .from("subscribers")
+          .update({ scans_used: data.scansUsed + 1 })
+          .eq("id", user.id);
       } catch (error) {
         console.error("Error recording search:", error);
       }
+    } catch (error) {
+      console.error("Error checking scan access:", error);
+    } finally {
+      setIsCheckingAccess(false);
     }
     
+    // Proceed with navigation
     if (isAddress) {
       // If it's an address, go directly to scan-loading
       navigate(`/scan-loading?address=${tokenInput}`);
@@ -84,20 +141,50 @@ export default function TokenSearchInput({
     }
   };
 
+  const handleUpgrade = () => {
+    navigate('/pricing');
+    setShowUpgradeDialog(false);
+  };
+
   return (
-    <form onSubmit={handleSubmit} className={`flex w-full max-w-lg gap-2 ${large ? 'flex-col md:flex-row' : ''}`}>
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={tokenInput}
-          onChange={(e) => setTokenInput(e.target.value)}
-          placeholder={placeholder}
-          className={`pl-9 ${large ? 'h-12 text-lg' : ''}`}
-        />
-      </div>
-      <Button type="submit" className={large ? 'h-12 px-8' : ''}>
-        Scan Now
-      </Button>
-    </form>
+    <>
+      <form onSubmit={handleSubmit} className={`flex w-full max-w-lg gap-2 ${large ? 'flex-col md:flex-row' : ''}`}>
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={tokenInput}
+            onChange={(e) => setTokenInput(e.target.value)}
+            placeholder={placeholder}
+            className={`pl-9 ${large ? 'h-12 text-lg' : ''}`}
+          />
+        </div>
+        <Button 
+          type="submit" 
+          className={large ? 'h-12 px-8' : ''} 
+          disabled={isCheckingAccess}
+        >
+          {isCheckingAccess ? "Checking..." : "Scan Now"}
+        </Button>
+      </form>
+
+      <AlertDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Scan Limit Reached</AlertDialogTitle>
+            <AlertDialogDescription>
+              {scanAccessData?.plan === 'free'
+                ? `You have used ${scanAccessData?.scansUsed} out of ${scanAccessData?.scanLimit} free scans. Upgrade to Pro for more scans and advanced features.`
+                : `You have used ${scanAccessData?.scansUsed} out of ${scanAccessData?.scanLimit} Pro scans this month. Your limit will reset with your next billing cycle.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleUpgrade}>
+              {scanAccessData?.plan === 'free' ? 'Upgrade to Pro' : 'Manage Subscription'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 type SubscriberData = {
   plan: string;
@@ -17,6 +18,8 @@ export function UserProfile() {
   const { user, signOut } = useAuth();
   const [subscriberData, setSubscriberData] = useState<SubscriberData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSubscriberData = async () => {
@@ -49,6 +52,38 @@ export function UserProfile() {
 
     fetchSubscriberData();
   }, [user]);
+
+  const handleManageSubscription = async () => {
+    if (!user) return;
+    
+    setIsLoadingPortal(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal', {
+        body: {
+          returnUrl: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw new Error(error.message);
+      
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error("Error creating customer portal session:", error);
+      toast({
+        title: "Error",
+        description: "Could not open subscription management portal",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingPortal(false);
+    }
+  };
+
+  const handleUpgradePlan = () => {
+    navigate('/pricing');
+  };
 
   if (!user) {
     return (
@@ -84,16 +119,58 @@ export function UserProfile() {
               <>
                 <div className="space-y-1">
                   <p className="text-sm font-medium">Plan</p>
-                  <p className="text-sm capitalize text-muted-foreground">
-                    {subscriberData.plan}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm capitalize text-muted-foreground">
+                      {subscriberData.plan}
+                    </p>
+                    {subscriberData.plan === "pro" ? (
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        Active
+                      </Badge>
+                    ) : null}
+                  </div>
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">Pro Scans</p>
-                  <p className="text-sm text-muted-foreground">
-                    {subscriberData.scans_used} / {subscriberData.pro_scan_limit} used
+                  <p className="text-sm font-medium">
+                    {subscriberData.plan === "pro" ? "Pro Scans" : "Free Scans"}
                   </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground">
+                      {subscriberData.scans_used} / {subscriberData.pro_scan_limit} used
+                    </p>
+                    {subscriberData.scans_used >= subscriberData.pro_scan_limit && (
+                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                        Limit Reached
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  {subscriberData.plan === "pro" ? (
+                    <Button 
+                      variant="outline" 
+                      onClick={handleManageSubscription} 
+                      className="w-full"
+                      disabled={isLoadingPortal}
+                    >
+                      {isLoadingPortal ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Please wait...
+                        </>
+                      ) : "Manage Subscription"}
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="default" 
+                      onClick={handleUpgradePlan} 
+                      className="w-full"
+                    >
+                      Upgrade to Pro
+                    </Button>
+                  )}
                 </div>
               </>
             )}
