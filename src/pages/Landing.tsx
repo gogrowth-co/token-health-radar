@@ -7,6 +7,7 @@ import { Shield, Droplet, BarChart3, Globe, Code, ArrowRight } from "lucide-reac
 import { Link } from "react-router-dom";
 
 export default function Landing() {
+  // This component embeds TokenSearchInput which now uses the correct 'token' parameter
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />

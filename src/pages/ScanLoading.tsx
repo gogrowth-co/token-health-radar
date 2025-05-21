@@ -24,11 +24,16 @@ export default function ScanLoading() {
   
   // Make sure we have a token to scan
   useEffect(() => {
+    console.log("ScanLoading: URL parameters received:", Object.fromEntries(searchParams.entries()));
+    console.log("ScanLoading: tokenAddress =", tokenAddress);
+    console.log("ScanLoading: coinGeckoId =", coinGeckoId);
+    
     if (!tokenAddress) {
+      console.error("ScanLoading: No token address provided in URL parameters");
       toast.error("No token address provided");
       navigate("/");
     }
-  }, [tokenAddress, navigate]);
+  }, [tokenAddress, navigate, searchParams]);
 
   useEffect(() => {
     // Select random trivia
@@ -48,16 +53,17 @@ export default function ScanLoading() {
       try {
         // Make sure user is authenticated
         if (!user) {
+          console.error("ScanLoading: User not authenticated");
           toast.error("You must be logged in to scan tokens");
           navigate("/auth");
           return;
         }
 
-        console.log("Starting token scan with address:", tokenAddress, "and CoinGecko ID:", coinGeckoId);
+        console.log("ScanLoading: Starting token scan with address:", tokenAddress, "and CoinGecko ID:", coinGeckoId);
 
         // Enhanced error logging
         if (!tokenAddress) {
-          console.error("Token address is missing");
+          console.error("ScanLoading: Token address is missing");
           toast.error("Token address is required");
           navigate("/");
           return;
@@ -67,7 +73,17 @@ export default function ScanLoading() {
         const savedTokenInfo = localStorage.getItem("selectedToken");
         const selectedToken = savedTokenInfo ? JSON.parse(savedTokenInfo) : null;
         
+        console.log("ScanLoading: Selected token from localStorage:", selectedToken);
+        
         // Call the run-token-scan edge function with properly named parameters
+        console.log("ScanLoading: Calling run-token-scan with params:", {
+          token_address: tokenAddress,
+          coingecko_id: coinGeckoId,
+          user_id: user.id,
+          token_name: selectedToken?.name,
+          token_symbol: selectedToken?.symbol
+        });
+        
         const { data, error } = await supabase.functions.invoke('run-token-scan', {
           body: {
             token_address: tokenAddress, // Consistent parameter naming
@@ -79,18 +95,19 @@ export default function ScanLoading() {
         });
 
         if (error) {
-          console.error("Edge function error:", error);
+          console.error("ScanLoading: Edge function error:", error);
           throw new Error(error.message || "Failed to scan token");
         }
 
-        console.log("Token scan response:", data);
+        console.log("ScanLoading: Token scan response:", data);
 
         if (!data) {
-          console.error("No data returned from token scan");
+          console.error("ScanLoading: No data returned from token scan");
           throw new Error("No data returned from scan");
         }
 
         if (!data.allowed) {
+          console.error("ScanLoading: Scan not allowed:", data.reason);
           toast.error(data.reason || "You don't have permission to scan this token.");
           navigate("/");
           return;
@@ -101,17 +118,16 @@ export default function ScanLoading() {
         // Wait for the progress bar to reach 100%
         setTimeout(() => {
           // Save scan result to localStorage for persistence
-          if (data.token_info) {
-            localStorage.setItem("lastScanResult", JSON.stringify(data.token_info));
-          } else {
-            localStorage.setItem("lastScanResult", JSON.stringify(data));
-          }
+          const resultData = data.token_info || data;
+          console.log("ScanLoading: Saving scan result to localStorage:", resultData);
+          localStorage.setItem("lastScanResult", JSON.stringify(resultData));
           
-          // Redirect to scan result page with token info
-          navigate(`/scan-result?token=${tokenAddress}&id=${coinGeckoId}`);
+          // Redirect to scan result page with token info - ensure consistent parameter naming
+          console.log("ScanLoading: Redirecting to scan result page with token:", tokenAddress);
+          navigate(`/scan-result?token=${tokenAddress}${coinGeckoId ? `&id=${coinGeckoId}` : ''}`);
         }, 1000); // Short delay to ensure progress bar completes
       } catch (error) {
-        console.error("Error during token scan:", error instanceof Error ? error.message : String(error));
+        console.error("ScanLoading: Error during token scan:", error instanceof Error ? error.message : String(error));
         toast.error("Failed to scan token. Please try again later.");
         navigate("/");
       } finally {
