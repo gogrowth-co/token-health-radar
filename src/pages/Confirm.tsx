@@ -181,7 +181,7 @@ export default function Confirm() {
                   symbol={token.symbol.toUpperCase()}
                   logo={token.large || token.thumb}
                   marketCap={token.market_cap_rank ? `Rank #${token.market_cap_rank}` : "Unranked"}
-                  price="Price data unavailable" // CoinGecko search endpoint doesn't include price
+                  price={undefined} // Fix: Pass undefined instead of a string "Price data unavailable"
                   onClick={() => handleSelectToken(token.id, token.symbol)}
                 />
               ))}
