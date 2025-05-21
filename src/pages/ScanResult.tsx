@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, handleSupabaseError } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Check, X, Loader2 } from "lucide-react";
@@ -192,7 +193,7 @@ export default function ScanResult() {
     }
   };
 
-  // Fetch token scan data
+  // Fetch token scan data with improved error handling and debugging
   const fetchTokenScanData = async (tokenAddress: string): Promise<void> => {
     setIsLoading(true);
     setError(null);
@@ -202,19 +203,27 @@ export default function ScanResult() {
       
       // Try to get data from localStorage first
       const cachedData = localStorage.getItem("lastScanResult");
+      let localCacheUsed = false;
+      
       if (cachedData) {
-        const parsedData = JSON.parse(cachedData);
-        console.log("Found cached scan result:", parsedData);
-        
-        if (parsedData.token_address === tokenAddress) {
-          // Use cached data if available
-          setTokenData(parsedData);
+        try {
+          const parsedData = JSON.parse(cachedData);
+          console.log("Found cached scan result:", parsedData);
           
-          // Continue with database fetch for other data
+          if (parsedData.token_address === tokenAddress) {
+            // Use cached data if available
+            setTokenData(parsedData);
+            localCacheUsed = true;
+            console.log("Using local cache for initial data");
+          }
+        } catch (err) {
+          console.error("Error parsing cached data:", err);
+          // Continue with database fetch if cache parsing fails
         }
       }
       
       // Fetch basic token data from the database
+      console.log("Fetching token data from database for:", tokenAddress);
       const { data: basicData, error: basicError } = await supabase
         .from("token_data_cache")
         .select("*")
@@ -223,18 +232,18 @@ export default function ScanResult() {
         
       if (basicError) {
         console.error("Error fetching token data:", basicError);
-        throw new Error("Failed to fetch token data");
+        throw new Error(handleSupabaseError(basicError, "Failed to fetch token data"));
       }
       
-      if (!basicData) {
-        console.log("Token not found in database, using cached data if available");
-        if (!cachedData) {
-          throw new Error("Token not found");
-        }
-      } else {
-        console.log("Received token data:", basicData);
+      if (!basicData && !localCacheUsed) {
+        console.log("Token not found in database, and no cache available");
+        throw new Error("Token not found in our database");
+      } 
+      
+      if (basicData) {
+        console.log("Received token data from database:", basicData);
         
-        // Create the enhanced TokenData that includes price data
+        // Create the enhanced TokenData with fallback values for potentially missing fields
         const enhancedTokenData: TokenData = {
           ...basicData,
           current_price_usd: basicData.current_price_usd || 0,
@@ -247,7 +256,10 @@ export default function ScanResult() {
         setTokenData(enhancedTokenData);
       }
       
-      // Fetch all category data in parallel
+      // Log fetch attempt for category data
+      console.log("Fetching category data for token:", tokenAddress);
+      
+      // Fetch all category data in parallel with improved error handling
       const [
         securityResult,
         tokenomicsResult,
@@ -262,6 +274,21 @@ export default function ScanResult() {
         supabase.from("token_development_cache").select("*").eq("token_address", tokenAddress).maybeSingle()
       ]);
       
+      // Log each category result for debugging
+      console.log("Security data result:", securityResult);
+      console.log("Tokenomics data result:", tokenomicsResult);
+      console.log("Liquidity data result:", liquidityResult);
+      console.log("Community data result:", communityResult);
+      console.log("Development data result:", developmentResult);
+      
+      // Handle potential errors in category data fetching
+      if (securityResult.error) console.error("Error fetching security data:", securityResult.error);
+      if (tokenomicsResult.error) console.error("Error fetching tokenomics data:", tokenomicsResult.error);
+      if (liquidityResult.error) console.error("Error fetching liquidity data:", liquidityResult.error);
+      if (communityResult.error) console.error("Error fetching community data:", communityResult.error);
+      if (developmentResult.error) console.error("Error fetching development data:", developmentResult.error);
+      
+      // Set data with null fallbacks if there are errors
       if (securityResult.data) setSecurityData(securityResult.data);
       if (tokenomicsResult.data) setTokenomicsData(tokenomicsResult.data);
       if (liquidityResult.data) setLiquidityData(liquidityResult.data);
@@ -279,14 +306,18 @@ export default function ScanResult() {
     }
   };
 
-  // Handle rescan action
+  // Handle rescan action with improved error handling and debugging
   const handleRescan = async () => {
-    if (!tokenAddress) return;
+    if (!tokenAddress) {
+      toast.error("No token address provided");
+      return;
+    }
     
     setIsRescanning(true);
     
     try {
-      console.log("Rescanning token:", tokenAddress);
+      console.log("Rescanning token:", tokenAddress, "with CoinGecko ID:", coinGeckoId);
+      
       const { data, error } = await supabase.functions.invoke("run-token-scan", {
         body: { 
           token_address: tokenAddress,
@@ -297,7 +328,7 @@ export default function ScanResult() {
       
       if (error) {
         console.error("Error in rescan function:", error);
-        throw error;
+        throw new Error(handleSupabaseError(error, "Failed to rescan token"));
       }
       
       console.log("Rescan result:", data);
@@ -305,7 +336,7 @@ export default function ScanResult() {
         description: "The latest data has been loaded."
       });
       
-      // Update localStorage with new scan result
+      // Update localStorage with new scan result - handle different response formats
       if (data.token_info) {
         localStorage.setItem("lastScanResult", JSON.stringify(data.token_info));
       } else {
@@ -317,7 +348,7 @@ export default function ScanResult() {
     } catch (error) {
       console.error("Error rescanning token:", error);
       toast.error("Failed to rescan token", {
-        description: "Please try again later"
+        description: error instanceof Error ? error.message : "Please try again later"
       });
     } finally {
       setIsRescanning(false);
@@ -338,9 +369,17 @@ export default function ScanResult() {
     setTokenAddress(token);
     if (id) setCoinGeckoId(id);
     
+    console.log("Initializing ScanResult for token:", token, "with CoinGecko ID:", id || "none");
+    
     const loadData = async () => {
-      await checkScanAccess(token);
-      await fetchTokenScanData(token);
+      try {
+        await checkScanAccess(token);
+        await fetchTokenScanData(token);
+      } catch (error) {
+        console.error("Failed to load token data:", error);
+        setError("Failed to load token data");
+        setIsLoading(false);
+      }
     };
     
     loadData();
@@ -415,7 +454,7 @@ export default function ScanResult() {
                       name={tokenData.name}
                       symbol={tokenData.symbol}
                       logo={tokenData.logo_url}
-                      price={tokenData.price_usd || 0}
+                      price={tokenData.price_usd || tokenData.current_price_usd || 0}
                       priceChange={tokenData.price_change_24h || 0}
                       marketCap={tokenData.market_cap_usd?.toString() || "0"}
                       score={calculateOverallScore()}

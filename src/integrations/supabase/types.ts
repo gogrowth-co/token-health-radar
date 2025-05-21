@@ -93,39 +93,51 @@ export type Database = {
         Row: {
           coingecko_id: string | null
           created_at: string | null
+          current_price_usd: number | null
           description: string | null
           github_url: string | null
           launch_date: string | null
           logo_url: string | null
+          market_cap_usd: number | null
           name: string | null
+          price_change_24h: number | null
           symbol: string | null
           token_address: string
+          total_value_locked_usd: string | null
           twitter_handle: string | null
           website_url: string | null
         }
         Insert: {
           coingecko_id?: string | null
           created_at?: string | null
+          current_price_usd?: number | null
           description?: string | null
           github_url?: string | null
           launch_date?: string | null
           logo_url?: string | null
+          market_cap_usd?: number | null
           name?: string | null
+          price_change_24h?: number | null
           symbol?: string | null
           token_address: string
+          total_value_locked_usd?: string | null
           twitter_handle?: string | null
           website_url?: string | null
         }
         Update: {
           coingecko_id?: string | null
           created_at?: string | null
+          current_price_usd?: number | null
           description?: string | null
           github_url?: string | null
           launch_date?: string | null
           logo_url?: string | null
+          market_cap_usd?: number | null
           name?: string | null
+          price_change_24h?: number | null
           symbol?: string | null
           token_address?: string
+          total_value_locked_usd?: string | null
           twitter_handle?: string | null
           website_url?: string | null
         }
