@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "./ThemeToggle";
 import { Search } from "lucide-react";
+import { AuthButton } from "./auth/AuthButton";
 
 export default function Navbar() {
   return (
@@ -31,12 +32,7 @@ export default function Navbar() {
         
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/dashboard">Login</Link>
-          </Button>
-          <Button size="sm" asChild>
-            <Link to="/dashboard">Sign Up</Link>
-          </Button>
+          <AuthButton />
         </div>
       </div>
     </header>

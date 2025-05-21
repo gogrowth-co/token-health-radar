@@ -1,238 +1,168 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { UserProfile } from "@/components/auth/UserProfile";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowUpRight, Clock, TrendingUp, Eye, History } from "lucide-react";
-import { dashboardData } from "@/lib/mock-data";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
+import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+type ScanHistory = {
+  id: string;
+  token_address: string;
+  score_total: number;
+  scanned_at: string;
+  token_name?: string;
+  token_symbol?: string;
+}
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState("overview");
-  const { remainingScans, totalScans, planType, recentScans } = dashboardData;
+  const { user, isAuthenticated } = useAuth();
+  const [scans, setScans] = useState<ScanHistory[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  useEffect(() => {
+    const fetchScanHistory = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data: scanData, error } = await supabase
+          .from("token_scans")
+          .select(`
+            id, 
+            token_address,
+            score_total,
+            scanned_at,
+            token_data_cache (
+              name,
+              symbol
+            )
+          `)
+          .eq("user_id", user.id)
+          .order("scanned_at", { ascending: false })
+          .limit(10);
+
+        if (error) {
+          console.error("Error fetching scan history:", error);
+          return;
+        }
+
+        // Transform the data to include token name and symbol
+        const formattedScans = scanData.map(scan => ({
+          id: scan.id,
+          token_address: scan.token_address,
+          score_total: scan.score_total,
+          scanned_at: scan.scanned_at,
+          token_name: scan.token_data_cache?.name || "Unknown Token",
+          token_symbol: scan.token_data_cache?.symbol || "???"
+        }));
+
+        setScans(formattedScans);
+      } catch (error) {
+        console.error("Error in scan history fetch:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchScanHistory();
+  }, [user]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 container px-4 py-8">
+          <div className="max-w-3xl mx-auto">
+            <Alert className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Authentication Required</AlertTitle>
+              <AlertDescription>
+                Please log in or sign up to access your dashboard.
+              </AlertDescription>
+            </Alert>
+            <div className="text-center mt-8">
+              <h1 className="text-3xl font-bold mb-4">Welcome to TokenHealthScan</h1>
+              <p className="text-lg text-muted-foreground mb-6">
+                Sign in to track your token scans and manage your subscription.
+              </p>
+              <Button asChild>
+                <Link to="/">Back to Home</Link>
+              </Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       
       <main className="flex-1 container px-4 py-8">
-        <div className="flex flex-col md:flex-row items-start gap-6">
-          {/* Sidebar */}
-          <div className="w-full md:w-64 mb-6 md:mb-0">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Dashboard</CardTitle>
-                <CardDescription>Your account & scans</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Tabs 
-                  defaultValue="overview" 
-                  orientation="vertical" 
-                  value={activeTab}
-                  onValueChange={setActiveTab}
-                  className="w-full"
-                >
-                  <TabsList className="flex flex-row md:flex-col h-auto md:h-auto justify-start">
-                    <TabsTrigger value="overview" className="flex items-center gap-2 w-full justify-start">
-                      <TrendingUp className="h-4 w-4" /> Overview
-                    </TabsTrigger>
-                    <TabsTrigger value="scans" className="flex items-center gap-2 w-full justify-start">
-                      <History className="h-4 w-4" /> Recent Scans
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link to="/">
-                    New Scan
-                  </Link>
-                </Button>
-              </CardFooter>
-            </Card>
-            
-            <Card className="mt-4">
-              <CardHeader>
-                <CardTitle className="text-lg">Your Plan</CardTitle>
-                <Badge>{planType}</Badge>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2 text-sm">
-                    <span>Remaining Scans</span>
-                    <span className="font-medium">{remainingScans} / {totalScans}</span>
-                  </div>
-                  <Progress value={(remainingScans / totalScans) * 100} />
-                </div>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link to="/pricing">
-                    Upgrade Plan
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+        <div className="max-w-5xl mx-auto space-y-8">
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           
-          {/* Main Content */}
-          <div className="flex-1">
-            <TabsContent value="overview" className={`${activeTab === 'overview' ? 'block' : 'hidden'}`}>
-              <div className="space-y-6">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <Card className="flex-1">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <Clock className="w-4 h-4" /> Recent Activity
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">
-                        {recentScans.length > 0
-                          ? `Last scan: ${formatDate(recentScans[0].time)}`
-                          : "No recent scans"}
-                      </p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="flex-1">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4" /> Usage
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">
-                        {remainingScans} of {totalScans} Pro scans remaining
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Recent Scans</CardTitle>
-                    <CardDescription>Your latest token analysis</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {recentScans.length > 0 ? (
-                      <div className="space-y-4">
-                        {recentScans.slice(0, 3).map((scan) => (
-                          <div 
-                            key={scan.id} 
-                            className="flex justify-between items-center p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                          >
-                            <div>
-                              <h3 className="font-medium">{scan.token}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {formatDate(scan.time)}
-                              </p>
-                            </div>
-                            
-                            <div className="flex items-center gap-4">
-                              <Badge className={`${scan.score >= 80 ? 'bg-success hover:bg-success/80' : 
-                                scan.score >= 60 ? 'bg-info hover:bg-info/80' : 
-                                scan.score >= 40 ? 'bg-warning hover:bg-warning/80' : 
-                                'bg-danger hover:bg-danger/80'}`}
-                              >
-                                Score: {scan.score}
-                              </Badge>
-                              
-                              <Button variant="ghost" size="sm" asChild>
-                                <Link to={`/scan-result?token=${scan.id}`} className="flex items-center gap-1">
-                                  <Eye className="h-3.5 w-3.5" /> View
-                                </Link>
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">No scan history yet</p>
-                        <Button className="mt-4" asChild>
-                          <Link to="/">Scan Your First Token</Link>
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" size="sm" className="ml-auto" onClick={() => setActiveTab("scans")}>
-                      View All Scans
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </div>
-            </TabsContent>
+          <div className="grid gap-8 md:grid-cols-3">
+            <div className="md:col-span-1">
+              <UserProfile />
+            </div>
             
-            <TabsContent value="scans" className={`${activeTab === 'scans' ? 'block' : 'hidden'}`}>
+            <div className="md:col-span-2">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Scan History</CardTitle>
-                  <CardDescription>All your previous token scans</CardDescription>
+                  <CardTitle>Recent Scans</CardTitle>
+                  <CardDescription>Your most recent token health scans</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {recentScans.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Token</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Score</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {recentScans.map((scan) => (
-                          <TableRow key={scan.id}>
-                            <TableCell className="font-medium">{scan.token}</TableCell>
-                            <TableCell>{formatDate(scan.time)}</TableCell>
-                            <TableCell>
-                              <Badge className={`${scan.score >= 80 ? 'bg-success hover:bg-success/80' : 
-                                scan.score >= 60 ? 'bg-info hover:bg-info/80' : 
-                                scan.score >= 40 ? 'bg-warning hover:bg-warning/80' : 
-                                'bg-danger hover:bg-danger/80'}`}
-                              >
-                                {scan.score}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
-                                <Link to={`/scan-result?token=${scan.id}`}>
-                                  <ArrowUpRight className="h-4 w-4" />
-                                  <span className="sr-only">View scan</span>
-                                </Link>
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                  {loading ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : scans.length > 0 ? (
+                    <div className="space-y-4">
+                      {scans.map((scan) => (
+                        <div key={scan.id} className="flex items-center justify-between border-b pb-3">
+                          <div>
+                            <p className="font-medium">{scan.token_name} ({scan.token_symbol})</p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(scan.scanned_at).toLocaleString()}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-center">
+                              <p className="text-sm text-muted-foreground">Score</p>
+                              <p className="font-medium">{scan.score_total}/100</p>
+                            </div>
+                            <Button variant="outline" size="sm" asChild>
+                              <Link to={`/scan-result?token=${scan.token_address}`}>
+                                <ArrowRight className="h-4 w-4" />
+                              </Link>
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
                     <div className="text-center py-8">
-                      <p className="text-muted-foreground">No scan history yet</p>
-                      <Button className="mt-4" asChild>
-                        <Link to="/">Scan Your First Token</Link>
+                      <p className="text-muted-foreground mb-4">You haven't performed any scans yet.</p>
+                      <Button asChild>
+                        <Link to="/">Scan a Token Now</Link>
                       </Button>
                     </div>
                   )}
                 </CardContent>
               </Card>
-            </TabsContent>
+            </div>
           </div>
         </div>
       </main>
