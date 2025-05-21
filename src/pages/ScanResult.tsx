@@ -198,7 +198,14 @@ export default function ScanResult() {
     setError(null);
     
     try {
-      console.log("Fetching token scan data for:", tokenAddress);
+      console.log("ScanResult: Fetching token scan data for:", tokenAddress);
+      
+      // Validate token address format
+      const isValidAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(tokenAddress);
+      if (!isValidAddress) {
+        console.error("ScanResult: Invalid token address format:", tokenAddress);
+        throw new Error("Invalid token address format");
+      }
       
       // Try to get data from localStorage first
       const cachedData = localStorage.getItem("lastScanResult");
@@ -207,22 +214,22 @@ export default function ScanResult() {
       if (cachedData) {
         try {
           const parsedData = JSON.parse(cachedData);
-          console.log("Found cached scan result:", parsedData);
+          console.log("ScanResult: Found cached scan result:", parsedData);
           
           if (parsedData.token_address === tokenAddress) {
             // Use cached data if available
             setTokenData(parsedData);
             localCacheUsed = true;
-            console.log("Using local cache for initial data");
+            console.log("ScanResult: Using local cache for initial data");
           }
         } catch (err) {
-          console.error("Error parsing cached data:", err);
+          console.error("ScanResult: Error parsing cached data:", err);
           // Continue with database fetch if cache parsing fails
         }
       }
       
       // Fetch basic token data from the database
-      console.log("Fetching token data from database for:", tokenAddress);
+      console.log("ScanResult: Fetching token data from database for:", tokenAddress);
       const { data: basicData, error: basicError } = await supabase
         .from("token_data_cache")
         .select("*")
@@ -230,17 +237,17 @@ export default function ScanResult() {
         .maybeSingle();
         
       if (basicError) {
-        console.error("Error fetching token data:", basicError);
+        console.error("ScanResult: Error fetching token data:", basicError);
         throw new Error(handleSupabaseError(basicError, "Failed to fetch token data"));
       }
       
       if (!basicData && !localCacheUsed) {
-        console.log("Token not found in database, and no cache available");
+        console.log("ScanResult: Token not found in database, and no cache available");
         throw new Error("Token not found in our database");
       } 
       
       if (basicData) {
-        console.log("Received token data from database:", basicData);
+        console.log("ScanResult: Received token data from database:", basicData);
         
         // Create the enhanced TokenData with fallback values for potentially missing fields
         const enhancedTokenData: TokenData = {
@@ -256,7 +263,7 @@ export default function ScanResult() {
       }
       
       // Log fetch attempt for category data
-      console.log("Fetching category data for token:", tokenAddress);
+      console.log("ScanResult: Fetching category data for token:", tokenAddress);
       
       // Fetch all category data in parallel with improved error handling
       const [
@@ -274,18 +281,18 @@ export default function ScanResult() {
       ]);
       
       // Log each category result for debugging
-      console.log("Security data result:", securityResult);
-      console.log("Tokenomics data result:", tokenomicsResult);
-      console.log("Liquidity data result:", liquidityResult);
-      console.log("Community data result:", communityResult);
-      console.log("Development data result:", developmentResult);
+      console.log("ScanResult: Security data result:", securityResult);
+      console.log("ScanResult: Tokenomics data result:", tokenomicsResult);
+      console.log("ScanResult: Liquidity data result:", liquidityResult);
+      console.log("ScanResult: Community data result:", communityResult);
+      console.log("ScanResult: Development data result:", developmentResult);
       
       // Handle potential errors in category data fetching
-      if (securityResult.error) console.error("Error fetching security data:", securityResult.error);
-      if (tokenomicsResult.error) console.error("Error fetching tokenomics data:", tokenomicsResult.error);
-      if (liquidityResult.error) console.error("Error fetching liquidity data:", liquidityResult.error);
-      if (communityResult.error) console.error("Error fetching community data:", communityResult.error);
-      if (developmentResult.error) console.error("Error fetching development data:", developmentResult.error);
+      if (securityResult.error) console.error("ScanResult: Error fetching security data:", securityResult.error);
+      if (tokenomicsResult.error) console.error("ScanResult: Error fetching tokenomics data:", tokenomicsResult.error);
+      if (liquidityResult.error) console.error("ScanResult: Error fetching liquidity data:", liquidityResult.error);
+      if (communityResult.error) console.error("ScanResult: Error fetching community data:", communityResult.error);
+      if (developmentResult.error) console.error("ScanResult: Error fetching development data:", developmentResult.error);
       
       // Set data with null fallbacks if there are errors
       if (securityResult.data) setSecurityData(securityResult.data);
@@ -295,7 +302,7 @@ export default function ScanResult() {
       if (developmentResult.data) setDevelopmentData(developmentResult.data);
       
     } catch (err) {
-      console.error("Error in fetchTokenScanData:", err);
+      console.error("ScanResult: Error in fetchTokenScanData:", err);
       setError(err instanceof Error ? err.message : "An unknown error occurred");
       toast.error("Failed to load scan results", {
         description: err instanceof Error ? err.message : "Please try again later"
@@ -312,10 +319,17 @@ export default function ScanResult() {
       return;
     }
     
+    // Validate token address format before rescan
+    const isValidAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(tokenAddress);
+    if (!isValidAddress) {
+      toast.error("Invalid token address format");
+      return;
+    }
+    
     setIsRescanning(true);
     
     try {
-      console.log("Rescanning token:", tokenAddress, "with CoinGecko ID:", coinGeckoId);
+      console.log("ScanResult: Rescanning token:", tokenAddress, "with CoinGecko ID:", coinGeckoId);
       
       const { data, error } = await supabase.functions.invoke("run-token-scan", {
         body: { 
@@ -326,11 +340,11 @@ export default function ScanResult() {
       });
       
       if (error) {
-        console.error("Error in rescan function:", error);
+        console.error("ScanResult: Error in rescan function:", error);
         throw new Error(handleSupabaseError(error, "Failed to rescan token"));
       }
       
-      console.log("Rescan result:", data);
+      console.log("ScanResult: Rescan result:", data);
       toast.success("Token rescanned successfully", {
         description: "The latest data has been loaded."
       });
@@ -345,7 +359,7 @@ export default function ScanResult() {
       // Reload the data
       await fetchTokenScanData(tokenAddress);
     } catch (error) {
-      console.error("Error rescanning token:", error);
+      console.error("ScanResult: Error rescanning token:", error);
       toast.error("Failed to rescan token", {
         description: error instanceof Error ? error.message : "Please try again later"
       });
@@ -369,6 +383,15 @@ export default function ScanResult() {
       return;
     }
     
+    // CRITICAL: Validate token address format early
+    const isValidAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(token);
+    if (!isValidAddress) {
+      console.error("ScanResult: Invalid token address format:", token);
+      setError("Invalid token address format");
+      setIsLoading(false);
+      return;
+    }
+    
     setTokenAddress(token);
     if (id) setCoinGeckoId(id);
     
@@ -379,7 +402,7 @@ export default function ScanResult() {
         await checkScanAccess(token);
         await fetchTokenScanData(token);
       } catch (error) {
-        console.error("Failed to load token data:", error);
+        console.error("ScanResult: Failed to load token data:", error);
         setError("Failed to load token data");
         setIsLoading(false);
       }

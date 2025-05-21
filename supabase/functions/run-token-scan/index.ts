@@ -1,4 +1,3 @@
-
 // Follow Edge Function Conventions
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
@@ -32,11 +31,21 @@ serve(async (req) => {
     const body = await req.json() as TokenScanRequest;
     console.log("[TOKEN-SCAN] Starting token scan -", body);
     
-    // Validate required parameters
+    // Validate token address - CRITICAL VALIDATION
     if (!body.token_address) {
       console.error("[TOKEN-SCAN] Missing token_address parameter");
       return new Response(
         JSON.stringify({ error: "Token address is required" }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Validate token address format
+    const isValidAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(body.token_address);
+    if (!isValidAddress) {
+      console.error("[TOKEN-SCAN] Invalid token address format:", body.token_address);
+      return new Response(
+        JSON.stringify({ error: "Invalid token address format" }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

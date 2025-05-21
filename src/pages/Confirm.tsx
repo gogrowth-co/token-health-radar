@@ -141,25 +141,25 @@ export default function Confirm() {
   };
 
   const handleSelectToken = async (token: TokenResult) => {
-    // Get Ethereum address if available
-    let tokenAddress = "";
-    
-    // Check if platforms is available and has Ethereum address
-    if (token.platforms && token.platforms.ethereum) {
-      tokenAddress = token.platforms.ethereum;
-      console.log(`Found Ethereum address: ${tokenAddress} for token ${token.name}`);
-    }
-    
-    // If no Ethereum address, use a placeholder derived from the token id
-    if (!tokenAddress) {
-      console.warn(`No Ethereum address found for ${token.name}, using placeholder`);
-      // Create a more consistent placeholder format for testing
-      tokenAddress = `0x${token.id.replace(/-/g, '').substring(0, 38).padEnd(38, '0')}`;
-    }
-    
-    console.log(`Selected token: ${token.name}, address: ${tokenAddress}, id: ${token.id}`);
-    
     try {
+      // Get Ethereum address if available - CRITICAL PART HERE
+      let tokenAddress = "";
+      
+      // Check if platforms is available and has Ethereum address
+      if (token.platforms && token.platforms.ethereum) {
+        tokenAddress = token.platforms.ethereum;
+        console.log(`Found Ethereum address: ${tokenAddress} for token ${token.name}`);
+      }
+      
+      // If no Ethereum address, use a placeholder derived from the token id
+      if (!tokenAddress) {
+        console.warn(`No Ethereum address found for ${token.name}, using placeholder`);
+        // Create a more consistent placeholder format for testing
+        tokenAddress = `0x${token.id.replace(/-/g, '').substring(0, 38).padEnd(38, '0')}`;
+      }
+      
+      console.log(`Selected token: ${token.name}, address: ${tokenAddress}, id: ${token.id}`);
+      
       // Check if user has access to perform a scan
       const { data: accessData, error: accessError } = await supabase.functions.invoke('check-scan-access');
       
@@ -246,11 +246,13 @@ export default function Confirm() {
       localStorage.setItem("selectedToken", JSON.stringify(tokenInfo));
       
       // Navigate to scan loading page with consistent parameter naming
+      // CRITICAL: Make sure we use the token address here and pass it correctly
       console.log("Navigating to scan-loading with parameters:", {
         token: tokenAddress,
         id: token.id
       });
-      navigate(`/scan-loading?token=${tokenAddress}&id=${token.id}`);
+      
+      navigate(`/scan-loading?token=${encodeURIComponent(tokenAddress)}&id=${token.id}`);
       
     } catch (error) {
       console.error("Error saving token data:", error);

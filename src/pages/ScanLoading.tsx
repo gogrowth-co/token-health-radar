@@ -32,6 +32,16 @@ export default function ScanLoading() {
       console.error("ScanLoading: No token address provided in URL parameters");
       toast.error("No token address provided");
       navigate("/");
+      return;
+    }
+    
+    // Validate token address format
+    const isValidAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(tokenAddress);
+    if (!isValidAddress) {
+      console.error("ScanLoading: Invalid token address format:", tokenAddress);
+      toast.error("Invalid token address format");
+      navigate("/");
+      return;
     }
   }, [tokenAddress, navigate, searchParams]);
 
@@ -75,22 +85,39 @@ export default function ScanLoading() {
         
         console.log("ScanLoading: Selected token from localStorage:", selectedToken);
         
-        // If we don't have token info in localStorage and don't have a CoinGecko ID,
-        // this might be a direct scan from an address search, create basic token info
+        // Token address must match what's stored in localStorage or be present in params
         let tokenToScan = selectedToken;
-        if (!tokenToScan && !coinGeckoId) {
-          console.log("ScanLoading: No token info available, creating basic info from address");
-          tokenToScan = {
-            address: tokenAddress,
-            name: `Token ${tokenAddress.substring(0, 6)}...`,
-            symbol: "???"
-          };
+        if (!tokenToScan || selectedToken?.address !== tokenAddress) {
+          // Attempt to load token data from the database
+          const { data: tokenData } = await supabase
+            .from("token_data_cache")
+            .select("*")
+            .eq("token_address", tokenAddress)
+            .maybeSingle();
+            
+          if (tokenData) {
+            console.log("ScanLoading: Found token in database:", tokenData);
+            tokenToScan = {
+              address: tokenAddress,
+              name: tokenData.name,
+              symbol: tokenData.symbol,
+              logo: tokenData.logo_url,
+              id: tokenData.coingecko_id
+            };
+          } else {
+            console.log("ScanLoading: No token info available for address", tokenAddress);
+            tokenToScan = {
+              address: tokenAddress,
+              name: `Token ${tokenAddress.substring(0, 6)}...`,
+              symbol: "???"
+            };
+          }
         }
         
         // Call the run-token-scan edge function with consistently named parameters
         console.log("ScanLoading: Calling run-token-scan with params:", {
           token_address: tokenAddress,
-          coingecko_id: coinGeckoId,
+          coingecko_id: coinGeckoId || tokenToScan?.id || "",
           user_id: user.id,
           token_name: tokenToScan?.name,
           token_symbol: tokenToScan?.symbol
@@ -99,7 +126,7 @@ export default function ScanLoading() {
         const { data, error } = await supabase.functions.invoke('run-token-scan', {
           body: {
             token_address: tokenAddress,
-            coingecko_id: coinGeckoId,
+            coingecko_id: coinGeckoId || tokenToScan?.id || "",
             user_id: user.id,
             token_name: tokenToScan?.name,
             token_symbol: tokenToScan?.symbol
@@ -134,13 +161,13 @@ export default function ScanLoading() {
           console.log("ScanLoading: Saving scan result to localStorage:", resultData);
           localStorage.setItem("lastScanResult", JSON.stringify(resultData));
           
-          // Redirect to scan result page with token info - use consistent parameter naming
+          // CRITICAL: Make sure we pass the correct token address
           console.log("ScanLoading: Redirecting to scan result page with parameters:", { 
             token: tokenAddress, 
-            id: coinGeckoId 
+            id: coinGeckoId || tokenToScan?.id || "" 
           });
           
-          navigate(`/scan-result?token=${tokenAddress}${coinGeckoId ? `&id=${coinGeckoId}` : ''}`);
+          navigate(`/scan-result?token=${tokenAddress}${coinGeckoId ? `&id=${coinGeckoId}` : (tokenToScan?.id ? `&id=${tokenToScan.id}` : '')}`);
         }, 1000); // Short delay to ensure progress bar completes
       } catch (error) {
         console.error("ScanLoading: Error during token scan:", error instanceof Error ? error.message : String(error));
@@ -165,10 +192,13 @@ export default function ScanLoading() {
       const savedToken = localStorage.getItem("selectedToken");
       if (savedToken) {
         const parsedToken = JSON.parse(savedToken);
+        // Make sure the token address matches
         if (parsedToken && parsedToken.address === tokenAddress) {
           return parsedToken;
         }
       }
+      
+      // Fallback display format
       return { 
         name: tokenAddress.substring(0, 8) + "..." + tokenAddress.substring(tokenAddress.length - 6),
         logo: null

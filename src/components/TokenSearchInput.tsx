@@ -87,11 +87,11 @@ export default function TokenSearchInput({
       setIsCheckingAccess(false);
     }
     
-    // Proceed with navigation - using 'token' parameter name consistently
+    // CRITICAL: Use consistent 'token' parameter name for the search flow
     console.log("Navigating with token parameter:", tokenInput);
     if (isAddress) {
-      // If it's an address, go directly to scan-loading
-      navigate(`/scan-loading?token=${tokenInput}`);
+      // If it's an address, still go to confirm page to verify token
+      navigate(`/confirm?token=${encodeURIComponent(tokenInput)}`);
     } else {
       // If it's a token name, go to confirm page
       navigate(`/confirm?token=${encodeURIComponent(tokenInput)}`);
