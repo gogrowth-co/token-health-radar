@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@12.18.0?dts";
@@ -49,6 +50,8 @@ serve(async (req) => {
       throw new Error("Missing required parameters");
     }
 
+    console.log(`Creating checkout session with priceId: ${priceId}`);
+
     // Check if this user already has a Stripe customer ID
     const { data: subscriberData, error: subscriberError } = await supabase
       .from("subscribers")
@@ -61,6 +64,7 @@ serve(async (req) => {
     // If we already have a customer ID, use it
     if (subscriberData?.stripe_customer_id) {
       customerId = subscriberData.stripe_customer_id;
+      console.log(`Using existing customer ID: ${customerId}`);
     } else {
       // Otherwise create a new customer
       const customer = await stripe.customers.create({
@@ -70,6 +74,7 @@ serve(async (req) => {
         },
       });
       customerId = customer.id;
+      console.log(`Created new customer ID: ${customerId}`);
       
       // Update the subscriber record with the new customer ID
       await supabase
@@ -92,6 +97,8 @@ serve(async (req) => {
         user_id: user.id,
       },
     });
+
+    console.log(`Checkout session created: ${session.id}`);
 
     return new Response(
       JSON.stringify({ url: session.url }),

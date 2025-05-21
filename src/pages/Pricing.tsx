@@ -4,29 +4,35 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PricingCard from "@/components/PricingCard";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { pricingTiers, faqData } from "@/lib/mock-data";
+import { faqData } from "@/lib/mock-data";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 export default function Pricing() {
-  const [billingInterval, setBillingInterval] = useState<"monthly" | "annual">("monthly");
   const [isLoading, setIsLoading] = useState(false);
+  const [processingPlan, setProcessingPlan] = useState<string | null>(null);
   const { isAuthenticated, user } = useAuth();
 
-  const handleUpgrade = async (priceId: string) => {
+  // Define price IDs for the different plans
+  const pricePlans = {
+    monthly: "price_1RQK5tD41aNWIHmd4YspKxDi", // Monthly Pro plan
+    annual: "price_1RQK5tD41aNWIHmd1p46UCwl"   // Annual Pro plan
+  };
+
+  const handleUpgrade = async (priceId: string, planType: string) => {
     if (!isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to upgrade your account.",
-        variant: "destructive",
+      toast.error("Please sign in to upgrade your account.", {
+        description: "You need to be logged in to subscribe to a plan."
       });
       return;
     }
 
     setIsLoading(true);
+    setProcessingPlan(planType);
+    
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
@@ -46,13 +52,12 @@ export default function Pricing() {
       }
     } catch (error) {
       console.error("Error creating checkout session:", error);
-      toast({
-        title: "Checkout Error",
-        description: "There was a problem starting the checkout process. Please try again.",
-        variant: "destructive",
+      toast.error("Checkout Error", {
+        description: "There was a problem starting the checkout process. Please try again."
       });
     } finally {
       setIsLoading(false);
+      setProcessingPlan(null);
     }
   };
 
@@ -84,16 +89,15 @@ export default function Pricing() {
                   "Shareable scan results"
                 ]}
                 limitation="Limited to 3 total Pro Scans"
-                cta="Get Started Free"
+                cta={isLoading && processingPlan === "free" ? "Processing..." : "Get Started Free"}
+                popular={false}
                 onCtaClick={() => {
                   if (!isAuthenticated) {
-                    toast({
-                      title: "Sign up to get started",
+                    toast.info("Sign up to get started", {
                       description: "Create a free account to begin scanning tokens."
                     });
                   } else {
-                    toast({
-                      title: "Free Plan Active",
+                    toast.info("Free Plan Active", {
                       description: "You're already on the Free plan."
                     });
                   }
@@ -112,8 +116,13 @@ export default function Pricing() {
                   "Liquidity analysis"
                 ]}
                 popular={true}
-                cta="Upgrade Now"
-                onCtaClick={() => handleUpgrade("price_1RQK5tD41aNWIHmd4YspKxDi")}
+                cta={isLoading && processingPlan === "monthly" ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : "Upgrade Now"}
+                onCtaClick={() => handleUpgrade(pricePlans.monthly, "monthly")}
               />
               <PricingCard 
                 name="Pro Annual"
@@ -129,8 +138,13 @@ export default function Pricing() {
                   "Liquidity analysis",
                   "Priority support"
                 ]}
-                cta="Upgrade & Save"
-                onCtaClick={() => handleUpgrade("price_1RQK5tD41aNWIHmd1p46UCwl")}
+                cta={isLoading && processingPlan === "annual" ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : "Upgrade & Save"}
+                onCtaClick={() => handleUpgrade(pricePlans.annual, "annual")}
               />
             </div>
           </div>

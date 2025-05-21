@@ -1,8 +1,9 @@
 
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import React from "react";
 
 interface PricingCardProps {
   name: string;
@@ -11,7 +12,7 @@ interface PricingCardProps {
   discount?: string;
   features: string[];
   limitation?: string;
-  cta: string;
+  cta: React.ReactNode;
   popular?: boolean;
   onCtaClick?: () => void;
 }
@@ -67,6 +68,7 @@ export default function PricingCard({
           variant={popular ? "default" : "outline"} 
           className={`w-full ${popular ? 'bg-primary hover:bg-primary/90' : ''}`}
           onClick={onCtaClick}
+          disabled={typeof cta === "object" && React.isValidElement(cta) && cta.type === React.Fragment && cta.props.children[0]?.type === Loader2}
         >
           {cta}
         </Button>
