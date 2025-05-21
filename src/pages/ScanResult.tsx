@@ -29,7 +29,7 @@ interface TokenData {
   coingecko_id: string;
   launch_date: string;
   created_at: string;
-  // Add price data properties
+  // Add the missing price data properties
   current_price_usd?: number;
   price_usd?: number;
   price_change_24h?: number;
@@ -417,7 +417,7 @@ export default function ScanResult() {
                       logo={tokenData.logo_url}
                       price={tokenData.price_usd || 0}
                       priceChange={tokenData.price_change_24h || 0}
-                      marketCap={tokenData.market_cap_usd || 0}
+                      marketCap={tokenData.market_cap_usd?.toString() || "0"}
                       tvl={tokenData.total_value_locked_usd || "N/A"}
                       score={calculateOverallScore()}
                       launchDate={tokenData.launch_date}
@@ -466,7 +466,7 @@ export default function ScanResult() {
                   </div>
                   
                   <CategoryTabs
-                    activeTab={activeTab} // Matching prop name as expected by the component
+                    activeTab={activeTab} 
                     securityData={securityData}
                     tokenomicsData={tokenomicsData}
                     liquidityData={liquidityData}
