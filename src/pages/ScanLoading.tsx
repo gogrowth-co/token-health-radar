@@ -75,13 +75,25 @@ export default function ScanLoading() {
         
         console.log("ScanLoading: Selected token from localStorage:", selectedToken);
         
+        // If we don't have token info in localStorage and don't have a CoinGecko ID,
+        // this might be a direct scan from an address search, create basic token info
+        let tokenToScan = selectedToken;
+        if (!tokenToScan && !coinGeckoId) {
+          console.log("ScanLoading: No token info available, creating basic info from address");
+          tokenToScan = {
+            address: tokenAddress,
+            name: `Token ${tokenAddress.substring(0, 6)}...`,
+            symbol: "???"
+          };
+        }
+        
         // Call the run-token-scan edge function with consistently named parameters
         console.log("ScanLoading: Calling run-token-scan with params:", {
           token_address: tokenAddress,
           coingecko_id: coinGeckoId,
           user_id: user.id,
-          token_name: selectedToken?.name,
-          token_symbol: selectedToken?.symbol
+          token_name: tokenToScan?.name,
+          token_symbol: tokenToScan?.symbol
         });
         
         const { data, error } = await supabase.functions.invoke('run-token-scan', {
@@ -89,8 +101,8 @@ export default function ScanLoading() {
             token_address: tokenAddress,
             coingecko_id: coinGeckoId,
             user_id: user.id,
-            token_name: selectedToken?.name,
-            token_symbol: selectedToken?.symbol
+            token_name: tokenToScan?.name,
+            token_symbol: tokenToScan?.symbol
           }
         });
 
@@ -147,6 +159,29 @@ export default function ScanLoading() {
     };
   }, [navigate, tokenAddress, coinGeckoId, user]);
 
+  // Get token display information from localStorage if available
+  const displayToken = (() => {
+    try {
+      const savedToken = localStorage.getItem("selectedToken");
+      if (savedToken) {
+        const parsedToken = JSON.parse(savedToken);
+        if (parsedToken && parsedToken.address === tokenAddress) {
+          return parsedToken;
+        }
+      }
+      return { 
+        name: tokenAddress.substring(0, 8) + "..." + tokenAddress.substring(tokenAddress.length - 6),
+        logo: null
+      };
+    } catch (e) {
+      console.error("Error parsing token from localStorage:", e);
+      return { 
+        name: tokenAddress.substring(0, 8) + "..." + tokenAddress.substring(tokenAddress.length - 6),
+        logo: null
+      };
+    }
+  })();
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -154,12 +189,20 @@ export default function ScanLoading() {
       <main className="flex-1 container px-4 py-8 flex items-center justify-center">
         <div className="w-full max-w-xl text-center space-y-8">
           <div className="flex flex-col items-center">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-4">
-              <span className="text-2xl text-white">
-                {tokenAddress?.substring(0, 2).toUpperCase()}
-              </span>
-            </div>
-            <h1 className="text-3xl font-bold">{tokenAddress.slice(0, 8)}...{tokenAddress.slice(-6)}</h1>
+            {displayToken.logo ? (
+              <img 
+                src={displayToken.logo} 
+                alt={`${displayToken.name} logo`} 
+                className="w-20 h-20 rounded-full mb-4 object-cover"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-4">
+                <span className="text-2xl text-white">
+                  {tokenAddress.substring(0, 2).toUpperCase()}
+                </span>
+              </div>
+            )}
+            <h1 className="text-3xl font-bold">{displayToken.name}</h1>
             <p className="text-muted-foreground mt-2">Scanning token for health metrics...</p>
           </div>
           

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -159,6 +160,23 @@ export default function Confirm() {
     console.log(`Selected token: ${token.name}, address: ${tokenAddress}, id: ${token.id}`);
     
     try {
+      // Check if user has access to perform a scan
+      const { data: accessData, error: accessError } = await supabase.functions.invoke('check-scan-access');
+      
+      if (accessError) {
+        console.error("Error checking scan access:", accessError);
+        toast.error("Could not check scan access. Please try again.");
+        return;
+      }
+      
+      if (!accessData.canScan) {
+        toast.error(accessData.reason || "You don't have permission to scan this token.");
+        navigate("/pricing");
+        return;
+      }
+      
+      // THIS IS THE ONLY PLACE WHERE WE SAVE TOKEN INFO
+      
       // Check if the token already exists in our database
       const { data: existingToken } = await supabase
         .from("token_data_cache")
@@ -176,6 +194,9 @@ export default function Confirm() {
             symbol: token.symbol,
             logo_url: token.large || token.thumb,
             coingecko_id: token.id,
+            current_price_usd: token.price_usd,
+            price_change_24h: token.price_change_24h,
+            market_cap_usd: token.market_cap
           })
           .eq("token_address", tokenAddress);
       } else {
@@ -189,7 +210,8 @@ export default function Confirm() {
             logo_url: token.large || token.thumb,
             coingecko_id: token.id,
             current_price_usd: token.price_usd,
-            market_cap_usd: token.market_cap
+            market_cap_usd: token.market_cap,
+            price_change_24h: token.price_change_24h
           });
       }
 
@@ -200,6 +222,12 @@ export default function Confirm() {
           token_address: tokenAddress,
           pro_scan: true
         });
+        
+        // Increment the user's scans_used count
+        await supabase
+          .from("subscribers")
+          .update({ scans_used: accessData.scansUsed + 1 })
+          .eq("id", user.id);
       }
       
       // Save token info to localStorage for persistence

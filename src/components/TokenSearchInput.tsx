@@ -81,59 +81,13 @@ export default function TokenSearchInput({
         setShowUpgradeDialog(true);
         return;
       }
-      
-      // If authenticated and has access, proceed with the scan
-      try {
-        // First check if the token exists in our cache
-        let tokenAddress = tokenInput;
-        
-        if (!isAddress) {
-          // This is just placeholder logic - in a real app, we'd search by name
-          // For now we're just using the input as a placeholder address
-          tokenAddress = `0x${tokenInput.toLowerCase().replace(/[^a-z0-9]/g, "").padEnd(40, "0").slice(0, 40)}`;
-        }
-        
-        console.log("Token address for database operations:", tokenAddress);
-        
-        // Check if token exists in cache, if not add it
-        const { data: existingToken } = await supabase
-          .from("token_data_cache")
-          .select("token_address")
-          .eq("token_address", tokenAddress)
-          .single();
-          
-        if (!existingToken) {
-          // Add token to cache with placeholder data
-          await supabase.from("token_data_cache").insert({
-            token_address: tokenAddress,
-            name: isAddress ? "Unknown Token" : tokenInput,
-            symbol: isAddress ? "???" : tokenInput.slice(0, 5).toUpperCase()
-          });
-        }
-        
-        // Record the scan
-        await supabase.from("token_scans").insert({
-          user_id: user.id,
-          token_address: tokenAddress,
-          score_total: Math.floor(Math.random() * 100), // Placeholder score
-          pro_scan: true // Mark as a pro scan
-        });
-        
-        // Increment the user's scans_used count
-        await supabase
-          .from("subscribers")
-          .update({ scans_used: data.scansUsed + 1 })
-          .eq("id", user.id);
-      } catch (error) {
-        console.error("Error recording search:", error);
-      }
     } catch (error) {
       console.error("Error checking scan access:", error);
     } finally {
       setIsCheckingAccess(false);
     }
     
-    // Proceed with navigation - FIXED: Use 'token' parameter name consistently
+    // Proceed with navigation - using 'token' parameter name consistently
     console.log("Navigating with token parameter:", tokenInput);
     if (isAddress) {
       // If it's an address, go directly to scan-loading

@@ -17,28 +17,36 @@ export default function Auth() {
   const navigate = useNavigate();
   const { signIn, signUp, isAuthenticated, loading } = useAuth();
   
-  // Check if there's a pending token search
+  // Handle login success and redirect based on saved search
   useEffect(() => {
-    if (isAuthenticated) {
-      const pendingTokenSearch = localStorage.getItem("pendingTokenSearch");
+    // Skip if not authenticated or still loading
+    if (!isAuthenticated || loading) return;
+
+    // Check if we have a saved token search to continue with
+    const pendingTokenSearch = localStorage.getItem("pendingTokenSearch");
+    if (pendingTokenSearch) {
+      console.log("Found pending token search:", pendingTokenSearch);
+      // Clear the pending search from localStorage
+      localStorage.removeItem("pendingTokenSearch");
+
+      // Check if the token looks like an address
+      const isAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(pendingTokenSearch);
       
-      if (pendingTokenSearch) {
-        console.log("Found pending token search after auth:", pendingTokenSearch);
-        localStorage.removeItem("pendingTokenSearch");
-        const isAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(pendingTokenSearch);
-        
-        if (isAddress) {
-          console.log("Navigating to scan-loading with token:", pendingTokenSearch);
-          navigate(`/scan-loading?token=${pendingTokenSearch}`);
-        } else {
-          console.log("Navigating to confirm with token:", pendingTokenSearch);
-          navigate(`/confirm?token=${encodeURIComponent(pendingTokenSearch)}`);
-        }
+      if (isAddress) {
+        // If it looks like an address, go directly to scan loading with 'token' parameter
+        console.log("Pending search is an address, redirecting to scan-loading");
+        navigate(`/scan-loading?token=${pendingTokenSearch}`);
       } else {
-        navigate("/dashboard");
+        // If it's a name, go to confirm
+        console.log("Pending search is a name, redirecting to confirm");
+        navigate(`/confirm?token=${encodeURIComponent(pendingTokenSearch)}`);
       }
+    } else {
+      // Default redirect to dashboard
+      console.log("No pending token search, redirecting to dashboard");
+      navigate("/dashboard");
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, loading, navigate]);
   
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
