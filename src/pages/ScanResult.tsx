@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +29,7 @@ interface TokenData {
   coingecko_id: string;
   launch_date: string;
   created_at: string;
-  // Add the missing price data properties
+  // Add the missing price data properties that are being accessed
   current_price_usd?: number;
   price_usd?: number;
   price_change_24h?: number;
