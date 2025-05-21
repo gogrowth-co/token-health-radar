@@ -42,16 +42,16 @@ export default function TokenSearchInput({
       return;
     }
     
-    // Check if user is authenticated before proceeding
+    // If user is not authenticated, redirect to auth page
     if (!isAuthenticated) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to scan tokens",
-        variant: "destructive",
-      });
+      // Store the search query in localStorage so we can use it after login
+      localStorage.setItem("pendingTokenSearch", tokenInput);
+      // Redirect to auth page
+      navigate("/auth");
       return;
     }
     
+    // Continue with the existing flow for authenticated users
     // Check if input looks like an address (simple validation)
     const isAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(tokenInput);
     

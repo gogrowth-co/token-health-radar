@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Landing from "./pages/Landing";
+import Auth from "./pages/Auth"; // Import the new Auth page
 import Confirm from "./pages/Confirm";
 import ScanLoading from "./pages/ScanLoading";
 import ScanResult from "./pages/ScanResult";
@@ -24,6 +25,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<Auth />} /> {/* Add the new Auth route */}
             <Route path="/confirm" element={<Confirm />} />
             <Route path="/scan-loading" element={<ScanLoading />} />
             <Route path="/scan-result" element={<ScanResult />} />
