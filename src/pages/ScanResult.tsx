@@ -34,6 +34,11 @@ interface TokenData {
   github_url: string;
   coingecko_id: string;
   launch_date: string;
+  // Add simulated price data properties
+  price_usd?: number;
+  price_change_24h?: number;
+  market_cap_usd?: string;
+  total_value_locked_usd?: string;
 }
 
 interface CategoryScore {
@@ -64,6 +69,10 @@ interface UserSubscription {
   scans_used: number;
   pro_scan_limit: number;
   plan: "free" | "pro";
+  created_at?: string;
+  updated_at?: string;
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
 }
 
 export default function ScanResult() {
@@ -100,8 +109,20 @@ export default function ScanResult() {
           return;
         }
         
-        setUserSubscription(data);
-        setIsProUser(data.plan === "pro");
+        // Cast the plan to the specific "free" | "pro" type
+        const typedSubscription: UserSubscription = {
+          id: data.id,
+          scans_used: data.scans_used,
+          pro_scan_limit: data.pro_scan_limit,
+          plan: data.plan as "free" | "pro",
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+          stripe_customer_id: data.stripe_customer_id,
+          stripe_subscription_id: data.stripe_subscription_id
+        };
+        
+        setUserSubscription(typedSubscription);
+        setIsProUser(typedSubscription.plan === "pro");
       } catch (err) {
         console.error("Failed to fetch user subscription:", err);
       }
@@ -226,17 +247,18 @@ export default function ScanResult() {
           ? Math.round(scores.reduce((sum, score) => sum + (score || 0), 0) / scores.length) 
           : 0;
         
+        // Create the enhanced TokenData that includes simulated price data
+        const enhancedTokenData: TokenData = {
+          ...tokenData,
+          price_usd: 0, // Simulated price
+          price_change_24h: 0, // Simulated price change
+          market_cap_usd: "N/A", // Simulated market cap
+          total_value_locked_usd: "N/A" // Simulated TVL
+        };
+        
         // Assemble the full result
         setScanResult({
-          tokenData: {
-            ...tokenData,
-            // Simulate missing data for price, market cap, etc. from CoinGecko
-            // In a real app, you would fetch this data from a price API
-            price: 0,
-            priceChange: 0,
-            marketCap: "N/A",
-            tvl: "N/A"
-          },
+          tokenData: enhancedTokenData,
           securityData: securityData || {},
           liquidityData: liquidityData || {},
           tokenomicsData: tokenomicsData || {},
@@ -369,10 +391,10 @@ export default function ScanResult() {
                 website={scanResult.tokenData.website_url || "#"}
                 twitter={scanResult.tokenData.twitter_handle ? `https://twitter.com/${scanResult.tokenData.twitter_handle}` : "#"}
                 github={scanResult.tokenData.github_url || "#"}
-                price={0} // Would fetch from a price API
-                priceChange={0}
-                marketCap="N/A" // Would fetch from a price API
-                tvl="N/A" // Would fetch from a DeFi API
+                price={scanResult.tokenData.price_usd || 0} // Using the new property
+                priceChange={scanResult.tokenData.price_change_24h || 0} // Using the new property
+                marketCap={scanResult.tokenData.market_cap_usd || "N/A"} // Using the new property
+                tvl={scanResult.tokenData.total_value_locked_usd || "N/A"} // Using the new property
                 launchDate={scanResult.tokenData.launch_date || "Unknown"}
               />
             </section>
