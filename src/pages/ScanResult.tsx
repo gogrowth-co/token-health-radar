@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase, handleSupabaseError } from "@/integrations/supabase/client";
@@ -357,10 +356,14 @@ export default function ScanResult() {
 
   // Initialize component on load
   useEffect(() => {
+    // Get the token parameter - consistent naming across the app
     const token = searchParams.get("token");
     const id = searchParams.get("id");
     
+    console.log("ScanResult: Initializing with parameters:", { token, id });
+    
     if (!token) {
+      console.error("ScanResult: No token address provided");
       setError("No token address provided");
       setIsLoading(false);
       return;
@@ -369,7 +372,7 @@ export default function ScanResult() {
     setTokenAddress(token);
     if (id) setCoinGeckoId(id);
     
-    console.log("Initializing ScanResult for token:", token, "with CoinGecko ID:", id || "none");
+    console.log("ScanResult: Starting scan for token:", token, "with CoinGecko ID:", id || "none");
     
     const loadData = async () => {
       try {

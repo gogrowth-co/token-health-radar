@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -24,12 +23,15 @@ export default function Auth() {
       const pendingTokenSearch = localStorage.getItem("pendingTokenSearch");
       
       if (pendingTokenSearch) {
+        console.log("Found pending token search after auth:", pendingTokenSearch);
         localStorage.removeItem("pendingTokenSearch");
         const isAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(pendingTokenSearch);
         
         if (isAddress) {
-          navigate(`/scan-loading?address=${pendingTokenSearch}`);
+          console.log("Navigating to scan-loading with token:", pendingTokenSearch);
+          navigate(`/scan-loading?token=${pendingTokenSearch}`);
         } else {
+          console.log("Navigating to confirm with token:", pendingTokenSearch);
           navigate(`/confirm?token=${encodeURIComponent(pendingTokenSearch)}`);
         }
       } else {

@@ -44,6 +44,7 @@ export default function TokenSearchInput({
     
     // If user is not authenticated, store the search query and redirect to auth page
     if (!isAuthenticated) {
+      console.log("User not authenticated. Storing search query:", tokenInput);
       localStorage.setItem("pendingTokenSearch", tokenInput);
       navigate("/auth");
       return;
@@ -51,6 +52,7 @@ export default function TokenSearchInput({
     
     // Check if input looks like an address (simple validation)
     const isAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(tokenInput);
+    console.log("Input validation:", { isAddress, tokenInput });
     
     // Check if user has access to perform a scan
     setIsCheckingAccess(true);
@@ -58,6 +60,7 @@ export default function TokenSearchInput({
       const { data, error } = await supabase.functions.invoke('check-scan-access');
       
       if (error) {
+        console.error("Error checking scan access:", error);
         toast({
           title: "Error",
           description: "Could not check scan access. Please try again.",
@@ -89,6 +92,8 @@ export default function TokenSearchInput({
           // For now we're just using the input as a placeholder address
           tokenAddress = `0x${tokenInput.toLowerCase().replace(/[^a-z0-9]/g, "").padEnd(40, "0").slice(0, 40)}`;
         }
+        
+        console.log("Token address for database operations:", tokenAddress);
         
         // Check if token exists in cache, if not add it
         const { data: existingToken } = await supabase
@@ -128,7 +133,8 @@ export default function TokenSearchInput({
       setIsCheckingAccess(false);
     }
     
-    // Proceed with navigation - FIX: Use 'token' parameter name consistently
+    // Proceed with navigation - FIXED: Use 'token' parameter name consistently
+    console.log("Navigating with token parameter:", tokenInput);
     if (isAddress) {
       // If it's an address, go directly to scan-loading
       navigate(`/scan-loading?token=${tokenInput}`);

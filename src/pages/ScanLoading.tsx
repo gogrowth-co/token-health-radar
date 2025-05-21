@@ -18,7 +18,7 @@ export default function ScanLoading() {
   const [isScanning, setIsScanning] = useState(true);
   const { user } = useAuth();
   
-  // Get token from URL params (either address or id)
+  // Get token from URL params (parameter name is always 'token')
   const tokenAddress = searchParams.get("token") || "";
   const coinGeckoId = searchParams.get("id") || "";
   
@@ -75,7 +75,7 @@ export default function ScanLoading() {
         
         console.log("ScanLoading: Selected token from localStorage:", selectedToken);
         
-        // Call the run-token-scan edge function with properly named parameters
+        // Call the run-token-scan edge function with consistently named parameters
         console.log("ScanLoading: Calling run-token-scan with params:", {
           token_address: tokenAddress,
           coingecko_id: coinGeckoId,
@@ -86,7 +86,7 @@ export default function ScanLoading() {
         
         const { data, error } = await supabase.functions.invoke('run-token-scan', {
           body: {
-            token_address: tokenAddress, // Consistent parameter naming
+            token_address: tokenAddress,
             coingecko_id: coinGeckoId,
             user_id: user.id,
             token_name: selectedToken?.name,
@@ -122,8 +122,12 @@ export default function ScanLoading() {
           console.log("ScanLoading: Saving scan result to localStorage:", resultData);
           localStorage.setItem("lastScanResult", JSON.stringify(resultData));
           
-          // Redirect to scan result page with token info - ensure consistent parameter naming
-          console.log("ScanLoading: Redirecting to scan result page with token:", tokenAddress);
+          // Redirect to scan result page with token info - use consistent parameter naming
+          console.log("ScanLoading: Redirecting to scan result page with parameters:", { 
+            token: tokenAddress, 
+            id: coinGeckoId 
+          });
+          
           navigate(`/scan-result?token=${tokenAddress}${coinGeckoId ? `&id=${coinGeckoId}` : ''}`);
         }, 1000); // Short delay to ensure progress bar completes
       } catch (error) {

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -204,7 +203,7 @@ export default function Confirm() {
       }
       
       // Save token info to localStorage for persistence
-      localStorage.setItem("selectedToken", JSON.stringify({
+      const tokenInfo = {
         address: tokenAddress,
         id: token.id,
         name: token.name,
@@ -213,9 +212,16 @@ export default function Confirm() {
         price_usd: token.price_usd,
         price_change_24h: token.price_change_24h,
         market_cap_usd: token.market_cap
-      }));
+      };
       
-      // Navigate to scan loading page
+      console.log("Saving selected token to localStorage:", tokenInfo);
+      localStorage.setItem("selectedToken", JSON.stringify(tokenInfo));
+      
+      // Navigate to scan loading page with consistent parameter naming
+      console.log("Navigating to scan-loading with parameters:", {
+        token: tokenAddress,
+        id: token.id
+      });
       navigate(`/scan-loading?token=${tokenAddress}&id=${token.id}`);
       
     } catch (error) {
