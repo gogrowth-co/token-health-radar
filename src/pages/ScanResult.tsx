@@ -28,7 +28,6 @@ interface TokenData {
   coingecko_id: string;
   launch_date: string;
   created_at: string;
-  // Add the missing price data properties
   current_price_usd?: number;
   price_usd?: number;
   price_change_24h?: number;
