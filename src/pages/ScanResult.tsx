@@ -34,7 +34,7 @@ interface TokenData {
   github_url: string;
   coingecko_id: string;
   launch_date: string;
-  // Add simulated price data properties
+  // Add price data properties
   price_usd?: number;
   price_change_24h?: number;
   market_cap_usd?: string;
@@ -85,8 +85,9 @@ export default function ScanResult() {
   const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
   const [isProUser, setIsProUser] = useState(false);
   
-  // Get token from URL params
+  // Get token from URL params - normalize to lowercase
   const tokenParam = searchParams.get("token") || "";
+  const normalizedTokenAddress = tokenParam.toLowerCase();
   
   useEffect(() => {
     const fetchUserSubscription = async () => {
@@ -143,21 +144,26 @@ export default function ScanResult() {
       setError(null);
       
       try {
+        console.log("Fetching scan result for token:", normalizedTokenAddress);
+        
         // First check if token is an address or a symbol
-        const isAddress = tokenParam.startsWith('0x');
+        const isAddress = normalizedTokenAddress.startsWith('0x');
         
         // Fetch token data
         const { data: tokenData, error: tokenError } = await supabase
           .from('token_data_cache')
           .select('*')
-          .or(`token_address.eq.${isAddress ? tokenParam : ''},symbol.ilike.${!isAddress ? tokenParam : ''}`)
+          .or(`token_address.eq.${isAddress ? normalizedTokenAddress : ''},symbol.ilike.${!isAddress ? normalizedTokenAddress : ''}`)
           .single();
           
         if (tokenError || !tokenData) {
-          setError("Token not found");
+          console.error("Token not found:", tokenError);
+          setError("Token not found in our database");
           setIsLoading(false);
           return;
         }
+
+        console.log("Found token data:", tokenData);
 
         // Fetch security data
         const { data: securityData, error: securityError } = await supabase
@@ -216,7 +222,7 @@ export default function ScanResult() {
         
         // Determine category scores
         const getScoreLevel = (score: number | null): "high" | "medium" | "low" => {
-          if (!score && score !== 0) return "low";
+          if (score === null || score === undefined) return "low";
           if (score >= 70) return "high";
           if (score >= 50) return "medium";
           return "low";
@@ -241,20 +247,27 @@ export default function ScanResult() {
         const developmentLevel = getScoreLevel(developmentScore);
         
         const scores = [securityScore, liquidityScore, tokenomicsScore, communityScore, developmentScore]
-          .filter(score => score !== null);
+          .filter(score => score !== null && score !== undefined);
         
         const overallScore = scores.length > 0 
           ? Math.round(scores.reduce((sum, score) => sum + (score || 0), 0) / scores.length) 
           : 0;
         
-        // Create the enhanced TokenData that includes simulated price data
+        // Create the enhanced TokenData that includes price data
         const enhancedTokenData: TokenData = {
           ...tokenData,
-          price_usd: 0, // Simulated price
-          price_change_24h: 0, // Simulated price change
-          market_cap_usd: "N/A", // Simulated market cap
-          total_value_locked_usd: "N/A" // Simulated TVL
+          price_usd: 0, // Will be updated when real data is available
+          price_change_24h: 0, // Will be updated when real data is available
+          market_cap_usd: "N/A", // Will be updated when real data is available
+          total_value_locked_usd: "N/A" // Will be updated when real data is available
         };
+        
+        if (tokenomicsData) {
+          enhancedTokenData.total_value_locked_usd = tokenomicsData.tvl_usd ? 
+            tokenomicsData.tvl_usd.toLocaleString() : "N/A";
+          enhancedTokenData.market_cap_usd = tokenomicsData.circulating_supply ? 
+            (tokenomicsData.circulating_supply * (enhancedTokenData.price_usd || 0)).toLocaleString() : "N/A";
+        }
         
         // Assemble the full result
         setScanResult({
@@ -303,7 +316,7 @@ export default function ScanResult() {
     };
     
     fetchScanResult();
-  }, [tokenParam]);
+  }, [tokenParam, normalizedTokenAddress]);
 
   // Handle category card click
   const handleCategoryClick = (category: string) => {
@@ -391,10 +404,10 @@ export default function ScanResult() {
                 website={scanResult.tokenData.website_url || "#"}
                 twitter={scanResult.tokenData.twitter_handle ? `https://twitter.com/${scanResult.tokenData.twitter_handle}` : "#"}
                 github={scanResult.tokenData.github_url || "#"}
-                price={scanResult.tokenData.price_usd || 0} // Using the new property
-                priceChange={scanResult.tokenData.price_change_24h || 0} // Using the new property
-                marketCap={scanResult.tokenData.market_cap_usd || "N/A"} // Using the new property
-                tvl={scanResult.tokenData.total_value_locked_usd || "N/A"} // Using the new property
+                price={scanResult.tokenData.price_usd || 0}
+                priceChange={scanResult.tokenData.price_change_24h || 0}
+                marketCap={scanResult.tokenData.market_cap_usd || "N/A"}
+                tvl={scanResult.tokenData.total_value_locked_usd || "N/A"}
                 launchDate={scanResult.tokenData.launch_date || "Unknown"}
               />
             </section>
