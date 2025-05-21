@@ -42,11 +42,9 @@ export default function TokenSearchInput({
       return;
     }
     
-    // If user is not authenticated, redirect to auth page
+    // If user is not authenticated, store the search query and redirect to auth page
     if (!isAuthenticated) {
-      // Store the search query in localStorage so we can use it after login
       localStorage.setItem("pendingTokenSearch", tokenInput);
-      // Redirect to auth page
       navigate("/auth");
       return;
     }
@@ -137,7 +135,7 @@ export default function TokenSearchInput({
       navigate(`/scan-loading?address=${tokenInput}`);
     } else {
       // If it's a token name, go to confirm page
-      navigate(`/confirm?token=${tokenInput}`);
+      navigate(`/confirm?token=${encodeURIComponent(tokenInput)}`);
     }
   };
 

@@ -1,40 +1,36 @@
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
-import { Search, Shield, Droplet, BarChart3, Globe, Code } from "lucide-react";
-import { Loader2 } from "lucide-react";
-import Navbar from "@/components/Navbar";
+import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp, isAuthenticated } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
   const navigate = useNavigate();
+  const { signIn, signUp, isAuthenticated, loading } = useAuth();
   
-  // If user is already authenticated, redirect to the appropriate page
+  // Check if there's a pending token search
   useEffect(() => {
     if (isAuthenticated) {
-      const pendingSearch = localStorage.getItem("pendingTokenSearch");
+      const pendingTokenSearch = localStorage.getItem("pendingTokenSearch");
       
-      if (pendingSearch) {
+      if (pendingTokenSearch) {
         localStorage.removeItem("pendingTokenSearch");
-        
-        // Check if input looks like an address
-        const isAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(pendingSearch);
+        const isAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(pendingTokenSearch);
         
         if (isAddress) {
-          navigate(`/scan-loading?address=${pendingSearch}`);
+          navigate(`/scan-loading?address=${pendingTokenSearch}`);
         } else {
-          navigate(`/confirm?token=${pendingSearch}`);
+          navigate(`/confirm?token=${encodeURIComponent(pendingTokenSearch)}`);
         }
       } else {
         navigate("/dashboard");
@@ -42,191 +38,223 @@ export default function Auth() {
     }
   }, [isAuthenticated, navigate]);
   
-  const handleAuth = async (action: "login" | "signup") => {
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!email || !password) {
       toast({
-        title: "Missing credentials",
-        description: "Please provide both email and password",
+        title: "Missing information",
+        description: "Please provide both email and password.",
         variant: "destructive",
       });
       return;
     }
     
-    setIsLoading(true);
+    setIsSubmitting(true);
     
     try {
-      if (action === "login") {
-        await signIn(email, password);
-      } else {
-        await signUp(email, password);
-      }
+      await signIn(email, password);
     } catch (error: any) {
-      // Error handling is done in the AuthContext
-      console.error(`Authentication error:`, error);
+      console.error("Sign in error:", error);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
   
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: "Missing information",
+        description: "Please provide both email and password.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      await signUp(email, password);
+      toast({
+        title: "Registration successful",
+        description: "Please check your email for the confirmation link.",
+      });
+    } catch (error: any) {
+      console.error("Sign up error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  if (loading || isAuthenticated) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p>{isAuthenticated ? "Redirecting..." : "Loading..."}</p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      
-      <main className="flex-1 flex items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          {/* Left column - Project info */}
-          <div className="space-y-6 text-center md:text-left">
-            <div className="flex flex-col items-center md:items-start gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center">
-                  <Search className="h-6 w-6 text-white" />
-                </div>
-                <h1 className="text-2xl font-bold">Token Health Scan</h1>
-              </div>
-              
-              <p className="text-xl font-medium">
-                Scan any token and get a free health report across 5 key risk factors.
-              </p>
+    <div className="flex min-h-screen">
+      {/* Left panel with branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-primary text-primary-foreground p-8 flex-col justify-center">
+        <div className="max-w-md mx-auto">
+          <h1 className="text-3xl font-bold mb-6">Token Health Scan</h1>
+          <p className="text-xl opacity-90 mb-6">
+            Scan any token and get a free health report across 5 key risk factors.
+          </p>
+          <div className="grid gap-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              <span>Security risk assessment</span>
             </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4">
-              <div className="flex flex-col items-center p-4 bg-card rounded-lg border">
-                <Shield className="h-6 w-6 text-primary mb-2" />
-                <span className="text-sm font-medium">Security</span>
-              </div>
-              
-              <div className="flex flex-col items-center p-4 bg-card rounded-lg border">
-                <Droplet className="h-6 w-6 text-primary mb-2" />
-                <span className="text-sm font-medium">Liquidity</span>
-              </div>
-              
-              <div className="flex flex-col items-center p-4 bg-card rounded-lg border">
-                <BarChart3 className="h-6 w-6 text-primary mb-2" />
-                <span className="text-sm font-medium">Tokenomics</span>
-              </div>
-              
-              <div className="flex flex-col items-center p-4 bg-card rounded-lg border">
-                <Globe className="h-6 w-6 text-primary mb-2" />
-                <span className="text-sm font-medium">Community</span>
-              </div>
-              
-              <div className="flex flex-col items-center p-4 bg-card rounded-lg border">
-                <Code className="h-6 w-6 text-primary mb-2" />
-                <span className="text-sm font-medium">Development</span>
-              </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              <span>Liquidity analysis</span>
             </div>
-          </div>
-          
-          {/* Right column - Auth form */}
-          <div>
-            <Card className="w-full">
-              <CardHeader>
-                <CardTitle>Welcome to Token Health Scan</CardTitle>
-                <CardDescription>
-                  Sign in to continue or create a new account
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="login" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="login">Login</TabsTrigger>
-                    <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="login">
-                    <div className="space-y-4 pt-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="email-login">Email</Label>
-                        <Input
-                          id="email-login"
-                          type="email"
-                          placeholder="Enter your email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="password-login">Password</Label>
-                        <Input
-                          id="password-login"
-                          type="password"
-                          placeholder="Enter your password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                        />
-                      </div>
-                      
-                      <Button 
-                        className="w-full" 
-                        onClick={() => handleAuth("login")}
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Signing in...
-                          </>
-                        ) : (
-                          "Sign In"
-                        )}
-                      </Button>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="signup">
-                    <div className="space-y-4 pt-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="email-signup">Email</Label>
-                        <Input
-                          id="email-signup"
-                          type="email"
-                          placeholder="Enter your email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="password-signup">Password</Label>
-                        <Input
-                          id="password-signup"
-                          type="password"
-                          placeholder="Choose a password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                        />
-                      </div>
-                      
-                      <Button 
-                        className="w-full" 
-                        onClick={() => handleAuth("signup")}
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Creating account...
-                          </>
-                        ) : (
-                          "Create Account"
-                        )}
-                      </Button>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-                
-                <div className="mt-6">
-                  <Separator className="my-4" />
-                  <p className="text-sm text-center text-muted-foreground">
-                    By signing up, you agree to our Terms of Service and Privacy Policy
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              <span>Tokenomics evaluation</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              <span>Community metrics</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              <span>Development activity</span>
+            </div>
           </div>
         </div>
-      </main>
+      </div>
+      
+      {/* Right panel with auth forms */}
+      <div className="w-full lg:w-1/2 p-8 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Welcome to Token Health Scan</CardTitle>
+            <CardDescription>
+              Sign in to your account or create a new one to start scanning tokens
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="login">Sign In</TabsTrigger>
+                <TabsTrigger value="register">Sign Up</TabsTrigger>
+              </TabsList>
+              <TabsContent value="login">
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="your@email.com" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input 
+                      id="password" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Signing In...
+                      </>
+                    ) : "Sign In"}
+                  </Button>
+                </form>
+                <div className="mt-4 text-center text-sm">
+                  <p>
+                    Don't have an account?{" "}
+                    <button 
+                      type="button"
+                      onClick={() => setActiveTab("register")}
+                      className="text-primary hover:underline font-medium"
+                    >
+                      Create one
+                    </button>
+                  </p>
+                </div>
+              </TabsContent>
+              <TabsContent value="register">
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="register-email">Email</Label>
+                    <Input 
+                      id="register-email" 
+                      type="email" 
+                      placeholder="your@email.com" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="register-password">Password</Label>
+                    <Input 
+                      id="register-password" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Password must be at least 6 characters long
+                    </p>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating Account...
+                      </>
+                    ) : "Create Account"}
+                  </Button>
+                </form>
+                <div className="mt-4 text-center text-sm">
+                  <p>
+                    Already have an account?{" "}
+                    <button 
+                      type="button"
+                      onClick={() => setActiveTab("login")}
+                      className="text-primary hover:underline font-medium"
+                    >
+                      Sign in
+                    </button>
+                  </p>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-2">
+            <div className="text-sm text-muted-foreground text-center w-full">
+              By continuing, you agree to our Terms of Service and Privacy Policy.
+            </div>
+            <Button variant="outline" className="w-full" onClick={() => navigate("/")}>
+              Back to Home
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 }
