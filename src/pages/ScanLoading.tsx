@@ -151,14 +151,7 @@ export default function ScanLoading() {
           return;
         }
 
-        if (!data.allowed) {
-          console.error("ScanLoading: Scan not allowed:", data.reason);
-          setScanFailed(true);
-          setErrorMessage(data.reason || "You don't have permission to scan this token.");
-          return;
-        }
-
-        // Check if scan was successful
+        // FIXED: Don't check 'allowed' flag - continue with scan result even for free scans
         if (!data.success) {
           console.error("ScanLoading: Scan failed:", data.error_message);
           setScanFailed(true);

@@ -338,8 +338,6 @@ serve(async (req) => {
     }
     
     // Generate a combined result
-    const overallScore = Math.floor(Math.random() * 100);
-    
     // Ensure we have valid data - at least one category must have data
     const [
       securityResult,
@@ -370,7 +368,7 @@ serve(async (req) => {
       );
     }
 
-    // Calculate the overall score from category scores - improved calculation
+    // Calculate the overall score from category scores
     const scores = [
       securityResult.data?.score, 
       tokenomicsResult.data?.score,
@@ -383,30 +381,35 @@ serve(async (req) => {
     const validScores = scores.filter(score => score !== null && score !== undefined) as number[];
     
     // Calculate the average and round to the nearest integer
-    const overallScore = validScores.length > 0 
+    const calculatedScore = validScores.length > 0 
       ? Math.round(validScores.reduce((acc, curr) => acc + curr, 0) / validScores.length)
       : 0;
       
-    console.log("[TOKEN-SCAN] Calculated overall score:", overallScore);
+    console.log("[TOKEN-SCAN] Calculated overall score:", calculatedScore);
 
-    // Since we have valid data, now we can record this scan and increment the counter
-    // Record this scan - THIS IS NOW THE ONLY PLACE SCANS ARE COUNTED
+    // Since we have valid data, now we can record this scan
+    // IMPORTANT: Allow the scan to proceed regardless of pro status,
+    // but set pro_scan flag accordingly to control UI blurring
     await supabase
       .from('token_scans')
       .insert({
         user_id: body.user_id,
         token_address: body.token_address,
-        score_total: overallScore, // Save the calculated overall score
+        score_total: calculatedScore, // Save the calculated overall score
         pro_scan: isPro  // Set based on whether user has used their Pro scan limit
       });
         
-    // Increment the user's scan count
-    await supabase
-      .from("subscribers")
-      .update({ scans_used: subscriber.scans_used + 1 })
-      .eq("id", body.user_id);
-    
-    console.log("[TOKEN-SCAN] Successfully incremented scan count for user:", body.user_id);
+    // Only increment the user's scan count if this is a Pro scan
+    if (isPro) {
+      await supabase
+        .from("subscribers")
+        .update({ scans_used: subscriber.scans_used + 1 })
+        .eq("id", body.user_id);
+      
+      console.log("[TOKEN-SCAN] Successfully incremented scan count for user:", body.user_id);
+    } else {
+      console.log("[TOKEN-SCAN] Free scan completed, not incrementing scan count for user:", body.user_id);
+    }
       
     // Get complete token info
     const { data: tokenWithAllData } = await supabase
@@ -427,7 +430,7 @@ serve(async (req) => {
         liquidity_data: liquidityResult.data || null,
         community_data: communityResult.data || null,
         development_data: developmentResult.data || null,
-        score: overallScore,
+        score: calculatedScore,
         token_address: body.token_address,
         token_name: token.name,
         token_symbol: token.symbol
@@ -436,7 +439,7 @@ serve(async (req) => {
     
     console.log("[TOKEN-SCAN] Scan completed successfully -", {
       token_address: body.token_address,
-      score: overallScore,
+      score: calculatedScore,
       token_name: token.name,
       token_symbol: token.symbol,
       pro_scan: isPro

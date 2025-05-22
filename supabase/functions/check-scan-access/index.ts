@@ -78,7 +78,7 @@ serve(async (req) => {
     let hasPro = false;
     let proScanAvailable = false;
     
-    // Updated logic: Allow scans after limit, but only as free scans
+    // CRITICAL: Always allow scanning - just control whether they get Pro features
     if (plan === "pro") {
       if (scansUsed < scanLimit) {
         hasPro = true;         // Access full scan 
