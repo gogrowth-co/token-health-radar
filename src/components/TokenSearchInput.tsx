@@ -54,35 +54,33 @@ export default function TokenSearchInput({
     const isAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(tokenInput);
     console.log("Input validation:", { isAddress, tokenInput });
     
-    // Check if user has access to perform a scan
+    // Check if user has access to perform a search (not incrementing scan counter here)
     setIsCheckingAccess(true);
     try {
       const { data, error } = await supabase.functions.invoke('check-scan-access');
       
       if (error) {
-        console.error("Error checking scan access:", error);
+        console.error("Error checking search access:", error);
         toast({
           title: "Error",
-          description: "Could not check scan access. Please try again.",
+          description: "Could not check access. Please try again.",
           variant: "destructive",
         });
         return;
       }
       
+      // Initial search is always allowed, token selection is what counts against the scan limit
       if (!data.canScan) {
-        // Store the data for the upgrade dialog
-        setScanAccessData({
-          plan: data.plan,
-          scansUsed: data.scansUsed,
-          scanLimit: data.scanLimit
+        toast({
+          title: "Error",
+          description: "Could not access search functionality. Please try again.",
+          variant: "destructive",
         });
-        
-        // Show upgrade dialog
-        setShowUpgradeDialog(true);
         return;
       }
+      
     } catch (error) {
-      console.error("Error checking scan access:", error);
+      console.error("Error checking search access:", error);
     } finally {
       setIsCheckingAccess(false);
     }

@@ -10,6 +10,7 @@ import { Search, ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface TokenResult {
   id: string;
@@ -30,6 +31,12 @@ export default function Confirm() {
   const [results, setResults] = useState<TokenResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [scanAccessData, setScanAccessData] = useState<{
+    plan: string;
+    scansUsed: number;
+    scanLimit: number;
+  } | null>(null);
   
   const navigate = useNavigate();
   const { user, isAuthenticated, loading } = useAuth();
@@ -191,9 +198,17 @@ export default function Confirm() {
         return;
       }
       
-      if (!accessData.canScan) {
-        toast.error(accessData.reason || "You don't have permission to scan this token.");
-        navigate("/pricing");
+      // Check if the user can select a token (this is the actual scan count check)
+      if (!accessData.canSelectToken) {
+        // Store the data for the upgrade dialog
+        setScanAccessData({
+          plan: accessData.plan,
+          scansUsed: accessData.scansUsed,
+          scanLimit: accessData.scanLimit
+        });
+        
+        // Show upgrade dialog
+        setShowUpgradeDialog(true);
         return;
       }
       
@@ -289,6 +304,11 @@ export default function Confirm() {
         description: "Failed to save token data. Please try again."
       });
     }
+  };
+
+  const handleUpgrade = () => {
+    navigate('/pricing');
+    setShowUpgradeDialog(false);
   };
 
   // Show loading while auth is checking
@@ -396,6 +416,25 @@ export default function Confirm() {
           )}
         </div>
       </main>
+      
+      <AlertDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Scan Limit Reached</AlertDialogTitle>
+            <AlertDialogDescription>
+              {scanAccessData?.plan === 'free'
+                ? `You have used ${scanAccessData?.scansUsed} out of ${scanAccessData?.scanLimit} free scans. Upgrade to Pro for more scans and advanced features.`
+                : `You have used ${scanAccessData?.scansUsed} out of ${scanAccessData?.scanLimit} Pro scans this month. Your limit will reset with your next billing cycle.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleUpgrade}>
+              {scanAccessData?.plan === 'free' ? 'Upgrade to Pro' : 'Manage Subscription'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       
       <Footer />
     </div>

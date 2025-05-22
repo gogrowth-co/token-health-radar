@@ -47,7 +47,8 @@ serve(async (req) => {
       // If there's an error, default to free tier with conservative limits
       return new Response(
         JSON.stringify({ 
-          canScan: true, // Allow searching, actual scan counting happens at token selection
+          canScan: true, // Always allow initial search
+          canSelectToken: true, // Assume they can select a token until proven otherwise
           plan: "free", 
           scansUsed: 0, 
           scanLimit: 3,
@@ -65,21 +66,25 @@ serve(async (req) => {
 
     // For Pro users, we need to check if they've used their monthly quota
     // For Free users, it's a lifetime limit of 3
-    let canScan = true; // Initially allow searching
-    let hasPro = plan === "pro";
     
-    // Only check limits for actual token selection (not for initial search)
-    // The actual incrementing of scan count happens in Confirm.tsx when a token is selected
+    // Initial search is always allowed
+    let canScan = true;
+    
+    // Only when selecting a token we check the limits
+    let canSelectToken = true;
     if (plan === "pro") {
-      canScan = scansUsed < scanLimit;
+      canSelectToken = scansUsed < scanLimit;
     } else {
       // Free tier
-      canScan = scansUsed < 3;
+      canSelectToken = scansUsed < 3;
     }
+    
+    let hasPro = plan === "pro";
 
     return new Response(
       JSON.stringify({
         canScan,
+        canSelectToken,
         hasPro,
         plan,
         scansUsed,
@@ -90,7 +95,7 @@ serve(async (req) => {
   } catch (error) {
     console.error(`Error checking scan access: ${error.message}`);
     return new Response(
-      JSON.stringify({ error: error.message, canScan: false }),
+      JSON.stringify({ error: error.message, canScan: false, canSelectToken: false }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
     );
   }

@@ -1,3 +1,4 @@
+
 // Follow Edge Function Conventions
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
@@ -329,11 +330,8 @@ serve(async (req) => {
     // Generate a combined result
     const overallScore = Math.floor(Math.random() * 100);
     
-    // Increment the user's scan count
-    await supabase
-      .from('subscribers')
-      .update({ scans_used: subscriber.scans_used + 1 })
-      .eq('id', body.user_id);
+    // Increment the user's scan count is now done in the frontend when a token is selected
+    // We don't need to increment it again here
       
     // Record this scan
     await supabase
