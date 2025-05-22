@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle, Info } from "lucide-react";
 import TokenCard from "@/components/TokenCard";
@@ -101,25 +102,38 @@ export default function TokenSearchResults({
               description={`${token.name} (${token.symbol.toUpperCase()}) is a cryptocurrency${token.market_cap_rank ? ` ranked #${token.market_cap_rank}` : ''}`}
               showActions={token.isErc20}
             />
-            {token.isErc20 ? (
-              <div className="absolute bottom-4 right-4">
-                <Badge className="bg-green-500 hover:bg-green-600">ERC-20 Compatible</Badge>
+
+            {/* Custom footer for compatibility badge and info/action button */}
+            <div className="absolute bottom-4 right-4 flex items-center justify-between w-full max-w-[calc(100%-2rem)]">
+              <div className="flex items-center gap-2">
+                {token.isErc20 ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge className="bg-green-500 hover:bg-green-600">ERC-20 Compatible</Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>This token is deployed on the Ethereum network and supports ERC-20 scanning.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <Badge className="bg-red-500 hover:bg-red-600">Unsupported Chain</Badge>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>This token is not supported yet. Support for Solana, Arbitrum, and others is coming soon.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="absolute bottom-4 right-4 flex items-center gap-1.5">
-                <Badge className="bg-red-500 hover:bg-red-600">Unsupported Chain</Badge>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>This token is not supported yet. Support for Solana, Arbitrum, and others is coming soon.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            )}
+            </div>
           </div>
         ))}
       </div>
