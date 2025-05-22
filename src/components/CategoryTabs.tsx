@@ -5,31 +5,32 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Shield, Droplet, BarChart3, Globe, Code } from "lucide-react";
+import { Shield, Droplet, BarChart3, Globe, Code, Info } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CategoryTabsProps {
-  activeTab?: string; // Changed from "active" to "activeTab" to match what's passed from ScanResult
+  activeTab?: string;
   isProUser?: boolean;
-  isPro?: boolean; // Added this prop to accept what's passed from ScanResult
+  isPro?: boolean;
   securityData?: any;
   liquidityData?: any;
   tokenomicsData?: any;
   communityData?: any;
   developmentData?: any;
-  onCategoryChange?: (category: any) => void; // Added to match what ScanResult passes
+  onCategoryChange?: (category: any) => void;
 }
 
 export default function CategoryTabs({ 
   activeTab = "security", 
   isProUser = true,
-  isPro, // Added to accept the prop
+  isPro, 
   securityData = {},
   liquidityData = {},
   tokenomicsData = {},
   communityData = {},
   developmentData = {},
-  onCategoryChange // Added to accept the prop
+  onCategoryChange 
 }: CategoryTabsProps) {
   // Use isPro if provided, otherwise fall back to isProUser
   const isUserPro = isPro !== undefined ? isPro : isProUser;
@@ -42,6 +43,84 @@ export default function CategoryTabs({
     if (onCategoryChange) {
       onCategoryChange(value);
     }
+  };
+
+  // Helper for formatting values
+  const formatValue = (key: string, value: any): string => {
+    if (value === null || value === undefined) return "N/A";
+    
+    // Format booleans
+    if (typeof value === 'boolean') return value ? "Yes" : "No";
+    
+    // Format objects
+    if (typeof value === 'object') return JSON.stringify(value);
+    
+    // Format numbers based on common crypto metrics
+    if (typeof value === 'number') {
+      // Days or counts
+      if (key.includes('day') || key.includes('count') || key.includes('listings')) {
+        return value.toLocaleString();
+      }
+      // USD values
+      else if (key.includes('usd') || key.includes('volume')) {
+        if (value >= 1000000000) return `$${(value / 1000000000).toFixed(2)}B`;
+        if (value >= 1000000) return `$${(value / 1000000).toFixed(2)}M`;
+        if (value >= 1000) return `$${(value / 1000).toFixed(2)}K`;
+        return `$${value.toLocaleString()}`;
+      }
+    }
+    
+    // Default stringification
+    return String(value);
+  };
+
+  // Get tooltip descriptions for metrics
+  const getMetricDescription = (key: string): string => {
+    const descriptions: Record<string, string> = {
+      // Security metrics
+      "ownership_renounced": "When token ownership is renounced, developers can no longer modify the contract, which reduces rug-pull risk",
+      "audit_status": "Security audits verify the contract code for vulnerabilities and potential exploits",
+      "multisig_status": "Multi-signature wallets require multiple approvals for transactions, adding security",
+      "honeypot_detected": "Honeypot tokens prevent selling, allowing scammers to steal investor funds",
+      "freeze_authority": "The ability to freeze transactions can be used legitimately for security or maliciously",
+      "can_mint": "Tokens that can be minted indefinitely may lead to supply inflation",
+      
+      // Tokenomics metrics
+      "circulating_supply": "The number of tokens currently in circulation and available to the public",
+      "supply_cap": "Maximum possible token supply, affecting long-term value and inflation",
+      "tvl_usd": "Total Value Locked measures how much value is secured by a protocol",
+      "vesting_schedule": "Defines when team and investor tokens unlock, affecting potential sell pressure",
+      "distribution_score": "How well token supply is distributed among different holders",
+      "treasury_usd": "Project's financial reserves, indicating sustainability",
+      "burn_mechanism": "Token burning reduces supply over time, potentially increasing value",
+      
+      // Liquidity metrics
+      "liquidity_locked_days": "Longer locked liquidity reduces the risk of rug pulls",
+      "cex_listings": "More exchange listings typically indicates better liquidity and legitimacy",
+      "trading_volume_24h_usd": "Higher trading volume suggests more active markets and better liquidity",
+      "holder_distribution": "How tokens are distributed among holders, signaling potential concentration risks",
+      "dex_depth_status": "Deeper liquidity pools mean less price impact when trading",
+      
+      // Community metrics
+      "twitter_followers": "Larger social media following indicates stronger community engagement",
+      "twitter_verified": "Verified accounts have higher credibility and are less likely to be scams",
+      "twitter_growth_7d": "Rapid follower growth shows increasing interest in the project",
+      "telegram_members": "Active messaging communities suggest engaged users",
+      "discord_members": "Strong Discord presence indicates developer and community engagement",
+      "active_channels": "More active communication channels suggest better community management",
+      "team_visibility": "Transparent teams with public identities have higher accountability",
+      
+      // Development metrics
+      "github_repo": "Open source code allows community verification of security and functionality",
+      "is_open_source": "Transparent code builds trust and allows inspection",
+      "contributors_count": "More contributors typically means better code and faster development",
+      "commits_30d": "Recent code commits show active development",
+      "last_commit": "Recent commits indicate ongoing maintenance and development",
+      "roadmap_progress": "Shows how well the team delivers on promises"
+    };
+    
+    const formattedKey = key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim().toLowerCase();
+    return descriptions[key] || `This metric shows the ${formattedKey} of the token`;
   };
 
   const renderTabContent = (content: React.ReactNode, isBlurred: boolean) => {
@@ -79,19 +158,25 @@ export default function CategoryTabs({
         {Object.entries(displayableData).map(([key, value]: [string, any]) => (
           <Card key={key} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium capitalize">
-                {key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim()}
+              <CardTitle className="text-sm font-medium capitalize flex items-center justify-between">
+                <span>{key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim()}</span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                        <Info className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">{getMetricDescription(key)}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-lg font-semibold text-foreground">
-                {value === null || value === undefined
-                  ? "N/A"
-                  : typeof value === 'boolean'
-                    ? value ? "Yes" : "No"
-                    : typeof value === 'object'
-                      ? JSON.stringify(value)
-                      : String(value)}
+                {formatValue(key, value)}
               </CardDescription>
             </CardContent>
           </Card>
@@ -219,8 +304,8 @@ export default function CategoryTabs({
               : "Security analysis data is not available for this token."}
           </AlertDescription>
         </Alert>
-        {renderMetrics(securityData, !isUserPro)} {/* Updated to use the consolidated isUserPro */}
-        {renderBreakdown(securityData, !isUserPro)} {/* Updated to use the consolidated isUserPro */}
+        {renderMetrics(securityData, !isUserPro)}
+        {renderBreakdown(securityData, !isUserPro)}
       </TabsContent>
 
       <TabsContent value="liquidity" className="space-y-4">

@@ -1,11 +1,12 @@
 
 import { Link } from "react-router-dom";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowRight, ExternalLink, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
 
 interface TokenCardProps {
   name: string;
@@ -20,6 +21,7 @@ interface TokenCardProps {
   website?: string;
   twitter?: string;
   github?: string;
+  description?: string;
   onClick?: () => void;
   showActions?: boolean;
 }
@@ -37,12 +39,34 @@ export default function TokenCard({
   website,
   twitter,
   github,
+  description,
   onClick,
   showActions = true
 }: TokenCardProps) {
   const shortenAddress = (address: string) => {
     if (!address) return "";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const formatNumber = (value: number | undefined): string => {
+    if (value === undefined) return "N/A";
+    
+    // For very large numbers
+    if (value >= 1000000000) {
+      return `$${(value / 1000000000).toFixed(2)}B`;
+    } 
+    // For millions
+    else if (value >= 1000000) {
+      return `$${(value / 1000000).toFixed(2)}M`;
+    }
+    // For thousands
+    else if (value >= 1000) {
+      return `$${(value / 1000).toFixed(2)}K`;
+    } 
+    // For regular numbers
+    else {
+      return `$${value.toFixed(2)}`;
+    }
   };
 
   const copyAddress = async () => {
@@ -57,6 +81,21 @@ export default function TokenCard({
         console.error("Failed to copy:", err);
       }
     }
+  };
+
+  // Generate a token summary based on available data
+  const getTokenSummary = () => {
+    if (description) return description;
+    
+    let summary = `${name} (${symbol}) is a cryptocurrency`;
+    if (launchDate) {
+      const date = new Date(launchDate);
+      summary += ` launched on ${date.toLocaleDateString()}`;
+    }
+    if (marketCap) {
+      summary += ` with a market cap of ${marketCap}`;
+    }
+    return summary;
   };
 
   return (
@@ -96,29 +135,55 @@ export default function TokenCard({
                 </div>
               </div>
               
-              {price !== undefined && (
-                <div className="text-right">
-                  <div className="font-bold">${price.toLocaleString()}</div>
-                  {priceChange !== undefined && (
-                    <div className={`text-sm ${priceChange >= 0 ? 'text-success' : 'text-danger'}`}>
-                      {priceChange >= 0 ? '+' : ''}{priceChange}%
-                    </div>
-                  )}
+              {score !== undefined && (
+                <div className="relative w-16 h-16">
+                  {/* Background circle */}
+                  <div className="absolute inset-0 rounded-full bg-gray-700" />
+                  
+                  {/* Colored progress arc */}
+                  <svg className="absolute inset-0 w-full h-full -rotate-90 transform">
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      stroke={score >= 70 ? "#10b981" : score >= 40 ? "#f59e0b" : "#ef4444"}
+                      strokeWidth="8"
+                      fill="transparent"
+                      strokeDasharray={`${score * 1.76} 176`} // 2πr ≈ 176 for r=28
+                    />
+                  </svg>
+                  
+                  {/* Score text in the middle */}
+                  <div className="absolute inset-0 flex items-center justify-center font-bold text-xl">
+                    {score}
+                  </div>
                 </div>
               )}
             </div>
             
-            {marketCap && (
-              <div className="text-sm text-muted-foreground mt-1">
-                Market Cap: ${marketCap}
-              </div>
-            )}
+            {/* Token summary */}
+            <div className="mt-2 text-sm text-muted-foreground">
+              {getTokenSummary()}
+            </div>
             
-            {score !== undefined && (
-              <div className="text-sm font-semibold mt-1">
-                Health Score: {score}%
-              </div>
-            )}
+            <div className="flex justify-between items-center mt-3">
+              {price !== undefined && (
+                <div>
+                  <div className="font-bold">{formatNumber(price)}</div>
+                  {priceChange !== undefined && (
+                    <div className={`text-sm ${priceChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}%
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {marketCap && (
+                <div className="text-sm text-muted-foreground">
+                  Market Cap: {marketCap}
+                </div>
+              )}
+            </div>
           </div>
         </div>
         

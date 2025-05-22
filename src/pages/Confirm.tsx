@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -33,6 +32,28 @@ export default function Confirm() {
   
   const navigate = useNavigate();
   const { user, isAuthenticated, loading } = useAuth();
+
+  // Helper function to format numbers nicely
+  const formatNumber = (value: number | undefined): string => {
+    if (value === undefined) return "N/A";
+    
+    // For very large numbers
+    if (value >= 1000000000) {
+      return `$${(value / 1000000000).toFixed(2)}B`;
+    } 
+    // For millions
+    else if (value >= 1000000) {
+      return `$${(value / 1000000).toFixed(2)}M`;
+    }
+    // For thousands
+    else if (value >= 1000) {
+      return `$${(value / 1000).toFixed(2)}K`;
+    } 
+    // For regular numbers
+    else {
+      return `$${value.toFixed(2)}`;
+    }
+  };
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -175,8 +196,6 @@ export default function Confirm() {
         return;
       }
       
-      // THIS IS THE ONLY PLACE WHERE WE SAVE TOKEN INFO
-      
       // Check if the token already exists in our database
       const { data: existingToken } = await supabase
         .from("token_data_cache")
@@ -184,6 +203,12 @@ export default function Confirm() {
         .eq("token_address", tokenAddress)
         .maybeSingle();
 
+      // Format numbers for display and storage
+      const formattedPrice = token.price_usd || 0;
+      const formattedMarketCap = typeof token.market_cap === 'number' ? 
+        formatNumber(token.market_cap) : 
+        (token.market_cap || '0');
+        
       // Save or update token info in token_data_cache
       if (existingToken) {
         // Update existing token
@@ -194,9 +219,9 @@ export default function Confirm() {
             symbol: token.symbol,
             logo_url: token.large || token.thumb,
             coingecko_id: token.id,
-            current_price_usd: token.price_usd,
+            current_price_usd: formattedPrice,
             price_change_24h: token.price_change_24h,
-            market_cap_usd: token.market_cap
+            market_cap_usd: formattedMarketCap
           })
           .eq("token_address", tokenAddress);
       } else {
@@ -209,8 +234,8 @@ export default function Confirm() {
             symbol: token.symbol,
             logo_url: token.large || token.thumb,
             coingecko_id: token.id,
-            current_price_usd: token.price_usd,
-            market_cap_usd: token.market_cap,
+            current_price_usd: formattedPrice,
+            market_cap_usd: formattedMarketCap,
             price_change_24h: token.price_change_24h
           });
       }
@@ -237,15 +262,15 @@ export default function Confirm() {
         name: token.name,
         symbol: token.symbol,
         logo: token.large || token.thumb,
-        price_usd: token.price_usd,
+        price_usd: formattedPrice,
         price_change_24h: token.price_change_24h,
-        market_cap_usd: token.market_cap
+        market_cap_usd: formattedMarketCap
       };
       
       console.log("Saving selected token to localStorage:", tokenInfo);
       localStorage.setItem("selectedToken", JSON.stringify(tokenInfo));
       
-      // Navigate to scan loading page with consistent parameter naming
+      // Navigate to scan-loading with consistent parameter naming
       // CRITICAL: Make sure we use the token address here and pass it correctly
       console.log("Navigating to scan-loading with parameters:", {
         token: tokenAddress,
@@ -341,10 +366,11 @@ export default function Confirm() {
                   name={token.name}
                   symbol={token.symbol.toUpperCase()}
                   logo={token.large || token.thumb}
-                  marketCap={token.market_cap_rank ? `Rank #${token.market_cap_rank}` : "Unranked"}
+                  marketCap={token.market_cap_rank ? `Rank #${token.market_cap_rank}` : (typeof token.market_cap === 'number' ? formatNumber(token.market_cap) : 'N/A')}
                   price={token.price_usd || 0}
                   priceChange={token.price_change_24h || 0}
                   onClick={() => handleSelectToken(token)}
+                  description={`${token.name} (${token.symbol.toUpperCase()}) is a cryptocurrency${token.market_cap_rank ? ` ranked #${token.market_cap_rank}` : ''}`}
                 />
               ))}
             </div>
