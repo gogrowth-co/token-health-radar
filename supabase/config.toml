@@ -42,3 +42,6 @@ vector_port = 54328
 
 [functions.run-token-scan]
 verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false

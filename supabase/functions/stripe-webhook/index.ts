@@ -142,9 +142,9 @@ async function handleCheckoutCompleted(session: any) {
   
   const plan = getPlanFromPriceId(priceId);
   
-  // First, find the user by email
+  // Find user by email instead of directly accessing auth.users
   const { data: userData, error: userError } = await supabase
-    .from('auth.users')
+    .from('subscribers')
     .select('id')
     .eq('email', email)
     .single();
