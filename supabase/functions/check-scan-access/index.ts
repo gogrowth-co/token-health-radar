@@ -64,18 +64,16 @@ serve(async (req) => {
     const scansUsed = subscriberData?.scans_used || 0;
     const scanLimit = subscriberData?.pro_scan_limit || 3;
 
-    // For Pro users, we need to check if they've used their monthly quota
-    // For Free users, it's a lifetime limit of 3
-    
     // Initial search is always allowed
     let canScan = true;
     
-    // Only when selecting a token we check the limits
+    // Check scan limits only when selecting a token for detailed analysis
     let canSelectToken = true;
     if (plan === "pro") {
+      // Pro users have a monthly scan limit
       canSelectToken = scansUsed < scanLimit;
     } else {
-      // Free tier
+      // Free tier has a lifetime limit
       canSelectToken = scansUsed < 3;
     }
     

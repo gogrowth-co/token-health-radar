@@ -3,14 +3,15 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import TokenCard from "@/components/TokenCard";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import TokenSearchForm from "@/components/token/TokenSearchForm";
+import TokenSearchResults from "@/components/token/TokenSearchResults";
+import useTokenSelection from "@/components/token/useTokenSelection";
+import ScanLimitDialog from "@/components/token/ScanLimitDialog";
 
 interface TokenResult {
   id: string;
@@ -26,47 +27,25 @@ interface TokenResult {
 }
 
 export default function Confirm() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get("token") || "");
   const [results, setResults] = useState<TokenResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
-  const [scanAccessData, setScanAccessData] = useState<{
-    plan: string;
-    scansUsed: number;
-    scanLimit: number;
-  } | null>(null);
   
   const navigate = useNavigate();
   const { user, isAuthenticated, loading } = useAuth();
-
-  // Helper function to format numbers nicely
-  const formatNumber = (value: number | undefined): string => {
-    if (value === undefined) return "N/A";
-    
-    // For very large numbers
-    if (value >= 1000000000) {
-      return `$${(value / 1000000000).toFixed(2)}B`;
-    } 
-    // For millions
-    else if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`;
-    }
-    // For thousands
-    else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(2)}K`;
-    } 
-    // For regular numbers
-    else {
-      return `$${value.toFixed(2)}`;
-    }
-  };
+  const { 
+    handleSelectToken, 
+    handleUpgrade, 
+    showUpgradeDialog, 
+    setShowUpgradeDialog,
+    scanAccessData 
+  } = useTokenSelection();
 
   // Redirect if not authenticated
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      // Store the search query in localStorage so we can use it after login
       if (searchTerm) {
         localStorage.setItem("pendingTokenSearch", searchTerm);
       }
@@ -97,31 +76,30 @@ export default function Confirm() {
         const data = await response.json();
         
         if (data && data.coins) {
-          // Sort results by market cap rank (if available)
+          // Sort results by market cap rank
           const sortedCoins = data.coins
-            .filter((coin: any) => coin) // Filter out any null/undefined entries
+            .filter((coin: any) => coin)
             .sort((a: any, b: any) => {
-              // Sort by market cap rank (lower rank = higher market cap)
               const rankA = a.market_cap_rank || Infinity;
               const rankB = b.market_cap_rank || Infinity;
               return rankA - rankB;
             });
             
-          // Take only top results (limit to 5)
+          // Take only top results
           const topCoins = sortedCoins.slice(0, 5);
           
           // Enhanced results with full token data
           const enhancedResults = await Promise.all(
             topCoins.map(async (coin: any) => {
               try {
-                // Get detailed coin data including platform addresses and price information
+                // Get detailed coin data
                 const detailResponse = await fetch(
                   `https://api.coingecko.com/api/v3/coins/${coin.id}?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false`
                 );
                 
                 if (detailResponse.ok) {
                   const detailData = await detailResponse.json();
-                  // Return enhanced coin data with platforms, price and market cap
+                  // Return enhanced coin data
                   return {
                     ...coin,
                     platforms: detailData.platforms || {},
@@ -156,9 +134,8 @@ export default function Confirm() {
     searchTokens();
   }, [searchTerm, isAuthenticated]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchTerm.trim()) {
+  const handleSearch = (newSearchTerm: string) => {
+    if (!newSearchTerm.trim()) {
       toast.error("Empty search", {
         description: "Please enter a token name"
       });
@@ -166,149 +143,8 @@ export default function Confirm() {
     }
     
     // Update URL with new search term
-    navigate(`/confirm?token=${encodeURIComponent(searchTerm)}`);
-  };
-
-  const handleSelectToken = async (token: TokenResult) => {
-    try {
-      // Get Ethereum address if available - CRITICAL PART HERE
-      let tokenAddress = "";
-      
-      // Check if platforms is available and has Ethereum address
-      if (token.platforms && token.platforms.ethereum) {
-        tokenAddress = token.platforms.ethereum;
-        console.log(`Found Ethereum address: ${tokenAddress} for token ${token.name}`);
-      }
-      
-      // If no Ethereum address, use a placeholder derived from the token id
-      if (!tokenAddress) {
-        console.warn(`No Ethereum address found for ${token.name}, using placeholder`);
-        // Create a more consistent placeholder format for testing
-        tokenAddress = `0x${token.id.replace(/-/g, '').substring(0, 38).padEnd(38, '0')}`;
-      }
-      
-      console.log(`Selected token: ${token.name}, address: ${tokenAddress}, id: ${token.id}`);
-      
-      // Check if user has access to perform a scan
-      const { data: accessData, error: accessError } = await supabase.functions.invoke('check-scan-access');
-      
-      if (accessError) {
-        console.error("Error checking scan access:", accessError);
-        toast.error("Could not check scan access. Please try again.");
-        return;
-      }
-      
-      // Check if the user can select a token (this is the actual scan count check)
-      if (!accessData.canSelectToken) {
-        // Store the data for the upgrade dialog
-        setScanAccessData({
-          plan: accessData.plan,
-          scansUsed: accessData.scansUsed,
-          scanLimit: accessData.scanLimit
-        });
-        
-        // Show upgrade dialog
-        setShowUpgradeDialog(true);
-        return;
-      }
-      
-      // Check if the token already exists in our database
-      const { data: existingToken } = await supabase
-        .from("token_data_cache")
-        .select("*")
-        .eq("token_address", tokenAddress)
-        .maybeSingle();
-
-      // Format numbers for display and storage
-      const formattedPrice = token.price_usd || 0;
-      // Convert market cap to number
-      const marketCapNumber = typeof token.market_cap === 'number' ? 
-        token.market_cap : 
-        0; // Default to 0 if not a number
-        
-      const formattedMarketCap = formatNumber(marketCapNumber);
-        
-      // Save or update token info in token_data_cache
-      if (existingToken) {
-        // Update existing token with correct types
-        await supabase
-          .from("token_data_cache")
-          .update({
-            name: token.name,
-            symbol: token.symbol,
-            logo_url: token.large || token.thumb,
-            coingecko_id: token.id,
-            current_price_usd: formattedPrice, // This is a number
-            price_change_24h: token.price_change_24h,
-            market_cap_usd: marketCapNumber // This is a number, not a string
-          })
-          .eq("token_address", tokenAddress);
-      } else {
-        // Insert new token with correct types
-        await supabase
-          .from("token_data_cache")
-          .insert({
-            token_address: tokenAddress,
-            name: token.name,
-            symbol: token.symbol,
-            logo_url: token.large || token.thumb,
-            coingecko_id: token.id,
-            current_price_usd: formattedPrice, // This is a number
-            market_cap_usd: marketCapNumber, // This is a number, not a string
-            price_change_24h: token.price_change_24h
-          });
-      }
-
-      // IMPORTANT: Only add a scan record when a token is actually selected
-      // This ensures we only count actual scans, not just searches
-      if (user) {
-        await supabase.from("token_scans").insert({
-          user_id: user.id,
-          token_address: tokenAddress,
-          pro_scan: true
-        });
-        
-        // Increment the user's scans_used count
-        await supabase
-          .from("subscribers")
-          .update({ scans_used: accessData.scansUsed + 1 })
-          .eq("id", user.id);
-      }
-      
-      // Save token info to localStorage for persistence
-      const tokenInfo = {
-        address: tokenAddress,
-        id: token.id,
-        name: token.name,
-        symbol: token.symbol,
-        logo: token.large || token.thumb,
-        price_usd: formattedPrice,
-        price_change_24h: token.price_change_24h,
-        market_cap_usd: marketCapNumber  // Save as number for consistency
-      };
-      
-      console.log("Saving selected token to localStorage:", tokenInfo);
-      localStorage.setItem("selectedToken", JSON.stringify(tokenInfo));
-      
-      // Navigate to scan-loading with consistent parameter naming
-      console.log("Navigating to scan-loading with parameters:", {
-        token: tokenAddress,
-        id: token.id
-      });
-      
-      navigate(`/scan-loading?token=${encodeURIComponent(tokenAddress)}&id=${token.id}`);
-      
-    } catch (error) {
-      console.error("Error saving token data:", error);
-      toast.error("Error", {
-        description: "Failed to save token data. Please try again."
-      });
-    }
-  };
-
-  const handleUpgrade = () => {
-    navigate('/pricing');
-    setShowUpgradeDialog(false);
+    setSearchParams({ token: newSearchTerm });
+    setSearchTerm(newSearchTerm);
   };
 
   // Show loading while auth is checking
@@ -351,90 +187,32 @@ export default function Confirm() {
           </div>
           
           <div className="mb-8">
-            <form onSubmit={handleSearch}>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search token name"
-                  className="pl-9"
-                />
-              </div>
-            </form>
+            <TokenSearchForm 
+              initialSearchTerm={searchTerm}
+              onSearch={handleSearch}
+            />
           </div>
           
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <div className="flex flex-col items-center gap-4">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p>Searching for tokens...</p>
-              </div>
-            </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">{error}</p>
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => navigate("/")}
-              >
-                Try a different search
-              </Button>
-            </div>
-          ) : results.length > 0 ? (
-            <div className="space-y-4">
-              {results.map((token) => (
-                <TokenCard
-                  key={token.id}
-                  name={token.name}
-                  symbol={token.symbol.toUpperCase()}
-                  logo={token.large || token.thumb}
-                  marketCap={token.market_cap_rank ? `Rank #${token.market_cap_rank}` : (typeof token.market_cap === 'number' ? formatNumber(token.market_cap) : 'N/A')}
-                  price={token.price_usd || 0}
-                  priceChange={token.price_change_24h || 0}
-                  onClick={() => handleSelectToken(token)}
-                  description={`${token.name} (${token.symbol.toUpperCase()}) is a cryptocurrency${token.market_cap_rank ? ` ranked #${token.market_cap_rank}` : ''}`}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              {searchTerm ? (
-                <p className="text-muted-foreground">No tokens found matching "{searchTerm}"</p>
-              ) : (
-                <p className="text-muted-foreground">Enter a token name to search</p>
-              )}
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => navigate("/")}
-              >
-                Try a different search
-              </Button>
-            </div>
-          )}
+          <TokenSearchResults
+            isLoading={isLoading}
+            error={error}
+            results={results}
+            searchTerm={searchTerm}
+            onSelectToken={handleSelectToken}
+          />
         </div>
       </main>
       
-      <AlertDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Scan Limit Reached</AlertDialogTitle>
-            <AlertDialogDescription>
-              {scanAccessData?.plan === 'free'
-                ? `You have used ${scanAccessData?.scansUsed} out of ${scanAccessData?.scanLimit} free scans. Upgrade to Pro for more scans and advanced features.`
-                : `You have used ${scanAccessData?.scansUsed} out of ${scanAccessData?.scanLimit} Pro scans this month. Your limit will reset with your next billing cycle.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleUpgrade}>
-              {scanAccessData?.plan === 'free' ? 'Upgrade to Pro' : 'Manage Subscription'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {scanAccessData && (
+        <ScanLimitDialog
+          open={showUpgradeDialog}
+          onOpenChange={setShowUpgradeDialog}
+          onUpgrade={handleUpgrade}
+          plan={scanAccessData.plan}
+          scansUsed={scanAccessData.scansUsed}
+          scanLimit={scanAccessData.scanLimit}
+        />
+      )}
       
       <Footer />
     </div>
