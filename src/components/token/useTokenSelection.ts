@@ -16,6 +16,7 @@ interface TokenResult {
   market_cap?: number;
   price_usd?: number;
   price_change_24h?: number;
+  isErc20?: boolean;
 }
 
 interface ScanAccessData {
@@ -50,6 +51,14 @@ export default function useTokenSelection() {
 
   const handleSelectToken = useCallback(async (token: TokenResult) => {
     try {
+      // Check if token is ERC-20 compatible
+      if (!token.isErc20) {
+        toast.error("Unsupported Token", {
+          description: "This token is not ERC-20 compatible. We're adding support for more blockchains soon."
+        });
+        return;
+      }
+      
       // Get Ethereum address if available
       let tokenAddress = "";
       

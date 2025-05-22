@@ -1,8 +1,10 @@
 
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle, Info } from "lucide-react";
 import TokenCard from "@/components/TokenCard";
 import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TokenResult {
   id: string;
@@ -15,6 +17,7 @@ interface TokenResult {
   market_cap?: number;
   price_usd?: number;
   price_change_24h?: number;
+  isErc20?: boolean;
 }
 
 interface TokenSearchResultsProps {
@@ -86,17 +89,48 @@ export default function TokenSearchResults({
     return (
       <div className="space-y-4">
         {results.map((token) => (
-          <TokenCard
-            key={token.id}
-            name={token.name}
-            symbol={token.symbol.toUpperCase()}
-            logo={token.large || token.thumb}
-            marketCap={token.market_cap_rank ? `Rank #${token.market_cap_rank}` : (typeof token.market_cap === 'number' ? formatNumber(token.market_cap) : 'N/A')}
-            price={token.price_usd || 0}
-            priceChange={token.price_change_24h || 0}
-            onClick={() => onSelectToken(token)}
-            description={`${token.name} (${token.symbol.toUpperCase()}) is a cryptocurrency${token.market_cap_rank ? ` ranked #${token.market_cap_rank}` : ''}`}
-          />
+          <div key={token.id} className="relative">
+            <TokenCard
+              key={token.id}
+              name={token.name}
+              symbol={token.symbol.toUpperCase()}
+              logo={token.large || token.thumb}
+              marketCap={token.market_cap_rank ? `Rank #${token.market_cap_rank}` : (typeof token.market_cap === 'number' ? formatNumber(token.market_cap) : 'N/A')}
+              price={token.price_usd || 0}
+              priceChange={token.price_change_24h || 0}
+              onClick={token.isErc20 ? () => onSelectToken(token) : undefined}
+              description={
+                <>
+                  {token.name} ({token.symbol.toUpperCase()}) is a cryptocurrency{token.market_cap_rank ? ` ranked #${token.market_cap_rank}` : ''}
+                  <div className="mt-2">
+                    {token.isErc20 ? (
+                      <Badge className="bg-green-500 hover:bg-green-600">ERC-20 Compatible</Badge>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <Badge className="bg-red-500 hover:bg-red-600">Unsupported Chain</Badge>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Info className="h-4 w-4 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>This token is not supported yet. Support for Solana, Arbitrum, and others is coming soon.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    )}
+                  </div>
+                </>
+              }
+              showActions={token.isErc20}
+            />
+            {!token.isErc20 && (
+              <div className="absolute bottom-4 right-4 px-4 py-2 rounded-md bg-muted text-sm">
+                This token is not ERC-20 compatible. We're adding support for more blockchains soon.
+              </div>
+            )}
+          </div>
         ))}
       </div>
     );

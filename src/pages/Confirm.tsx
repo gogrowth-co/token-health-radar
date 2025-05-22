@@ -24,6 +24,7 @@ interface TokenResult {
   market_cap?: number;
   price_usd?: number;
   price_change_24h?: number;
+  isErc20?: boolean;
 }
 
 export default function Confirm() {
@@ -99,19 +100,28 @@ export default function Confirm() {
                 
                 if (detailResponse.ok) {
                   const detailData = await detailResponse.json();
+                  
+                  // Check if token is ERC-20 (has Ethereum address)
+                  const isErc20 = detailData.platforms && 
+                                  detailData.platforms.ethereum && 
+                                  detailData.platforms.ethereum.length > 0;
+                  
+                  console.log(`Token ${coin.id} ERC-20 status:`, isErc20 ? "Compatible" : "Not compatible");
+                  
                   // Return enhanced coin data
                   return {
                     ...coin,
                     platforms: detailData.platforms || {},
                     price_usd: detailData.market_data?.current_price?.usd || 0,
                     price_change_24h: detailData.market_data?.price_change_percentage_24h || 0,
-                    market_cap: detailData.market_data?.market_cap?.usd || 0
+                    market_cap: detailData.market_data?.market_cap?.usd || 0,
+                    isErc20: isErc20
                   };
                 }
-                return coin;
+                return {...coin, isErc20: false};
               } catch (err) {
                 console.error(`Error fetching details for ${coin.id}:`, err);
-                return coin;
+                return {...coin, isErc20: false};
               }
             })
           );
