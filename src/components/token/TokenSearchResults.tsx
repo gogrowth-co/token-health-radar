@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle, Info } from "lucide-react";
 import TokenCard from "@/components/TokenCard";
@@ -119,9 +118,6 @@ export default function TokenSearchResults({
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                <div className="px-4 py-2 rounded-md bg-muted text-sm">
-                  This token is not ERC-20 compatible. We're adding support for more blockchains soon.
-                </div>
               </div>
             )}
           </div>

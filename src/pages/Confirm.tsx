@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -101,12 +100,14 @@ export default function Confirm() {
                 if (detailResponse.ok) {
                   const detailData = await detailResponse.json();
                   
-                  // Check if token is ERC-20 (has Ethereum address)
-                  const isErc20 = detailData.platforms && 
-                                  detailData.platforms.ethereum && 
-                                  detailData.platforms.ethereum.length > 0;
+                  // FIXED: More robust ERC-20 detection
+                  // Check if token has an Ethereum address in the platforms field
+                  const hasEthereumAddress = !!detailData.platforms?.ethereum;
                   
-                  console.log(`Token ${coin.id} ERC-20 status:`, isErc20 ? "Compatible" : "Not compatible");
+                  // Debug logging for platforms data
+                  console.log(`Token ${coin.id} platforms:`, detailData.platforms);
+                  console.log(`Token ${coin.id} Ethereum address:`, detailData.platforms?.ethereum);
+                  console.log(`Token ${coin.id} ERC-20 status:`, hasEthereumAddress ? "Compatible" : "Not compatible");
                   
                   // Return enhanced coin data
                   return {
@@ -115,7 +116,7 @@ export default function Confirm() {
                     price_usd: detailData.market_data?.current_price?.usd || 0,
                     price_change_24h: detailData.market_data?.price_change_percentage_24h || 0,
                     market_cap: detailData.market_data?.market_cap?.usd || 0,
-                    isErc20: isErc20
+                    isErc20: hasEthereumAddress
                   };
                 }
                 return {...coin, isErc20: false};
