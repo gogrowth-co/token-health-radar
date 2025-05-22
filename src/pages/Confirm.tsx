@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -205,13 +206,16 @@ export default function Confirm() {
 
       // Format numbers for display and storage
       const formattedPrice = token.price_usd || 0;
-      const formattedMarketCap = typeof token.market_cap === 'number' ? 
-        formatNumber(token.market_cap) : 
-        (token.market_cap || '0');
+      // Fix the first issue - Convert market cap to number
+      const marketCapNumber = typeof token.market_cap === 'number' ? 
+        token.market_cap : 
+        0; // Default to 0 if not a number
+        
+      const formattedMarketCap = formatNumber(marketCapNumber);
         
       // Save or update token info in token_data_cache
       if (existingToken) {
-        // Update existing token
+        // Update existing token - Fix the second issue by using the correct type for current_price_usd
         await supabase
           .from("token_data_cache")
           .update({
@@ -219,13 +223,13 @@ export default function Confirm() {
             symbol: token.symbol,
             logo_url: token.large || token.thumb,
             coingecko_id: token.id,
-            current_price_usd: formattedPrice,
+            current_price_usd: formattedPrice, // This should be a number
             price_change_24h: token.price_change_24h,
-            market_cap_usd: formattedMarketCap
+            market_cap_usd: marketCapNumber // This should be a number, not a string
           })
           .eq("token_address", tokenAddress);
       } else {
-        // Insert new token
+        // Insert new token - Fix by using the correct structure
         await supabase
           .from("token_data_cache")
           .insert({
@@ -234,8 +238,8 @@ export default function Confirm() {
             symbol: token.symbol,
             logo_url: token.large || token.thumb,
             coingecko_id: token.id,
-            current_price_usd: formattedPrice,
-            market_cap_usd: formattedMarketCap,
+            current_price_usd: formattedPrice, // This should be a number
+            market_cap_usd: marketCapNumber, // This should be a number, not a string
             price_change_24h: token.price_change_24h
           });
       }
@@ -264,7 +268,7 @@ export default function Confirm() {
         logo: token.large || token.thumb,
         price_usd: formattedPrice,
         price_change_24h: token.price_change_24h,
-        market_cap_usd: formattedMarketCap
+        market_cap_usd: marketCapNumber  // Save as number for consistency
       };
       
       console.log("Saving selected token to localStorage:", tokenInfo);
