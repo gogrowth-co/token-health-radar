@@ -8,6 +8,8 @@ import Footer from "@/components/Footer";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { cryptoTrivia } from "@/lib/mock-data";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function ScanLoading() {
   const [searchParams] = useSearchParams();
@@ -16,6 +18,8 @@ export default function ScanLoading() {
   const [trivia, setTrivia] = useState("");
   const [tokenInfo, setTokenInfo] = useState<any>(null);
   const [isScanning, setIsScanning] = useState(true);
+  const [scanFailed, setScanFailed] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const { user } = useAuth();
   
   // Get token from URL params (parameter name is always 'token')
@@ -142,13 +146,23 @@ export default function ScanLoading() {
 
         if (!data) {
           console.error("ScanLoading: No data returned from token scan");
-          throw new Error("No data returned from scan");
+          setScanFailed(true);
+          setErrorMessage("No data returned from scan");
+          return;
         }
 
         if (!data.allowed) {
           console.error("ScanLoading: Scan not allowed:", data.reason);
-          toast.error(data.reason || "You don't have permission to scan this token.");
-          navigate("/");
+          setScanFailed(true);
+          setErrorMessage(data.reason || "You don't have permission to scan this token.");
+          return;
+        }
+
+        // Check if scan was successful
+        if (!data.success) {
+          console.error("ScanLoading: Scan failed:", data.error_message);
+          setScanFailed(true);
+          setErrorMessage(data.error_message || "Failed to retrieve token data. Please try again.");
           return;
         }
 
@@ -171,8 +185,8 @@ export default function ScanLoading() {
         }, 1000); // Short delay to ensure progress bar completes
       } catch (error) {
         console.error("ScanLoading: Error during token scan:", error instanceof Error ? error.message : String(error));
-        toast.error("Failed to scan token. Please try again later.");
-        navigate("/");
+        setScanFailed(true);
+        setErrorMessage(error instanceof Error ? error.message : "Unknown error occurred");
       } finally {
         setIsScanning(false);
       }
@@ -212,43 +226,77 @@ export default function ScanLoading() {
     }
   })();
 
+  const handleRetry = () => {
+    setIsScanning(true);
+    setScanFailed(false);
+    setProgress(0);
+    window.location.reload();
+  };
+
+  const handleBackToSearch = () => {
+    navigate("/");
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       
       <main className="flex-1 container px-4 py-8 flex items-center justify-center">
-        <div className="w-full max-w-xl text-center space-y-8">
-          <div className="flex flex-col items-center">
-            {displayToken.logo ? (
-              <img 
-                src={displayToken.logo} 
-                alt={`${displayToken.name} logo`} 
-                className="w-20 h-20 rounded-full mb-4 object-cover"
-              />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-4">
-                <span className="text-2xl text-white">
-                  {tokenAddress.substring(0, 2).toUpperCase()}
-                </span>
+        {!scanFailed ? (
+          <div className="w-full max-w-xl text-center space-y-8">
+            <div className="flex flex-col items-center">
+              {displayToken.logo ? (
+                <img 
+                  src={displayToken.logo} 
+                  alt={`${displayToken.name} logo`} 
+                  className="w-20 h-20 rounded-full mb-4 object-cover"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-4">
+                  <span className="text-2xl text-white">
+                    {tokenAddress.substring(0, 2).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <h1 className="text-3xl font-bold">{displayToken.name}</h1>
+              <p className="text-muted-foreground mt-2">Scanning token for health metrics...</p>
+            </div>
+            
+            <div className="w-full">
+              <Progress value={progress} className="h-2 mb-2" />
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Scanning...</span>
+                <span>{progress}%</span>
               </div>
-            )}
-            <h1 className="text-3xl font-bold">{displayToken.name}</h1>
-            <p className="text-muted-foreground mt-2">Scanning token for health metrics...</p>
-          </div>
-          
-          <div className="w-full">
-            <Progress value={progress} className="h-2 mb-2" />
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>Scanning...</span>
-              <span>{progress}%</span>
+            </div>
+            
+            <div className="py-6 px-6 rounded-lg bg-muted">
+              <h3 className="text-lg font-medium mb-2">Did you know?</h3>
+              <p className="text-muted-foreground italic">{trivia}</p>
             </div>
           </div>
-          
-          <div className="py-6 px-6 rounded-lg bg-muted">
-            <h3 className="text-lg font-medium mb-2">Did you know?</h3>
-            <p className="text-muted-foreground italic">{trivia}</p>
+        ) : (
+          <div className="w-full max-w-xl text-center space-y-8">
+            <div className="flex flex-col items-center">
+              <div className="w-20 h-20 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center mb-4">
+                <AlertCircle className="h-10 w-10 text-red-500" />
+              </div>
+              <h1 className="text-3xl font-bold">Scan Failed</h1>
+              <p className="text-muted-foreground mt-2 max-w-md">
+                {errorMessage || "We encountered an error while scanning this token. Please try again."}
+              </p>
+              
+              <div className="flex gap-4 mt-8">
+                <Button variant="outline" onClick={handleBackToSearch}>
+                  Back to Search
+                </Button>
+                <Button onClick={handleRetry}>
+                  Retry Scan
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </main>
       
       <Footer />

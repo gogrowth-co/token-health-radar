@@ -132,21 +132,6 @@ export default function useTokenSelection() {
             price_change_24h: token.price_change_24h
           });
       }
-
-      // Add a scan record when a token is actually selected
-      if (user) {
-        await supabase.from("token_scans").insert({
-          user_id: user.id,
-          token_address: tokenAddress,
-          pro_scan: true
-        });
-        
-        // Increment the user's scans_used count
-        await supabase
-          .from("subscribers")
-          .update({ scans_used: accessData.scansUsed + 1 })
-          .eq("id", user.id);
-      }
       
       // Save token info to localStorage for persistence
       const tokenInfo = {

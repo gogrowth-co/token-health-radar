@@ -36,7 +36,10 @@ serve(async (req) => {
     if (!body.token_address) {
       console.error("[TOKEN-SCAN] Missing token_address parameter");
       return new Response(
-        JSON.stringify({ error: "Token address is required" }),
+        JSON.stringify({ 
+          success: false, 
+          error_message: "Token address is required" 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -46,7 +49,10 @@ serve(async (req) => {
     if (!isValidAddress) {
       console.error("[TOKEN-SCAN] Invalid token address format:", body.token_address);
       return new Response(
-        JSON.stringify({ error: "Invalid token address format" }),
+        JSON.stringify({ 
+          success: false, 
+          error_message: "Invalid token address format" 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -54,7 +60,10 @@ serve(async (req) => {
     if (!body.user_id) {
       console.error("[TOKEN-SCAN] Missing user_id parameter");
       return new Response(
-        JSON.stringify({ error: "User ID is required" }),
+        JSON.stringify({ 
+          success: false, 
+          error_message: "User ID is required" 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -75,7 +84,10 @@ serve(async (req) => {
     if (subscriberError) {
       console.error("[TOKEN-SCAN] Error fetching subscriber -", subscriberError);
       return new Response(
-        JSON.stringify({ error: "Failed to verify subscription status" }),
+        JSON.stringify({ 
+          success: false, 
+          error_message: "Failed to verify subscription status" 
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -89,7 +101,8 @@ serve(async (req) => {
       });
       return new Response(
         JSON.stringify({ 
-          allowed: false, 
+          allowed: false,
+          success: false, 
           reason: `You have reached your scan limit (${subscriber.scans_used}/${scanLimit}). Please upgrade your plan for more scans.` 
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -131,7 +144,10 @@ serve(async (req) => {
       if (insertError) {
         console.error("[TOKEN-SCAN] Error creating token in cache -", insertError);
         return new Response(
-          JSON.stringify({ error: "Failed to create token data" }),
+          JSON.stringify({ 
+            success: false, 
+            error_message: "Failed to create token data" 
+          }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -330,27 +346,7 @@ serve(async (req) => {
     // Generate a combined result
     const overallScore = Math.floor(Math.random() * 100);
     
-    // Increment the user's scan count is now done in the frontend when a token is selected
-    // We don't need to increment it again here
-      
-    // Record this scan
-    await supabase
-      .from('token_scans')
-      .insert({
-        user_id: body.user_id,
-        token_address: body.token_address,
-        score_total: overallScore,
-        pro_scan: true
-      });
-    
-    // Get complete token info
-    const { data: tokenWithAllData } = await supabase
-      .from('token_data_cache')
-      .select('*')
-      .eq('token_address', body.token_address)
-      .single();
-      
-    // Query all data for the token
+    // Ensure we have valid data - at least one category must have data
     const [
       securityResult,
       tokenomicsResult, 
@@ -364,9 +360,51 @@ serve(async (req) => {
       supabase.from('token_community_cache').select('*').eq('token_address', body.token_address).maybeSingle(),
       supabase.from('token_development_cache').select('*').eq('token_address', body.token_address).maybeSingle()
     ]);
+
+    const hasCategoryData = securityResult.data || tokenomicsResult.data || 
+                           liquidityResult.data || communityResult.data || 
+                           developmentResult.data;
+
+    if (!hasCategoryData || overallScore === 0) {
+      console.error("[TOKEN-SCAN] No valid category data found for token");
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error_message: "Could not generate valid scan data for this token." 
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Since we have valid data, now we can record this scan and increment the counter
+    // Record this scan - THIS IS NOW THE ONLY PLACE SCANS ARE COUNTED
+    await supabase
+      .from('token_scans')
+      .insert({
+        user_id: body.user_id,
+        token_address: body.token_address,
+        score_total: overallScore,
+        pro_scan: true
+      });
+        
+    // Increment the user's scan count
+    await supabase
+      .from("subscribers")
+      .update({ scans_used: subscriber.scans_used + 1 })
+      .eq("id", body.user_id);
+    
+    console.log("[TOKEN-SCAN] Successfully incremented scan count for user:", body.user_id);
+      
+    // Get complete token info
+    const { data: tokenWithAllData } = await supabase
+      .from('token_data_cache')
+      .select('*')
+      .eq('token_address', body.token_address)
+      .single();
     
     // Final scan result
     const result = {
+      success: true,
       allowed: true,
       token_info: {
         ...tokenWithAllData,
@@ -399,8 +437,9 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({
+        success: false,
         error: "Internal server error",
-        message: error instanceof Error ? error.message : "Unknown error"
+        error_message: error instanceof Error ? error.message : "Unknown error"
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
