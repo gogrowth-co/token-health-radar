@@ -99,35 +99,29 @@ export default function TokenSearchResults({
               price={token.price_usd || 0}
               priceChange={token.price_change_24h || 0}
               onClick={token.isErc20 ? () => onSelectToken(token) : undefined}
-              description={
-                <>
-                  {token.name} ({token.symbol.toUpperCase()}) is a cryptocurrency{token.market_cap_rank ? ` ranked #${token.market_cap_rank}` : ''}
-                  <div className="mt-2">
-                    {token.isErc20 ? (
-                      <Badge className="bg-green-500 hover:bg-green-600">ERC-20 Compatible</Badge>
-                    ) : (
-                      <div className="flex items-center gap-1.5">
-                        <Badge className="bg-red-500 hover:bg-red-600">Unsupported Chain</Badge>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <Info className="h-4 w-4 text-muted-foreground" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>This token is not supported yet. Support for Solana, Arbitrum, and others is coming soon.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    )}
-                  </div>
-                </>
-              }
+              description={`${token.name} (${token.symbol.toUpperCase()}) is a cryptocurrency${token.market_cap_rank ? ` ranked #${token.market_cap_rank}` : ''}`}
               showActions={token.isErc20}
             />
-            {!token.isErc20 && (
-              <div className="absolute bottom-4 right-4 px-4 py-2 rounded-md bg-muted text-sm">
-                This token is not ERC-20 compatible. We're adding support for more blockchains soon.
+            {token.isErc20 ? (
+              <div className="absolute bottom-4 right-4">
+                <Badge className="bg-green-500 hover:bg-green-600">ERC-20 Compatible</Badge>
+              </div>
+            ) : (
+              <div className="absolute bottom-4 right-4 flex items-center gap-1.5">
+                <Badge className="bg-red-500 hover:bg-red-600">Unsupported Chain</Badge>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>This token is not supported yet. Support for Solana, Arbitrum, and others is coming soon.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <div className="px-4 py-2 rounded-md bg-muted text-sm">
+                  This token is not ERC-20 compatible. We're adding support for more blockchains soon.
+                </div>
               </div>
             )}
           </div>
