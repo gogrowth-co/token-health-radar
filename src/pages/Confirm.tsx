@@ -206,7 +206,7 @@ export default function Confirm() {
 
       // Format numbers for display and storage
       const formattedPrice = token.price_usd || 0;
-      // Fix the first issue - Convert market cap to number
+      // Convert market cap to number
       const marketCapNumber = typeof token.market_cap === 'number' ? 
         token.market_cap : 
         0; // Default to 0 if not a number
@@ -215,7 +215,7 @@ export default function Confirm() {
         
       // Save or update token info in token_data_cache
       if (existingToken) {
-        // Update existing token - Fix the second issue by using the correct type for current_price_usd
+        // Update existing token with correct types
         await supabase
           .from("token_data_cache")
           .update({
@@ -223,13 +223,13 @@ export default function Confirm() {
             symbol: token.symbol,
             logo_url: token.large || token.thumb,
             coingecko_id: token.id,
-            current_price_usd: formattedPrice, // This should be a number
+            current_price_usd: formattedPrice, // This is a number
             price_change_24h: token.price_change_24h,
-            market_cap_usd: marketCapNumber // This should be a number, not a string
+            market_cap_usd: marketCapNumber // This is a number, not a string
           })
           .eq("token_address", tokenAddress);
       } else {
-        // Insert new token - Fix by using the correct structure
+        // Insert new token with correct types
         await supabase
           .from("token_data_cache")
           .insert({
@@ -238,13 +238,14 @@ export default function Confirm() {
             symbol: token.symbol,
             logo_url: token.large || token.thumb,
             coingecko_id: token.id,
-            current_price_usd: formattedPrice, // This should be a number
-            market_cap_usd: marketCapNumber, // This should be a number, not a string
+            current_price_usd: formattedPrice, // This is a number
+            market_cap_usd: marketCapNumber, // This is a number, not a string
             price_change_24h: token.price_change_24h
           });
       }
 
-      // Add a scan record
+      // IMPORTANT: Only add a scan record when a token is actually selected
+      // This ensures we only count actual scans, not just searches
       if (user) {
         await supabase.from("token_scans").insert({
           user_id: user.id,
@@ -275,7 +276,6 @@ export default function Confirm() {
       localStorage.setItem("selectedToken", JSON.stringify(tokenInfo));
       
       // Navigate to scan-loading with consistent parameter naming
-      // CRITICAL: Make sure we use the token address here and pass it correctly
       console.log("Navigating to scan-loading with parameters:", {
         token: tokenAddress,
         id: token.id

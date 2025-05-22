@@ -87,15 +87,28 @@ export default function TokenCard({
   const getTokenSummary = () => {
     if (description) return description;
     
+    // Create a more comprehensive summary with the available data
     let summary = `${name} (${symbol}) is a cryptocurrency`;
     if (launchDate) {
       const date = new Date(launchDate);
       summary += ` launched on ${date.toLocaleDateString()}`;
     }
-    if (marketCap) {
+    if (marketCap && marketCap !== "N/A") {
       summary += ` with a market cap of ${marketCap}`;
     }
+    if (score !== undefined) {
+      const healthStatus = score >= 70 ? "good" : score >= 40 ? "moderate" : "poor";
+      summary += `. The token has a ${healthStatus} health score of ${score}/100.`;
+    }
     return summary;
+  };
+
+  // Get color based on score
+  const getScoreColor = (score: number | undefined) => {
+    if (score === undefined) return "#6b7280"; // gray-500
+    if (score >= 70) return "#10b981"; // green-500
+    if (score >= 40) return "#f59e0b"; // amber-500
+    return "#ef4444"; // red-500
   };
 
   return (
@@ -137,19 +150,20 @@ export default function TokenCard({
               
               {score !== undefined && (
                 <div className="relative w-16 h-16">
-                  {/* Background circle */}
-                  <div className="absolute inset-0 rounded-full bg-gray-700" />
+                  {/* Speedometer background circle */}
+                  <div className="absolute inset-0 rounded-full bg-gray-700/30" />
                   
-                  {/* Colored progress arc */}
+                  {/* Colored progress arc for speedometer */}
                   <svg className="absolute inset-0 w-full h-full -rotate-90 transform">
                     <circle
                       cx="32"
                       cy="32"
                       r="28"
-                      stroke={score >= 70 ? "#10b981" : score >= 40 ? "#f59e0b" : "#ef4444"}
+                      stroke={getScoreColor(score)}
                       strokeWidth="8"
                       fill="transparent"
                       strokeDasharray={`${score * 1.76} 176`} // 2πr ≈ 176 for r=28
+                      strokeLinecap="round"
                     />
                   </svg>
                   
@@ -161,7 +175,7 @@ export default function TokenCard({
               )}
             </div>
             
-            {/* Token summary */}
+            {/* Enhanced token summary */}
             <div className="mt-2 text-sm text-muted-foreground">
               {getTokenSummary()}
             </div>
