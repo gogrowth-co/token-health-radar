@@ -78,7 +78,7 @@ serve(async (req) => {
     let hasPro = false;
     let proScanAvailable = false;
     
-    // Implement the complete access logic for both Free and Pro users
+    // Updated logic: Allow scans after limit, but only as free scans
     if (plan === "pro") {
       if (scansUsed < scanLimit) {
         hasPro = true;         // Access full scan 
@@ -86,6 +86,9 @@ serve(async (req) => {
       } else {
         hasPro = false;        // Access free scan
         proScanAvailable = false; // Cannot perform new Pro scan
+        // But can still scan as Free user - don't block scanning
+        canScan = true;
+        canSelectToken = true;
       }
     } else if (plan === "free") {
       if (scansUsed < 3) {
@@ -94,6 +97,9 @@ serve(async (req) => {
       } else {
         hasPro = false;         // No Pro features
         proScanAvailable = false; // Cannot perform new Pro scan
+        // But can still scan as Free user - don't block scanning
+        canScan = true;
+        canSelectToken = true;
       }
     }
 

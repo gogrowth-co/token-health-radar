@@ -92,22 +92,16 @@ serve(async (req) => {
       );
     }
 
-    // Check scan limits
+    // Check scan limits - but continue as free scan if pro limit reached
     const scanLimit = subscriber.pro_scan_limit || 3;
-    if (subscriber.scans_used >= scanLimit) {
-      console.log("[TOKEN-SCAN] Scan limit reached -", {
-        scans_used: subscriber.scans_used,
-        scan_limit: scanLimit
-      });
-      return new Response(
-        JSON.stringify({ 
-          allowed: false,
-          success: false, 
-          reason: `You have reached your scan limit (${subscriber.scans_used}/${scanLimit}). Please upgrade your plan for more scans.` 
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const isPro = subscriber.scans_used < scanLimit;
+    
+    console.log("[TOKEN-SCAN] User scan status:", { 
+      scans_used: subscriber.scans_used, 
+      scan_limit: scanLimit, 
+      is_pro_scan: isPro,
+      plan: subscriber.plan
+    });
 
     // First check if token already exists in our cache
     const { data: existingToken } = await supabase
@@ -362,10 +356,10 @@ serve(async (req) => {
     ]);
 
     const hasCategoryData = securityResult.data || tokenomicsResult.data || 
-                           liquidityResult.data || communityResult.data || 
-                           developmentResult.data;
+                          liquidityResult.data || communityResult.data || 
+                          developmentResult.data;
 
-    if (!hasCategoryData || overallScore === 0) {
+    if (!hasCategoryData) {
       console.error("[TOKEN-SCAN] No valid category data found for token");
       return new Response(
         JSON.stringify({ 
@@ -376,6 +370,25 @@ serve(async (req) => {
       );
     }
 
+    // Calculate the overall score from category scores - improved calculation
+    const scores = [
+      securityResult.data?.score, 
+      tokenomicsResult.data?.score,
+      liquidityResult.data?.score,
+      communityResult.data?.score,
+      developmentResult.data?.score
+    ];
+    
+    // Filter out null and undefined scores
+    const validScores = scores.filter(score => score !== null && score !== undefined) as number[];
+    
+    // Calculate the average and round to the nearest integer
+    const overallScore = validScores.length > 0 
+      ? Math.round(validScores.reduce((acc, curr) => acc + curr, 0) / validScores.length)
+      : 0;
+      
+    console.log("[TOKEN-SCAN] Calculated overall score:", overallScore);
+
     // Since we have valid data, now we can record this scan and increment the counter
     // Record this scan - THIS IS NOW THE ONLY PLACE SCANS ARE COUNTED
     await supabase
@@ -383,8 +396,8 @@ serve(async (req) => {
       .insert({
         user_id: body.user_id,
         token_address: body.token_address,
-        score_total: overallScore,
-        pro_scan: true
+        score_total: overallScore, // Save the calculated overall score
+        pro_scan: isPro  // Set based on whether user has used their Pro scan limit
       });
         
     // Increment the user's scan count
@@ -406,6 +419,7 @@ serve(async (req) => {
     const result = {
       success: true,
       allowed: true,
+      isPro: isPro, // Include whether this was a Pro scan or not
       token_info: {
         ...tokenWithAllData,
         security_data: securityResult.data || null,
@@ -424,7 +438,8 @@ serve(async (req) => {
       token_address: body.token_address,
       score: overallScore,
       token_name: token.name,
-      token_symbol: token.symbol
+      token_symbol: token.symbol,
+      pro_scan: isPro
     });
     
     return new Response(

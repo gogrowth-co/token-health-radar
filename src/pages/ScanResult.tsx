@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase, handleSupabaseError } from "@/integrations/supabase/client";
@@ -183,6 +184,26 @@ export default function ScanResult() {
       
       console.log("Scan access response:", data);
       setIsPro(data.hasPro);
+      
+      // New: Check if the user previously completed a Pro scan for this token
+      if (user && tokenAddress && !data.hasPro) {
+        console.log("Checking for previous Pro scans of this token");
+        const { data: latestScan, error: scanError } = await supabase
+          .from("token_scans")
+          .select("pro_scan")
+          .eq("token_address", tokenAddress)
+          .eq("user_id", user.id)
+          .order("scanned_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (scanError) {
+          console.error("Error checking previous scans:", scanError);
+        } else if (latestScan?.pro_scan) {
+          console.log("Found previous Pro scan, granting Pro access to this result");
+          setIsPro(true); // Override access control for previously completed Pro scans
+        }
+      }
     } catch (error) {
       console.error("Error checking scan access:", error);
       toast.error("Error checking access level", {
