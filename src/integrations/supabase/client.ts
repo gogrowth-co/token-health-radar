@@ -34,20 +34,32 @@ export const handleSupabaseError = (error: any, fallbackMessage: string = 'An er
   return fallbackMessage;
 };
 
-// Helper to check if a user has Pro access for their scans
-export const checkUserHasProAccess = async (): Promise<boolean> => {
+// Enhanced helper to check if a user has Pro access for their scans
+export const checkUserHasProAccess = async (): Promise<{
+  hasPro: boolean;
+  proScanAvailable: boolean;
+  plan?: string;
+  scansUsed?: number;
+  scanLimit?: number;
+}> => {
   try {
     const { data, error } = await supabase.functions.invoke("check-scan-access");
     
     if (error) {
       console.error("Error checking scan access:", error);
-      return false;
+      return { hasPro: false, proScanAvailable: false };
     }
     
     console.log("User access data:", data);
-    return data?.hasPro || false;
+    return {
+      hasPro: data?.hasPro || false,
+      proScanAvailable: data?.proScanAvailable || false,
+      plan: data?.plan,
+      scansUsed: data?.scansUsed,
+      scanLimit: data?.scanLimit
+    };
   } catch (err) {
     console.error("Exception checking pro access:", err);
-    return false;
+    return { hasPro: false, proScanAvailable: false };
   }
 };

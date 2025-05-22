@@ -243,17 +243,20 @@ async function handleInvoicePaid(invoice: any) {
   
   // Only update if this is for a pro plan - in case of other charges
   if (currentPlan === "pro") {
-    // Reset the scan limit on successful renewal
+    // Reset BOTH the scan limit AND the scans_used on successful renewal
     const { error: updateError } = await supabase
       .from('subscribers')
       .update({
         pro_scan_limit: 10,  // Reset to monthly limit
+        scans_used: 0,       // Reset used scans count
         updated_at: new Date().toISOString()
       })
       .eq('id', userId);
     
     if (updateError) {
-      console.error(`Error updating scan limit: ${updateError.message}`);
+      console.error(`Error updating scan limits: ${updateError.message}`);
+    } else {
+      console.log(`Successfully reset scan counts for user ${userId} on new billing cycle`);
     }
   }
 }

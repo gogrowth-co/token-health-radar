@@ -57,8 +57,9 @@ serve(async (req) => {
           plan: "free", 
           scansUsed: 0, 
           scanLimit: 3,
-          error: "Could not retrieve subscriber data",
-          hasPro: false
+          hasPro: false,
+          proScanAvailable: false,
+          error: "Could not retrieve subscriber data"
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
@@ -73,28 +74,37 @@ serve(async (req) => {
 
     // Initial search is always allowed
     let canScan = true;
-    
-    // Check scan limits only when selecting a token for detailed analysis
     let canSelectToken = true;
-    if (plan === "pro") {
-      // Pro users have a monthly scan limit
-      canSelectToken = scansUsed < scanLimit;
-    } else {
-      // Free tier has a lifetime limit
-      canSelectToken = scansUsed < 3;
-    }
+    let hasPro = false;
+    let proScanAvailable = false;
     
-    // IMPORTANT FIX: Consider users with remaining free pro scans (less than 3) to have Pro access
-    // This ensures the first 3 scans for free users show unblurred content
-    let hasPro = (plan === "pro") || (plan === "free" && scansUsed < 3);
+    // Implement the complete access logic for both Free and Pro users
+    if (plan === "pro") {
+      if (scansUsed < scanLimit) {
+        hasPro = true;         // Access full scan 
+        proScanAvailable = true; // Can perform a new Pro scan
+      } else {
+        hasPro = false;        // Access free scan
+        proScanAvailable = false; // Cannot perform new Pro scan
+      }
+    } else if (plan === "free") {
+      if (scansUsed < 3) {
+        hasPro = true;          // First 3 free scans show unblurred content
+        proScanAvailable = true; // Can perform a Pro scan
+      } else {
+        hasPro = false;         // No Pro features
+        proScanAvailable = false; // Cannot perform new Pro scan
+      }
+    }
 
-    console.log(`Can scan: ${canScan}, can select token: ${canSelectToken}, has pro: ${hasPro}`);
+    console.log(`Can scan: ${canScan}, can select token: ${canSelectToken}, has pro: ${hasPro}, pro scan available: ${proScanAvailable}`);
 
     return new Response(
       JSON.stringify({
         canScan,
         canSelectToken,
         hasPro,
+        proScanAvailable,
         plan,
         scansUsed,
         scanLimit
@@ -104,7 +114,13 @@ serve(async (req) => {
   } catch (error) {
     console.error(`Error checking scan access: ${error.message}`);
     return new Response(
-      JSON.stringify({ error: error.message, canScan: false, canSelectToken: false }),
+      JSON.stringify({ 
+        error: error.message, 
+        canScan: false, 
+        canSelectToken: false,
+        hasPro: false,
+        proScanAvailable: false
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
     );
   }
