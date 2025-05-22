@@ -20,6 +20,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Check scan access function called");
+    
     // Get the authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -36,6 +38,8 @@ serve(async (req) => {
       throw new Error("Invalid user token");
     }
 
+    console.log(`User authenticated: ${user.id}`);
+
     // Get user's subscriber data
     const { data: subscriberData, error: subscriberError } = await supabase
       .from("subscribers")
@@ -44,6 +48,7 @@ serve(async (req) => {
       .single();
 
     if (subscriberError) {
+      console.error(`Error fetching subscriber data: ${subscriberError.message}`);
       // If there's an error, default to free tier with conservative limits
       return new Response(
         JSON.stringify({ 
@@ -64,6 +69,8 @@ serve(async (req) => {
     const scansUsed = subscriberData?.scans_used || 0;
     const scanLimit = subscriberData?.pro_scan_limit || 3;
 
+    console.log(`User plan: ${plan}, scans used: ${scansUsed}, scan limit: ${scanLimit}`);
+
     // Initial search is always allowed
     let canScan = true;
     
@@ -77,7 +84,11 @@ serve(async (req) => {
       canSelectToken = scansUsed < 3;
     }
     
-    let hasPro = plan === "pro";
+    // IMPORTANT FIX: Consider users with remaining free pro scans (less than 3) to have Pro access
+    // This ensures the first 3 scans for free users show unblurred content
+    let hasPro = (plan === "pro") || (plan === "free" && scansUsed < 3);
+
+    console.log(`Can scan: ${canScan}, can select token: ${canSelectToken}, has pro: ${hasPro}`);
 
     return new Response(
       JSON.stringify({

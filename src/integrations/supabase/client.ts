@@ -33,3 +33,21 @@ export const handleSupabaseError = (error: any, fallbackMessage: string = 'An er
   }
   return fallbackMessage;
 };
+
+// Helper to check if a user has Pro access for their scans
+export const checkUserHasProAccess = async (): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.functions.invoke("check-scan-access");
+    
+    if (error) {
+      console.error("Error checking scan access:", error);
+      return false;
+    }
+    
+    console.log("User access data:", data);
+    return data?.hasPro || false;
+  } catch (err) {
+    console.error("Exception checking pro access:", err);
+    return false;
+  }
+};
