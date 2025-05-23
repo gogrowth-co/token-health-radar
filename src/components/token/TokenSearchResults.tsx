@@ -134,8 +134,8 @@ export default function TokenSearchResults({
     return (
       <div className="space-y-4">
         {results.map((token) => {
-          // Extra safety check for ERC-20 compatibility with improved logic
-          const isErc20 = isErc20Compatible(token);
+          // FIXED: Prioritize the pre-determined isErc20 flag if it exists
+          const isErc20 = typeof token.isErc20 === 'boolean' ? token.isErc20 : isErc20Compatible(token);
           
           return (
             <div key={token.id} className="relative">
