@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase, handleSupabaseError } from "@/integrations/supabase/client";
@@ -147,7 +148,7 @@ export default function ScanResult() {
       securityData?.score, 
       tokenomicsData?.score,
       liquidityData?.score,
-      // communityData?.score, // 🚫 TEMPORARILY DISABLED - will be re-enabled later
+      // communityData?.score, // 🚫 TEMPORARILY EXCLUDED - will be re-enabled later
       developmentData?.score
     ];
     
