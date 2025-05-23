@@ -28,6 +28,12 @@ interface TokenSearchResultsProps {
   onSelectToken: (token: TokenResult) => void;
 }
 
+// Known ERC-20 tokens that might not be correctly identified by platform data
+const KNOWN_ERC20_TOKENS = [
+  'ethereum', 'uniswap', 'dai', 'chainlink', 'aave', 'compound', 
+  'maker', 'wrapped-bitcoin', 'tether', 'usd-coin'
+];
+
 export default function TokenSearchResults({ 
   isLoading, 
   error, 
@@ -59,21 +65,43 @@ export default function TokenSearchResults({
     }
   };
 
-  // Helper function to double-check ERC-20 compatibility
+  // Enhanced helper function to robustly detect ERC-20 compatibility
   const isErc20Compatible = (token: TokenResult): boolean => {
     // If the token already has isErc20 explicitly set, trust that value
     if (typeof token.isErc20 === 'boolean') {
       return token.isErc20;
     }
     
-    if (!token.platforms) return false;
+    // Check if it's in our known ERC-20 whitelist
+    if (KNOWN_ERC20_TOKENS.includes(token.id)) {
+      return true;
+    }
     
-    const ethereumAddress = token.platforms.ethereum;
-    return (
-      typeof ethereumAddress === "string" && 
-      ethereumAddress.length > 0 && 
-      /^(0x)?[0-9a-fA-F]{40}$/i.test(ethereumAddress.trim())
-    );
+    // Check platforms data - this is the primary method
+    if (token.platforms && token.platforms.ethereum) {
+      const ethereumAddress = token.platforms.ethereum;
+      
+      // More lenient Ethereum address validation (handles any non-empty string)
+      if (typeof ethereumAddress === "string" && ethereumAddress.trim().length > 0) {
+        // Prefer correctly formatted addresses, but don't strictly require it
+        // This helps with API inconsistencies in address formats
+        if (/^(0x)?[0-9a-fA-F]{40}$/i.test(ethereumAddress.trim())) {
+          return true;
+        }
+        
+        // If it has any ethereum address, it's likely ERC-20
+        return true;
+      }
+    }
+    
+    // Fallback based on token naming (some tokens have "ETH" or "ERC" in their name/symbol)
+    const nameAndSymbol = (token.name + token.symbol).toLowerCase();
+    if (nameAndSymbol.includes('erc20') || nameAndSymbol.includes('erc-20') || 
+        nameAndSymbol.includes('eth') || nameAndSymbol.includes('ethereum')) {
+      return true;
+    }
+    
+    return false;
   };
 
   if (isLoading) {
@@ -106,7 +134,7 @@ export default function TokenSearchResults({
     return (
       <div className="space-y-4">
         {results.map((token) => {
-          // Extra safety check for ERC-20 compatibility
+          // Extra safety check for ERC-20 compatibility with improved logic
           const isErc20 = isErc20Compatible(token);
           
           return (
