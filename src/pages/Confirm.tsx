@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -100,25 +101,27 @@ export default function Confirm() {
                 if (detailResponse.ok) {
                   const detailData = await detailResponse.json();
                   
-                  // FIXED: More robust ERC-20 detection
+                  // FIXED: More robust ERC-20 detection - ensure platforms data is present
                   // Check if token has an Ethereum address in the platforms field
-                  const hasEthereumAddress = !!detailData.platforms?.ethereum;
+                  const platforms = detailData.platforms || {};
+                  const hasEthereumAddress = !!platforms.ethereum;
                   
                   // Debug logging for platforms data
-                  console.log(`Token ${coin.id} platforms:`, detailData.platforms);
-                  console.log(`Token ${coin.id} Ethereum address:`, detailData.platforms?.ethereum);
+                  console.log(`Token ${coin.id} platforms:`, platforms);
+                  console.log(`Token ${coin.id} Ethereum address:`, platforms.ethereum);
                   console.log(`Token ${coin.id} ERC-20 status:`, hasEthereumAddress ? "Compatible" : "Not compatible");
                   
-                  // Return enhanced coin data
+                  // Return enhanced coin data with explicit ERC-20 status
                   return {
                     ...coin,
-                    platforms: detailData.platforms || {},
+                    platforms: platforms,
                     price_usd: detailData.market_data?.current_price?.usd || 0,
                     price_change_24h: detailData.market_data?.price_change_percentage_24h || 0,
                     market_cap: detailData.market_data?.market_cap?.usd || 0,
                     isErc20: hasEthereumAddress
                   };
                 }
+                // If we can't get details, default to non-ERC20 to be safe
                 return {...coin, isErc20: false};
               } catch (err) {
                 console.error(`Error fetching details for ${coin.id}:`, err);

@@ -103,8 +103,8 @@ export default function TokenSearchResults({
               showActions={token.isErc20}
             />
 
-            {/* Custom footer for compatibility badge and info/action button */}
-            <div className="absolute bottom-4 right-4 flex items-center justify-between w-full max-w-[calc(100%-2rem)]">
+            {/* FIXED: Improved badge layout and position */}
+            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {token.isErc20 ? (
                   <TooltipProvider>
@@ -133,6 +133,17 @@ export default function TokenSearchResults({
                   </div>
                 )}
               </div>
+              
+              {/* Select button would appear on the right when applicable */}
+              {token.isErc20 && (
+                <Button 
+                  size="sm" 
+                  onClick={() => onSelectToken(token)} 
+                  className="flex items-center gap-1 ml-auto"
+                >
+                  Select
+                </Button>
+              )}
             </div>
           </div>
         ))}
