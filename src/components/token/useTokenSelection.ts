@@ -49,6 +49,22 @@ export default function useTokenSelection() {
     }
   };
 
+  // Helper function to find the first valid EVM address from platforms
+  const getFirstValidEvmAddress = (platforms: Record<string, string> | undefined): string => {
+    if (!platforms) return "";
+    
+    // Look through all platform values for a valid Ethereum-style address
+    const evmAddressPattern = /^0x[a-fA-F0-9]{40}$/;
+    
+    for (const [_, address] of Object.entries(platforms)) {
+      if (typeof address === 'string' && evmAddressPattern.test(address.toLowerCase())) {
+        return address;
+      }
+    }
+    
+    return "";
+  };
+
   const handleSelectToken = useCallback(async (token: TokenResult) => {
     try {
       // Check if token is ERC-20 compatible
@@ -59,16 +75,11 @@ export default function useTokenSelection() {
         return;
       }
       
-      // Get Ethereum address if available
-      let tokenAddress = "";
-      
-      if (token.platforms && token.platforms.ethereum) {
-        tokenAddress = token.platforms.ethereum;
-        console.log(`Found Ethereum address: ${tokenAddress} for token ${token.name}`);
-      }
+      // Get the first valid EVM address from any platform (not just Ethereum)
+      let tokenAddress = getFirstValidEvmAddress(token.platforms);
       
       if (!tokenAddress) {
-        console.warn(`No Ethereum address found for ${token.name}, using placeholder`);
+        console.warn(`No EVM address found for ${token.name}, using placeholder`);
         tokenAddress = `0x${token.id.replace(/-/g, '').substring(0, 38).padEnd(38, '0')}`;
       }
       

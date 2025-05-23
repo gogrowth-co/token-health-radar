@@ -1,4 +1,3 @@
-
 // Follow Edge Function Conventions
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
@@ -44,8 +43,8 @@ serve(async (req) => {
       );
     }
     
-    // Validate token address format
-    const isValidAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(body.token_address);
+    // Validate token address format - updated to ensure it's a valid EVM address
+    const isValidAddress = /^0x[0-9a-fA-F]{40}$/i.test(body.token_address);
     if (!isValidAddress) {
       console.error("[TOKEN-SCAN] Invalid token address format:", body.token_address);
       return new Response(
