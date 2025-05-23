@@ -1,4 +1,3 @@
-
 import { Shield, Lock, AlertCircle, Activity, Users, Twitter, BadgeCheck, TrendingUp, MessageSquare, MessageCircle, Code, ListChecks, Building2, BarChart2, Hash } from "lucide-react";
 import { CategoryFeature } from "@/components/CategoryFeatureGrid";
 import { formatCurrencyValue, formatNumberValue, formatDateToHuman } from "@/utils/tokenFormatters";
@@ -101,8 +100,9 @@ export const transformSecurityData = (data: SecurityData | null): CategoryFeatur
       icon: Lock,
       title: "Audit Status",
       description: "Security audit verification by third-party firm",
-      badgeLabel: data.audit_status || "Not Verified",
-      badgeVariant: data.audit_status === "Verified" ? "green" : "red"
+      // TEMPORARY: Displaying placeholder until audit/multisig data integration is complete
+      badgeLabel: "Coming Soon",
+      badgeVariant: "blue"
     },
     {
       icon: AlertCircle,
@@ -115,8 +115,9 @@ export const transformSecurityData = (data: SecurityData | null): CategoryFeatur
       icon: Activity,
       title: "Multisig Status",
       description: "Multiple signatures required for critical actions",
-      badgeLabel: data.multisig_status || "No",
-      badgeVariant: data.multisig_status === "Yes" ? "green" : "red"
+      // TEMPORARY: Displaying placeholder until audit/multisig data integration is complete
+      badgeLabel: "Coming Soon",
+      badgeVariant: "blue"
     },
     {
       icon: Code,

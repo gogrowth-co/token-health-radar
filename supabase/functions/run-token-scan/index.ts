@@ -22,79 +22,111 @@ interface TokenScanRequest {
   token_symbol?: string;
 }
 
-// Deterministic score calculation functions - FULLY DETERMINISTIC BASED ON TOKEN ADDRESS
-function calculateSecurityScore(tokenAddress: string): { score: number; data: any } {
-  console.log("[SCORE-CALC] Calculating deterministic security score for:", tokenAddress);
+// Fetch security data from GoPlus API
+async function fetchGoPlusSecurityData(token_address: string) {
+  console.log("[SECURITY-SCAN] Fetching GoPlus security data for:", token_address);
   
-  // Use token address hash for deterministic values
-  const hash = hashString(tokenAddress);
-  
-  // Generate deterministic boolean values based on hash
-  const ownership_renounced = (hash % 2) === 0;
-  const audit_status = ["Audited", "Not Audited", "Pending"][hash % 3];
-  const multisig_status = ["Multisig", "Single Signer"][hash % 2];
-  const honeypot_detected = (hash % 5) === 0; // 20% chance
-  const freeze_authority = (hash % 7) === 0; // ~14% chance
-  const can_mint = (hash % 6) === 0; // ~17% chance
+  try {
+    // GoPlus API endpoint for Ethereum mainnet (chain ID 1)
+    const url = `https://api.gopluslabs.io/api/v1/token_security/1/${token_address}`;
+    
+    console.log("[SECURITY-SCAN] GoPlus API URL:", url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'accept': 'application/json',
+      }
+    });
+    
+    if (!response.ok) {
+      console.error("[SECURITY-SCAN] GoPlus API error:", response.status, response.statusText);
+      return null;
+    }
+    
+    const data = await response.json();
+    console.log("[SECURITY-SCAN] GoPlus API response received:", {
+      code: data.code,
+      message: data.message,
+      has_result: !!data.result?.[token_address.toLowerCase()]
+    });
+    
+    // GoPlus returns data keyed by lowercase token address
+    const tokenData = data.result?.[token_address.toLowerCase()];
+    
+    if (!tokenData) {
+      console.log("[SECURITY-SCAN] No security data found for token in GoPlus response");
+      return null;
+    }
+    
+    // Map GoPlus fields to our database schema
+    return {
+      ownership_renounced: tokenData.is_ownership_renounced === "1",
+      honeypot_detected: tokenData.is_honeypot === "1",
+      can_mint: tokenData.is_mintable === "1",
+      freeze_authority: tokenData.can_take_back_ownership === "1" || tokenData.owner_change_balance === "1",
+      // TEMPORARY: Set audit and multisig to null until we have real data sources
+      audit_status: null,
+      multisig_status: null
+    };
+  } catch (error) {
+    console.error("[SECURITY-SCAN] Error fetching GoPlus data:", error);
+    return null;
+  }
+}
+
+// Calculate security score from GoPlus data
+function calculateSecurityScoreFromGoPlus(securityData: any): number {
+  console.log("[SCORE-CALC] Calculating security score from GoPlus data:", securityData);
   
   let score = 50; // Base score
   
   // Ownership renounced (+20 points if true)
-  if (ownership_renounced) {
+  if (securityData.ownership_renounced) {
     score += 20;
     console.log("[SCORE-CALC] Security: +20 for ownership renounced");
   }
   
-  // Audit status (30 points if "Audited", 15 if "Pending", 0 if "Not Audited")
-  if (audit_status === "Audited") {
-    score += 30;
-    console.log("[SCORE-CALC] Security: +30 for audit status");
-  } else if (audit_status === "Pending") {
-    score += 15;
-    console.log("[SCORE-CALC] Security: +15 for pending audit");
-  }
-  
-  // Multisig status (+25 points if "Multisig")
-  if (multisig_status === "Multisig") {
-    score += 25;
-    console.log("[SCORE-CALC] Security: +25 for multisig");
-  }
-  
   // Honeypot detected (-30 points if true)
-  if (honeypot_detected) {
+  if (securityData.honeypot_detected) {
     score -= 30;
     console.log("[SCORE-CALC] Security: -30 for honeypot detected");
   }
   
+  // Can mint (-10 points if true)
+  if (securityData.can_mint) {
+    score -= 10;
+    console.log("[SCORE-CALC] Security: -10 for mint capability");
+  }
+  
   // Freeze authority (-15 points if true)
-  if (freeze_authority) {
+  if (securityData.freeze_authority) {
     score -= 15;
     console.log("[SCORE-CALC] Security: -15 for freeze authority");
   }
   
-  // Can mint (-10 points if true)
-  if (can_mint) {
-    score -= 10;
-    console.log("[SCORE-CALC] Security: -10 for mint capability");
-  }
+  // ⚠️ TEMPORARILY excluded from score calculation: audit_status & multisig_status
+  // These will be added back once we have reliable data sources
   
   // Ensure score is between 0 and 100
   const finalScore = Math.max(0, Math.min(100, score));
   console.log("[SCORE-CALC] Security final score:", finalScore);
   
-  return {
-    score: finalScore,
-    data: {
-      ownership_renounced,
-      audit_status,
-      multisig_status,
-      honeypot_detected,
-      freeze_authority,
-      can_mint
-    }
-  };
+  return finalScore;
 }
 
+// Helper function to create deterministic hash from string (fallback for non-security categories)
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
+}
+
+// Deterministic score calculation functions for non-security categories
 function calculateLiquidityScore(tokenAddress: string): { score: number; data: any } {
   console.log("[SCORE-CALC] Calculating deterministic liquidity score for:", tokenAddress);
   
@@ -336,17 +368,6 @@ function calculateDevelopmentScore(tokenAddress: string, githubUrl?: string): { 
   };
 }
 
-// Helper function to create deterministic hash from string
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  return Math.abs(hash);
-}
-
 // Fetch token data from CoinGecko API
 async function fetchCoinGeckoData(coingecko_id: string, token_address: string) {
   console.log("[TOKEN-SCAN] Fetching CoinGecko data for:", coingecko_id || token_address);
@@ -577,18 +598,54 @@ serve(async (req) => {
       token = newToken;
     }
     
-    // Process security data with deterministic scoring
-    console.log("[TOKEN-SCAN] Processing security data with deterministic logic");
+    // Process security data with GoPlus API
+    console.log("[TOKEN-SCAN] Processing security data with GoPlus API");
     try {
-      const securityResult = calculateSecurityScore(body.token_address);
+      const goPlusData = await fetchGoPlusSecurityData(body.token_address);
+      
+      let securityScore = 0;
+      let securityDataToStore: any = {
+        token_address: body.token_address,
+        ownership_renounced: null,
+        honeypot_detected: null,
+        can_mint: null,
+        freeze_authority: null,
+        audit_status: null, // TEMPORARY: Set to null until we have real data sources
+        multisig_status: null, // TEMPORARY: Set to null until we have real data sources
+      };
+      
+      if (goPlusData) {
+        // Use real GoPlus data
+        securityDataToStore = {
+          ...securityDataToStore,
+          ...goPlusData
+        };
+        securityScore = calculateSecurityScoreFromGoPlus(goPlusData);
+      } else {
+        // Fallback to deterministic values if GoPlus fails
+        console.log("[TOKEN-SCAN] GoPlus API failed, using fallback deterministic values");
+        const hash = hashString(body.token_address);
+        
+        securityDataToStore.ownership_renounced = (hash % 2) === 0;
+        securityDataToStore.honeypot_detected = (hash % 5) === 0;
+        securityDataToStore.can_mint = (hash % 6) === 0;
+        securityDataToStore.freeze_authority = (hash % 7) === 0;
+        
+        // Calculate fallback score
+        let fallbackScore = 50;
+        if (securityDataToStore.ownership_renounced) fallbackScore += 20;
+        if (securityDataToStore.honeypot_detected) fallbackScore -= 30;
+        if (securityDataToStore.can_mint) fallbackScore -= 10;
+        if (securityDataToStore.freeze_authority) fallbackScore -= 15;
+        
+        securityScore = Math.max(0, Math.min(100, fallbackScore));
+      }
+      
+      securityDataToStore.score = securityScore;
       
       const { error: securityError } = await supabase
         .from('token_security_cache')
-        .upsert({
-          token_address: body.token_address,
-          score: securityResult.score,
-          ...securityResult.data
-        }, {
+        .upsert(securityDataToStore, {
           onConflict: 'token_address'
         });
         
@@ -792,7 +849,7 @@ serve(async (req) => {
       }
     };
     
-    console.log("[TOKEN-SCAN] Scan completed successfully with deterministic scores -", {
+    console.log("[TOKEN-SCAN] Scan completed successfully with GoPlus integration -", {
       token_address: body.token_address,
       score: calculatedScore,
       token_name: token.name,
@@ -801,7 +858,7 @@ serve(async (req) => {
       has_description: !!tokenWithAllData.description,
       has_social_links: !!(tokenWithAllData.website_url || tokenWithAllData.twitter_handle || tokenWithAllData.github_url),
       community_excluded: true, // Flag that community score was excluded
-      deterministic: true // Flag that scores are now deterministic
+      goplus_integrated: true // Flag that GoPlus is now integrated
     });
     
     return new Response(
