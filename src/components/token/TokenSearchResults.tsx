@@ -61,6 +61,11 @@ export default function TokenSearchResults({
 
   // Helper function to double-check ERC-20 compatibility
   const isErc20Compatible = (token: TokenResult): boolean => {
+    // If the token already has isErc20 explicitly set, trust that value
+    if (typeof token.isErc20 === 'boolean') {
+      return token.isErc20;
+    }
+    
     if (!token.platforms) return false;
     
     const ethereumAddress = token.platforms.ethereum;
@@ -102,12 +107,11 @@ export default function TokenSearchResults({
       <div className="space-y-4">
         {results.map((token) => {
           // Extra safety check for ERC-20 compatibility
-          const isErc20 = token.isErc20 === true || isErc20Compatible(token);
+          const isErc20 = isErc20Compatible(token);
           
           return (
             <div key={token.id} className="relative">
               <TokenCard
-                key={token.id}
                 name={token.name}
                 symbol={token.symbol.toUpperCase()}
                 logo={token.large || token.thumb}

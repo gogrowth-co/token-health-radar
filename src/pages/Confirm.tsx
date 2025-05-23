@@ -27,6 +27,10 @@ interface TokenResult {
   isErc20?: boolean;
 }
 
+// Used to prevent too many API calls in a short period
+let lastApiCallTime = 0;
+const MIN_API_CALL_INTERVAL = 500; // milliseconds between calls
+
 export default function Confirm() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get("token") || "");
@@ -80,10 +84,29 @@ export default function Confirm() {
       try {
         console.log("Searching for token:", searchTerm);
         
-        // Call CoinGecko API to search for tokens
+        // Simple client-side rate limiting to prevent API overload
+        const now = Date.now();
+        if (now - lastApiCallTime < MIN_API_CALL_INTERVAL) {
+          await new Promise(resolve => 
+            setTimeout(resolve, MIN_API_CALL_INTERVAL - (now - lastApiCallTime))
+          );
+        }
+        lastApiCallTime = Date.now();
+        
+        // Call CoinGecko API to search for tokens with proper headers
         const response = await fetch(
-          `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(searchTerm)}`
+          `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(searchTerm)}`,
+          {
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            }
+          }
         );
+
+        if (response.status === 429) {
+          throw new Error("API rate limit reached. Please try again in a few moments.");
+        }
 
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
@@ -105,64 +128,93 @@ export default function Confirm() {
           const topCoins = sortedCoins.slice(0, 5);
           
           // Enhanced results with full token data
-          const enhancedResults = await Promise.all(
-            topCoins.map(async (coin: any) => {
-              try {
-                // Get detailed coin data
-                const detailResponse = await fetch(
-                  `https://api.coingecko.com/api/v3/coins/${coin.id}?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false`
-                );
-                
-                if (detailResponse.ok) {
-                  const detailData = await detailResponse.json();
-                  
-                  // Extract platforms data safely
-                  const platforms = detailData.platforms || {};
-                  
-                  // Use the helper function to determine ERC-20 compatibility
-                  const isErc20Compatible = isValidErc20Token(platforms);
-                  
-                  // Enhanced debugging
-                  console.log(`[Token Debug] ${coin.id} (${coin.symbol}):`);
-                  console.log(` - Platforms data:`, platforms);
-                  console.log(` - Ethereum address:`, platforms.ethereum || "none");
-                  console.log(` - Is valid ERC-20:`, isErc20Compatible);
-                  if (platforms.ethereum) {
-                    console.log(` - Address validation:`, {
-                      isString: typeof platforms.ethereum === "string",
-                      nonEmpty: platforms.ethereum.length > 0,
-                      matchesFormat: /^(0x)?[0-9a-fA-F]{40}$/i.test(platforms.ethereum)
-                    });
-                  }
-                  
-                  // Return enhanced coin data with explicit ERC-20 status
-                  return {
-                    ...coin,
-                    platforms: platforms,
-                    price_usd: detailData.market_data?.current_price?.usd || 0,
-                    price_change_24h: detailData.market_data?.price_change_percentage_24h || 0,
-                    market_cap: detailData.market_data?.market_cap?.usd || 0,
-                    isErc20: isErc20Compatible
-                  };
-                }
-                // If we can't get details, default to non-ERC20 to be safe
-                return {...coin, isErc20: false};
-              } catch (err) {
-                console.error(`Error fetching details for ${coin.id}:`, err);
-                return {...coin, isErc20: false};
+          // Add delay between requests to avoid rate limiting
+          const enhancedResults = [];
+          for (const coin of topCoins) {
+            try {
+              // Add delay between detail requests
+              if (enhancedResults.length > 0) {
+                await new Promise(resolve => setTimeout(resolve, 300));
               }
-            })
-          );
+              
+              // Get detailed coin data with proper headers
+              const detailResponse = await fetch(
+                `https://api.coingecko.com/api/v3/coins/${coin.id}?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false`,
+                {
+                  headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                  }
+                }
+              );
+              
+              if (detailResponse.status === 429) {
+                console.warn(`Rate limit hit for ${coin.id}, skipping details`);
+                // Add basic data without details
+                enhancedResults.push({
+                  ...coin,
+                  isErc20: false // Default to false without details
+                });
+                continue;
+              }
+              
+              if (detailResponse.ok) {
+                const detailData = await detailResponse.json();
+                
+                // Extract platforms data safely
+                const platforms = detailData.platforms || {};
+                
+                // Use the helper function to determine ERC-20 compatibility
+                const isErc20Compatible = isValidErc20Token(platforms);
+                
+                // Enhanced debugging
+                console.log(`[Token Debug] ${coin.id} (${coin.symbol}):`);
+                console.log(` - Platforms data:`, platforms);
+                console.log(` - Ethereum address:`, platforms.ethereum || "none");
+                console.log(` - Is valid ERC-20:`, isErc20Compatible);
+                if (platforms.ethereum) {
+                  console.log(` - Address validation:`, {
+                    isString: typeof platforms.ethereum === "string",
+                    nonEmpty: platforms.ethereum.length > 0,
+                    matchesFormat: /^(0x)?[0-9a-fA-F]{40}$/i.test(platforms.ethereum)
+                  });
+                }
+                
+                // Return enhanced coin data with explicit ERC-20 status
+                enhancedResults.push({
+                  ...coin,
+                  platforms: platforms,
+                  price_usd: detailData.market_data?.current_price?.usd || 0,
+                  price_change_24h: detailData.market_data?.price_change_percentage_24h || 0,
+                  market_cap: detailData.market_data?.market_cap?.usd || 0,
+                  isErc20: isErc20Compatible
+                });
+              } else {
+                // If details request fails, add basic data
+                enhancedResults.push({...coin, isErc20: false});
+              }
+            } catch (err) {
+              console.error(`Error fetching details for ${coin.id}:`, err);
+              enhancedResults.push({...coin, isErc20: false});
+            }
+          }
+          
           console.log("Enhanced token results:", enhancedResults);
           setResults(enhancedResults);
         } else {
           setResults([]);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching token data:", err);
-        setError("Failed to fetch token data. Please try again later.");
+        
+        // Special handling for rate limiting errors
+        const errorMessage = err.message?.includes("rate limit") 
+          ? "API rate limit reached. Please try again in a few moments."
+          : "Failed to fetch token data. Please try again later.";
+          
+        setError(errorMessage);
         toast.error("Search Error", {
-          description: "Could not fetch token information. Please try again later."
+          description: errorMessage
         });
       } finally {
         setIsLoading(false);
