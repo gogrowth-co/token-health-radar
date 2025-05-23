@@ -1,4 +1,3 @@
-
 import { useState, ReactNode } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -7,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Check, X, Lock, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import CategoryFeatureGrid from "./CategoryFeatureGrid";
+import { transformSecurityData } from "@/utils/categoryTransformers";
 
 // Use the types defined in ScanResult for consistency
 interface SecurityData {
@@ -283,36 +284,13 @@ export default function CategoryTabs({
         </TooltipProvider>
       </TabsList>
       
-      {/* Security Tab Content */}
+      {/* Security Tab Content - Updated to use CategoryFeatureGrid */}
       {renderTabContent(securityData, (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Ownership Renounced</h4>
-              <BooleanIndicator value={securityData?.ownership_renounced} positive={true} />
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Audit Status</h4>
-              <Badge variant="outline">{securityData?.audit_status || "Unknown"}</Badge>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Multisig Status</h4>
-              <Badge variant="outline">{securityData?.multisig_status || "Unknown"}</Badge>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Honeypot Detected</h4>
-              <BooleanIndicator value={securityData?.honeypot_detected} positive={false} />
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Freeze Authority</h4>
-              <BooleanIndicator value={securityData?.freeze_authority} positive={false} />
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Can Mint</h4>
-              <BooleanIndicator value={securityData?.can_mint} positive={false} />
-            </div>
-          </div>
-        </div>
+        <CategoryFeatureGrid 
+          features={transformSecurityData(securityData)}
+          title="Security Indicators"
+          description="Key security indicators for this token's smart contract"
+        />
       ), ScanCategory.Security)}
       
       {/* Tokenomics Tab Content */}
