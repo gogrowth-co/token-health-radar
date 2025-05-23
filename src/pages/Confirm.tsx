@@ -44,6 +44,21 @@ export default function Confirm() {
     scanAccessData 
   } = useTokenSelection();
 
+  // Helper function to properly determine if a token is ERC-20 compatible
+  const isValidErc20Token = (platforms: Record<string, string> | undefined): boolean => {
+    // Check if platforms exists and has an ethereum property with a valid address format
+    if (!platforms) return false;
+    
+    const ethereumAddress = platforms.ethereum;
+    
+    // Valid Ethereum address must be a string and match the general address format (0x followed by 40 hex characters)
+    const isValid = typeof ethereumAddress === "string" && 
+                   ethereumAddress.length > 0 && 
+                   /^(0x)?[0-9a-fA-F]{40}$/i.test(ethereumAddress.trim());
+    
+    return isValid;
+  }
+
   // Redirect if not authenticated
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -101,15 +116,24 @@ export default function Confirm() {
                 if (detailResponse.ok) {
                   const detailData = await detailResponse.json();
                   
-                  // FIXED: More robust ERC-20 detection - ensure platforms data is present
-                  // Check if token has an Ethereum address in the platforms field
+                  // Extract platforms data safely
                   const platforms = detailData.platforms || {};
-                  const hasEthereumAddress = !!platforms.ethereum;
                   
-                  // Debug logging for platforms data
-                  console.log(`Token ${coin.id} platforms:`, platforms);
-                  console.log(`Token ${coin.id} Ethereum address:`, platforms.ethereum);
-                  console.log(`Token ${coin.id} ERC-20 status:`, hasEthereumAddress ? "Compatible" : "Not compatible");
+                  // Use the helper function to determine ERC-20 compatibility
+                  const isErc20Compatible = isValidErc20Token(platforms);
+                  
+                  // Enhanced debugging
+                  console.log(`[Token Debug] ${coin.id} (${coin.symbol}):`);
+                  console.log(` - Platforms data:`, platforms);
+                  console.log(` - Ethereum address:`, platforms.ethereum || "none");
+                  console.log(` - Is valid ERC-20:`, isErc20Compatible);
+                  if (platforms.ethereum) {
+                    console.log(` - Address validation:`, {
+                      isString: typeof platforms.ethereum === "string",
+                      nonEmpty: platforms.ethereum.length > 0,
+                      matchesFormat: /^(0x)?[0-9a-fA-F]{40}$/i.test(platforms.ethereum)
+                    });
+                  }
                   
                   // Return enhanced coin data with explicit ERC-20 status
                   return {
@@ -118,7 +142,7 @@ export default function Confirm() {
                     price_usd: detailData.market_data?.current_price?.usd || 0,
                     price_change_24h: detailData.market_data?.price_change_percentage_24h || 0,
                     market_cap: detailData.market_data?.market_cap?.usd || 0,
-                    isErc20: hasEthereumAddress
+                    isErc20: isErc20Compatible
                   };
                 }
                 // If we can't get details, default to non-ERC20 to be safe

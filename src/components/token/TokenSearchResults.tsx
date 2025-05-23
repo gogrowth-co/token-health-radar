@@ -59,6 +59,18 @@ export default function TokenSearchResults({
     }
   };
 
+  // Helper function to double-check ERC-20 compatibility
+  const isErc20Compatible = (token: TokenResult): boolean => {
+    if (!token.platforms) return false;
+    
+    const ethereumAddress = token.platforms.ethereum;
+    return (
+      typeof ethereumAddress === "string" && 
+      ethereumAddress.length > 0 && 
+      /^(0x)?[0-9a-fA-F]{40}$/i.test(ethereumAddress.trim())
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -88,65 +100,70 @@ export default function TokenSearchResults({
   if (results.length > 0) {
     return (
       <div className="space-y-4">
-        {results.map((token) => (
-          <div key={token.id} className="relative">
-            <TokenCard
-              key={token.id}
-              name={token.name}
-              symbol={token.symbol.toUpperCase()}
-              logo={token.large || token.thumb}
-              marketCap={token.market_cap_rank ? `Rank #${token.market_cap_rank}` : (typeof token.market_cap === 'number' ? formatNumber(token.market_cap) : 'N/A')}
-              price={token.price_usd || 0}
-              priceChange={token.price_change_24h || 0}
-              onClick={token.isErc20 ? () => onSelectToken(token) : undefined}
-              description={`${token.name} (${token.symbol.toUpperCase()}) is a cryptocurrency${token.market_cap_rank ? ` ranked #${token.market_cap_rank}` : ''}`}
-              showActions={token.isErc20}
-            />
+        {results.map((token) => {
+          // Extra safety check for ERC-20 compatibility
+          const isErc20 = token.isErc20 === true || isErc20Compatible(token);
+          
+          return (
+            <div key={token.id} className="relative">
+              <TokenCard
+                key={token.id}
+                name={token.name}
+                symbol={token.symbol.toUpperCase()}
+                logo={token.large || token.thumb}
+                marketCap={token.market_cap_rank ? `Rank #${token.market_cap_rank}` : (typeof token.market_cap === 'number' ? formatNumber(token.market_cap) : 'N/A')}
+                price={token.price_usd || 0}
+                priceChange={token.price_change_24h || 0}
+                onClick={isErc20 ? () => onSelectToken(token) : undefined}
+                description={`${token.name} (${token.symbol.toUpperCase()}) is a cryptocurrency${token.market_cap_rank ? ` ranked #${token.market_cap_rank}` : ''}`}
+                showActions={isErc20}
+              />
 
-            {/* FIXED: Improved badge layout and position */}
-            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {token.isErc20 ? (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge className="bg-green-500 hover:bg-green-600">ERC-20 Compatible</Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>This token is deployed on the Ethereum network and supports ERC-20 scanning.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ) : (
-                  <div className="flex items-center gap-1.5">
-                    <Badge className="bg-red-500 hover:bg-red-600">Unsupported Chain</Badge>
+              {/* Enhanced badge layout with platform status indicators */}
+              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {isErc20 ? (
                     <TooltipProvider>
                       <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="h-4 w-4 text-muted-foreground" />
+                        <TooltipTrigger asChild>
+                          <Badge className="bg-green-500 hover:bg-green-600">ERC-20 Compatible</Badge>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>This token is not supported yet. Support for Solana, Arbitrum, and others is coming soon.</p>
+                          <p>This token is deployed on the Ethereum network and supports ERC-20 scanning.</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5">
+                      <Badge className="bg-red-500 hover:bg-red-600">Unsupported Chain</Badge>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>This token is not supported yet. Support for Solana, Arbitrum, and others is coming soon.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Select button for ERC-20 tokens */}
+                {isErc20 && (
+                  <Button 
+                    size="sm" 
+                    onClick={() => onSelectToken(token)} 
+                    className="flex items-center gap-1 ml-auto"
+                  >
+                    Select
+                  </Button>
                 )}
               </div>
-              
-              {/* Select button would appear on the right when applicable */}
-              {token.isErc20 && (
-                <Button 
-                  size="sm" 
-                  onClick={() => onSelectToken(token)} 
-                  className="flex items-center gap-1 ml-auto"
-                >
-                  Select
-                </Button>
-              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
