@@ -1,5 +1,5 @@
 
-import { Shield, Lock, AlertCircle, Activity, Users } from "lucide-react";
+import { Shield, Lock, AlertCircle, Activity } from "lucide-react";
 import CategoryFeatureGrid, { CategoryFeature } from "./CategoryFeatureGrid";
 
 export default function CategoryFeatureExample() {
@@ -39,7 +39,6 @@ export default function CategoryFeatureExample() {
     <div className="p-4">
       <CategoryFeatureGrid 
         features={securityFeatures}
-        title="Security Analysis"
         description="Key security indicators for this token's smart contract"
       />
     </div>
