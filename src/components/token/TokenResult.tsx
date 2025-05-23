@@ -5,6 +5,7 @@ import TokenCard from "@/components/TokenCard";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TokenResult as TokenResultType } from "./types";
+import { formatCurrencyValue } from "@/utils/tokenFormatters";
 
 interface TokenResultProps {
   token: TokenResultType;
@@ -12,28 +13,6 @@ interface TokenResultProps {
 }
 
 export default function TokenResult({ token, onSelectToken }: TokenResultProps) {
-  // Helper function to format numbers nicely
-  const formatNumber = (value: number | undefined): string => {
-    if (value === undefined) return "N/A";
-    
-    // For very large numbers
-    if (value >= 1000000000) {
-      return `$${(value / 1000000000).toFixed(2)}B`;
-    } 
-    // For millions
-    else if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`;
-    }
-    // For thousands
-    else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(2)}K`;
-    } 
-    // For regular numbers
-    else {
-      return `$${value.toFixed(2)}`;
-    }
-  };
-  
   // Determine if this is an ERC-20 token
   const isErc20 = typeof token.isErc20 === 'boolean' ? token.isErc20 : false;
 
@@ -43,16 +22,15 @@ export default function TokenResult({ token, onSelectToken }: TokenResultProps) 
         name={token.name}
         symbol={token.symbol.toUpperCase()}
         logo={token.large || token.thumb}
-        marketCap={token.market_cap_rank ? `Rank #${token.market_cap_rank}` : (typeof token.market_cap === 'number' ? formatNumber(token.market_cap) : 'N/A')}
+        marketCap={token.market_cap_rank ? `Rank #${token.market_cap_rank}` : (typeof token.market_cap === 'number' ? formatCurrencyValue(token.market_cap) : 'N/A')}
         price={token.price_usd || 0}
         priceChange={token.price_change_24h || 0}
-        onClick={isErc20 ? () => onSelectToken(token) : undefined}
         description={`${token.name} (${token.symbol.toUpperCase()}) is a cryptocurrency${token.market_cap_rank ? ` ranked #${token.market_cap_rank}` : ''}`}
         showActions={false} /* Disable built-in actions for custom layout */
       />
 
-      {/* Fixed badge and button layout - separated from card content */}
-      <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+      {/* Improved layout for badges and buttons - now placed in a better position */}
+      <div className="flex items-center justify-between px-4 pb-4">
         <div className="flex items-center gap-2">
           {isErc20 ? (
             <TooltipProvider>
