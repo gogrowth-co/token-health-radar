@@ -10,6 +10,9 @@ import CategoryFeatureGrid from "./CategoryFeatureGrid";
 import { 
   transformSecurityData, 
   transformTokenomicsData,
+  transformLiquidityData,
+  transformCommunityData,
+  transformDevelopmentData,
   SecurityData,
   TokenomicsData,
   LiquidityData,
@@ -17,62 +20,7 @@ import {
   DevelopmentData
 } from "@/utils/categoryTransformers";
 
-// Use the types defined in ScanResult for consistency
-interface SecurityData {
-  token_address: string;
-  score: number | null;
-  ownership_renounced: boolean | null;
-  audit_status: string | null;
-  multisig_status: string | null;
-  honeypot_detected: boolean | null;
-  freeze_authority: boolean | null;
-  can_mint: boolean | null;
-}
-
-interface TokenomicsData {
-  token_address: string;
-  score: number | null;
-  circulating_supply: number | null;
-  supply_cap: number | null;
-  tvl_usd: number | null;
-  vesting_schedule: string | null;
-  distribution_score: string | null;
-  treasury_usd: number | null;
-  burn_mechanism: boolean | null;
-}
-
-interface LiquidityData {
-  token_address: string;
-  score: number | null;
-  liquidity_locked_days: number | null;
-  cex_listings: number | null;
-  trading_volume_24h_usd: number | null;
-  holder_distribution: string | null;
-  dex_depth_status: string | null;
-}
-
-interface CommunityData {
-  token_address: string;
-  score: number | null;
-  twitter_followers: number | null;
-  twitter_verified: boolean | null;
-  twitter_growth_7d: number | null;
-  telegram_members: number | null;
-  discord_members: number | null;
-  active_channels: string[] | null;
-  team_visibility: string | null;
-}
-
-interface DevelopmentData {
-  token_address: string;
-  score: number | null;
-  github_repo: string | null;
-  is_open_source: boolean | null;
-  contributors_count: number | null;
-  commits_30d: number | null;
-  last_commit: string | null;
-  roadmap_progress: string | null;
-}
+// Removing the duplicate interface definitions and using the ones imported from categoryTransformers
 
 enum ScanCategory {
   Security = "security",
@@ -292,7 +240,7 @@ export default function CategoryTabs({
         </TooltipProvider>
       </TabsList>
       
-      {/* Security Tab Content - Updated to use CategoryFeatureGrid */}
+      {/* Security Tab Content */}
       {renderTabContent(securityData, (
         <CategoryFeatureGrid 
           features={transformSecurityData(securityData)}
@@ -301,7 +249,7 @@ export default function CategoryTabs({
         />
       ), ScanCategory.Security)}
       
-      {/* Tokenomics Tab Content - Updated to use CategoryFeatureGrid */}
+      {/* Tokenomics Tab Content */}
       {renderTabContent(tokenomicsData, (
         <CategoryFeatureGrid
           features={transformTokenomicsData(tokenomicsData)}
@@ -312,131 +260,29 @@ export default function CategoryTabs({
       
       {/* Liquidity Tab Content */}
       {renderTabContent(liquidityData, (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Liquidity Locked Days</h4>
-              <p className="font-medium">{liquidityData?.liquidity_locked_days ?? "N/A"} days</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">CEX Listings</h4>
-              <p className="font-medium">{liquidityData?.cex_listings ?? "N/A"}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">24h Trading Volume</h4>
-              <p className="font-medium">{formatCurrency(liquidityData?.trading_volume_24h_usd)}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">DEX Depth Status</h4>
-              <Badge variant="outline">{liquidityData?.dex_depth_status || "Unknown"}</Badge>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Holder Distribution</h4>
-              <Badge variant="outline">{liquidityData?.holder_distribution || "Unknown"}</Badge>
-            </div>
-          </div>
-        </div>
+        <CategoryFeatureGrid
+          features={transformLiquidityData(liquidityData)}
+          title="Liquidity Indicators"
+          description="Measures of token trading activity and accessibility"
+        />
       ), ScanCategory.Liquidity)}
       
       {/* Community Tab Content */}
       {renderTabContent(communityData, (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Twitter Followers</h4>
-              <p className="font-medium">{formatNumber(communityData?.twitter_followers)}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Twitter Verified</h4>
-              <BooleanIndicator value={communityData?.twitter_verified} positive={true} />
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Twitter 7d Growth</h4>
-              <p className={`font-medium ${
-                communityData?.twitter_growth_7d && communityData.twitter_growth_7d >= 0 
-                  ? 'text-green-500' 
-                  : 'text-red-500'
-              }`}>
-                {communityData?.twitter_growth_7d !== null && communityData?.twitter_growth_7d !== undefined
-                  ? `${communityData.twitter_growth_7d >= 0 ? '+' : ''}${communityData.twitter_growth_7d.toFixed(2)}%` 
-                  : "N/A"}
-              </p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Telegram Members</h4>
-              <p className="font-medium">{formatNumber(communityData?.telegram_members)}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Discord Members</h4>
-              <p className="font-medium">{formatNumber(communityData?.discord_members)}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Active Channels</h4>
-              <div className="flex flex-wrap gap-1">
-                {communityData?.active_channels && communityData.active_channels.length > 0 ? (
-                  communityData.active_channels.map((channel, i) => (
-                    <Badge key={i} variant="outline">{channel}</Badge>
-                  ))
-                ) : (
-                  <Badge variant="outline">None</Badge>
-                )}
-              </div>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Team Visibility</h4>
-              <Badge variant="outline">{communityData?.team_visibility || "Unknown"}</Badge>
-            </div>
-          </div>
-        </div>
+        <CategoryFeatureGrid
+          features={transformCommunityData(communityData)}
+          title="Community Indicators"
+          description="Social media presence and community engagement metrics"
+        />
       ), ScanCategory.Community)}
       
       {/* Development Tab Content */}
       {renderTabContent(developmentData, (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">GitHub Repository</h4>
-              <p className="font-medium truncate">
-                {developmentData?.github_repo ? (
-                  <a 
-                    href={developmentData.github_repo} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline"
-                  >
-                    {developmentData.github_repo.replace(/https:\/\/github\.com\//, '')}
-                  </a>
-                ) : (
-                  "N/A"
-                )}
-              </p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Open Source</h4>
-              <BooleanIndicator value={developmentData?.is_open_source} positive={true} />
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Contributors</h4>
-              <p className="font-medium">{developmentData?.contributors_count ?? "N/A"}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Commits (30d)</h4>
-              <p className="font-medium">{developmentData?.commits_30d ?? "N/A"}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Last Commit</h4>
-              <p className="font-medium">
-                {developmentData?.last_commit 
-                  ? new Date(developmentData.last_commit).toLocaleDateString() 
-                  : "N/A"}
-              </p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Roadmap Progress</h4>
-              <Badge variant="outline">{developmentData?.roadmap_progress || "Unknown"}</Badge>
-            </div>
-          </div>
-        </div>
+        <CategoryFeatureGrid
+          features={transformDevelopmentData(developmentData)}
+          title="Development Indicators"
+          description="GitHub activity and development progress metrics"
+        />
       ), ScanCategory.Development)}
     </Tabs>
   );

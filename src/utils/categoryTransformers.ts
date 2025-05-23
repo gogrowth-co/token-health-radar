@@ -3,7 +3,8 @@ import {
   Shield, Lock, AlertTriangle, CheckCircle, Code, 
   Fingerprint, CheckCircle2, XCircle, CircleDot, 
   LucideIcon, Wallet, Coins, BarChart4, Activity,
-  TrendingUp, PieChart
+  TrendingUp, PieChart, Users, Twitter, MessageSquare,
+  Globe, Github, Calendar, GitCommit, GitPullRequest
 } from "lucide-react";
 import { CategoryFeature } from "@/components/CategoryFeatureGrid";
 
@@ -219,22 +220,152 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
 export const transformLiquidityData = (data: LiquidityData | null): CategoryFeature[] => {
   if (!data) return [];
   
-  // Will be implemented as needed
-  return [];
+  return [
+    {
+      icon: Lock,
+      title: "Liquidity Locked Days",
+      description: "Duration of locked liquidity in DEX pools",
+      badgeLabel: data.liquidity_locked_days !== null ? `${data.liquidity_locked_days} days` : "N/A",
+      badgeVariant: data.liquidity_locked_days ? (data.liquidity_locked_days > 90 ? "green" : "orange") : "gray"
+    },
+    {
+      icon: Globe,
+      title: "CEX Listings",
+      description: "Number of centralized exchanges listing the token",
+      badgeLabel: data.cex_listings !== null ? data.cex_listings.toString() : "N/A",
+      badgeVariant: data.cex_listings ? (data.cex_listings > 2 ? "green" : "blue") : "gray"
+    },
+    {
+      icon: Activity,
+      title: "24h Trading Volume",
+      description: "USD volume of token traded in last 24 hours",
+      badgeLabel: data.trading_volume_24h_usd !== null ? `$${formatNumberWithFallback(data.trading_volume_24h_usd)}` : "N/A",
+      badgeVariant: "blue"
+    },
+    {
+      icon: PieChart,
+      title: "Holder Distribution",
+      description: "Concentration of token ownership",
+      badgeLabel: data.holder_distribution || "Unknown",
+      badgeVariant: data.holder_distribution 
+        ? getDistributionBadgeVariant(data.holder_distribution) 
+        : "gray"
+    },
+    {
+      icon: BarChart4,
+      title: "DEX Depth Status",
+      description: "Liquidity depth in decentralized exchanges",
+      badgeLabel: data.dex_depth_status || "Unknown",
+      badgeVariant: data.dex_depth_status
+        ? (data.dex_depth_status.toLowerCase().includes("high") ? "green" : 
+           data.dex_depth_status.toLowerCase().includes("medium") ? "blue" : "orange")
+        : "gray"
+    }
+  ];
 };
 
 // Transform community data to CategoryFeature format
 export const transformCommunityData = (data: CommunityData | null): CategoryFeature[] => {
   if (!data) return [];
   
-  // Will be implemented as needed
-  return [];
+  return [
+    {
+      icon: Twitter,
+      title: "Twitter Followers",
+      description: "Number of followers on Twitter/X",
+      badgeLabel: formatNumberWithFallback(data.twitter_followers),
+      badgeVariant: data.twitter_followers ? (data.twitter_followers > 50000 ? "green" : "blue") : "gray"
+    },
+    {
+      icon: CheckCircle,
+      title: "Twitter Verified",
+      description: "Official verification status on Twitter/X",
+      badgeLabel: getBadgeLabelForBoolean(data.twitter_verified),
+      badgeVariant: getBadgeVariantForBoolean(data.twitter_verified, true)
+    },
+    {
+      icon: TrendingUp,
+      title: "7-Day Growth",
+      description: "Twitter follower growth in past week",
+      badgeLabel: data.twitter_growth_7d !== null ? `${data.twitter_growth_7d >= 0 ? '+' : ''}${data.twitter_growth_7d.toFixed(2)}%` : "N/A",
+      badgeVariant: data.twitter_growth_7d ? (data.twitter_growth_7d > 0 ? "green" : "red") : "gray"
+    },
+    {
+      icon: MessageSquare,
+      title: "Telegram Members",
+      description: "Number of members in Telegram group",
+      badgeLabel: formatNumberWithFallback(data.telegram_members),
+      badgeVariant: "blue"
+    },
+    {
+      icon: Users,
+      title: "Discord Members",
+      description: "Number of members in Discord server",
+      badgeLabel: formatNumberWithFallback(data.discord_members),
+      badgeVariant: "blue"
+    },
+    {
+      icon: Shield,
+      title: "Team Visibility",
+      description: "Transparency of project team identity",
+      badgeLabel: data.team_visibility || "Unknown",
+      badgeVariant: data.team_visibility 
+        ? (data.team_visibility.toLowerCase().includes("high") ? "green" : 
+           data.team_visibility.toLowerCase().includes("medium") ? "blue" : "orange")
+        : "gray"
+    }
+  ];
 };
 
 // Transform development data to CategoryFeature format
 export const transformDevelopmentData = (data: DevelopmentData | null): CategoryFeature[] => {
   if (!data) return [];
   
-  // Will be implemented as needed
-  return [];
+  return [
+    {
+      icon: Github,
+      title: "GitHub Repository",
+      description: "Link to project's source code",
+      badgeLabel: data.github_repo ? "Available" : "Not Found",
+      badgeVariant: data.github_repo ? "green" : "gray"
+    },
+    {
+      icon: Code,
+      title: "Open Source",
+      description: "Public availability of project code",
+      badgeLabel: getBadgeLabelForBoolean(data.is_open_source),
+      badgeVariant: getBadgeVariantForBoolean(data.is_open_source, true)
+    },
+    {
+      icon: Users,
+      title: "Contributors",
+      description: "Number of code contributors",
+      badgeLabel: data.contributors_count !== null ? data.contributors_count.toString() : "N/A",
+      badgeVariant: data.contributors_count ? (data.contributors_count > 5 ? "green" : "blue") : "gray"
+    },
+    {
+      icon: GitCommit,
+      title: "Recent Commits",
+      description: "Code commits in past 30 days",
+      badgeLabel: data.commits_30d !== null ? data.commits_30d.toString() : "N/A",
+      badgeVariant: data.commits_30d ? (data.commits_30d > 10 ? "green" : "blue") : "gray"
+    },
+    {
+      icon: Calendar,
+      title: "Last Commit",
+      description: "Date of most recent code update",
+      badgeLabel: data.last_commit ? new Date(data.last_commit).toLocaleDateString() : "N/A",
+      badgeVariant: data.last_commit ? "blue" : "gray"
+    },
+    {
+      icon: GitPullRequest,
+      title: "Roadmap Progress",
+      description: "Status of development roadmap completion",
+      badgeLabel: data.roadmap_progress || "Unknown",
+      badgeVariant: data.roadmap_progress
+        ? (data.roadmap_progress.toLowerCase().includes("high") ? "green" : 
+           data.roadmap_progress.toLowerCase().includes("medium") ? "blue" : "orange")
+        : "gray"
+    }
+  ];
 };
