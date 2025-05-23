@@ -1,4 +1,3 @@
-
 import { 
   Shield, Lock, AlertTriangle, CheckCircle, Code, 
   Fingerprint, CheckCircle2, XCircle, CircleDot, 
@@ -211,7 +210,9 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
       title: "Burn Mechanism",
       description: "Permanent token removal from supply",
       badgeLabel: getBadgeLabelForBoolean(data.burn_mechanism),
-      badgeVariant: getBadgeVariantForBoolean(data.burn_mechanism, true)
+      badgeVariant: data.burn_mechanism !== null && data.burn_mechanism !== undefined 
+        ? (data.burn_mechanism ? "green" : "red") 
+        : "gray"
     }
   ];
 };
