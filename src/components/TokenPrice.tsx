@@ -46,7 +46,7 @@ export default function TokenPrice({ price, priceChange, address }: TokenPricePr
       
       {/* Address and chain */}
       {address && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-4">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

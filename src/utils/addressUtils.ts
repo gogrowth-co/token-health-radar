@@ -23,3 +23,15 @@ export const getFirstValidEvmAddress = (platforms: Record<string, string> | unde
   return "";
 };
 
+/**
+ * Shortens an Ethereum address for display
+ * @param address - Full Ethereum address
+ * @returns Shortened address (e.g., 0x1234...5678)
+ */
+export const shortenAddress = (address: string | undefined): string => {
+  if (!address) return "";
+  
+  if (address.length < 10) return address;
+  
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+};

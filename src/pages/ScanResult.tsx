@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase, handleSupabaseError } from "@/integrations/supabase/client";
@@ -509,6 +508,8 @@ export default function ScanResult() {
                       website={tokenData.website_url}
                       twitter={tokenData.twitter_handle}
                       github={tokenData.github_url}
+                      description={tokenData.description}
+                      address={tokenData.token_address}
                     />
                   </div>
                   

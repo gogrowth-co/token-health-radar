@@ -1,12 +1,12 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
 import TokenLogo from "./TokenLogo";
 import TokenInfo from "./TokenInfo";
 import TokenPrice from "./TokenPrice";
 import TokenScore from "./TokenScore";
 import TokenSocialLinks from "./TokenSocialLinks";
-import TokenActions from "./TokenActions";
+import { getFirstValidEvmAddress } from "@/utils/addressUtils";
+import { formatCurrencyValue } from "@/utils/tokenFormatters";
 
 interface TokenCardProps {
   name: string;
@@ -43,20 +43,6 @@ export default function TokenCard({
   onClick,
   showActions = true
 }: TokenCardProps) {
-  const copyAddress = async () => {
-    if (address) {
-      try {
-        await navigator.clipboard.writeText(address);
-        toast({
-          title: "Address copied to clipboard",
-          duration: 2000,
-        });
-      } catch (err) {
-        console.error("Failed to copy:", err);
-      }
-    }
-  };
-
   return (
     <Card className="overflow-hidden bg-card border border-border shadow-sm">
       <CardContent className="p-6">
@@ -67,7 +53,6 @@ export default function TokenCard({
             <TokenInfo 
               name={name} 
               symbol={symbol} 
-              showAddressInHeader={false}
             />
           </div>
           {score !== undefined && <TokenScore score={score} />}
@@ -75,16 +60,16 @@ export default function TokenCard({
         
         {/* Description section */}
         {description && (
-          <div className="mb-4 ml-20">
+          <div className="mb-4">
             <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
               {description}
             </p>
           </div>
         )}
         
-        {/* Bottom section: Price/Change + Address/Chain + Social Links + Actions */}
-        <div className="flex items-center justify-between ml-20">
-          <div className="flex items-center gap-6">
+        {/* Bottom section: Price/Change + Address/Chain + Social Links */}
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex flex-col gap-2">
             <TokenPrice 
               price={price} 
               priceChange={priceChange} 
@@ -93,15 +78,12 @@ export default function TokenCard({
             
             {marketCap && (
               <div className="text-sm text-muted-foreground">
-                Market Cap: {marketCap}
+                Market Cap: {formatCurrencyValue(parseFloat(marketCap))}
               </div>
             )}
           </div>
           
-          <div className="flex items-center gap-4">
-            <TokenSocialLinks website={website} twitter={twitter} github={github} />
-            <TokenActions showActions={showActions} onClick={onClick} />
-          </div>
+          <TokenSocialLinks website={website} twitter={twitter} github={github} />
         </div>
       </CardContent>
     </Card>
