@@ -2,7 +2,8 @@
 import { 
   Shield, Lock, AlertTriangle, CheckCircle, Code, 
   Fingerprint, CheckCircle2, XCircle, CircleDot, 
-  LucideIcon 
+  LucideIcon, Wallet, Coins, BarChart4, Activity,
+  TrendingUp, PieChart
 } from "lucide-react";
 import { CategoryFeature } from "@/components/CategoryFeatureGrid";
 
@@ -137,12 +138,81 @@ export const transformSecurityData = (data: SecurityData | null): CategoryFeatur
   ];
 };
 
+// Helper function to determine badge variant based on distribution score
+const getDistributionBadgeVariant = (score: string | null | undefined): "green" | "orange" | "red" | "gray" => {
+  if (!score) return "gray";
+  
+  const lowerScore = score.toLowerCase();
+  if (lowerScore.includes("good") || lowerScore.includes("high")) return "green";
+  if (lowerScore.includes("moderate") || lowerScore.includes("medium")) return "orange";
+  if (lowerScore.includes("poor") || lowerScore.includes("low")) return "red";
+  return "gray";
+};
+
+// Helper function to format number or show fallback
+const formatNumberWithFallback = (value: number | null | undefined, suffix: string = ""): string => {
+  if (value === null || value === undefined) return "N/A";
+  
+  // Format large numbers with abbreviations
+  if (value >= 1000000000) {
+    return `${(value / 1000000000).toFixed(2)}B${suffix}`;
+  } else if (value >= 1000000) {
+    return `${(value / 1000000).toFixed(2)}M${suffix}`;
+  } else if (value >= 1000) {
+    return `${(value / 1000).toFixed(2)}K${suffix}`;
+  }
+  
+  return `${value}${suffix}`;
+};
+
 // Transform tokenomics data to CategoryFeature format
 export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFeature[] => {
   if (!data) return [];
   
-  // Will be implemented as needed
-  return [];
+  return [
+    {
+      icon: Coins,
+      title: "Circulating Supply",
+      description: "Number of tokens currently in circulation",
+      badgeLabel: formatNumberWithFallback(data.circulating_supply),
+      badgeVariant: "blue"
+    },
+    {
+      icon: BarChart4, 
+      title: "Supply Cap",
+      description: "Maximum total supply of tokens",
+      badgeLabel: formatNumberWithFallback(data.supply_cap),
+      badgeVariant: "blue"
+    },
+    {
+      icon: Wallet,
+      title: "Total Value Locked",
+      description: "Value locked in DeFi protocols",
+      badgeLabel: data.tvl_usd ? `$${formatNumberWithFallback(data.tvl_usd)}` : "N/A",
+      badgeVariant: "blue"
+    },
+    {
+      icon: Activity,
+      title: "Vesting Schedule",
+      description: "Token release schedule for initial allocations",
+      badgeLabel: data.vesting_schedule || "Unknown",
+      badgeVariant: data.vesting_schedule ? "blue" : "gray"
+    },
+    {
+      icon: PieChart,
+      title: "Distribution Score",
+      description: "How well token supply is distributed among holders",
+      badgeLabel: data.distribution_score || "Unknown",
+      badgeVariant: getDistributionBadgeVariant(data.distribution_score)
+    },
+    {
+      icon: TrendingUp,
+      title: "Burn Mechanism",
+      description: "Permanent token removal from supply",
+      badgeLabel: getBadgeLabelForBoolean(data.burn_mechanism),
+      badgeVariant: getBadgeVariantForBoolean(data.burn_mechanism, true)
+    }
+  ];
 };
 
 // Transform liquidity data to CategoryFeature format

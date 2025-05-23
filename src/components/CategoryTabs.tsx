@@ -7,7 +7,15 @@ import { Check, X, Lock, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import CategoryFeatureGrid from "./CategoryFeatureGrid";
-import { transformSecurityData } from "@/utils/categoryTransformers";
+import { 
+  transformSecurityData, 
+  transformTokenomicsData,
+  SecurityData,
+  TokenomicsData,
+  LiquidityData,
+  CommunityData,
+  DevelopmentData
+} from "@/utils/categoryTransformers";
 
 // Use the types defined in ScanResult for consistency
 interface SecurityData {
@@ -293,40 +301,13 @@ export default function CategoryTabs({
         />
       ), ScanCategory.Security)}
       
-      {/* Tokenomics Tab Content */}
+      {/* Tokenomics Tab Content - Updated to use CategoryFeatureGrid */}
       {renderTabContent(tokenomicsData, (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Circulating Supply</h4>
-              <p className="font-medium">{formatNumber(tokenomicsData?.circulating_supply)}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Supply Cap</h4>
-              <p className="font-medium">{formatNumber(tokenomicsData?.supply_cap)}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Total Value Locked</h4>
-              <p className="font-medium">{formatCurrency(tokenomicsData?.tvl_usd)}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Vesting Schedule</h4>
-              <Badge variant="outline">{tokenomicsData?.vesting_schedule || "Unknown"}</Badge>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Distribution Score</h4>
-              <Badge variant="outline">{tokenomicsData?.distribution_score || "Unknown"}</Badge>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Treasury Value</h4>
-              <p className="font-medium">{formatCurrency(tokenomicsData?.treasury_usd)}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Burn Mechanism</h4>
-              <BooleanIndicator value={tokenomicsData?.burn_mechanism} positive={true} />
-            </div>
-          </div>
-        </div>
+        <CategoryFeatureGrid
+          features={transformTokenomicsData(tokenomicsData)}
+          title="Tokenomics Indicators"
+          description="Economic metrics and token supply analysis"
+        />
       ), ScanCategory.Tokenomics)}
       
       {/* Liquidity Tab Content */}
