@@ -8,9 +8,15 @@ interface TokenPriceProps {
   price?: number;
   priceChange?: number;
   address?: string;
+  showPriceData?: boolean;
 }
 
-export default function TokenPrice({ price, priceChange, address }: TokenPriceProps) {
+export default function TokenPrice({ 
+  price, 
+  priceChange, 
+  address, 
+  showPriceData = true 
+}: TokenPriceProps) {
   const shortenAddress = (address: string) => {
     if (!address) return "";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -32,8 +38,8 @@ export default function TokenPrice({ price, priceChange, address }: TokenPricePr
 
   return (
     <div className="flex items-center gap-4">
-      {/* Price and change */}
-      {price !== undefined && (
+      {/* Price and change - only show if showPriceData is true */}
+      {showPriceData && price !== undefined && (
         <div>
           <div className="text-2xl font-bold">${price.toLocaleString()}</div>
           {priceChange !== undefined && (
@@ -46,14 +52,14 @@ export default function TokenPrice({ price, priceChange, address }: TokenPricePr
       
       {/* Address and chain */}
       {address && (
-        <div className="flex items-center gap-2 ml-4">
+        <div className="flex items-center gap-2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-auto p-1 text-xs font-mono text-muted-foreground hover:text-foreground"
+                  className="h-auto p-2 text-sm font-mono text-muted-foreground hover:text-foreground border border-border rounded-md"
                   onClick={copyAddress}
                 >
                   {shortenAddress(address)}
@@ -65,7 +71,7 @@ export default function TokenPrice({ price, priceChange, address }: TokenPricePr
             </Tooltip>
           </TooltipProvider>
           
-          <Badge variant="secondary" className="text-xs px-2 py-0">
+          <Badge variant="secondary" className="text-xs px-2 py-1">
             ETH
           </Badge>
         </div>
