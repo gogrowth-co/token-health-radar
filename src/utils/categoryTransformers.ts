@@ -1,4 +1,5 @@
-import { Shield, Lock, AlertCircle, Activity, Users, Twitter, BadgeCheck, TrendingUp, MessageSquare, MessageCircle, MessageCircle2, Code, ListChecks, LockClosed, Building2, BarChart2, Hash } from "lucide-react";
+
+import { Shield, Lock, AlertCircle, Activity, Users, Twitter, BadgeCheck, TrendingUp, MessageSquare, MessageCircle, Code, ListChecks, Building2, BarChart2, Hash } from "lucide-react";
 import { CategoryFeature } from "@/components/CategoryFeatureGrid";
 
 // Types for each category data
@@ -165,7 +166,7 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
       badgeVariant: getBadgeVariant(data.tvl_usd || 0, 10000, 100000)
     },
     {
-      icon: MessageCircle2,
+      icon: MessageCircle,
       title: "Burn Mechanism",
       description: "Token burning to reduce supply",
       badgeLabel: getBadgeLabelForBoolean(data.burn_mechanism),
@@ -182,7 +183,7 @@ export const formatHolderDistribution = (distributionJson: string | null | undef
       title: "Holder Distribution",
       description: "Breakdown of token holdings by wallet groups",
       badgeLabel: "No Data",
-      badgeVariant: "outline"
+      badgeVariant: "gray"
     }];
   }
 
@@ -208,7 +209,7 @@ export const formatHolderDistribution = (distributionJson: string | null | undef
         title: "Top 50 Holders",
         description: "Percentage held by wallets ranked 11-50",
         badgeLabel: `${(distribution.top50 * 100).toFixed(1)}%`,
-        badgeVariant: "outline"
+        badgeVariant: "gray"
       });
     }
     
@@ -219,7 +220,7 @@ export const formatHolderDistribution = (distributionJson: string | null | undef
         title: "Other Holders",
         description: "Percentage held by remaining wallets",
         badgeLabel: `${(distribution.others * 100).toFixed(1)}%`,
-        badgeVariant: "outline"
+        badgeVariant: "gray"
       });
     }
     
@@ -247,7 +248,7 @@ export const transformLiquidityData = (data: LiquidityData | null): CategoryFeat
 
   const features: CategoryFeature[] = [
     {
-      icon: LockClosed,
+      icon: Lock,
       title: "Liquidity Locked",
       description: "Number of days liquidity is locked",
       badgeLabel: data.liquidity_locked_days ? `${data.liquidity_locked_days} days` : "Unknown",
@@ -294,42 +295,42 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
       title: "Twitter Followers",
       description: "Number of followers on Twitter/X",
       badgeLabel: "Coming Soon",
-      badgeVariant: "outline"
+      badgeVariant: "gray"
     },
     {
       icon: BadgeCheck,
       title: "Twitter Verified",
       description: "Verification status on Twitter/X",
       badgeLabel: "Coming Soon",
-      badgeVariant: "outline"
+      badgeVariant: "gray"
     },
     {
       icon: TrendingUp,
       title: "7-Day Growth",
       description: "Follower growth percentage over 7 days",
       badgeLabel: "Coming Soon",
-      badgeVariant: "outline"
+      badgeVariant: "gray"
     },
     {
       icon: MessageSquare,
       title: "Telegram Members",
       description: "Number of members in Telegram group",
       badgeLabel: "Coming Soon",
-      badgeVariant: "outline"
+      badgeVariant: "gray"
     },
     {
       icon: MessageCircle,
       title: "Discord Members",
       description: "Number of members in Discord server",
       badgeLabel: "Coming Soon",
-      badgeVariant: "outline"
+      badgeVariant: "gray"
     },
     {
       icon: Users,
       title: "Team Visibility",
       description: "Public visibility of project team members",
       badgeLabel: "Coming Soon",
-      badgeVariant: "outline"
+      badgeVariant: "gray"
     }
   ];
 };
