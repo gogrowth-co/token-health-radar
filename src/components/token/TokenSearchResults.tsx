@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle, Info } from "lucide-react";
 import TokenCard from "@/components/TokenCard";
@@ -155,7 +156,7 @@ export default function TokenSearchResults({
                           <Badge className="bg-green-500 hover:bg-green-600">ERC-20 Compatible</Badge>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>This token is deployed on the Ethereum network and supports ERC-20 scanning.</p>
+                          <p>This token is deployed on an EVM-compatible network and supports scanning.</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -168,7 +169,7 @@ export default function TokenSearchResults({
                             <Info className="h-4 w-4 text-muted-foreground" />
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>This token is not supported yet. Support for Solana, Arbitrum, and others is coming soon.</p>
+                            <p>This token is not supported yet. Support for Solana and others is coming soon.</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

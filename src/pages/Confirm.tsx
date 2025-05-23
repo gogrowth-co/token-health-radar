@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -33,7 +32,8 @@ let lastDetailApiCallTime = 0;
 const MIN_API_CALL_INTERVAL = 1000; // milliseconds between search calls
 const MIN_DETAIL_API_CALL_INTERVAL = 600; // milliseconds between detail calls
 
-// Cache for token detail responses to reduce API calls
+// Cache for token detail responses to reduce API calls - now versioned
+const CACHE_VERSION = "v2"; // Increment this when logic changes
 const tokenDetailCache: Record<string, any> = {};
 
 // Known ERC-20 tokens that might not be correctly identified by platform data
@@ -66,20 +66,11 @@ export default function Confirm() {
       return true;
     }
     
-    // Check platforms data
+    // Check platforms data for ANY EVM chain with 0x address
     if (token.platforms) {
-      const ethereumAddress = token.platforms.ethereum;
-      
-      // More lenient Ethereum address validation
-      if (typeof ethereumAddress === "string" && ethereumAddress.trim().length > 0) {
-        // Prefer correctly formatted addresses
-        if (/^(0x)?[0-9a-fA-F]{40}$/i.test(ethereumAddress.trim())) {
-          return true;
-        }
-        
-        // If it has any ethereum address, it's likely ERC-20
-        return true;
-      }
+      return Object.values(token.platforms || {}).some(addr => 
+        typeof addr === 'string' && addr.trim().toLowerCase().startsWith('0x')
+      );
     }
     
     // Fallback based on token naming
@@ -180,20 +171,20 @@ export default function Confirm() {
           const enhancedResults = [];
           for (const coin of topCoins) {
             try {
-              // Check cache first to reduce API calls
-              const cacheKey = `coin:${coin.id}`;
+              // Check cache first to reduce API calls - now with versioned cache key
+              const cacheKey = `coin:${CACHE_VERSION}:${coin.id}`;
               let detailData;
               
               if (tokenDetailCache[cacheKey]) {
                 console.log(`Using cached data for ${coin.id}`);
                 detailData = tokenDetailCache[cacheKey];
               } else {
-                // Get detailed coin data
-                const detailUrl = `https://api.coingecko.com/api/v3/coins/${coin.id}?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false`;
+                // Get detailed coin data - OPTIMIZED to only request market_data
+                const detailUrl = `https://api.coingecko.com/api/v3/coins/${coin.id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
                 
                 try {
                   detailData = await callCoinGeckoAPI(detailUrl, true);
-                  // Cache the successful response
+                  // Cache the successful response with version
                   tokenDetailCache[cacheKey] = detailData;
                 } catch (detailError: any) {
                   console.warn(`Error fetching details for ${coin.id}:`, detailError.message);
@@ -222,15 +213,10 @@ export default function Confirm() {
               // Enhanced debugging
               console.log(`[Token Debug] ${coin.id} (${coin.symbol}):`);
               console.log(` - Platforms data:`, platforms);
-              console.log(` - Ethereum address:`, platforms.ethereum || "none");
               console.log(` - Is valid ERC-20:`, isErc20Compatible);
-              if (platforms.ethereum) {
-                console.log(` - Address validation:`, {
-                  isString: typeof platforms.ethereum === "string",
-                  nonEmpty: platforms.ethereum.length > 0,
-                  matchesFormat: /^(0x)?[0-9a-fA-F]{40}$/i.test(platforms.ethereum)
-                });
-              }
+              console.log(` - Platform addresses:`, Object.values(platforms).filter(addr => 
+                typeof addr === 'string' && addr.trim().toLowerCase().startsWith('0x')
+              ));
               
               // Return enhanced coin data with explicit ERC-20 status
               enhancedResults.push({
