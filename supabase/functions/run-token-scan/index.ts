@@ -1,4 +1,3 @@
-
 // Follow Edge Function Conventions
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
@@ -20,6 +19,268 @@ interface TokenScanRequest {
   coingecko_id?: string;
   token_name?: string;
   token_symbol?: string;
+}
+
+// Deterministic score calculation functions
+function calculateSecurityScore(data: any): number {
+  console.log("[SCORE-CALC] Calculating security score with data:", data);
+  let score = 0;
+  
+  // Base score starts at 50
+  score = 50;
+  
+  // Ownership renounced (+20 points if true)
+  if (data.ownership_renounced === true) {
+    score += 20;
+    console.log("[SCORE-CALC] Security: +20 for ownership renounced");
+  }
+  
+  // Audit status (30 points if "Audited", 15 if "Pending", 0 if "Not Audited")
+  if (data.audit_status === "Audited") {
+    score += 30;
+    console.log("[SCORE-CALC] Security: +30 for audit status");
+  } else if (data.audit_status === "Pending") {
+    score += 15;
+    console.log("[SCORE-CALC] Security: +15 for pending audit");
+  }
+  
+  // Multisig status (+25 points if "Multisig")
+  if (data.multisig_status === "Multisig") {
+    score += 25;
+    console.log("[SCORE-CALC] Security: +25 for multisig");
+  }
+  
+  // Honeypot detected (-30 points if true)
+  if (data.honeypot_detected === true) {
+    score -= 30;
+    console.log("[SCORE-CALC] Security: -30 for honeypot detected");
+  }
+  
+  // Freeze authority (-15 points if true)
+  if (data.freeze_authority === true) {
+    score -= 15;
+    console.log("[SCORE-CALC] Security: -15 for freeze authority");
+  }
+  
+  // Can mint (-10 points if true)
+  if (data.can_mint === true) {
+    score -= 10;
+    console.log("[SCORE-CALC] Security: -10 for mint capability");
+  }
+  
+  // Ensure score is between 0 and 100
+  const finalScore = Math.max(0, Math.min(100, score));
+  console.log("[SCORE-CALC] Security final score:", finalScore);
+  return finalScore;
+}
+
+function calculateLiquidityScore(data: any): number {
+  console.log("[SCORE-CALC] Calculating liquidity score with data:", data);
+  let score = 0;
+  
+  // Base score starts at 20
+  score = 20;
+  
+  // Liquidity locked days (up to 25 points based on days locked)
+  if (data.liquidity_locked_days) {
+    const lockedDays = data.liquidity_locked_days;
+    if (lockedDays >= 365) {
+      score += 25;
+      console.log("[SCORE-CALC] Liquidity: +25 for 1+ year lock");
+    } else if (lockedDays >= 180) {
+      score += 20;
+      console.log("[SCORE-CALC] Liquidity: +20 for 6+ months lock");
+    } else if (lockedDays >= 90) {
+      score += 15;
+      console.log("[SCORE-CALC] Liquidity: +15 for 3+ months lock");
+    } else if (lockedDays >= 30) {
+      score += 10;
+      console.log("[SCORE-CALC] Liquidity: +10 for 1+ month lock");
+    }
+  }
+  
+  // CEX listings (5 points per exchange, max 25 points)
+  if (data.cex_listings) {
+    const listingPoints = Math.min(25, data.cex_listings * 5);
+    score += listingPoints;
+    console.log("[SCORE-CALC] Liquidity: +", listingPoints, "for CEX listings");
+  }
+  
+  // Trading volume 24h (up to 30 points based on volume tiers)
+  if (data.trading_volume_24h_usd) {
+    const volume = data.trading_volume_24h_usd;
+    if (volume >= 10000000) { // $10M+
+      score += 30;
+      console.log("[SCORE-CALC] Liquidity: +30 for high volume");
+    } else if (volume >= 1000000) { // $1M+
+      score += 25;
+      console.log("[SCORE-CALC] Liquidity: +25 for good volume");
+    } else if (volume >= 100000) { // $100K+
+      score += 15;
+      console.log("[SCORE-CALC] Liquidity: +15 for moderate volume");
+    } else if (volume >= 10000) { // $10K+
+      score += 5;
+      console.log("[SCORE-CALC] Liquidity: +5 for low volume");
+    }
+  }
+  
+  // Holder distribution (up to 20 points for good distribution)
+  if (data.holder_distribution) {
+    try {
+      const distribution = typeof data.holder_distribution === 'string' ? 
+        JSON.parse(data.holder_distribution) : data.holder_distribution;
+      const top10 = distribution.top10 || 0;
+      
+      if (top10 < 0.3) { // Less than 30% held by top 10
+        score += 20;
+        console.log("[SCORE-CALC] Liquidity: +20 for excellent distribution");
+      } else if (top10 < 0.5) { // Less than 50% held by top 10
+        score += 15;
+        console.log("[SCORE-CALC] Liquidity: +15 for good distribution");
+      } else if (top10 < 0.7) { // Less than 70% held by top 10
+        score += 10;
+        console.log("[SCORE-CALC] Liquidity: +10 for fair distribution");
+      }
+    } catch (e) {
+      console.log("[SCORE-CALC] Liquidity: Error parsing holder distribution");
+    }
+  }
+  
+  // Ensure score is between 0 and 100
+  const finalScore = Math.max(0, Math.min(100, score));
+  console.log("[SCORE-CALC] Liquidity final score:", finalScore);
+  return finalScore;
+}
+
+function calculateTokenomicsScore(data: any): number {
+  console.log("[SCORE-CALC] Calculating tokenomics score with data:", data);
+  let score = 0;
+  
+  // Base score starts at 30
+  score = 30;
+  
+  // Supply cap vs circulating supply ratio (25 points for healthy inflation)
+  if (data.supply_cap && data.circulating_supply) {
+    const inflationRatio = data.circulating_supply / data.supply_cap;
+    if (inflationRatio >= 0.8 && inflationRatio <= 1.0) { // 80-100% of supply circulating
+      score += 25;
+      console.log("[SCORE-CALC] Tokenomics: +25 for healthy supply ratio");
+    } else if (inflationRatio >= 0.6) { // 60-80% circulating
+      score += 20;
+      console.log("[SCORE-CALC] Tokenomics: +20 for good supply ratio");
+    } else if (inflationRatio >= 0.4) { // 40-60% circulating
+      score += 15;
+      console.log("[SCORE-CALC] Tokenomics: +15 for fair supply ratio");
+    }
+  }
+  
+  // TVL (up to 30 points based on TVL tiers)
+  if (data.tvl_usd) {
+    const tvl = data.tvl_usd;
+    if (tvl >= 100000000) { // $100M+ TVL
+      score += 30;
+      console.log("[SCORE-CALC] Tokenomics: +30 for excellent TVL");
+    } else if (tvl >= 10000000) { // $10M+ TVL
+      score += 25;
+      console.log("[SCORE-CALC] Tokenomics: +25 for high TVL");
+    } else if (tvl >= 1000000) { // $1M+ TVL
+      score += 20;
+      console.log("[SCORE-CALC] Tokenomics: +20 for good TVL");
+    } else if (tvl >= 100000) { // $100K+ TVL
+      score += 10;
+      console.log("[SCORE-CALC] Tokenomics: +10 for moderate TVL");
+    }
+  }
+  
+  // Burn mechanism (+15 points if true)
+  if (data.burn_mechanism === true) {
+    score += 15;
+    console.log("[SCORE-CALC] Tokenomics: +15 for burn mechanism");
+  }
+  
+  // Vesting schedule (30 points for "None", 20 for "Linear", 10 for "Cliff")
+  if (data.vesting_schedule === "None") {
+    score += 30;
+    console.log("[SCORE-CALC] Tokenomics: +30 for no vesting");
+  } else if (data.vesting_schedule === "Linear") {
+    score += 20;
+    console.log("[SCORE-CALC] Tokenomics: +20 for linear vesting");
+  } else if (data.vesting_schedule === "Cliff") {
+    score += 10;
+    console.log("[SCORE-CALC] Tokenomics: +10 for cliff vesting");
+  }
+  
+  // Ensure score is between 0 and 100
+  const finalScore = Math.max(0, Math.min(100, score));
+  console.log("[SCORE-CALC] Tokenomics final score:", finalScore);
+  return finalScore;
+}
+
+function calculateDevelopmentScore(data: any): number {
+  console.log("[SCORE-CALC] Calculating development score with data:", data);
+  let score = 0;
+  
+  // Base score starts at 25
+  score = 25;
+  
+  // Open source (+25 points if true)
+  if (data.is_open_source === true) {
+    score += 25;
+    console.log("[SCORE-CALC] Development: +25 for open source");
+  }
+  
+  // Contributors count (up to 25 points based on contributor count)
+  if (data.contributors_count) {
+    const contributors = data.contributors_count;
+    if (contributors >= 50) {
+      score += 25;
+      console.log("[SCORE-CALC] Development: +25 for many contributors");
+    } else if (contributors >= 20) {
+      score += 20;
+      console.log("[SCORE-CALC] Development: +20 for good contributors");
+    } else if (contributors >= 10) {
+      score += 15;
+      console.log("[SCORE-CALC] Development: +15 for moderate contributors");
+    } else if (contributors >= 5) {
+      score += 10;
+      console.log("[SCORE-CALC] Development: +10 for few contributors");
+    }
+  }
+  
+  // Commits in last 30 days (up to 30 points based on recent activity)
+  if (data.commits_30d) {
+    const commits = data.commits_30d;
+    if (commits >= 100) {
+      score += 30;
+      console.log("[SCORE-CALC] Development: +30 for very active");
+    } else if (commits >= 50) {
+      score += 25;
+      console.log("[SCORE-CALC] Development: +25 for active");
+    } else if (commits >= 20) {
+      score += 20;
+      console.log("[SCORE-CALC] Development: +20 for moderate activity");
+    } else if (commits >= 5) {
+      score += 10;
+      console.log("[SCORE-CALC] Development: +10 for low activity");
+    }
+  }
+  
+  // Roadmap progress (20 points for "On Track", 10 for "Ahead", -10 for "Delayed")
+  if (data.roadmap_progress === "On Track") {
+    score += 20;
+    console.log("[SCORE-CALC] Development: +20 for on track roadmap");
+  } else if (data.roadmap_progress === "Ahead") {
+    score += 10;
+    console.log("[SCORE-CALC] Development: +10 for ahead roadmap");
+  } else if (data.roadmap_progress === "Delayed") {
+    score -= 10;
+    console.log("[SCORE-CALC] Development: -10 for delayed roadmap");
+  }
+  
+  // Ensure score is between 0 and 100
+  const finalScore = Math.max(0, Math.min(100, score));
+  console.log("[SCORE-CALC] Development final score:", finalScore);
+  return finalScore;
 }
 
 // Fetch token data from CoinGecko API
@@ -252,22 +513,26 @@ serve(async (req) => {
       token = newToken;
     }
     
-    // Process security data - use UPSERT to avoid duplicate key errors
+    // Process security data with deterministic scoring
     console.log("[TOKEN-SCAN] Processing security data");
     try {
-      const securityScore = Math.floor(Math.random() * 100);
+      const securityDataValues = {
+        ownership_renounced: Math.random() > 0.5,
+        audit_status: ["Audited", "Not Audited", "Pending"][Math.floor(Math.random() * 3)],
+        multisig_status: ["Multisig", "Single Signer"][Math.floor(Math.random() * 2)],
+        honeypot_detected: Math.random() > 0.8,
+        freeze_authority: Math.random() > 0.7,
+        can_mint: Math.random() > 0.6
+      };
+      
+      const securityScore = calculateSecurityScore(securityDataValues);
       
       const { error: securityError } = await supabase
         .from('token_security_cache')
         .upsert({
           token_address: body.token_address,
           score: securityScore,
-          ownership_renounced: Math.random() > 0.5,
-          audit_status: ["Audited", "Not Audited", "Pending"][Math.floor(Math.random() * 3)],
-          multisig_status: ["Multisig", "Single Signer"][Math.floor(Math.random() * 2)],
-          honeypot_detected: Math.random() > 0.8,
-          freeze_authority: Math.random() > 0.7,
-          can_mint: Math.random() > 0.6
+          ...securityDataValues
         }, {
           onConflict: 'token_address'
         });
@@ -279,23 +544,29 @@ serve(async (req) => {
       console.error("[TOKEN-SCAN] Failed to process security data -", err);
     }
     
-    // Process liquidity data - use UPSERT
+    // Process liquidity data with deterministic scoring
     console.log("[TOKEN-SCAN] Processing liquidity data");
     try {
+      const liquidityDataValues = {
+        liquidity_locked_days: Math.floor(Math.random() * 365),
+        cex_listings: Math.floor(Math.random() * 10),
+        trading_volume_24h_usd: Math.random() * 1000000,
+        holder_distribution: JSON.stringify({
+          top10: Math.random() * 0.6,
+          top50: Math.random() * 0.3,
+          others: Math.random() * 0.1
+        }),
+        dex_depth_status: ["High", "Medium", "Low"][Math.floor(Math.random() * 3)]
+      };
+      
+      const liquidityScore = calculateLiquidityScore(liquidityDataValues);
+      
       const { error: liquidityError } = await supabase
         .from('token_liquidity_cache')
         .upsert({
           token_address: body.token_address,
-          score: Math.floor(Math.random() * 100),
-          liquidity_locked_days: Math.floor(Math.random() * 365),
-          cex_listings: Math.floor(Math.random() * 10),
-          trading_volume_24h_usd: Math.random() * 1000000,
-          holder_distribution: JSON.stringify({
-            top10: Math.random() * 0.6,
-            top50: Math.random() * 0.3,
-            others: Math.random() * 0.1
-          }),
-          dex_depth_status: ["High", "Medium", "Low"][Math.floor(Math.random() * 3)]
+          score: liquidityScore,
+          ...liquidityDataValues
         }, {
           onConflict: 'token_address'
         });
@@ -307,21 +578,27 @@ serve(async (req) => {
       console.error("[TOKEN-SCAN] Failed to process liquidity data -", err);
     }
     
-    // Process tokenomics data - use UPSERT
+    // Process tokenomics data with deterministic scoring
     console.log("[TOKEN-SCAN] Processing tokenomics data");
     try {
+      const tokenomicsDataValues = {
+        circulating_supply: Math.random() * 1000000000,
+        supply_cap: Math.random() * 2000000000,
+        tvl_usd: Math.random() * 10000000,
+        vesting_schedule: ["Linear", "Cliff", "None"][Math.floor(Math.random() * 3)],
+        distribution_score: ["Good", "Average", "Poor"][Math.floor(Math.random() * 3)],
+        treasury_usd: Math.random() * 5000000,
+        burn_mechanism: Math.random() > 0.5
+      };
+      
+      const tokenomicsScore = calculateTokenomicsScore(tokenomicsDataValues);
+      
       const { error: tokenomicsError } = await supabase
         .from('token_tokenomics_cache')
         .upsert({
           token_address: body.token_address,
-          score: Math.floor(Math.random() * 100),
-          circulating_supply: Math.random() * 1000000000,
-          supply_cap: Math.random() * 2000000000,
-          tvl_usd: Math.random() * 10000000,
-          vesting_schedule: ["Linear", "Cliff", "None"][Math.floor(Math.random() * 3)],
-          distribution_score: ["Good", "Average", "Poor"][Math.floor(Math.random() * 3)],
-          treasury_usd: Math.random() * 5000000,
-          burn_mechanism: Math.random() > 0.5
+          score: tokenomicsScore,
+          ...tokenomicsDataValues
         }, {
           onConflict: 'token_address'
         });
@@ -333,14 +610,14 @@ serve(async (req) => {
       console.error("[TOKEN-SCAN] Failed to process tokenomics data -", err);
     }
     
-    // Process community data - use UPSERT
+    // Process community data - TEMPORARILY DISABLED for scoring but still store data
     console.log("[TOKEN-SCAN] Processing community data");
     try {
       const { error: communityError } = await supabase
         .from('token_community_cache')
         .upsert({
           token_address: body.token_address,
-          score: Math.floor(Math.random() * 100),
+          score: 0, // 🚫 TEMPORARILY SET TO 0 - NOT INCLUDED IN OVERALL CALCULATION
           twitter_followers: Math.floor(Math.random() * 100000),
           twitter_verified: Math.random() > 0.7,
           twitter_growth_7d: Math.random() * 10 - 2, // -2% to 8%
@@ -359,20 +636,26 @@ serve(async (req) => {
       console.error("[TOKEN-SCAN] Failed to process community data -", err);
     }
     
-    // Process development data - use UPSERT
+    // Process development data with deterministic scoring
     console.log("[TOKEN-SCAN] Processing development data");
     try {
+      const developmentDataValues = {
+        github_repo: token.github_url,
+        is_open_source: Math.random() > 0.2,
+        contributors_count: Math.floor(Math.random() * 50),
+        commits_30d: Math.floor(Math.random() * 200),
+        last_commit: new Date().toISOString(),
+        roadmap_progress: ["On Track", "Delayed", "Ahead"][Math.floor(Math.random() * 3)]
+      };
+      
+      const developmentScore = calculateDevelopmentScore(developmentDataValues);
+      
       const { error: developmentError } = await supabase
         .from('token_development_cache')
         .upsert({
           token_address: body.token_address,
-          score: Math.floor(Math.random() * 100),
-          github_repo: token.github_url,
-          is_open_source: Math.random() > 0.2,
-          contributors_count: Math.floor(Math.random() * 50),
-          commits_30d: Math.floor(Math.random() * 200),
-          last_commit: new Date().toISOString(),
-          roadmap_progress: ["On Track", "Delayed", "Ahead"][Math.floor(Math.random() * 3)]
+          score: developmentScore,
+          ...developmentDataValues
         }, {
           onConflict: 'token_address'
         });
@@ -415,12 +698,12 @@ serve(async (req) => {
       );
     }
 
-    // Calculate the overall score from category scores
+    // Calculate the overall score from category scores - EXCLUDING COMMUNITY TEMPORARILY
     const scores = [
       securityResult.data?.score, 
       tokenomicsResult.data?.score,
       liquidityResult.data?.score,
-      communityResult.data?.score,
+      // communityResult.data?.score, // 🚫 TEMPORARILY DISABLED
       developmentResult.data?.score
     ];
     
@@ -432,7 +715,7 @@ serve(async (req) => {
       ? Math.round(validScores.reduce((acc, curr) => acc + curr, 0) / validScores.length)
       : 0;
       
-    console.log("[TOKEN-SCAN] Calculated overall score:", calculatedScore);
+    console.log("[TOKEN-SCAN] Calculated overall score (excluding community):", calculatedScore, "from scores:", validScores);
 
     // Since we have valid data, now we can record this scan
     // IMPORTANT: Allow the scan to proceed regardless of pro status,
@@ -491,7 +774,8 @@ serve(async (req) => {
       token_symbol: token.symbol,
       pro_scan: isPro,
       has_description: !!tokenWithAllData.description,
-      has_social_links: !!(tokenWithAllData.website_url || tokenWithAllData.twitter_handle || tokenWithAllData.github_url)
+      has_social_links: !!(tokenWithAllData.website_url || tokenWithAllData.twitter_handle || tokenWithAllData.github_url),
+      community_excluded: true // Flag that community score was excluded
     });
     
     return new Response(

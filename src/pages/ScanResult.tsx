@@ -141,13 +141,13 @@ export default function ScanResult() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
 
-  // Calculate the overall score
+  // Calculate the overall score - TEMPORARILY EXCLUDING COMMUNITY
   const calculateOverallScore = (): number => {
     const scores = [
       securityData?.score, 
       tokenomicsData?.score,
       liquidityData?.score,
-      communityData?.score,
+      // communityData?.score, // 🚫 TEMPORARILY DISABLED - will be re-enabled later
       developmentData?.score
     ];
     
@@ -157,7 +157,10 @@ export default function ScanResult() {
     if (validScores.length === 0) return 0;
     
     // Calculate the average and round to the nearest integer
-    return Math.round(validScores.reduce((acc, curr) => acc + curr, 0) / validScores.length);
+    const calculatedScore = Math.round(validScores.reduce((acc, curr) => acc + curr, 0) / validScores.length);
+    
+    console.log("ScanResult: Calculated overall score (excluding community):", calculatedScore, "from scores:", validScores);
+    return calculatedScore;
   };
 
   // Check if scan access is allowed
