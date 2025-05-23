@@ -110,7 +110,7 @@ export const transformSecurityData = (data: SecurityData | null): CategoryFeatur
       icon: AlertTriangle,
       title: "Honeypot Detection",
       description: "Checks if token can be sold after purchase",
-      badgeLabel: getBadgeLabelForBoolean(data.honeypot_detected, false, "Not Detected", "Detected"),
+      badgeLabel: getBadgeLabelForBoolean(data.honeypot_detected, "Not Detected", "Detected", "Unknown"),
       badgeVariant: getBadgeVariantForBoolean(data.honeypot_detected, false)
     },
     {
@@ -126,14 +126,14 @@ export const transformSecurityData = (data: SecurityData | null): CategoryFeatur
       icon: Lock,
       title: "Freeze Authority",
       description: "Ability to freeze token transfers (security risk)",
-      badgeLabel: getBadgeLabelForBoolean(data.freeze_authority, false),
+      badgeLabel: getBadgeLabelForBoolean(data.freeze_authority, "No", "Yes", "Unknown"),
       badgeVariant: getBadgeVariantForBoolean(data.freeze_authority, false)
     },
     {
       icon: Code,
       title: "Mintable",
       description: "Ability to create new tokens beyond supply cap",
-      badgeLabel: getBadgeLabelForBoolean(data.can_mint, false),
+      badgeLabel: getBadgeLabelForBoolean(data.can_mint, "No", "Yes", "Unknown"),
       badgeVariant: getBadgeVariantForBoolean(data.can_mint, false)
     }
   ];
