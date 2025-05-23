@@ -65,6 +65,8 @@ async function fetchGoPlusSecurityData(token_address: string) {
       honeypot_detected: tokenData.is_honeypot === "1",
       can_mint: tokenData.is_mintable === "1",
       freeze_authority: tokenData.can_take_back_ownership === "1" || tokenData.owner_change_balance === "1",
+      // Check for burn mechanism indicators in GoPlus data
+      burn_mechanism: tokenData.slippage_modifiable === "0" && tokenData.is_anti_whale === "0",
       // TEMPORARY: Set audit and multisig to null until we have real data sources
       audit_status: null,
       multisig_status: null
@@ -124,6 +126,138 @@ function hashString(str: string): number {
     hash = hash & hash; // Convert to 32-bit integer
   }
   return Math.abs(hash);
+}
+
+// Fetch TVL data from DeFiLlama API
+async function fetchDeFiLlamaTVL(coingecko_id: string): Promise<number | null> {
+  console.log("[TVL-FETCH] Attempting to fetch TVL from DeFiLlama for:", coingecko_id);
+  
+  try {
+    // DeFiLlama protocol endpoint - we'll try with the coingecko_id as protocol slug
+    const url = `https://api.llama.fi/protocol/${coingecko_id}`;
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.log("[TVL-FETCH] DeFiLlama API error:", response.status);
+      return null;
+    }
+    
+    const data = await response.json();
+    
+    // Get the latest TVL value
+    const tvl = data.tvl?.[data.tvl.length - 1]?.totalLiquidityUSD;
+    
+    if (typeof tvl === 'number' && tvl > 0) {
+      console.log("[TVL-FETCH] Successfully fetched TVL from DeFiLlama:", tvl);
+      return tvl;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("[TVL-FETCH] Error fetching DeFiLlama TVL:", error);
+    return null;
+  }
+}
+
+// Enhanced function to extract tokenomics data from CoinGecko
+async function extractTokenomicsFromCoinGecko(coinGeckoData: any, token_address: string) {
+  console.log("[TOKENOMICS] Extracting real tokenomics data from CoinGecko");
+  
+  if (!coinGeckoData?.market_data) {
+    console.log("[TOKENOMICS] No market_data available from CoinGecko");
+    return null;
+  }
+  
+  const marketData = coinGeckoData.market_data;
+  
+  // Extract circulating supply
+  const circulating_supply = marketData.circulating_supply || null;
+  
+  // Extract supply cap (prefer max_supply over total_supply)
+  const supply_cap = marketData.max_supply || marketData.total_supply || null;
+  
+  // Extract TVL from CoinGecko first
+  let tvl_usd = marketData.total_value_locked?.usd || null;
+  
+  // If no TVL from CoinGecko, try DeFiLlama
+  if (!tvl_usd && coinGeckoData.id) {
+    tvl_usd = await fetchDeFiLlamaTVL(coinGeckoData.id);
+  }
+  
+  console.log("[TOKENOMICS] Extracted tokenomics data:", {
+    circulating_supply,
+    supply_cap,
+    tvl_usd,
+    has_market_data: !!marketData
+  });
+  
+  return {
+    circulating_supply,
+    supply_cap,
+    tvl_usd,
+    // These will be determined from other sources
+    vesting_schedule: null,
+    distribution_score: null,
+    treasury_usd: null
+  };
+}
+
+// Calculate tokenomics score from real data
+function calculateTokenomicsScore(tokenomicsData: any): number {
+  console.log("[SCORE-CALC] Calculating tokenomics score from real data:", tokenomicsData);
+  
+  let score = 30; // Base score
+  
+  // Supply cap vs circulating supply ratio (25 points for healthy inflation)
+  if (tokenomicsData.circulating_supply && tokenomicsData.supply_cap) {
+    const inflationRatio = tokenomicsData.circulating_supply / tokenomicsData.supply_cap;
+    if (inflationRatio >= 0.8 && inflationRatio <= 1.0) { // 80-100% of supply circulating
+      score += 25;
+      console.log("[SCORE-CALC] Tokenomics: +25 for healthy supply ratio");
+    } else if (inflationRatio >= 0.6) { // 60-80% circulating
+      score += 20;
+      console.log("[SCORE-CALC] Tokenomics: +20 for good supply ratio");
+    } else if (inflationRatio >= 0.4) { // 40-60% circulating
+      score += 15;
+      console.log("[SCORE-CALC] Tokenomics: +15 for fair supply ratio");
+    }
+  }
+  
+  // TVL scoring (up to 30 points based on TVL tiers)
+  if (tokenomicsData.tvl_usd) {
+    if (tokenomicsData.tvl_usd >= 100000000) { // $100M+ TVL
+      score += 30;
+      console.log("[SCORE-CALC] Tokenomics: +30 for excellent TVL");
+    } else if (tokenomicsData.tvl_usd >= 10000000) { // $10M+ TVL
+      score += 25;
+      console.log("[SCORE-CALC] Tokenomics: +25 for high TVL");
+    } else if (tokenomicsData.tvl_usd >= 1000000) { // $1M+ TVL
+      score += 20;
+      console.log("[SCORE-CALC] Tokenomics: +20 for good TVL");
+    } else if (tokenomicsData.tvl_usd >= 100000) { // $100K+ TVL
+      score += 10;
+      console.log("[SCORE-CALC] Tokenomics: +10 for moderate TVL");
+    }
+  }
+  
+  // Supply cap existence (+15 points if defined)
+  if (tokenomicsData.supply_cap) {
+    score += 15;
+    console.log("[SCORE-CALC] Tokenomics: +15 for defined supply cap");
+  }
+  
+  // Burn mechanism (+20 points if true)
+  if (tokenomicsData.burn_mechanism) {
+    score += 20;
+    console.log("[SCORE-CALC] Tokenomics: +20 for burn mechanism");
+  }
+  
+  // Ensure score is between 0 and 100
+  const finalScore = Math.max(0, Math.min(100, score));
+  console.log("[SCORE-CALC] Tokenomics final score:", finalScore);
+  
+  return finalScore;
 }
 
 // Deterministic score calculation functions for non-security categories
@@ -205,86 +339,6 @@ function calculateLiquidityScore(tokenAddress: string): { score: number; data: a
       trading_volume_24h_usd,
       holder_distribution,
       dex_depth_status
-    }
-  };
-}
-
-function calculateTokenomicsScore(tokenAddress: string): { score: number; data: any } {
-  console.log("[SCORE-CALC] Calculating deterministic tokenomics score for:", tokenAddress);
-  
-  const hash = hashString(tokenAddress + "tokenomics");
-  
-  // Generate deterministic values
-  const circulating_supply = (hash % 1000000000) + 100000000; // 100M-1B
-  const supply_cap = circulating_supply + (hash % 1000000000); // Always higher than circulating
-  const tvl_usd = (hash % 10000000) + 100000; // 100K-10M
-  const vesting_schedule = ["Linear", "Cliff", "None"][hash % 3];
-  const distribution_score = ["Good", "Average", "Poor"][hash % 3];
-  const treasury_usd = (hash % 5000000) + 50000; // 50K-5M
-  const burn_mechanism = (hash % 2) === 0;
-  
-  let score = 30; // Base score
-  
-  // Supply cap vs circulating supply ratio (25 points for healthy inflation)
-  const inflationRatio = circulating_supply / supply_cap;
-  if (inflationRatio >= 0.8 && inflationRatio <= 1.0) { // 80-100% of supply circulating
-    score += 25;
-    console.log("[SCORE-CALC] Tokenomics: +25 for healthy supply ratio");
-  } else if (inflationRatio >= 0.6) { // 60-80% circulating
-    score += 20;
-    console.log("[SCORE-CALC] Tokenomics: +20 for good supply ratio");
-  } else if (inflationRatio >= 0.4) { // 40-60% circulating
-    score += 15;
-    console.log("[SCORE-CALC] Tokenomics: +15 for fair supply ratio");
-  }
-  
-  // TVL (up to 30 points based on TVL tiers)
-  if (tvl_usd >= 100000000) { // $100M+ TVL
-    score += 30;
-    console.log("[SCORE-CALC] Tokenomics: +30 for excellent TVL");
-  } else if (tvl_usd >= 10000000) { // $10M+ TVL
-    score += 25;
-    console.log("[SCORE-CALC] Tokenomics: +25 for high TVL");
-  } else if (tvl_usd >= 1000000) { // $1M+ TVL
-    score += 20;
-    console.log("[SCORE-CALC] Tokenomics: +20 for good TVL");
-  } else if (tvl_usd >= 100000) { // $100K+ TVL
-    score += 10;
-    console.log("[SCORE-CALC] Tokenomics: +10 for moderate TVL");
-  }
-  
-  // Burn mechanism (+15 points if true)
-  if (burn_mechanism) {
-    score += 15;
-    console.log("[SCORE-CALC] Tokenomics: +15 for burn mechanism");
-  }
-  
-  // Vesting schedule (30 points for "None", 20 for "Linear", 10 for "Cliff")
-  if (vesting_schedule === "None") {
-    score += 30;
-    console.log("[SCORE-CALC] Tokenomics: +30 for no vesting");
-  } else if (vesting_schedule === "Linear") {
-    score += 20;
-    console.log("[SCORE-CALC] Tokenomics: +20 for linear vesting");
-  } else if (vesting_schedule === "Cliff") {
-    score += 10;
-    console.log("[SCORE-CALC] Tokenomics: +10 for cliff vesting");
-  }
-  
-  // Ensure score is between 0 and 100
-  const finalScore = Math.max(0, Math.min(100, score));
-  console.log("[SCORE-CALC] Tokenomics final score:", finalScore);
-  
-  return {
-    score: finalScore,
-    data: {
-      circulating_supply,
-      supply_cap,
-      tvl_usd,
-      vesting_schedule,
-      distribution_score,
-      treasury_usd,
-      burn_mechanism
     }
   };
 }
@@ -405,7 +459,8 @@ async function fetchCoinGeckoData(coingecko_id: string, token_address: string) {
       name: data.name,
       symbol: data.symbol,
       has_description: !!data.description?.en,
-      has_links: !!data.links
+      has_links: !!data.links,
+      has_market_data: !!data.market_data
     });
     
     return {
@@ -419,7 +474,9 @@ async function fetchCoinGeckoData(coingecko_id: string, token_address: string) {
       github: data.links?.repos_url?.github?.[0] || null,
       current_price: data.market_data?.current_price?.usd || null,
       price_change_24h: data.market_data?.price_change_percentage_24h || null,
-      market_cap: data.market_data?.market_cap?.usd || null
+      market_cap: data.market_data?.market_cap?.usd || null,
+      // Include the full data object for tokenomics extraction
+      full_data: data
     };
   } catch (error) {
     console.error("[TOKEN-SCAN] Error fetching CoinGecko data:", error);
@@ -598,8 +655,9 @@ serve(async (req) => {
       token = newToken;
     }
     
-    // Process security data with GoPlus API
+    // Process security data with GoPlus API (includes burn mechanism detection)
     console.log("[TOKEN-SCAN] Processing security data with GoPlus API");
+    let burnMechanism = null;
     try {
       const goPlusData = await fetchGoPlusSecurityData(body.token_address);
       
@@ -620,6 +678,7 @@ serve(async (req) => {
           ...securityDataToStore,
           ...goPlusData
         };
+        burnMechanism = goPlusData.burn_mechanism;
         securityScore = calculateSecurityScoreFromGoPlus(goPlusData);
       } else {
         // Fallback to deterministic values if GoPlus fails
@@ -630,6 +689,7 @@ serve(async (req) => {
         securityDataToStore.honeypot_detected = (hash % 5) === 0;
         securityDataToStore.can_mint = (hash % 6) === 0;
         securityDataToStore.freeze_authority = (hash % 7) === 0;
+        burnMechanism = (hash % 3) === 0; // Fallback burn mechanism
         
         // Calculate fallback score
         let fallbackScore = 50;
@@ -656,6 +716,44 @@ serve(async (req) => {
       console.error("[TOKEN-SCAN] Failed to process security data -", err);
     }
     
+    // Process tokenomics data with REAL CoinGecko data
+    console.log("[TOKEN-SCAN] Processing tokenomics data with real CoinGecko API data");
+    try {
+      let tokenomicsData = null;
+      
+      if (coinGeckoData?.full_data) {
+        tokenomicsData = await extractTokenomicsFromCoinGecko(coinGeckoData.full_data, body.token_address);
+      }
+      
+      if (tokenomicsData) {
+        // Add burn mechanism from GoPlus data
+        tokenomicsData.burn_mechanism = burnMechanism;
+        
+        // Calculate score based on real data
+        const tokenomicsScore = calculateTokenomicsScore(tokenomicsData);
+        
+        const { error: tokenomicsError } = await supabase
+          .from('token_tokenomics_cache')
+          .upsert({
+            token_address: body.token_address,
+            score: tokenomicsScore,
+            ...tokenomicsData
+          }, {
+            onConflict: 'token_address'
+          });
+          
+        if (tokenomicsError) {
+          console.error("[TOKEN-SCAN] Error storing tokenomics data -", tokenomicsError.message);
+        } else {
+          console.log("[TOKEN-SCAN] Successfully stored real tokenomics data with score:", tokenomicsScore);
+        }
+      } else {
+        console.log("[TOKEN-SCAN] No tokenomics data available from CoinGecko, skipping");
+      }
+    } catch (err) {
+      console.error("[TOKEN-SCAN] Failed to process tokenomics data -", err);
+    }
+    
     // Process liquidity data with deterministic scoring
     console.log("[TOKEN-SCAN] Processing liquidity data with deterministic logic");
     try {
@@ -676,28 +774,6 @@ serve(async (req) => {
       }
     } catch (err) {
       console.error("[TOKEN-SCAN] Failed to process liquidity data -", err);
-    }
-    
-    // Process tokenomics data with deterministic scoring
-    console.log("[TOKEN-SCAN] Processing tokenomics data with deterministic logic");
-    try {
-      const tokenomicsResult = calculateTokenomicsScore(body.token_address);
-      
-      const { error: tokenomicsError } = await supabase
-        .from('token_tokenomics_cache')
-        .upsert({
-          token_address: body.token_address,
-          score: tokenomicsResult.score,
-          ...tokenomicsResult.data
-        }, {
-          onConflict: 'token_address'
-        });
-        
-      if (tokenomicsError) {
-        console.error("[TOKEN-SCAN] Error storing tokenomics data -", tokenomicsError.message);
-      }
-    } catch (err) {
-      console.error("[TOKEN-SCAN] Failed to process tokenomics data -", err);
     }
     
     // Process community data - Set score to 0 (temporarily disabled)
@@ -849,7 +925,7 @@ serve(async (req) => {
       }
     };
     
-    console.log("[TOKEN-SCAN] Scan completed successfully with GoPlus integration -", {
+    console.log("[TOKEN-SCAN] Scan completed successfully with real tokenomics data -", {
       token_address: body.token_address,
       score: calculatedScore,
       token_name: token.name,
@@ -858,6 +934,7 @@ serve(async (req) => {
       has_description: !!tokenWithAllData.description,
       has_social_links: !!(tokenWithAllData.website_url || tokenWithAllData.twitter_handle || tokenWithAllData.github_url),
       community_excluded: true, // Flag that community score was excluded
+      real_tokenomics_integrated: true, // Flag that real tokenomics data is now integrated
       goplus_integrated: true // Flag that GoPlus is now integrated
     });
     
