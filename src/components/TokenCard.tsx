@@ -60,36 +60,46 @@ export default function TokenCard({
   return (
     <Card className="overflow-hidden bg-card border border-border shadow-sm">
       <CardContent className="p-6">
-        {/* Main content area */}
-        <div className="flex items-start gap-4 mb-4">
-          <TokenLogo logo={logo} name={name} />
-          
-          <div className="flex-1 flex items-start justify-between">
+        {/* Top section: Logo + Name/Symbol + Score */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <TokenLogo logo={logo} name={name} />
             <TokenInfo 
               name={name} 
               symbol={symbol} 
-              description={description}
+              showAddressInHeader={false}
+            />
+          </div>
+          {score !== undefined && <TokenScore score={score} />}
+        </div>
+        
+        {/* Description section */}
+        {description && (
+          <div className="mb-4 ml-20">
+            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+              {description}
+            </p>
+          </div>
+        )}
+        
+        {/* Bottom section: Price/Change + Address/Chain + Social Links + Actions */}
+        <div className="flex items-center justify-between ml-20">
+          <div className="flex items-center gap-6">
+            <TokenPrice 
+              price={price} 
+              priceChange={priceChange} 
               address={address}
             />
             
-            <div className="flex items-start gap-4 ml-4">
-              <TokenSocialLinks website={website} twitter={twitter} github={github} />
-              {score !== undefined && <TokenScore score={score} />}
-            </div>
-          </div>
-        </div>
-        
-        {/* Price and market cap row */}
-        <div className="flex items-center justify-between">
-          <TokenPrice price={price} priceChange={priceChange} />
-          
-          <div className="flex items-center gap-4">
             {marketCap && (
               <div className="text-sm text-muted-foreground">
                 Market Cap: {marketCap}
               </div>
             )}
-            
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <TokenSocialLinks website={website} twitter={twitter} github={github} />
             <TokenActions showActions={showActions} onClick={onClick} />
           </div>
         </div>
