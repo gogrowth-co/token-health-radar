@@ -1,13 +1,13 @@
 
-import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
 interface CategoryScoreCardProps {
   category: string;
   score: number;
-  level: string;
-  color: string;
+  level: 'low' | 'medium' | 'high';
+  color: 'red' | 'amber' | 'green';
   onClick?: () => void;
 }
 
@@ -18,42 +18,30 @@ export default function CategoryScoreCard({
   color,
   onClick
 }: CategoryScoreCardProps) {
-  const getColorClass = () => {
+  // Check if this is the Community category to show "Coming Soon"
+  const isComingSoon = category === "Community";
+
+  const getScoreColor = (color: 'red' | 'amber' | 'green') => {
     switch (color) {
-      case 'success':
-        return 'bg-gradient-to-br from-emerald-400 to-green-500';
-      case 'warning':
-        return 'bg-gradient-to-br from-amber-400 to-orange-500';
-      case 'danger':
-        return 'bg-gradient-to-br from-red-400 to-rose-500';
-      case 'info':
+      case 'green':
+        return '#10b981';
+      case 'amber':
+        return '#f59e0b';
+      case 'red':
+        return '#ef4444';
       default:
-        return 'bg-gradient-to-br from-blue-400 to-indigo-500';
-    }
-  };
-  
-  const getTextColorClass = () => {
-    switch (color) {
-      case 'success':
-        return 'text-success';
-      case 'warning':
-        return 'text-warning';
-      case 'danger':
-        return 'text-danger';
-      case 'info':
-      default:
-        return 'text-info';
+        return '#6b7280';
     }
   };
 
-  const getLevelText = () => {
+  const getLevelText = (level: 'low' | 'medium' | 'high') => {
     switch (level) {
       case 'high':
         return 'Excellent';
       case 'medium':
         return 'Good';
       case 'low':
-        return 'Needs Improvement';
+        return 'Poor';
       default:
         return 'Unknown';
     }
@@ -61,32 +49,51 @@ export default function CategoryScoreCard({
 
   return (
     <Card 
-      className="token-score-card cursor-pointer hover:shadow-md hover:scale-105"
+      className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+        onClick ? 'hover:bg-accent/50' : ''
+      }`}
       onClick={onClick}
     >
-      <div className={`score-gradient-bg ${getColorClass()}`}></div>
-      
-      <div className="flex flex-col items-center gap-2 p-1">
-        <div className={`text-3xl font-bold ${getTextColorClass()}`}>
-          {score}
+      <CardContent className="p-6">
+        <div className="text-center space-y-4">
+          {/* Score Display */}
+          <div className="text-4xl font-bold text-primary">
+            {isComingSoon ? "?" : score}
+          </div>
+          
+          {/* Category Name */}
+          <h3 className="text-lg font-semibold text-foreground">
+            {category}
+          </h3>
+          
+          {/* Progress Bar */}
+          <div className="w-full">
+            <Progress 
+              value={isComingSoon ? 0 : score} 
+              className="h-2"
+              style={{
+                '--progress-foreground': isComingSoon ? '#6b7280' : getScoreColor(color)
+              } as React.CSSProperties}
+            />
+          </div>
+          
+          {/* Status Badge */}
+          <Badge 
+            variant="secondary"
+            className={`${
+              isComingSoon 
+                ? 'bg-gray-100 text-gray-600 border-gray-200' 
+                : color === 'green' 
+                  ? 'bg-green-100 text-green-700 border-green-200'
+                  : color === 'amber'
+                    ? 'bg-amber-100 text-amber-700 border-amber-200'
+                    : 'bg-red-100 text-red-700 border-red-200'
+            }`}
+          >
+            {isComingSoon ? "Coming Soon" : getLevelText(level)}
+          </Badge>
         </div>
-        
-        <div className="text-sm font-medium capitalize">
-          {category}
-        </div>
-        
-        <Progress 
-          value={score} 
-          className={`h-1.5 w-full ${color === 'success' ? 'bg-green-100 dark:bg-green-900/30' : 
-                   color === 'warning' ? 'bg-amber-100 dark:bg-amber-900/30' : 
-                   color === 'danger' ? 'bg-red-100 dark:bg-red-900/30' : 
-                   'bg-blue-100 dark:bg-blue-900/30'}`}
-        />
-
-        <span className={`text-xs ${getTextColorClass()}`}>
-          {getLevelText()}
-        </span>
-      </div>
+      </CardContent>
     </Card>
   );
 }
