@@ -1,4 +1,3 @@
-
 import { 
   Shield, Lock, AlertTriangle, CheckCircle, Code, 
   Fingerprint, CheckCircle2, XCircle, CircleDot, 
@@ -83,6 +82,26 @@ export const getBadgeLabelForBoolean = (
 ): string => {
   if (value === null || value === undefined) return nullLabel;
   return value ? positiveLabel : negativeLabel;
+};
+
+// Helper function to format holder distribution data
+const formatHolderDistribution = (distributionData: string | null): string => {
+  if (!distributionData) return "Unknown";
+  
+  try {
+    // Parse the JSON string
+    const distribution = JSON.parse(distributionData);
+    
+    // Format the values as percentages
+    const top10 = distribution.top10 ? `${(distribution.top10 * 100).toFixed(1)}%` : "N/A";
+    const top50 = distribution.top50 ? `${(distribution.top50 * 100).toFixed(1)}%` : "N/A";
+    const others = distribution.others ? `${(distribution.others * 100).toFixed(1)}%` : "N/A";
+    
+    return `Top 10: ${top10} • Top 50: ${top50} • Others: ${others}`;
+  } catch (error) {
+    console.error("Error parsing holder distribution data:", error);
+    return "Format error";
+  }
 };
 
 // Transform security data to CategoryFeature format
@@ -248,7 +267,7 @@ export const transformLiquidityData = (data: LiquidityData | null): CategoryFeat
       icon: PieChart,
       title: "Holder Distribution",
       description: "Concentration of token ownership",
-      badgeLabel: data.holder_distribution || "Unknown",
+      badgeLabel: formatHolderDistribution(data.holder_distribution),
       badgeVariant: data.holder_distribution 
         ? getDistributionBadgeVariant(data.holder_distribution) 
         : "gray"

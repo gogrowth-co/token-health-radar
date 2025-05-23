@@ -244,7 +244,6 @@ export default function CategoryTabs({
       {renderTabContent(securityData, (
         <CategoryFeatureGrid 
           features={transformSecurityData(securityData)}
-          title="Security Indicators"
           description="Key security indicators for this token's smart contract"
         />
       ), ScanCategory.Security)}
@@ -253,7 +252,6 @@ export default function CategoryTabs({
       {renderTabContent(tokenomicsData, (
         <CategoryFeatureGrid
           features={transformTokenomicsData(tokenomicsData)}
-          title="Tokenomics Indicators"
           description="Economic metrics and token supply analysis"
         />
       ), ScanCategory.Tokenomics)}
@@ -262,7 +260,6 @@ export default function CategoryTabs({
       {renderTabContent(liquidityData, (
         <CategoryFeatureGrid
           features={transformLiquidityData(liquidityData)}
-          title="Liquidity Indicators"
           description="Measures of token trading activity and accessibility"
         />
       ), ScanCategory.Liquidity)}
@@ -271,7 +268,6 @@ export default function CategoryTabs({
       {renderTabContent(communityData, (
         <CategoryFeatureGrid
           features={transformCommunityData(communityData)}
-          title="Community Indicators"
           description="Social media presence and community engagement metrics"
         />
       ), ScanCategory.Community)}
@@ -280,7 +276,6 @@ export default function CategoryTabs({
       {renderTabContent(developmentData, (
         <CategoryFeatureGrid
           features={transformDevelopmentData(developmentData)}
-          title="Development Indicators"
           description="GitHub activity and development progress metrics"
         />
       ), ScanCategory.Development)}
