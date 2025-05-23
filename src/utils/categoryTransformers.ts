@@ -212,7 +212,7 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
       description: "Permanent token removal from supply",
       badgeLabel: getBadgeLabelForBoolean(data.burn_mechanism),
       badgeVariant: data.burn_mechanism !== null && data.burn_mechanism !== undefined 
-        ? getBadgeVariantForBoolean(data.burn_mechanism, true)
+        ? getBadgeVariantForBoolean(data.burn_mechanism, true) 
         : "gray"
     }
   ];
