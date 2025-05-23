@@ -59,7 +59,7 @@ export default function TokenPrice({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-auto p-2 text-sm font-mono text-muted-foreground hover:text-foreground border border-border rounded-md"
+                  className="h-auto p-2 text-sm font-mono text-muted-foreground hover:text-foreground border border-border rounded-md hover:bg-accent"
                   onClick={copyAddress}
                 >
                   {shortenAddress(address)}
@@ -71,7 +71,7 @@ export default function TokenPrice({
             </Tooltip>
           </TooltipProvider>
           
-          <Badge variant="secondary" className="text-xs px-2 py-1">
+          <Badge variant="secondary" className="text-xs px-2 py-1 font-medium">
             ETH
           </Badge>
         </div>

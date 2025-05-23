@@ -46,9 +46,9 @@ export default function TokenCard({
   return (
     <Card className="overflow-hidden bg-card border border-border shadow-sm">
       <CardContent className="p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
           {/* LEFT SIDE - Token Info */}
-          <div className="lg:col-span-6">
+          <div className="flex-1 min-w-0">
             <div className="flex items-start gap-4 mb-4">
               <TokenLogo logo={logo} name={name} />
               <div className="flex-1 min-w-0">
@@ -59,17 +59,17 @@ export default function TokenCard({
               </div>
             </div>
             
-            {/* Description */}
+            {/* Description - positioned under name/symbol */}
             {description && (
-              <div className="mb-4 ml-20">
+              <div className="mb-4">
                 <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
                   {description}
                 </p>
               </div>
             )}
             
-            {/* Address and Chain */}
-            <div className="ml-20">
+            {/* Address and Chain - clean positioning */}
+            <div className="flex items-center gap-3">
               <TokenPrice 
                 price={undefined} 
                 priceChange={undefined} 
@@ -80,8 +80,8 @@ export default function TokenCard({
           </div>
           
           {/* CENTER - Price & Market Data */}
-          <div className="lg:col-span-4">
-            <div className="space-y-3">
+          <div className="flex-shrink-0 lg:mx-8">
+            <div className="space-y-4 text-center lg:text-left">
               {/* Price and change */}
               {price !== undefined && (
                 <div>
@@ -107,7 +107,7 @@ export default function TokenCard({
           </div>
           
           {/* RIGHT SIDE - Score & Socials */}
-          <div className="lg:col-span-2 flex flex-col items-end space-y-4">
+          <div className="flex-shrink-0 flex flex-col items-center lg:items-end space-y-6">
             {/* Health Score */}
             {score !== undefined && (
               <div className="flex flex-col items-center">
@@ -116,8 +116,8 @@ export default function TokenCard({
               </div>
             )}
             
-            {/* Social Links */}
-            <div className="flex flex-col items-center">
+            {/* Social Links - positioned under score */}
+            <div className="flex justify-center lg:justify-end">
               <TokenSocialLinks 
                 website={website} 
                 twitter={twitter} 

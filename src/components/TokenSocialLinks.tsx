@@ -9,7 +9,6 @@ interface TokenSocialLinksProps {
 }
 
 export default function TokenSocialLinks({ website, twitter, github }: TokenSocialLinksProps) {
-  // Always show website and twitter icons, only show github if it exists
   const hasAnyLinks = website || twitter || github;
   
   if (!hasAnyLinks) {
@@ -18,7 +17,7 @@ export default function TokenSocialLinks({ website, twitter, github }: TokenSoci
   
   return (
     <div className="flex items-center gap-3">
-      {/* Website - always show if any social data exists */}
+      {/* Website - show if available */}
       {website && (
         <TooltipProvider>
           <Tooltip>
@@ -27,7 +26,7 @@ export default function TokenSocialLinks({ website, twitter, github }: TokenSoci
                 href={website?.startsWith('http') ? website : `https://${website}`} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-accent rounded"
+                className="text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-accent rounded-md"
               >
                 <Globe className="h-5 w-5" />
               </a>
@@ -39,7 +38,7 @@ export default function TokenSocialLinks({ website, twitter, github }: TokenSoci
         </TooltipProvider>
       )}
       
-      {/* Twitter - always show if any social data exists */}
+      {/* Twitter - show if available */}
       {twitter && (
         <TooltipProvider>
           <Tooltip>
@@ -48,7 +47,7 @@ export default function TokenSocialLinks({ website, twitter, github }: TokenSoci
                 href={twitter?.startsWith('http') ? twitter : `https://twitter.com/${twitter?.replace('@', '')}`} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-accent rounded"
+                className="text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-accent rounded-md"
               >
                 <Twitter className="h-5 w-5" />
               </a>
@@ -69,7 +68,7 @@ export default function TokenSocialLinks({ website, twitter, github }: TokenSoci
                 href={github.startsWith('http') ? github : `https://github.com/${github}`} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-accent rounded"
+                className="text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-accent rounded-md"
               >
                 <Github className="h-5 w-5" />
               </a>
