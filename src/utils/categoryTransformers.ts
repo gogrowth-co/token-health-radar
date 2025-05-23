@@ -1,6 +1,7 @@
 
 import { Shield, Lock, AlertCircle, Activity, Users, Twitter, BadgeCheck, TrendingUp, MessageSquare, MessageCircle, Code, ListChecks, Building2, BarChart2, Hash } from "lucide-react";
 import { CategoryFeature } from "@/components/CategoryFeatureGrid";
+import { formatCurrencyValue, formatNumberValue, formatDateToHuman } from "@/utils/tokenFormatters";
 
 // Types for each category data
 export interface SecurityData {
@@ -84,11 +85,6 @@ export const getBadgeLabelForBoolean = (
   return value ? "Yes" : "No";
 };
 
-// Format number with commas
-export const formatNumberWithCommas = (value: number): string => {
-  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-};
-
 // Transform security data
 export const transformSecurityData = (data: SecurityData | null): CategoryFeature[] => {
   if (!data) return [];
@@ -139,7 +135,7 @@ export const transformSecurityData = (data: SecurityData | null): CategoryFeatur
   ];
 };
 
-// Transform tokenomics data
+// Transform tokenomics data with improved number formatting
 export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFeature[] => {
   if (!data) return [];
 
@@ -148,21 +144,21 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
       icon: Users,
       title: "Circulating Supply",
       description: "Amount of tokens currently in circulation",
-      badgeLabel: data.circulating_supply ? formatNumberWithCommas(data.circulating_supply) : "Unknown",
+      badgeLabel: data.circulating_supply ? formatNumberValue(data.circulating_supply) : "Unknown",
       badgeVariant: getBadgeVariant(data.circulating_supply || 0, 100000, 1000000)
     },
     {
       icon: Lock,
       title: "Supply Cap",
       description: "Maximum total supply of tokens",
-      badgeLabel: data.supply_cap ? formatNumberWithCommas(data.supply_cap) : "Unlimited",
+      badgeLabel: data.supply_cap ? formatNumberValue(data.supply_cap) : "Unlimited",
       badgeVariant: data.supply_cap ? "green" : "red"
     },
     {
       icon: Activity,
       title: "TVL",
       description: "Total Value Locked in USD",
-      badgeLabel: data.tvl_usd ? `$${formatNumberWithCommas(data.tvl_usd)}` : "Unknown",
+      badgeLabel: data.tvl_usd ? formatCurrencyValue(data.tvl_usd) : "Unknown",
       badgeVariant: getBadgeVariant(data.tvl_usd || 0, 10000, 100000)
     },
     {
@@ -175,74 +171,34 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
   ];
 };
 
-// Helper function to format holder distribution from JSON
-export const formatHolderDistribution = (distributionJson: string | null | undefined): CategoryFeature[] => {
+// Helper function to extract and format top 10 holders data from JSON
+export const extractTop10HoldersData = (distributionJson: string | null | undefined): CategoryFeature | null => {
   if (!distributionJson) {
-    return [{
-      icon: Users,
-      title: "Holder Distribution",
-      description: "Breakdown of token holdings by wallet groups",
-      badgeLabel: "No Data",
-      badgeVariant: "gray"
-    }];
+    return null;
   }
 
   try {
     const distribution = JSON.parse(distributionJson);
-    const features = [];
     
-    // Format top 10 holders
+    // Format top 10 holders if available
     if (distribution.top10 !== undefined) {
-      features.push({
+      return {
         icon: Users,
         title: "Top 10 Holders",
         description: "Percentage held by largest 10 wallets",
         badgeLabel: `${(distribution.top10 * 100).toFixed(1)}%`,
         badgeVariant: getBadgeVariant(100 - distribution.top10 * 100, 50, 80)
-      });
+      };
     }
     
-    // Format top 50 holders
-    if (distribution.top50 !== undefined) {
-      features.push({
-        icon: Users,
-        title: "Top 50 Holders",
-        description: "Percentage held by wallets ranked 11-50",
-        badgeLabel: `${(distribution.top50 * 100).toFixed(1)}%`,
-        badgeVariant: "gray"
-      });
-    }
-    
-    // Format other holders
-    if (distribution.others !== undefined) {
-      features.push({
-        icon: Users,
-        title: "Other Holders",
-        description: "Percentage held by remaining wallets",
-        badgeLabel: `${(distribution.others * 100).toFixed(1)}%`,
-        badgeVariant: "gray"
-      });
-    }
-    
-    return features.length > 0 ? features : [{
-      icon: Users,
-      title: "Holder Distribution",
-      description: "Breakdown of token holdings by wallet groups",
-      badgeLabel: "Invalid Format",
-      badgeVariant: "red"
-    }];
+    return null;
   } catch (error) {
-    return [{
-      icon: Users,
-      title: "Holder Distribution",
-      description: "Breakdown of token holdings by wallet groups",
-      badgeLabel: "Parse Error",
-      badgeVariant: "red"
-    }];
+    console.error("Error parsing holder distribution:", error);
+    return null;
   }
 };
 
-// Transform liquidity data
+// Transform liquidity data - show only Top 10 Holders
 export const transformLiquidityData = (data: LiquidityData | null): CategoryFeature[] => {
   if (!data) return [];
 
@@ -265,7 +221,7 @@ export const transformLiquidityData = (data: LiquidityData | null): CategoryFeat
       icon: BarChart2,
       title: "24h Trading Volume",
       description: "Total traded value in the last 24 hours",
-      badgeLabel: data.trading_volume_24h_usd ? `$${formatNumberWithCommas(data.trading_volume_24h_usd)}` : "Unknown",
+      badgeLabel: data.trading_volume_24h_usd ? formatCurrencyValue(data.trading_volume_24h_usd) : "Unknown",
       badgeVariant: getBadgeVariant(data.trading_volume_24h_usd || 0, 10000, 100000)
     },
     {
@@ -277,16 +233,16 @@ export const transformLiquidityData = (data: LiquidityData | null): CategoryFeat
     },
   ];
   
-  // Add formatted holder distribution if available
-  if (data.holder_distribution) {
-    const distributionFeatures = formatHolderDistribution(data.holder_distribution);
-    features.push(...distributionFeatures);
+  // Add only top 10 holders if available (not top50 or others)
+  const top10Feature = extractTop10HoldersData(data.holder_distribution);
+  if (top10Feature) {
+    features.push(top10Feature);
   }
 
   return features;
 };
 
-// Transform community data - Modified to show "Coming Soon" placeholders
+// Transform community data - showing "Coming Soon" placeholders
 export const transformCommunityData = (data: CommunityData | null): CategoryFeature[] => {
   // We'll create the same structure but with "Coming Soon" badges
   return [
@@ -335,7 +291,7 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
   ];
 };
 
-// Transform development data
+// Transform development data with improved date formatting
 export const transformDevelopmentData = (data: DevelopmentData | null): CategoryFeature[] => {
   if (!data) return [];
 
@@ -365,7 +321,7 @@ export const transformDevelopmentData = (data: DevelopmentData | null): Category
       icon: Lock,
       title: "Last Commit",
       description: "Date of the most recent code commit",
-      badgeLabel: data.last_commit || "Unknown",
+      badgeLabel: data.last_commit ? formatDateToHuman(data.last_commit) : "Unknown",
       badgeVariant: data.last_commit ? "green" : "red"
     },
     {
