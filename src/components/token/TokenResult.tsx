@@ -17,7 +17,7 @@ export default function TokenResult({ token, onSelectToken }: TokenResultProps) 
   const isErc20 = typeof token.isErc20 === 'boolean' ? token.isErc20 : false;
 
   return (
-    <div className="relative">
+    <div className="relative border rounded-lg overflow-hidden shadow-sm">
       <TokenCard
         name={token.name}
         symbol={token.symbol.toUpperCase()}
@@ -29,8 +29,8 @@ export default function TokenResult({ token, onSelectToken }: TokenResultProps) 
         showActions={false} /* Disable built-in actions for custom layout */
       />
 
-      {/* Improved layout for badges and buttons - now placed in a better position */}
-      <div className="flex items-center justify-between px-4 pb-4">
+      {/* Badge and button row positioned within the card layout */}
+      <div className="flex items-center justify-between px-4 py-3 border-t">
         <div className="flex items-center gap-2">
           {isErc20 ? (
             <TooltipProvider>
