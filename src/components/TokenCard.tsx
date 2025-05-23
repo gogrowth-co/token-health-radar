@@ -43,11 +43,6 @@ export default function TokenCard({
   onClick,
   showActions = true
 }: TokenCardProps) {
-  const shortenAddress = (address: string) => {
-    if (!address) return "";
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-
   const copyAddress = async () => {
     if (address) {
       try {
@@ -63,32 +58,40 @@ export default function TokenCard({
   };
 
   return (
-    <Card className="overflow-hidden bg-card border-0 shadow-md">
-      <CardContent className="p-5">
-        <div className="flex items-start gap-4">
+    <Card className="overflow-hidden bg-card border border-border shadow-sm">
+      <CardContent className="p-6">
+        {/* Main content area */}
+        <div className="flex items-start gap-4 mb-4">
           <TokenLogo logo={logo} name={name} />
           
-          <div className="flex-grow">
-            <div className="flex items-start justify-between">
-              <div>
-                <TokenInfo name={name} symbol={symbol} description={description} />
-                <TokenPrice price={price} priceChange={priceChange} />
-              </div>
-              
-              <TokenScore score={score} />
+          <div className="flex-1 flex items-start justify-between">
+            <TokenInfo 
+              name={name} 
+              symbol={symbol} 
+              description={description}
+              address={address}
+            />
+            
+            <div className="flex items-start gap-4 ml-4">
+              <TokenSocialLinks website={website} twitter={twitter} github={github} />
+              {score !== undefined && <TokenScore score={score} />}
             </div>
           </div>
         </div>
         
-        <div className="flex justify-between items-center mt-4">
-          {marketCap && (
-            <div className="text-sm text-muted-foreground">
-              Market Cap: {marketCap}
-            </div>
-          )}
+        {/* Price and market cap row */}
+        <div className="flex items-center justify-between">
+          <TokenPrice price={price} priceChange={priceChange} />
           
-          <TokenSocialLinks website={website} twitter={twitter} github={github} />
-          <TokenActions showActions={showActions} onClick={onClick} />
+          <div className="flex items-center gap-4">
+            {marketCap && (
+              <div className="text-sm text-muted-foreground">
+                Market Cap: {marketCap}
+              </div>
+            )}
+            
+            <TokenActions showActions={showActions} onClick={onClick} />
+          </div>
         </div>
       </CardContent>
     </Card>
