@@ -148,10 +148,10 @@ export default function TokenSearchResults({
                 priceChange={token.price_change_24h || 0}
                 onClick={isErc20 ? () => onSelectToken(token) : undefined}
                 description={`${token.name} (${token.symbol.toUpperCase()}) is a cryptocurrency${token.market_cap_rank ? ` ranked #${token.market_cap_rank}` : ''}`}
-                showActions={isErc20}
+                showActions={false} /* Disable built-in actions for custom layout */
               />
 
-              {/* Enhanced badge layout with platform status indicators */}
+              {/* Fixed badge and button layout - separated from card content */}
               <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {isErc20 ? (
@@ -182,12 +182,12 @@ export default function TokenSearchResults({
                   )}
                 </div>
                 
-                {/* Select button for ERC-20 tokens */}
+                {/* Dedicated select button for ERC-20 tokens */}
                 {isErc20 && (
                   <Button 
                     size="sm" 
                     onClick={() => onSelectToken(token)} 
-                    className="flex items-center gap-1 ml-auto"
+                    className="ml-auto"
                   >
                     Select
                   </Button>

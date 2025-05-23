@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { ArrowRight, ExternalLink, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -175,8 +174,8 @@ export default function TokenCard({
               )}
             </div>
             
-            {/* Enhanced token summary */}
-            <div className="mt-2 text-sm text-muted-foreground">
+            {/* Enhanced token description with proper wrapping */}
+            <div className="mt-2 text-sm text-muted-foreground line-clamp-2">
               {getTokenSummary()}
             </div>
             
