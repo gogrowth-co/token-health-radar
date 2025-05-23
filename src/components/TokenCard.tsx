@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, ExternalLink, Info } from "lucide-react";
+import { ArrowRight, ExternalLink, Twitter, Github, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
-import { Progress } from "@/components/ui/progress";
+import { formatCurrencyValue } from "@/utils/tokenFormatters";
 
 interface TokenCardProps {
   name: string;
@@ -47,27 +47,6 @@ export default function TokenCard({
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  const formatNumber = (value: number | undefined): string => {
-    if (value === undefined) return "N/A";
-    
-    // For very large numbers
-    if (value >= 1000000000) {
-      return `$${(value / 1000000000).toFixed(2)}B`;
-    } 
-    // For millions
-    else if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`;
-    }
-    // For thousands
-    else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(2)}K`;
-    } 
-    // For regular numbers
-    else {
-      return `$${value.toFixed(2)}`;
-    }
-  };
-
   const copyAddress = async () => {
     if (address) {
       try {
@@ -82,23 +61,27 @@ export default function TokenCard({
     }
   };
 
-  // Generate a token summary based on available data
+  // Generate a more concise token summary based on available data
   const getTokenSummary = () => {
     if (description) return description;
     
-    // Create a more comprehensive summary with the available data
+    // Create a concise, informative summary with the available data
     let summary = `${name} (${symbol}) is a cryptocurrency`;
+    
     if (launchDate) {
       const date = new Date(launchDate);
-      summary += ` launched on ${date.toLocaleDateString()}`;
+      const formattedDate = date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short'
+      });
+      summary += ` launched in ${formattedDate}`;
     }
+    
+    // Add a brief market description but keep it concise
     if (marketCap && marketCap !== "N/A") {
       summary += ` with a market cap of ${marketCap}`;
     }
-    if (score !== undefined) {
-      const healthStatus = score >= 70 ? "good" : score >= 40 ? "moderate" : "poor";
-      summary += `. The token has a ${healthStatus} health score of ${score}/100.`;
-    }
+    
     return summary;
   };
 
@@ -175,14 +158,64 @@ export default function TokenCard({
             </div>
             
             {/* Enhanced token description with proper wrapping */}
-            <div className="mt-2 text-sm text-muted-foreground line-clamp-2">
+            <div className="mt-2 text-sm text-muted-foreground">
               {getTokenSummary()}
             </div>
+            
+            {/* Social links row */}
+            {(website || twitter || github) && (
+              <div className="flex items-center gap-3 mt-2">
+                {website && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
+                          <LinkIcon className="h-4 w-4" />
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Website</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                
+                {twitter && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a href={twitter.startsWith('http') ? twitter : `https://twitter.com/${twitter.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
+                          <Twitter className="h-4 w-4" />
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Twitter</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                
+                {github && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a href={github.startsWith('http') ? github : `https://github.com/${github}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
+                          <Github className="h-4 w-4" />
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>GitHub</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
+            )}
             
             <div className="flex justify-between items-center mt-3">
               {price !== undefined && (
                 <div>
-                  <div className="font-bold">{formatNumber(price)}</div>
+                  <div className="font-bold">{formatCurrencyValue(price)}</div>
                   {priceChange !== undefined && (
                     <div className={`text-sm ${priceChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                       {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}%
@@ -207,14 +240,14 @@ export default function TokenCard({
                 Select 
                 <ArrowRight className="h-3 w-3" />
               </Button>
-            ) : (
-              <Button size="sm" variant="outline" asChild>
-                <Link to={`https://etherscan.io/address/${address}`} target="_blank">
+            ) : address ? (
+              <Button size="sm" variant="outline" asChild className="gap-2">
+                <Link to={`https://etherscan.io/address/${address}`} target="_blank" rel="noopener noreferrer">
                   View on Explorer
-                  <ExternalLink className="h-3 w-3 ml-1" />
+                  <ExternalLink className="h-3 w-3" />
                 </Link>
               </Button>
-            )}
+            ) : null}
           </div>
         )}
       </CardContent>
