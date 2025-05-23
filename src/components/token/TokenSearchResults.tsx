@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle, Info } from "lucide-react";
 import TokenCard from "@/components/TokenCard";
@@ -78,18 +77,13 @@ export default function TokenSearchResults({
     }
     
     // Check platforms data - this is the primary method
-    if (token.platforms && token.platforms.ethereum) {
-      const ethereumAddress = token.platforms.ethereum;
-      
-      // More lenient Ethereum address validation (handles any non-empty string)
-      if (typeof ethereumAddress === "string" && ethereumAddress.trim().length > 0) {
-        // Prefer correctly formatted addresses, but don't strictly require it
-        // This helps with API inconsistencies in address formats
-        if (/^(0x)?[0-9a-fA-F]{40}$/i.test(ethereumAddress.trim())) {
-          return true;
-        }
-        
-        // If it has any ethereum address, it's likely ERC-20
+    if (token.platforms) {
+      // ERC-20 detection based on any EVM-compatible platform address
+      const hasErc20Address = Object.values(token.platforms || {}).some(
+        (address) => typeof address === 'string' && address.trim().toLowerCase().startsWith('0x')
+      );
+
+      if (hasErc20Address) {
         return true;
       }
     }
