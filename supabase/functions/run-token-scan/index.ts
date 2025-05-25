@@ -13,6 +13,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const COINGECKO_API_KEY = Deno.env.get('COINGECKO_API_KEY') ?? '';
+const ETHERSCAN_API_KEY = Deno.env.get('ETHERSCAN_API_KEY') ?? '';
 
 interface TokenScanRequest {
   token_address: string;
@@ -160,6 +161,206 @@ async function fetchDeFiLlamaTVL(coingecko_id: string): Promise<number | null> {
   }
 }
 
+// Fetch real liquidity data from multiple APIs
+async function fetchRealLiquidityData(token_address: string, coingecko_id?: string) {
+  console.log("[LIQUIDITY-SCAN] Fetching real liquidity data for:", token_address);
+  
+  let liquidityData = {
+    liquidity_locked_days: null as number | null,
+    cex_listings: null as number | null,
+    trading_volume_24h_usd: null as number | null,
+    holder_distribution: null as string | null,
+    dex_depth_status: null as string | null
+  };
+
+  try {
+    // 1. Fetch 24h trading volume from CoinGecko if we have an ID
+    if (coingecko_id) {
+      console.log("[LIQUIDITY-SCAN] Fetching CoinGecko data for volume:", coingecko_id);
+      const coinGeckoResponse = await fetch(`https://api.coingecko.com/api/v3/coins/${coingecko_id}`, {
+        headers: COINGECKO_API_KEY ? { 'x-cg-demo-api-key': COINGECKO_API_KEY } : {}
+      });
+      
+      if (coinGeckoResponse.ok) {
+        const data = await coinGeckoResponse.json();
+        liquidityData.trading_volume_24h_usd = data.market_data?.total_volume?.usd || null;
+        console.log("[LIQUIDITY-SCAN] CoinGecko volume:", liquidityData.trading_volume_24h_usd);
+      }
+    }
+
+    // 2. Fetch holder distribution from Etherscan API
+    if (ETHERSCAN_API_KEY) {
+      console.log("[LIQUIDITY-SCAN] Fetching holder data from Etherscan");
+      try {
+        const etherscanResponse = await fetch(
+          `https://api.etherscan.io/api?module=token&action=tokenholderlist&contractaddress=${token_address}&page=1&offset=100&apikey=${ETHERSCAN_API_KEY}`
+        );
+        
+        if (etherscanResponse.ok) {
+          const data = await etherscanResponse.json();
+          if (data.status === "1" && data.result) {
+            // Calculate holder distribution
+            const holders = data.result;
+            const totalSupply = holders.reduce((sum: number, holder: any) => sum + parseFloat(holder.TokenHolderQuantity || 0), 0);
+            
+            if (totalSupply > 0) {
+              const top10Supply = holders.slice(0, 10).reduce((sum: number, holder: any) => sum + parseFloat(holder.TokenHolderQuantity || 0), 0);
+              const top50Supply = holders.slice(0, 50).reduce((sum: number, holder: any) => sum + parseFloat(holder.TokenHolderQuantity || 0), 0);
+              
+              liquidityData.holder_distribution = JSON.stringify({
+                top10: top10Supply / totalSupply,
+                top50: top50Supply / totalSupply,
+                others: Math.max(0, 1 - (top50Supply / totalSupply))
+              });
+              console.log("[LIQUIDITY-SCAN] Calculated holder distribution");
+            }
+          }
+        }
+      } catch (error) {
+        console.error("[LIQUIDITY-SCAN] Error fetching Etherscan data:", error);
+      }
+    }
+
+    // 3. Fetch DEX data from DEXScreener API
+    try {
+      console.log("[LIQUIDITY-SCAN] Fetching DEX data from DEXScreener");
+      const dexResponse = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${token_address}`);
+      
+      if (dexResponse.ok) {
+        const data = await dexResponse.json();
+        if (data.pairs && data.pairs.length > 0) {
+          // Calculate liquidity depth status based on total liquidity
+          const totalLiquidity = data.pairs.reduce((sum: number, pair: any) => sum + (pair.liquidity?.usd || 0), 0);
+          
+          if (totalLiquidity >= 1000000) {
+            liquidityData.dex_depth_status = "High";
+          } else if (totalLiquidity >= 100000) {
+            liquidityData.dex_depth_status = "Medium";
+          } else {
+            liquidityData.dex_depth_status = "Low";
+          }
+          
+          console.log("[LIQUIDITY-SCAN] DEX depth status:", liquidityData.dex_depth_status, "with liquidity:", totalLiquidity);
+        }
+      }
+    } catch (error) {
+      console.error("[LIQUIDITY-SCAN] Error fetching DEXScreener data:", error);
+    }
+
+    // 4. For CEX listings, we'll use a simplified approach checking major exchanges
+    // This would ideally be expanded with proper CEX APIs in the future
+    if (coingecko_id) {
+      try {
+        console.log("[LIQUIDITY-SCAN] Fetching exchange data from CoinGecko");
+        const exchangeResponse = await fetch(`https://api.coingecko.com/api/v3/coins/${coingecko_id}/tickers`, {
+          headers: COINGECKO_API_KEY ? { 'x-cg-demo-api-key': COINGECKO_API_KEY } : {}
+        });
+        
+        if (exchangeResponse.ok) {
+          const data = await exchangeResponse.json();
+          if (data.tickers) {
+            // Count unique centralized exchanges
+            const cexNames = new Set();
+            const knownCEX = ['binance', 'coinbase', 'kraken', 'kucoin', 'huobi', 'okex', 'gate', 'bitfinex'];
+            
+            data.tickers.forEach((ticker: any) => {
+              const marketName = ticker.market?.name?.toLowerCase() || '';
+              if (knownCEX.some(cex => marketName.includes(cex))) {
+                cexNames.add(ticker.market.name);
+              }
+            });
+            
+            liquidityData.cex_listings = cexNames.size;
+            console.log("[LIQUIDITY-SCAN] CEX listings found:", liquidityData.cex_listings);
+          }
+        }
+      } catch (error) {
+        console.error("[LIQUIDITY-SCAN] Error fetching CEX data:", error);
+      }
+    }
+
+    // 5. Liquidity lock data - this would require specific DEX APIs or contract analysis
+    // For now, we'll set this to null as it requires more complex on-chain analysis
+    liquidityData.liquidity_locked_days = null;
+    console.log("[LIQUIDITY-SCAN] Liquidity lock days: N/A (requires on-chain analysis)");
+
+  } catch (error) {
+    console.error("[LIQUIDITY-SCAN] Error in fetchRealLiquidityData:", error);
+  }
+
+  return liquidityData;
+}
+
+// Calculate liquidity score from real data
+function calculateLiquidityScoreFromRealData(liquidityData: any): number {
+  console.log("[SCORE-CALC] Calculating liquidity score from real data:", liquidityData);
+  
+  let score = 20; // Base score
+  
+  // Trading volume 24h (up to 30 points based on volume tiers)
+  if (liquidityData.trading_volume_24h_usd) {
+    if (liquidityData.trading_volume_24h_usd >= 10000000) { // $10M+
+      score += 30;
+      console.log("[SCORE-CALC] Liquidity: +30 for high volume");
+    } else if (liquidityData.trading_volume_24h_usd >= 1000000) { // $1M+
+      score += 25;
+      console.log("[SCORE-CALC] Liquidity: +25 for good volume");
+    } else if (liquidityData.trading_volume_24h_usd >= 100000) { // $100K+
+      score += 15;
+      console.log("[SCORE-CALC] Liquidity: +15 for moderate volume");
+    } else if (liquidityData.trading_volume_24h_usd >= 10000) { // $10K+
+      score += 5;
+      console.log("[SCORE-CALC] Liquidity: +5 for low volume");
+    }
+  }
+  
+  // CEX listings (5 points per exchange, max 25 points)
+  if (liquidityData.cex_listings) {
+    const listingPoints = Math.min(25, liquidityData.cex_listings * 5);
+    score += listingPoints;
+    console.log("[SCORE-CALC] Liquidity: +", listingPoints, "for CEX listings");
+  }
+  
+  // DEX depth status (up to 20 points)
+  if (liquidityData.dex_depth_status === "High") {
+    score += 20;
+    console.log("[SCORE-CALC] Liquidity: +20 for high DEX depth");
+  } else if (liquidityData.dex_depth_status === "Medium") {
+    score += 15;
+    console.log("[SCORE-CALC] Liquidity: +15 for medium DEX depth");
+  } else if (liquidityData.dex_depth_status === "Low") {
+    score += 5;
+    console.log("[SCORE-CALC] Liquidity: +5 for low DEX depth");
+  }
+  
+  // Holder distribution (up to 25 points for good distribution)
+  if (liquidityData.holder_distribution) {
+    try {
+      const distribution = JSON.parse(liquidityData.holder_distribution);
+      const top10Percent = distribution.top10 * 100;
+      
+      if (top10Percent < 30) { // Less than 30% held by top 10
+        score += 25;
+        console.log("[SCORE-CALC] Liquidity: +25 for excellent distribution");
+      } else if (top10Percent < 50) { // Less than 50% held by top 10
+        score += 20;
+        console.log("[SCORE-CALC] Liquidity: +20 for good distribution");
+      } else if (top10Percent < 70) { // Less than 70% held by top 10
+        score += 10;
+        console.log("[SCORE-CALC] Liquidity: +10 for fair distribution");
+      }
+    } catch (error) {
+      console.error("[SCORE-CALC] Error parsing holder distribution:", error);
+    }
+  }
+  
+  // Ensure score is between 0 and 100
+  const finalScore = Math.max(0, Math.min(100, score));
+  console.log("[SCORE-CALC] Liquidity final score:", finalScore);
+  
+  return finalScore;
+}
+
 // Enhanced function to extract tokenomics data from CoinGecko
 async function extractTokenomicsFromCoinGecko(coinGeckoData: any, token_address: string) {
   console.log("[TOKENOMICS] Extracting real tokenomics data from CoinGecko");
@@ -258,89 +459,6 @@ function calculateTokenomicsScore(tokenomicsData: any): number {
   console.log("[SCORE-CALC] Tokenomics final score:", finalScore);
   
   return finalScore;
-}
-
-// Deterministic score calculation functions for non-security categories
-function calculateLiquidityScore(tokenAddress: string): { score: number; data: any } {
-  console.log("[SCORE-CALC] Calculating deterministic liquidity score for:", tokenAddress);
-  
-  const hash = hashString(tokenAddress + "liquidity");
-  
-  // Generate deterministic values
-  const liquidity_locked_days = hash % 365;
-  const cex_listings = hash % 10;
-  const trading_volume_24h_usd = (hash % 1000000) + 10000; // Between 10K-1M
-  const top10HolderPercent = (hash % 60) / 100; // 0-60%
-  const holder_distribution = JSON.stringify({
-    top10: top10HolderPercent,
-    top50: (hash % 30) / 100,
-    others: (hash % 10) / 100
-  });
-  const dex_depth_status = ["High", "Medium", "Low"][hash % 3];
-  
-  let score = 20; // Base score
-  
-  // Liquidity locked days (up to 25 points based on days locked)
-  if (liquidity_locked_days >= 365) {
-    score += 25;
-    console.log("[SCORE-CALC] Liquidity: +25 for 1+ year lock");
-  } else if (liquidity_locked_days >= 180) {
-    score += 20;
-    console.log("[SCORE-CALC] Liquidity: +20 for 6+ months lock");
-  } else if (liquidity_locked_days >= 90) {
-    score += 15;
-    console.log("[SCORE-CALC] Liquidity: +15 for 3+ months lock");
-  } else if (liquidity_locked_days >= 30) {
-    score += 10;
-    console.log("[SCORE-CALC] Liquidity: +10 for 1+ month lock");
-  }
-  
-  // CEX listings (5 points per exchange, max 25 points)
-  const listingPoints = Math.min(25, cex_listings * 5);
-  score += listingPoints;
-  console.log("[SCORE-CALC] Liquidity: +", listingPoints, "for CEX listings");
-  
-  // Trading volume 24h (up to 30 points based on volume tiers)
-  if (trading_volume_24h_usd >= 10000000) { // $10M+
-    score += 30;
-    console.log("[SCORE-CALC] Liquidity: +30 for high volume");
-  } else if (trading_volume_24h_usd >= 1000000) { // $1M+
-    score += 25;
-    console.log("[SCORE-CALC] Liquidity: +25 for good volume");
-  } else if (trading_volume_24h_usd >= 100000) { // $100K+
-    score += 15;
-    console.log("[SCORE-CALC] Liquidity: +15 for moderate volume");
-  } else if (trading_volume_24h_usd >= 10000) { // $10K+
-    score += 5;
-    console.log("[SCORE-CALC] Liquidity: +5 for low volume");
-  }
-  
-  // Holder distribution (up to 20 points for good distribution)
-  if (top10HolderPercent < 0.3) { // Less than 30% held by top 10
-    score += 20;
-    console.log("[SCORE-CALC] Liquidity: +20 for excellent distribution");
-  } else if (top10HolderPercent < 0.5) { // Less than 50% held by top 10
-    score += 15;
-    console.log("[SCORE-CALC] Liquidity: +15 for good distribution");
-  } else if (top10HolderPercent < 0.7) { // Less than 70% held by top 10
-    score += 10;
-    console.log("[SCORE-CALC] Liquidity: +10 for fair distribution");
-  }
-  
-  // Ensure score is between 0 and 100
-  const finalScore = Math.max(0, Math.min(100, score));
-  console.log("[SCORE-CALC] Liquidity final score:", finalScore);
-  
-  return {
-    score: finalScore,
-    data: {
-      liquidity_locked_days,
-      cex_listings,
-      trading_volume_24h_usd,
-      holder_distribution,
-      dex_depth_status
-    }
-  };
 }
 
 function calculateDevelopmentScore(tokenAddress: string, githubUrl?: string): { score: number; data: any } {
@@ -754,23 +872,26 @@ serve(async (req) => {
       console.error("[TOKEN-SCAN] Failed to process tokenomics data -", err);
     }
     
-    // Process liquidity data with deterministic scoring
-    console.log("[TOKEN-SCAN] Processing liquidity data with deterministic logic");
+    // Process liquidity data with REAL API data
+    console.log("[TOKEN-SCAN] Processing liquidity data with real API integrations");
     try {
-      const liquidityResult = calculateLiquidityScore(body.token_address);
+      const liquidityData = await fetchRealLiquidityData(body.token_address, coinGeckoData?.id);
+      const liquidityScore = calculateLiquidityScoreFromRealData(liquidityData);
       
       const { error: liquidityError } = await supabase
         .from('token_liquidity_cache')
         .upsert({
           token_address: body.token_address,
-          score: liquidityResult.score,
-          ...liquidityResult.data
+          score: liquidityScore,
+          ...liquidityData
         }, {
           onConflict: 'token_address'
         });
         
       if (liquidityError) {
         console.error("[TOKEN-SCAN] Error storing liquidity data -", liquidityError.message);
+      } else {
+        console.log("[TOKEN-SCAN] Successfully stored real liquidity data with score:", liquidityScore);
       }
     } catch (err) {
       console.error("[TOKEN-SCAN] Failed to process liquidity data -", err);
@@ -925,7 +1046,7 @@ serve(async (req) => {
       }
     };
     
-    console.log("[TOKEN-SCAN] Scan completed successfully with real tokenomics data -", {
+    console.log("[TOKEN-SCAN] Scan completed successfully with real API data -", {
       token_address: body.token_address,
       score: calculatedScore,
       token_name: token.name,
@@ -935,6 +1056,7 @@ serve(async (req) => {
       has_social_links: !!(tokenWithAllData.website_url || tokenWithAllData.twitter_handle || tokenWithAllData.github_url),
       community_excluded: true, // Flag that community score was excluded
       real_tokenomics_integrated: true, // Flag that real tokenomics data is now integrated
+      real_liquidity_integrated: true, // Flag that real liquidity data is now integrated
       goplus_integrated: true // Flag that GoPlus is now integrated
     });
     
