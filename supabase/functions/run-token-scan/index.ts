@@ -13,6 +13,7 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const COINGECKO_API_KEY = Deno.env.get('COINGECKO_API_KEY') ?? '';
 const ETHERSCAN_API_KEY = Deno.env.get('ETHERSCAN_API_KEY') ?? '';
+const GITHUB_API_KEY = Deno.env.get('GITHUB_API_KEY') ?? '';
 
 interface TokenScanRequest {
   token_address: string;
@@ -503,6 +504,247 @@ function calculateTokenomicsScore(tokenomicsData: any): number {
   return finalScore;
 }
 
+// Fetch real development data from GitHub API
+async function fetchRealDevelopmentData(githubUrl?: string): Promise<{ score: number; data: any }> {
+  console.log("[DEVELOPMENT-SCAN] Fetching real development data from GitHub API for:", githubUrl);
+  
+  if (!githubUrl || !GITHUB_API_KEY) {
+    console.log("[DEVELOPMENT-SCAN] No GitHub URL or API key available, using fallback");
+    return {
+      score: 0,
+      data: {
+        github_repo: githubUrl || null,
+        is_open_source: null,
+        contributors_count: null,
+        commits_30d: null,
+        last_commit: null,
+        roadmap_progress: null
+      }
+    };
+  }
+
+  try {
+    // Extract owner and repo from GitHub URL
+    const urlMatch = githubUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+    if (!urlMatch) {
+      console.log("[DEVELOPMENT-SCAN] Invalid GitHub URL format:", githubUrl);
+      return {
+        score: 0,
+        data: {
+          github_repo: githubUrl,
+          is_open_source: null,
+          contributors_count: null,
+          commits_30d: null,
+          last_commit: null,
+          roadmap_progress: null
+        }
+      };
+    }
+
+    const [, owner, repo] = urlMatch;
+    const cleanRepo = repo.replace(/\.git$/, ''); // Remove .git suffix if present
+    
+    console.log("[DEVELOPMENT-SCAN] Extracted GitHub owner/repo:", owner, cleanRepo);
+
+    const headers = {
+      'Authorization': `token ${GITHUB_API_KEY}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'Token-Health-Scan'
+    };
+
+    let developmentData = {
+      github_repo: githubUrl,
+      is_open_source: null as boolean | null,
+      contributors_count: null as number | null,
+      commits_30d: null as number | null,
+      last_commit: null as string | null,
+      roadmap_progress: null as string | null
+    };
+
+    // 1. Fetch repository information (for open source status)
+    try {
+      console.log("[DEVELOPMENT-SCAN] Fetching repository info");
+      const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${cleanRepo}`, { headers });
+      
+      if (repoResponse.ok) {
+        const repoData = await repoResponse.json();
+        developmentData.is_open_source = !repoData.private; // Public repos are open source
+        console.log("[DEVELOPMENT-SCAN] Repository is open source:", developmentData.is_open_source);
+      } else {
+        console.log("[DEVELOPMENT-SCAN] Repository info request failed:", repoResponse.status);
+      }
+    } catch (error) {
+      console.error("[DEVELOPMENT-SCAN] Error fetching repository info:", error);
+    }
+
+    // 2. Fetch contributors count
+    try {
+      console.log("[DEVELOPMENT-SCAN] Fetching contributors count");
+      const contributorsResponse = await fetch(`https://api.github.com/repos/${owner}/${cleanRepo}/contributors?per_page=1&anon=true`, { headers });
+      
+      if (contributorsResponse.ok) {
+        // GitHub returns pagination info in Link header
+        const linkHeader = contributorsResponse.headers.get('Link');
+        if (linkHeader) {
+          // Parse the last page number from Link header
+          const lastPageMatch = linkHeader.match(/page=(\d+)>; rel="last"/);
+          if (lastPageMatch) {
+            developmentData.contributors_count = parseInt(lastPageMatch[1]);
+          }
+        } else {
+          // If no pagination, count the returned contributors
+          const contributors = await contributorsResponse.json();
+          developmentData.contributors_count = contributors.length;
+        }
+        console.log("[DEVELOPMENT-SCAN] Contributors count:", developmentData.contributors_count);
+      } else {
+        console.log("[DEVELOPMENT-SCAN] Contributors request failed:", contributorsResponse.status);
+      }
+    } catch (error) {
+      console.error("[DEVELOPMENT-SCAN] Error fetching contributors:", error);
+    }
+
+    // 3. Fetch commits from last 30 days
+    try {
+      console.log("[DEVELOPMENT-SCAN] Fetching recent commits");
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const since = thirtyDaysAgo.toISOString();
+      
+      const commitsResponse = await fetch(`https://api.github.com/repos/${owner}/${cleanRepo}/commits?since=${since}&per_page=100`, { headers });
+      
+      if (commitsResponse.ok) {
+        const commits = await commitsResponse.json();
+        developmentData.commits_30d = commits.length;
+        
+        // Get the most recent commit date
+        if (commits.length > 0) {
+          developmentData.last_commit = commits[0].commit.committer.date;
+        }
+        
+        console.log("[DEVELOPMENT-SCAN] Commits in last 30 days:", developmentData.commits_30d);
+        console.log("[DEVELOPMENT-SCAN] Last commit date:", developmentData.last_commit);
+      } else {
+        console.log("[DEVELOPMENT-SCAN] Commits request failed:", commitsResponse.status);
+      }
+    } catch (error) {
+      console.error("[DEVELOPMENT-SCAN] Error fetching commits:", error);
+    }
+
+    // 4. Determine roadmap progress based on recent activity
+    if (developmentData.commits_30d !== null) {
+      if (developmentData.commits_30d >= 50) {
+        developmentData.roadmap_progress = "Ahead";
+      } else if (developmentData.commits_30d >= 10) {
+        developmentData.roadmap_progress = "On Track";
+      } else if (developmentData.commits_30d >= 1) {
+        developmentData.roadmap_progress = "Delayed";
+      } else {
+        developmentData.roadmap_progress = "Stalled";
+      }
+      console.log("[DEVELOPMENT-SCAN] Roadmap progress based on activity:", developmentData.roadmap_progress);
+    }
+
+    // Calculate score based on real data
+    const score = calculateDevelopmentScoreFromRealData(developmentData);
+
+    return {
+      score,
+      data: developmentData
+    };
+
+  } catch (error) {
+    console.error("[DEVELOPMENT-SCAN] Error in fetchRealDevelopmentData:", error);
+    return {
+      score: 0,
+      data: {
+        github_repo: githubUrl,
+        is_open_source: null,
+        contributors_count: null,
+        commits_30d: null,
+        last_commit: null,
+        roadmap_progress: null
+      }
+    };
+  }
+}
+
+// Calculate development score from real GitHub data
+function calculateDevelopmentScoreFromRealData(developmentData: any): number {
+  console.log("[SCORE-CALC] Calculating development score from real GitHub data:", developmentData);
+  
+  let score = 10; // Base score
+  
+  // Open source (+25 points if true)
+  if (developmentData.is_open_source === true) {
+    score += 25;
+    console.log("[SCORE-CALC] Development: +25 for open source");
+  }
+  
+  // Contributors count (up to 25 points based on contributor count)
+  if (developmentData.contributors_count !== null) {
+    if (developmentData.contributors_count >= 50) {
+      score += 25;
+      console.log("[SCORE-CALC] Development: +25 for many contributors");
+    } else if (developmentData.contributors_count >= 20) {
+      score += 20;
+      console.log("[SCORE-CALC] Development: +20 for good contributors");
+    } else if (developmentData.contributors_count >= 10) {
+      score += 15;
+      console.log("[SCORE-CALC] Development: +15 for moderate contributors");
+    } else if (developmentData.contributors_count >= 5) {
+      score += 10;
+      console.log("[SCORE-CALC] Development: +10 for few contributors");
+    } else if (developmentData.contributors_count >= 1) {
+      score += 5;
+      console.log("[SCORE-CALC] Development: +5 for minimal contributors");
+    }
+  }
+  
+  // Commits in last 30 days (up to 30 points based on recent activity)
+  if (developmentData.commits_30d !== null) {
+    if (developmentData.commits_30d >= 100) {
+      score += 30;
+      console.log("[SCORE-CALC] Development: +30 for very active");
+    } else if (developmentData.commits_30d >= 50) {
+      score += 25;
+      console.log("[SCORE-CALC] Development: +25 for active");
+    } else if (developmentData.commits_30d >= 20) {
+      score += 20;
+      console.log("[SCORE-CALC] Development: +20 for moderate activity");
+    } else if (developmentData.commits_30d >= 10) {
+      score += 15;
+      console.log("[SCORE-CALC] Development: +15 for some activity");
+    } else if (developmentData.commits_30d >= 5) {
+      score += 10;
+      console.log("[SCORE-CALC] Development: +10 for low activity");
+    } else if (developmentData.commits_30d >= 1) {
+      score += 5;
+      console.log("[SCORE-CALC] Development: +5 for minimal activity");
+    }
+  }
+  
+  // Roadmap progress (up to 20 points based on activity assessment)
+  if (developmentData.roadmap_progress === "Ahead") {
+    score += 20;
+    console.log("[SCORE-CALC] Development: +20 for ahead roadmap");
+  } else if (developmentData.roadmap_progress === "On Track") {
+    score += 15;
+    console.log("[SCORE-CALC] Development: +15 for on track roadmap");
+  } else if (developmentData.roadmap_progress === "Delayed") {
+    score += 5;
+    console.log("[SCORE-CALC] Development: +5 for delayed roadmap");
+  }
+  // Stalled gets 0 additional points
+  
+  // Ensure score is between 0 and 100
+  const finalScore = Math.max(0, Math.min(100, score));
+  console.log("[SCORE-CALC] Development final score:", finalScore);
+  
+  return finalScore;
+}
+
+// Enhanced function to calculate deterministic development score
 function calculateDevelopmentScore(tokenAddress: string, githubUrl?: string): { score: number; data: any } {
   console.log("[SCORE-CALC] Calculating deterministic development score for:", tokenAddress);
   
@@ -966,10 +1208,12 @@ serve(async (req) => {
       console.error("[TOKEN-SCAN] Failed to process community data -", err);
     }
     
-    // Process development data with deterministic scoring
-    console.log("[TOKEN-SCAN] Processing development data with deterministic logic");
+    // Process development data with REAL GitHub API integration
+    console.log("[TOKEN-SCAN] Processing development data with real GitHub API");
     try {
-      const developmentResult = calculateDevelopmentScore(body.token_address, token.github_url);
+      const developmentResult = GITHUB_API_KEY && token.github_url 
+        ? await fetchRealDevelopmentData(token.github_url)
+        : calculateDevelopmentScore(body.token_address, token.github_url);
       
       const { error: developmentError } = await supabase
         .from('token_development_cache')
@@ -983,6 +1227,9 @@ serve(async (req) => {
         
       if (developmentError) {
         console.log("[TOKEN-SCAN] Error storing development data -", developmentError.message);
+      } else {
+        console.log("[TOKEN-SCAN] Successfully stored development data with score:", developmentResult.score, 
+                    GITHUB_API_KEY && token.github_url ? "(using real GitHub API)" : "(using fallback)");
       }
     } catch (err) {
       console.error("[TOKEN-SCAN] Failed to process development data -", err);
