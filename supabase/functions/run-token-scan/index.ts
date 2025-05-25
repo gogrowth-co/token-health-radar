@@ -1,4 +1,3 @@
-
 // Follow Edge Function Conventions
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
@@ -161,6 +160,63 @@ async function fetchDeFiLlamaTVL(coingecko_id: string): Promise<number | null> {
   }
 }
 
+// Fetch DEX liquidity data from GeckoTerminal API
+async function fetchGeckoTerminalLiquidity(token_address: string): Promise<{ totalLiquidityUsd: number | null; dexDepthStatus: string | null }> {
+  console.log("[LIQUIDITY-SCAN] Fetching DEX liquidity from GeckoTerminal for:", token_address);
+  
+  try {
+    // Try multiple networks starting with Ethereum
+    const networks = ['eth', 'arbitrum', 'polygon_pos', 'bsc'];
+    
+    for (const network of networks) {
+      try {
+        console.log("[LIQUIDITY-SCAN] Trying GeckoTerminal network:", network);
+        const url = `https://api.geckoterminal.com/api/v2/networks/${network}/tokens/${token_address}`;
+        
+        const response = await fetch(url);
+        
+        if (response.ok) {
+          const data = await response.json();
+          const totalLiquidityUsd = parseFloat(data.data?.attributes?.total_liquidity_usd || '0');
+          
+          if (totalLiquidityUsd > 0) {
+            console.log("[LIQUIDITY-SCAN] Found liquidity on", network, ":", totalLiquidityUsd);
+            
+            // Calculate DEX depth status based on total liquidity
+            let dexDepthStatus = "Low";
+            if (totalLiquidityUsd >= 10000000) { // $10M+
+              dexDepthStatus = "High";
+            } else if (totalLiquidityUsd >= 1000000) { // $1M+
+              dexDepthStatus = "Medium";
+            }
+            
+            return {
+              totalLiquidityUsd,
+              dexDepthStatus
+            };
+          }
+        }
+      } catch (networkError) {
+        console.log("[LIQUIDITY-SCAN] Error with network", network, ":", networkError);
+        continue; // Try next network
+      }
+    }
+    
+    console.log("[LIQUIDITY-SCAN] No liquidity data found on any supported network");
+    return {
+      totalLiquidityUsd: null,
+      dexDepthStatus: null
+    };
+    
+  } catch (error) {
+    console.error("[LIQUIDITY-SCAN] Error fetching GeckoTerminal data:", error);
+    return {
+      totalLiquidityUsd: null,
+      dexDepthStatus: null
+    };
+  }
+}
+
 // Fetch real liquidity data from multiple APIs
 async function fetchRealLiquidityData(token_address: string, coingecko_id?: string) {
   console.log("[LIQUIDITY-SCAN] Fetching real liquidity data for:", token_address);
@@ -221,34 +277,20 @@ async function fetchRealLiquidityData(token_address: string, coingecko_id?: stri
       }
     }
 
-    // 3. Fetch DEX data from DEXScreener API
+    // 3. Fetch DEX data from GeckoTerminal API (replacing DexScreener)
     try {
-      console.log("[LIQUIDITY-SCAN] Fetching DEX data from DEXScreener");
-      const dexResponse = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${token_address}`);
+      console.log("[LIQUIDITY-SCAN] Fetching DEX data from GeckoTerminal");
+      const { totalLiquidityUsd, dexDepthStatus } = await fetchGeckoTerminalLiquidity(token_address);
       
-      if (dexResponse.ok) {
-        const data = await dexResponse.json();
-        if (data.pairs && data.pairs.length > 0) {
-          // Calculate liquidity depth status based on total liquidity
-          const totalLiquidity = data.pairs.reduce((sum: number, pair: any) => sum + (pair.liquidity?.usd || 0), 0);
-          
-          if (totalLiquidity >= 1000000) {
-            liquidityData.dex_depth_status = "High";
-          } else if (totalLiquidity >= 100000) {
-            liquidityData.dex_depth_status = "Medium";
-          } else {
-            liquidityData.dex_depth_status = "Low";
-          }
-          
-          console.log("[LIQUIDITY-SCAN] DEX depth status:", liquidityData.dex_depth_status, "with liquidity:", totalLiquidity);
-        }
+      if (dexDepthStatus) {
+        liquidityData.dex_depth_status = dexDepthStatus;
+        console.log("[LIQUIDITY-SCAN] GeckoTerminal depth status:", dexDepthStatus, "with liquidity:", totalLiquidityUsd);
       }
     } catch (error) {
-      console.error("[LIQUIDITY-SCAN] Error fetching DEXScreener data:", error);
+      console.error("[LIQUIDITY-SCAN] Error fetching GeckoTerminal data:", error);
     }
 
     // 4. For CEX listings, we'll use a simplified approach checking major exchanges
-    // This would ideally be expanded with proper CEX APIs in the future
     if (coingecko_id) {
       try {
         console.log("[LIQUIDITY-SCAN] Fetching exchange data from CoinGecko");
@@ -291,7 +333,7 @@ async function fetchRealLiquidityData(token_address: string, coingecko_id?: stri
   return liquidityData;
 }
 
-// Calculate liquidity score from real data
+// Calculate liquidity score from real data using GeckoTerminal
 function calculateLiquidityScoreFromRealData(liquidityData: any): number {
   console.log("[SCORE-CALC] Calculating liquidity score from real data:", liquidityData);
   
@@ -321,16 +363,16 @@ function calculateLiquidityScoreFromRealData(liquidityData: any): number {
     console.log("[SCORE-CALC] Liquidity: +", listingPoints, "for CEX listings");
   }
   
-  // DEX depth status (up to 20 points)
+  // DEX depth status from GeckoTerminal (up to 20 points)
   if (liquidityData.dex_depth_status === "High") {
     score += 20;
-    console.log("[SCORE-CALC] Liquidity: +20 for high DEX depth");
+    console.log("[SCORE-CALC] Liquidity: +20 for high DEX depth (GeckoTerminal)");
   } else if (liquidityData.dex_depth_status === "Medium") {
     score += 15;
-    console.log("[SCORE-CALC] Liquidity: +15 for medium DEX depth");
+    console.log("[SCORE-CALC] Liquidity: +15 for medium DEX depth (GeckoTerminal)");
   } else if (liquidityData.dex_depth_status === "Low") {
     score += 5;
-    console.log("[SCORE-CALC] Liquidity: +5 for low DEX depth");
+    console.log("[SCORE-CALC] Liquidity: +5 for low DEX depth (GeckoTerminal)");
   }
   
   // Holder distribution (up to 25 points for good distribution)
@@ -872,8 +914,8 @@ serve(async (req) => {
       console.error("[TOKEN-SCAN] Failed to process tokenomics data -", err);
     }
     
-    // Process liquidity data with REAL API data
-    console.log("[TOKEN-SCAN] Processing liquidity data with real API integrations");
+    // Process liquidity data with REAL API data using GeckoTerminal
+    console.log("[TOKEN-SCAN] Processing liquidity data with real API integrations (GeckoTerminal)");
     try {
       const liquidityData = await fetchRealLiquidityData(body.token_address, coinGeckoData?.id);
       const liquidityScore = calculateLiquidityScoreFromRealData(liquidityData);
@@ -891,7 +933,7 @@ serve(async (req) => {
       if (liquidityError) {
         console.error("[TOKEN-SCAN] Error storing liquidity data -", liquidityError.message);
       } else {
-        console.log("[TOKEN-SCAN] Successfully stored real liquidity data with score:", liquidityScore);
+        console.log("[TOKEN-SCAN] Successfully stored real liquidity data with score:", liquidityScore, "(using GeckoTerminal)");
       }
     } catch (err) {
       console.error("[TOKEN-SCAN] Failed to process liquidity data -", err);
@@ -1046,7 +1088,7 @@ serve(async (req) => {
       }
     };
     
-    console.log("[TOKEN-SCAN] Scan completed successfully with real API data -", {
+    console.log("[TOKEN-SCAN] Scan completed successfully with GeckoTerminal integration -", {
       token_address: body.token_address,
       score: calculatedScore,
       token_name: token.name,
@@ -1056,7 +1098,7 @@ serve(async (req) => {
       has_social_links: !!(tokenWithAllData.website_url || tokenWithAllData.twitter_handle || tokenWithAllData.github_url),
       community_excluded: true, // Flag that community score was excluded
       real_tokenomics_integrated: true, // Flag that real tokenomics data is now integrated
-      real_liquidity_integrated: true, // Flag that real liquidity data is now integrated
+      gecko_terminal_integrated: true, // Flag that GeckoTerminal is now integrated (replacing DexScreener)
       goplus_integrated: true // Flag that GoPlus is now integrated
     });
     
