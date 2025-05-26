@@ -35,8 +35,17 @@ serve(async (req) => {
       .eq('id', user_id)
       .single()
 
-    const isProScan = userData?.plan !== 'free'
-    console.log(`[TOKEN-SCAN] User scan status: { scans_used: ${userData?.scans_used || 0}, scan_limit: ${userData?.pro_scan_limit || 3}, is_pro_scan: ${isProScan}, plan: "${userData?.plan || 'free'}" }`)
+    // Fixed logic: First 3 scans are Pro quality for free users
+    const isWithinProLimit = (userData?.scans_used || 0) < (userData?.pro_scan_limit || 3)
+    const isProScan = userData?.plan === 'pro' || isWithinProLimit
+    
+    console.log(`[TOKEN-SCAN] User scan status: { 
+      scans_used: ${userData?.scans_used || 0}, 
+      scan_limit: ${userData?.pro_scan_limit || 3}, 
+      is_within_pro_limit: ${isWithinProLimit},
+      is_pro_scan: ${isProScan}, 
+      plan: "${userData?.plan || 'free'}" 
+    }`)
 
     // Fetch CoinGecko data first
     const coinGeckoApiKey = Deno.env.get('COINGECKO_API_KEY')
@@ -115,20 +124,31 @@ serve(async (req) => {
     
     console.log(`[TOKEN-SCAN] Calculated overall score (excluding community): ${overallScore} from scores: [`, scores.join(', '), ']')
 
-    // Record the scan
-    if (isProScan) {
+    // Record the scan in token_scans table
+    await supabaseClient
+      .from('token_scans')
+      .insert({
+        user_id,
+        token_address,
+        score_total: overallScore,
+        pro_scan: isProScan
+      })
+
+    // Update scan count for free users within their Pro limit
+    if (userData?.plan !== 'pro' && isWithinProLimit) {
       await supabaseClient
-        .from('token_scans')
-        .insert({
-          user_id,
-          token_address,
-          score_total: overallScore,
-          pro_scan: true
+        .from('subscribers')
+        .update({
+          scans_used: (userData?.scans_used || 0) + 1,
+          updated_at: new Date().toISOString()
         })
+        .eq('id', user_id)
       
-      console.log(`[TOKEN-SCAN] Pro scan completed, incrementing scan count for user: ${user_id}`)
+      console.log(`[TOKEN-SCAN] Pro-quality scan completed, incremented scan count for user: ${user_id} (${(userData?.scans_used || 0) + 1}/${userData?.pro_scan_limit || 3})`)
+    } else if (userData?.plan === 'pro') {
+      console.log(`[TOKEN-SCAN] Pro subscriber scan completed for user: ${user_id}`)
     } else {
-      console.log(`[TOKEN-SCAN] Free scan completed, not incrementing scan count for user: ${user_id}`)
+      console.log(`[TOKEN-SCAN] Basic scan completed for user: ${user_id} (exceeded free Pro limit)`)
     }
 
     console.log(`[TOKEN-SCAN] Scan completed successfully with enhanced integrations - {

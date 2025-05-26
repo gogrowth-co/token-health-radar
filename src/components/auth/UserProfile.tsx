@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -133,18 +134,28 @@ export function UserProfile() {
 
                 <div className="space-y-1">
                   <p className="text-sm font-medium">
-                    {subscriberData.plan === "pro" ? "Pro Scans" : "Free Scans"}
+                    {subscriberData.plan === "pro" ? "Pro Scans (Monthly)" : "Pro Scans"}
                   </p>
                   <div className="flex items-center gap-2">
                     <p className="text-sm text-muted-foreground">
                       {subscriberData.scans_used} / {subscriberData.pro_scan_limit} used
                     </p>
-                    {subscriberData.scans_used >= subscriberData.pro_scan_limit && (
+                    {subscriberData.scans_used >= subscriberData.pro_scan_limit && subscriberData.plan !== "pro" && (
                       <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                         Limit Reached
                       </Badge>
                     )}
                   </div>
+                  {subscriberData.plan !== "pro" && subscriberData.scans_used < subscriberData.pro_scan_limit && (
+                    <p className="text-xs text-muted-foreground">
+                      Full-quality scans with detailed analysis
+                    </p>
+                  )}
+                  {subscriberData.plan !== "pro" && subscriberData.scans_used >= subscriberData.pro_scan_limit && (
+                    <p className="text-xs text-muted-foreground">
+                      Unlimited basic scans available. Upgrade for full analysis.
+                    </p>
+                  )}
                 </div>
 
                 <div className="pt-2">
