@@ -14,6 +14,20 @@ interface ScanAccessData {
   scanLimit: number;
 }
 
+/**
+ * Get a well-known contract address for native tokens
+ */
+const getWellKnownAddress = (tokenId: string): string | null => {
+  const wellKnownAddresses: Record<string, string> = {
+    'ethereum': '0x0000000000000000000000000000000000000000', // ETH native
+    'binancecoin': '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', // BNB on BSC
+    'matic-network': '0x0000000000000000000000000000000000001010', // MATIC native
+    'avalanche-2': '0x0000000000000000000000000000000000000000', // AVAX native
+  };
+  
+  return wellKnownAddresses[tokenId] || null;
+};
+
 export default function useTokenSelection() {
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [scanAccessData, setScanAccessData] = useState<ScanAccessData | null>(null);
@@ -70,12 +84,34 @@ export default function useTokenSelection() {
         return;
       }
       
-      // Get the first valid EVM address from any platform (not just Ethereum)
+      // Get the first valid EVM address from any platform
       let tokenAddress = getFirstValidEvmAddress(token.platforms);
       
+      // If no valid address found, try well-known addresses for native tokens
       if (!tokenAddress) {
-        console.warn(`No EVM address found for ${token.name}, using placeholder`);
-        tokenAddress = `0x${token.id.replace(/-/g, '').substring(0, 38).padEnd(38, '0')}`;
+        tokenAddress = getWellKnownAddress(token.id);
+      }
+      
+      // If still no valid address, show error and don't proceed
+      if (!tokenAddress) {
+        console.error(`No valid address found for ${token.name} (${token.id})`);
+        toast.error("Token Not Supported", {
+          description: `Unable to find a valid contract address for ${token.name}. This token may not be supported yet.`
+        });
+        return;
+      }
+      
+      // Validate the address format
+      const isValidAddress = /^0x[a-fA-F0-9]{40}$/.test(tokenAddress);
+      const isSpecialAddress = tokenAddress === '0x0000000000000000000000000000000000000000' || 
+                               tokenAddress === '0x0000000000000000000000000000000000001010';
+      
+      if (!isValidAddress && !isSpecialAddress) {
+        console.error(`Invalid address format for ${token.name}: ${tokenAddress}`);
+        toast.error("Invalid Token Address", {
+          description: `The contract address for ${token.name} appears to be invalid. Please try a different token.`
+        });
+        return;
       }
       
       console.log(`Selected token: ${token.name}, address: ${tokenAddress}, id: ${token.id}`);
@@ -84,8 +120,13 @@ export default function useTokenSelection() {
       const hasAccess = await checkScanAccess();
       if (!hasAccess) return;
       
-      // Save token to database
-      await saveTokenToDatabase(token);
+      // Save token to database (only if we have a valid address)
+      try {
+        await saveTokenToDatabase(token);
+      } catch (error) {
+        console.error("Error saving token to database:", error);
+        // Continue with scan even if database save fails
+      }
       
       // Save token to localStorage
       saveTokenToLocalStorage(token, tokenAddress);
@@ -94,9 +135,9 @@ export default function useTokenSelection() {
       navigate(`/scan-loading?token=${encodeURIComponent(tokenAddress)}&id=${token.id}`);
       
     } catch (error) {
-      console.error("Error saving token data:", error);
+      console.error("Error in handleSelectToken:", error);
       toast.error("Error", {
-        description: "Failed to save token data. Please try again."
+        description: "Failed to process token selection. Please try again."
       });
     }
   }, [navigate, user]);

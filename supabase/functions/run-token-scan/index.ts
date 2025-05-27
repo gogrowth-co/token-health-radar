@@ -25,6 +25,15 @@ async function fetchWithTimeout(url: string, options: any = {}, timeoutMs: numbe
   }
 }
 
+// Validate token address format
+function isValidTokenAddress(address: string): boolean {
+  // Allow standard EVM addresses and special native token addresses
+  const isStandardAddress = /^0x[a-fA-F0-9]{40}$/.test(address)
+  const isNativeAddress = address === '0x0000000000000000000000000000000000000000' || 
+                          address === '0x0000000000000000000000000000000000001010'
+  return isStandardAddress || isNativeAddress
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -45,6 +54,36 @@ serve(async (req) => {
   token_name: "Processing...",
   token_symbol: "Processing..."
 }`)
+
+    // Validate required parameters
+    if (!token_address || !coingecko_id || !user_id) {
+      console.error('[TOKEN-SCAN] Missing required parameters:', { token_address, coingecko_id, user_id })
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error_message: 'Missing required parameters for token scan' 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      )
+    }
+
+    // Validate token address format
+    if (!isValidTokenAddress(token_address)) {
+      console.error('[TOKEN-SCAN] Invalid token address format:', token_address)
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error_message: 'Invalid token address format' 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      )
+    }
 
     // Check user's scan status
     const { data: userData } = await supabaseClient
@@ -74,8 +113,32 @@ serve(async (req) => {
 
     console.log(`[TOKEN-SCAN] CoinGecko API URL: ${coinGeckoUrl}`)
     
-    const coinGeckoResponse = await fetchWithTimeout(coinGeckoUrl)
-    const coinGeckoData = await coinGeckoResponse.json()
+    let coinGeckoData
+    try {
+      const coinGeckoResponse = await fetchWithTimeout(coinGeckoUrl)
+      
+      if (!coinGeckoResponse.ok) {
+        throw new Error(`CoinGecko API error: ${coinGeckoResponse.status}`)
+      }
+      
+      coinGeckoData = await coinGeckoResponse.json()
+      
+      if (!coinGeckoData || !coinGeckoData.id) {
+        throw new Error('Invalid CoinGecko response')
+      }
+    } catch (error) {
+      console.error('[TOKEN-SCAN] CoinGecko API failed:', error.message)
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error_message: `Failed to fetch token data from CoinGecko: ${error.message}` 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      )
+    }
 
     console.log(`[TOKEN-SCAN] CoinGecko data received: {
   id: "${coinGeckoData.id}",
@@ -110,8 +173,29 @@ serve(async (req) => {
           price_change_24h: coinGeckoData.market_data?.price_change_percentage_24h || 0,
           market_cap_usd: coinGeckoData.market_data?.market_cap?.usd || 0,
           total_value_locked_usd: coinGeckoData.market_data?.total_value_locked?.usd?.toString() || null,
+          coingecko_id: coinGeckoData.id,
         })
         .eq('token_address', token_address)
+    } else {
+      console.log(`[TOKEN-SCAN] Creating new token entry in cache - { token_address: "${token_address}" }`)
+      
+      await supabaseClient
+        .from('token_data_cache')
+        .insert({
+          token_address: token_address,
+          name: coinGeckoData.name,
+          symbol: coinGeckoData.symbol?.toUpperCase(),
+          description: coinGeckoData.description?.en || '',
+          website_url: coinGeckoData.links?.homepage?.[0] || '',
+          twitter_handle: coinGeckoData.links?.twitter_screen_name || '',
+          github_url: coinGeckoData.links?.repos_url?.github?.[0] || '',
+          logo_url: coinGeckoData.image?.large || '',
+          current_price_usd: coinGeckoData.market_data?.current_price?.usd || 0,
+          price_change_24h: coinGeckoData.market_data?.price_change_percentage_24h || 0,
+          market_cap_usd: coinGeckoData.market_data?.market_cap?.usd || 0,
+          total_value_locked_usd: coinGeckoData.market_data?.total_value_locked?.usd?.toString() || null,
+          coingecko_id: coinGeckoData.id,
+        })
     }
 
     console.log(`[TOKEN-SCAN] Successfully updated token with CoinGecko data`)
@@ -166,6 +250,21 @@ serve(async (req) => {
     const overallScore = scores.length > 0 ? Math.round(scores.reduce((acc, curr) => acc + curr, 0) / scores.length) : 0
     
     console.log(`[TOKEN-SCAN] Calculated overall score (excluding community): ${overallScore} from scores: [`, scores.join(', '), ']')
+
+    // Validate that we have meaningful results before saving the scan
+    if (overallScore === 0 || !coinGeckoData.name) {
+      console.error('[TOKEN-SCAN] Scan produced invalid results:', { overallScore, tokenName: coinGeckoData.name })
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error_message: 'Scan completed but produced invalid results. Please try again.' 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      )
+    }
 
     // Record the scan in token_scans table
     await supabaseClient
@@ -231,7 +330,11 @@ serve(async (req) => {
   } catch (error) {
     console.error('[TOKEN-SCAN] Error:', error)
     return new Response(
-      JSON.stringify({ error: 'Failed to scan token', details: error.message }),
+      JSON.stringify({ 
+        success: false, 
+        error_message: 'Failed to scan token. Please try again.', 
+        details: error.message 
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 

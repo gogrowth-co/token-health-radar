@@ -39,9 +39,12 @@ export default function ScanLoading() {
       return;
     }
     
-    // Validate token address format
-    const isValidAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(tokenAddress);
-    if (!isValidAddress) {
+    // Validate token address format (allow special addresses for native tokens)
+    const isValidAddress = /^0x[a-fA-F0-9]{40}$/.test(tokenAddress);
+    const isSpecialAddress = tokenAddress === '0x0000000000000000000000000000000000000000' || 
+                             tokenAddress === '0x0000000000000000000000000000000000001010';
+    
+    if (!isValidAddress && !isSpecialAddress) {
       console.error("ScanLoading: Invalid token address format:", tokenAddress);
       toast.error("Invalid token address format");
       navigate("/");
@@ -92,12 +95,27 @@ export default function ScanLoading() {
         // Token address must match what's stored in localStorage or be present in params
         let tokenToScan = selectedToken;
         if (!tokenToScan || selectedToken?.address !== tokenAddress) {
-          // Attempt to load token data from the database
-          const { data: tokenData } = await supabase
-            .from("token_data_cache")
-            .select("*")
-            .eq("token_address", tokenAddress)
-            .maybeSingle();
+          // Attempt to load token data from the database using CoinGecko ID first
+          let tokenData = null;
+          
+          if (coinGeckoId) {
+            const { data } = await supabase
+              .from("token_data_cache")
+              .select("*")
+              .eq("coingecko_id", coinGeckoId)
+              .maybeSingle();
+            tokenData = data;
+          }
+          
+          // Fallback to address lookup if CoinGecko ID lookup failed
+          if (!tokenData) {
+            const { data } = await supabase
+              .from("token_data_cache")
+              .select("*")
+              .eq("token_address", tokenAddress)
+              .maybeSingle();
+            tokenData = data;
+          }
             
           if (tokenData) {
             console.log("ScanLoading: Found token in database:", tokenData);
@@ -106,16 +124,25 @@ export default function ScanLoading() {
               name: tokenData.name,
               symbol: tokenData.symbol,
               logo: tokenData.logo_url,
-              id: tokenData.coingecko_id
+              id: tokenData.coingecko_id || coinGeckoId
             };
           } else {
             console.log("ScanLoading: No token info available for address", tokenAddress);
             tokenToScan = {
               address: tokenAddress,
               name: `Token ${tokenAddress.substring(0, 6)}...`,
-              symbol: "???"
+              symbol: "???",
+              id: coinGeckoId
             };
           }
+        }
+        
+        // Validate we have minimum required data for scanning
+        if (!coinGeckoId && !tokenToScan?.id) {
+          console.error("ScanLoading: No CoinGecko ID available for scanning");
+          setScanFailed(true);
+          setErrorMessage("Unable to scan token: Missing token identifier. Please try selecting the token again.");
+          return;
         }
         
         // Call the run-token-scan edge function with consistently named parameters
@@ -139,7 +166,9 @@ export default function ScanLoading() {
 
         if (error) {
           console.error("ScanLoading: Edge function error:", error);
-          throw new Error(error.message || "Failed to scan token");
+          setScanFailed(true);
+          setErrorMessage(error.message || "Failed to scan token. Please try again.");
+          return;
         }
 
         console.log("ScanLoading: Token scan response:", data);
@@ -147,15 +176,23 @@ export default function ScanLoading() {
         if (!data) {
           console.error("ScanLoading: No data returned from token scan");
           setScanFailed(true);
-          setErrorMessage("No data returned from scan");
+          setErrorMessage("No data returned from scan. Please try again.");
           return;
         }
 
-        // FIXED: Don't check 'allowed' flag - continue with scan result even for free scans
+        // Check if scan was successful
         if (!data.success) {
           console.error("ScanLoading: Scan failed:", data.error_message);
           setScanFailed(true);
           setErrorMessage(data.error_message || "Failed to retrieve token data. Please try again.");
+          return;
+        }
+
+        // Validate that we have meaningful scan results
+        if (!data.token_info || !data.overall_score) {
+          console.error("ScanLoading: Incomplete scan results:", data);
+          setScanFailed(true);
+          setErrorMessage("Scan completed but returned incomplete results. Please try again.");
           return;
         }
 
@@ -179,7 +216,7 @@ export default function ScanLoading() {
       } catch (error) {
         console.error("ScanLoading: Error during token scan:", error instanceof Error ? error.message : String(error));
         setScanFailed(true);
-        setErrorMessage(error instanceof Error ? error.message : "Unknown error occurred");
+        setErrorMessage(error instanceof Error ? error.message : "Unknown error occurred. Please try again.");
       } finally {
         setIsScanning(false);
       }

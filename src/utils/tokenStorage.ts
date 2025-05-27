@@ -19,38 +19,65 @@ interface TokenInfo {
 }
 
 /**
+ * Get a well-known contract address for native tokens
+ */
+const getWellKnownAddress = (tokenId: string): string | null => {
+  const wellKnownAddresses: Record<string, string> = {
+    'ethereum': '0x0000000000000000000000000000000000000000', // ETH native
+    'binancecoin': '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', // BNB on BSC
+    'matic-network': '0x0000000000000000000000000000000000001010', // MATIC native
+    'avalanche-2': '0x0000000000000000000000000000000000000000', // AVAX native
+  };
+  
+  return wellKnownAddresses[tokenId] || null;
+};
+
+/**
  * Save token data to Supabase database
  * @param token - Token data to save
  * @returns Promise that resolves when the data is saved
  */
 export const saveTokenToDatabase = async (token: TokenResult): Promise<void> => {
-  // Get the token address from platforms or generate a placeholder
+  // First try to get a valid EVM address from platforms
   let tokenAddress = getFirstValidEvmAddress(token.platforms);
   
+  // If no valid address found, try well-known addresses for native tokens
   if (!tokenAddress) {
-    console.warn(`No EVM address found for ${token.name}, using placeholder`);
-    tokenAddress = `0x${token.id.replace(/-/g, '').substring(0, 38).padEnd(38, '0')}`;
+    tokenAddress = getWellKnownAddress(token.id);
+  }
+  
+  // If still no address, don't create a placeholder - use CoinGecko ID as identifier
+  if (!tokenAddress) {
+    console.warn(`No valid address found for ${token.name} (${token.id}), skipping database storage`);
+    return;
+  }
+  
+  // Validate the address format before proceeding
+  const isValidAddress = /^0x[a-fA-F0-9]{40}$/.test(tokenAddress);
+  if (!isValidAddress && tokenAddress !== '0x0000000000000000000000000000000000000000' && tokenAddress !== '0x0000000000000000000000000000000000001010') {
+    console.warn(`Invalid address format for ${token.name}: ${tokenAddress}`);
+    return;
   }
   
   // Format numbers for storage
   const formattedPrice = token.price_usd || 0;
-  // Convert market cap to number
   const marketCapNumber = typeof token.market_cap === 'number' ? 
     token.market_cap : 
     0;
   
-  // Check if the token already exists in our database
+  // Check if the token already exists in our database by address OR CoinGecko ID
   const { data: existingToken } = await supabase
     .from("token_data_cache")
     .select("*")
-    .eq("token_address", tokenAddress)
+    .or(`token_address.eq.${tokenAddress},coingecko_id.eq.${token.id}`)
     .maybeSingle();
 
   if (existingToken) {
-    // Update existing token
+    // Update existing token, ensuring we use the real address
     await supabase
       .from("token_data_cache")
       .update({
+        token_address: tokenAddress, // Update to real address if it was placeholder
         name: token.name,
         symbol: token.symbol,
         logo_url: token.large || token.thumb,
@@ -59,9 +86,9 @@ export const saveTokenToDatabase = async (token: TokenResult): Promise<void> => 
         price_change_24h: token.price_change_24h,
         market_cap_usd: marketCapNumber
       })
-      .eq("token_address", tokenAddress);
+      .eq("id", existingToken.id);
   } else {
-    // Insert new token
+    // Insert new token with valid address
     await supabase
       .from("token_data_cache")
       .insert({
@@ -99,4 +126,3 @@ export const saveTokenToLocalStorage = (token: TokenResult, tokenAddress: string
   console.log("Saving selected token to localStorage:", tokenInfo);
   localStorage.setItem("selectedToken", JSON.stringify(tokenInfo));
 };
-
