@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase, handleSupabaseError } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Check, X, Loader2 } from "lucide-react";
+import { Check, X, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Navbar from "@/components/Navbar";
@@ -127,16 +126,17 @@ export default function ScanResult() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [tokenData, setTokenData] = useState<TokenData | null>(null);
-  const [securityData, setSecurityData] = useState<SecurityData | null>(null);
-  const [tokenomicsData, setTokenomicsData] = useState<TokenomicsData | null>(null);
-  const [liquidityData, setLiquidityData] = useState<LiquidityData | null>(null);
-  const [communityData, setCommunityData] = useState<CommunityData | null>(null);
-  const [developmentData, setDevelopmentData] = useState<DevelopmentData | null>(null);
+  const [securityData, setSecurityData] = useState<any | null>(null);
+  const [tokenomicsData, setTokenomicsData] = useState<any | null>(null);
+  const [liquidityData, setLiquidityData] = useState<any | null>(null);
+  const [communityData, setCommunityData] = useState<any | null>(null);
+  const [developmentData, setDevelopmentData] = useState<any | null>(null);
   const [tokenAddress, setTokenAddress] = useState<string>("");
   const [coinGeckoId, setCoinGeckoId] = useState<string>("");  
   const [isPro, setIsPro] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<ScanCategory>(ScanCategory.Security);
   const [isRescanning, setIsRescanning] = useState<boolean>(false);
+  const [isLimitedSupport, setIsLimitedSupport] = useState<boolean>(false);
   
   // Navigation and authentication
   const navigate = useNavigate();
@@ -144,11 +144,12 @@ export default function ScanResult() {
 
   // Calculate the overall score - TEMPORARILY EXCLUDING COMMUNITY
   const calculateOverallScore = (): number => {
+    if (isLimitedSupport) return 0; // No scoring for limited support tokens
+    
     const scores = [
       securityData?.score, 
       tokenomicsData?.score,
       liquidityData?.score,
-      // communityData?.score, // 🚫 TEMPORARILY EXCLUDED - will be re-enabled later
       developmentData?.score
     ];
     
@@ -223,6 +224,42 @@ export default function ScanResult() {
     
     try {
       console.log("ScanResult: Fetching token scan data for:", tokenAddress);
+      
+      // Check if this is a limited support token
+      if (tokenAddress.startsWith('unsupported-')) {
+        setIsLimitedSupport(true);
+        
+        // Try to get basic token info from localStorage
+        const cachedData = localStorage.getItem("selectedToken");
+        if (cachedData) {
+          const parsedData = JSON.parse(cachedData);
+          
+          // Create minimal token data for display
+          const limitedTokenData: TokenData = {
+            token_address: tokenAddress,
+            name: parsedData.name || 'Unknown Token',
+            symbol: parsedData.symbol || '???',
+            description: `${parsedData.name} is not fully supported for scanning. Limited data available.`,
+            website_url: '',
+            twitter_handle: '',
+            github_url: '',
+            logo_url: parsedData.logo || '',
+            coingecko_id: parsedData.id || '',
+            launch_date: '',
+            created_at: new Date().toISOString(),
+            current_price_usd: parsedData.price_usd || 0,
+            price_usd: parsedData.price_usd || 0,
+            price_change_24h: parsedData.price_change_24h || 0,
+            market_cap_usd: parsedData.market_cap_usd || 0,
+            total_value_locked_usd: 'N/A'
+          };
+          
+          setTokenData(limitedTokenData);
+        }
+        
+        setIsLoading(false);
+        return;
+      }
       
       // Validate token address format
       const isValidAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(tokenAddress);
@@ -397,8 +434,9 @@ export default function ScanResult() {
     // Get the token parameter - consistent naming across the app
     const token = searchParams.get("token");
     const id = searchParams.get("id");
+    const limited = searchParams.get("limited");
     
-    console.log("ScanResult: Initializing with parameters:", { token, id });
+    console.log("ScanResult: Initializing with parameters:", { token, id, limited });
     
     if (!token) {
       console.error("ScanResult: No token address provided");
@@ -407,13 +445,20 @@ export default function ScanResult() {
       return;
     }
     
-    // CRITICAL: Validate token address format early
-    const isValidAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(token);
-    if (!isValidAddress) {
-      console.error("ScanResult: Invalid token address format:", token);
-      setError("Invalid token address format");
-      setIsLoading(false);
-      return;
+    // Check if this is a limited support case
+    if (limited === 'true' || token.startsWith('unsupported-')) {
+      setIsLimitedSupport(true);
+    }
+    
+    // For unsupported tokens, don't validate address format
+    if (!isLimitedSupport && !token.startsWith('unsupported-')) {
+      const isValidAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(token);
+      if (!isValidAddress) {
+        console.error("ScanResult: Invalid token address format:", token);
+        setError("Invalid token address format");
+        setIsLoading(false);
+        return;
+      }
     }
     
     setTokenAddress(token);
@@ -423,7 +468,9 @@ export default function ScanResult() {
     
     const loadData = async () => {
       try {
-        await checkScanAccess(token);
+        if (!isLimitedSupport) {
+          await checkScanAccess(token);
+        }
         await fetchTokenScanData(token);
       } catch (error) {
         console.error("ScanResult: Failed to load token data:", error);
@@ -470,24 +517,34 @@ export default function ScanResult() {
           ) : (
             <>
               <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-                <h1 className="text-3xl font-bold tracking-tight mb-4 md:mb-0">
-                  Token Health Scan Results
-                </h1>
+                <div className="flex items-center gap-3 mb-4 md:mb-0">
+                  <h1 className="text-3xl font-bold tracking-tight">
+                    {isLimitedSupport ? "Token Information" : "Token Health Scan Results"}
+                  </h1>
+                  {isLimitedSupport && (
+                    <Badge variant="destructive" className="flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      Limited Support
+                    </Badge>
+                  )}
+                </div>
                 <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={handleRescan}
-                    disabled={isRescanning}
-                  >
-                    {isRescanning ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Rescanning...
-                      </>
-                    ) : (
-                      "Rescan Token"
-                    )}
-                  </Button>
+                  {!isLimitedSupport && (
+                    <Button
+                      variant="outline"
+                      onClick={handleRescan}
+                      disabled={isRescanning}
+                    >
+                      {isRescanning ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Rescanning...
+                        </>
+                      ) : (
+                        "Rescan Token"
+                      )}
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     onClick={() => navigate("/")}
@@ -496,6 +553,16 @@ export default function ScanResult() {
                   </Button>
                 </div>
               </div>
+              
+              {isLimitedSupport && (
+                <Alert className="mb-6">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    This token is not supported for full health scanning. We're showing basic information only. 
+                    Support for more blockchains like Solana, Hyperliquid, and others is coming soon.
+                  </AlertDescription>
+                </Alert>
+              )}
               
               {tokenData && (
                 <>
@@ -517,54 +584,58 @@ export default function ScanResult() {
                     />
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-                    <CategoryScoreCard
-                      category="Security"
-                      score={securityData?.score ?? 0}
-                      level={getScoreLevel(securityData?.score ?? 0)}
-                      color={getScoreColor(securityData?.score ?? 0)}
-                      onClick={() => setActiveTab(ScanCategory.Security)}
-                    />
-                    <CategoryScoreCard
-                      category="Tokenomics"
-                      score={tokenomicsData?.score ?? 0}
-                      level={getScoreLevel(tokenomicsData?.score ?? 0)}
-                      color={getScoreColor(tokenomicsData?.score ?? 0)}
-                      onClick={() => setActiveTab(ScanCategory.Tokenomics)}
-                    />
-                    <CategoryScoreCard
-                      category="Liquidity"
-                      score={liquidityData?.score ?? 0}
-                      level={getScoreLevel(liquidityData?.score ?? 0)}
-                      color={getScoreColor(liquidityData?.score ?? 0)}
-                      onClick={() => setActiveTab(ScanCategory.Liquidity)}
-                    />
-                    <CategoryScoreCard
-                      category="Community"
-                      score={communityData?.score ?? 0}
-                      level={getScoreLevel(communityData?.score ?? 0)}
-                      color={getScoreColor(communityData?.score ?? 0)}
-                      onClick={() => setActiveTab(ScanCategory.Community)}
-                    />
-                    <CategoryScoreCard
-                      category="Development"
-                      score={developmentData?.score ?? 0}
-                      level={getScoreLevel(developmentData?.score ?? 0)}
-                      color={getScoreColor(developmentData?.score ?? 0)}
-                      onClick={() => setActiveTab(ScanCategory.Development)}
-                    />
-                  </div>
-                  
-                  <CategoryTabs
-                    activeTab={activeTab}
-                    securityData={securityData}
-                    tokenomicsData={tokenomicsData}
-                    liquidityData={liquidityData}
-                    communityData={communityData}
-                    developmentData={developmentData}
-                    isPro={isPro}
-                    onCategoryChange={setActiveTab}
-                  />
+                  {!isLimitedSupport && (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+                        <CategoryScoreCard
+                          category="Security"
+                          score={securityData?.score ?? 0}
+                          level={getScoreLevel(securityData?.score ?? 0)}
+                          color={getScoreColor(securityData?.score ?? 0)}
+                          onClick={() => setActiveTab(ScanCategory.Security)}
+                        />
+                        <CategoryScoreCard
+                          category="Tokenomics"
+                          score={tokenomicsData?.score ?? 0}
+                          level={getScoreLevel(tokenomicsData?.score ?? 0)}
+                          color={getScoreColor(tokenomicsData?.score ?? 0)}
+                          onClick={() => setActiveTab(ScanCategory.Tokenomics)}
+                        />
+                        <CategoryScoreCard
+                          category="Liquidity"
+                          score={liquidityData?.score ?? 0}
+                          level={getScoreLevel(liquidityData?.score ?? 0)}
+                          color={getScoreColor(liquidityData?.score ?? 0)}
+                          onClick={() => setActiveTab(ScanCategory.Liquidity)}
+                        />
+                        <CategoryScoreCard
+                          category="Community"
+                          score={communityData?.score ?? 0}
+                          level={getScoreLevel(communityData?.score ?? 0)}
+                          color={getScoreColor(communityData?.score ?? 0)}
+                          onClick={() => setActiveTab(ScanCategory.Community)}
+                        />
+                        <CategoryScoreCard
+                          category="Development"
+                          score={developmentData?.score ?? 0}
+                          level={getScoreLevel(developmentData?.score ?? 0)}
+                          color={getScoreColor(developmentData?.score ?? 0)}
+                          onClick={() => setActiveTab(ScanCategory.Development)}
+                        />
+                      </div>
+                      
+                      <CategoryTabs
+                        activeTab={activeTab}
+                        securityData={securityData}
+                        tokenomicsData={tokenomicsData}
+                        liquidityData={liquidityData}
+                        communityData={communityData}
+                        developmentData={developmentData}
+                        isPro={isPro}
+                        onCategoryChange={setActiveTab}
+                      />
+                    </>
+                  )}
                 </>
               )}
             </>

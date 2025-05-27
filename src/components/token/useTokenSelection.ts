@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { TokenResult } from "./types";
 import { getFirstValidEvmAddress } from "@/utils/addressUtils";
-import { saveTokenToDatabase, saveTokenToLocalStorage } from "@/utils/tokenStorage";
+import { saveTokenToDatabase, saveTokenToLocalStorage, isTokenScanSupported } from "@/utils/tokenStorage";
 
 interface ScanAccessData {
   plan: string;
@@ -76,7 +76,37 @@ export default function useTokenSelection() {
    */
   const handleSelectToken = useCallback(async (token: TokenResult) => {
     try {
-      // Check if token is ERC-20 compatible
+      console.log(`Selected token: ${token.name}, id: ${token.id}`);
+      
+      // Check if token is supported for full scanning
+      const isSupported = isTokenScanSupported(token);
+      
+      if (!isSupported) {
+        // For unsupported tokens, show a toast and navigate to a limited info page
+        toast.info("Limited Support", {
+          description: `${token.name} is not fully supported. Showing basic information only.`
+        });
+        
+        // Save basic token info for display
+        const tokenInfo = {
+          address: `unsupported-${token.id}`, // Use a special identifier
+          id: token.id,
+          name: token.name,
+          symbol: token.symbol,
+          logo: token.large || token.thumb,
+          price_usd: token.price_usd || 0,
+          price_change_24h: token.price_change_24h,
+          market_cap_usd: typeof token.market_cap === 'number' ? token.market_cap : 0
+        };
+        
+        localStorage.setItem("selectedToken", JSON.stringify(tokenInfo));
+        
+        // Navigate to scan result with limited support flag
+        navigate(`/scan-result?token=unsupported-${token.id}&id=${token.id}&limited=true`);
+        return;
+      }
+      
+      // For supported tokens, proceed with normal flow
       if (!token.isErc20) {
         toast.error("Unsupported Token", {
           description: "This token is not ERC-20 compatible. We're adding support for more blockchains soon."
@@ -113,8 +143,6 @@ export default function useTokenSelection() {
         });
         return;
       }
-      
-      console.log(`Selected token: ${token.name}, address: ${tokenAddress}, id: ${token.id}`);
       
       // Check if user has access to perform a scan
       const hasAccess = await checkScanAccess();

@@ -33,20 +33,38 @@ const getWellKnownAddress = (tokenId: string): string | null => {
 };
 
 /**
+ * Check if a token is supported for full scanning based on its platforms
+ */
+export const isTokenScanSupported = (token: TokenResult): boolean => {
+  // Check if token has EVM-compatible platforms
+  if (token.platforms && Object.keys(token.platforms).length > 0) {
+    const evmPlatforms = ['ethereum', 'polygon-pos', 'binance-smart-chain', 'arbitrum-one', 'avalanche'];
+    const hasEvmPlatform = Object.keys(token.platforms).some(platform => 
+      evmPlatforms.includes(platform)
+    );
+    if (hasEvmPlatform) return true;
+  }
+  
+  // Check if it's a well-known native token we support
+  const wellKnownAddress = getWellKnownAddress(token.id);
+  if (wellKnownAddress) return true;
+  
+  return false;
+};
+
+/**
  * Save token data to Supabase database
  * @param token - Token data to save
  * @returns Promise that resolves when the data is saved
  */
 export const saveTokenToDatabase = async (token: TokenResult): Promise<void> => {
-  // First try to get a valid EVM address from platforms
+  // Only save tokens that have valid addresses or are well-known
   let tokenAddress = getFirstValidEvmAddress(token.platforms);
   
-  // If no valid address found, try well-known addresses for native tokens
   if (!tokenAddress) {
     tokenAddress = getWellKnownAddress(token.id);
   }
   
-  // If still no address, don't create a placeholder - use CoinGecko ID as identifier
   if (!tokenAddress) {
     console.warn(`No valid address found for ${token.name} (${token.id}), skipping database storage`);
     return;
@@ -54,7 +72,10 @@ export const saveTokenToDatabase = async (token: TokenResult): Promise<void> => 
   
   // Validate the address format before proceeding
   const isValidAddress = /^0x[a-fA-F0-9]{40}$/.test(tokenAddress);
-  if (!isValidAddress && tokenAddress !== '0x0000000000000000000000000000000000000000' && tokenAddress !== '0x0000000000000000000000000000000000001010') {
+  const isSpecialAddress = tokenAddress === '0x0000000000000000000000000000000000000000' || 
+                           tokenAddress === '0x0000000000000000000000000000000000001010';
+  
+  if (!isValidAddress && !isSpecialAddress) {
     console.warn(`Invalid address format for ${token.name}: ${tokenAddress}`);
     return;
   }
@@ -73,11 +94,11 @@ export const saveTokenToDatabase = async (token: TokenResult): Promise<void> => 
     .maybeSingle();
 
   if (existingToken) {
-    // Update existing token, ensuring we use the real address
+    // Update existing token
     await supabase
       .from("token_data_cache")
       .update({
-        token_address: tokenAddress, // Update to real address if it was placeholder
+        token_address: tokenAddress,
         name: token.name,
         symbol: token.symbol,
         logo_url: token.large || token.thumb,
@@ -88,7 +109,7 @@ export const saveTokenToDatabase = async (token: TokenResult): Promise<void> => 
       })
       .eq("id", existingToken.id);
   } else {
-    // Insert new token with valid address
+    // Insert new token
     await supabase
       .from("token_data_cache")
       .insert({
