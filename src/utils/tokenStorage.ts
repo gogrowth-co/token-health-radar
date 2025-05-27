@@ -33,9 +33,21 @@ const getWellKnownAddress = (tokenId: string): string | null => {
 };
 
 /**
- * Check if a token is supported for full scanning based on its platforms
+ * Check if a token's blockchain is supported for full scanning
  */
-export const isTokenScanSupported = (token: TokenResult): boolean => {
+export const isChainSupported = (token: TokenResult): boolean => {
+  // Native L1 tokens that we can't scan
+  const unsupportedNativeTokens = [
+    'hyperliquid', 'solana', 'sui', 'ton-crystal', 'sei-network',
+    'aptos', 'cardano', 'polkadot', 'cosmos', 'near', 'algorand',
+    'hedera-hashgraph', 'internet-computer', 'stellar', 'monero',
+    'kaspa', 'cronos', 'fantom', 'klay-token'
+  ];
+  
+  if (unsupportedNativeTokens.includes(token.id)) {
+    return false;
+  }
+  
   // Check if token has EVM-compatible platforms
   if (token.platforms && Object.keys(token.platforms).length > 0) {
     const evmPlatforms = ['ethereum', 'polygon-pos', 'binance-smart-chain', 'arbitrum-one', 'avalanche'];
@@ -50,6 +62,13 @@ export const isTokenScanSupported = (token: TokenResult): boolean => {
   if (wellKnownAddress) return true;
   
   return false;
+};
+
+/**
+ * Check if a token is supported for full scanning based on its platforms
+ */
+export const isTokenScanSupported = (token: TokenResult): boolean => {
+  return isChainSupported(token);
 };
 
 /**
@@ -87,11 +106,13 @@ export const saveTokenToDatabase = async (token: TokenResult): Promise<void> => 
     0;
   
   // Check if the token already exists in our database by address OR CoinGecko ID
-  const { data: existingToken } = await supabase
+  const { data: existingTokens } = await supabase
     .from("token_data_cache")
-    .select("*")
+    .select("token_address")
     .or(`token_address.eq.${tokenAddress},coingecko_id.eq.${token.id}`)
-    .maybeSingle();
+    .limit(1);
+
+  const existingToken = existingTokens && existingTokens.length > 0 ? existingTokens[0] : null;
 
   if (existingToken) {
     // Update existing token
@@ -107,7 +128,7 @@ export const saveTokenToDatabase = async (token: TokenResult): Promise<void> => 
         price_change_24h: token.price_change_24h,
         market_cap_usd: marketCapNumber
       })
-      .eq("id", existingToken.id);
+      .eq("token_address", existingToken.token_address);
   } else {
     // Insert new token
     await supabase
