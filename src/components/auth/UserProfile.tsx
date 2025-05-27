@@ -13,6 +13,7 @@ type SubscriberData = {
   plan: string;
   scans_used: number;
   pro_scan_limit: number;
+  source?: string;
 };
 
 export function UserProfile() {
@@ -29,7 +30,7 @@ export function UserProfile() {
       try {
         const { data, error } = await supabase
           .from("subscribers")
-          .select("plan, scans_used, pro_scan_limit")
+          .select("plan, scans_used, pro_scan_limit, source")
           .eq("id", user.id)
           .single();
 
@@ -124,7 +125,11 @@ export function UserProfile() {
                     <p className="text-sm capitalize text-muted-foreground">
                       {subscriberData.plan}
                     </p>
-                    {subscriberData.plan === "pro" ? (
+                    {subscriberData.plan === "lifetime" ? (
+                      <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                        Lifetime Access
+                      </Badge>
+                    ) : subscriberData.plan === "pro" ? (
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                         Active
                       </Badge>
@@ -134,24 +139,33 @@ export function UserProfile() {
 
                 <div className="space-y-1">
                   <p className="text-sm font-medium">
-                    {subscriberData.plan === "pro" ? "Pro Scans (Monthly)" : "Pro Scans"}
+                    {subscriberData.plan === "lifetime" ? "Scans Used" : 
+                     subscriberData.plan === "pro" ? "Pro Scans (Monthly)" : "Pro Scans"}
                   </p>
                   <div className="flex items-center gap-2">
                     <p className="text-sm text-muted-foreground">
-                      {subscriberData.scans_used} / {subscriberData.pro_scan_limit} used
+                      {subscriberData.plan === "lifetime" ? 
+                        `${subscriberData.scans_used} scans used` :
+                        `${subscriberData.scans_used} / ${subscriberData.pro_scan_limit} used`
+                      }
                     </p>
-                    {subscriberData.scans_used >= subscriberData.pro_scan_limit && subscriberData.plan !== "pro" && (
+                    {subscriberData.plan !== "lifetime" && subscriberData.scans_used >= subscriberData.pro_scan_limit && subscriberData.plan !== "pro" && (
                       <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                         Limit Reached
                       </Badge>
                     )}
                   </div>
-                  {subscriberData.plan !== "pro" && subscriberData.scans_used < subscriberData.pro_scan_limit && (
+                  {subscriberData.plan === "lifetime" && (
+                    <p className="text-xs text-muted-foreground">
+                      Unlimited high-quality scans forever
+                    </p>
+                  )}
+                  {subscriberData.plan !== "lifetime" && subscriberData.plan !== "pro" && subscriberData.scans_used < subscriberData.pro_scan_limit && (
                     <p className="text-xs text-muted-foreground">
                       Full-quality scans with detailed analysis
                     </p>
                   )}
-                  {subscriberData.plan !== "pro" && subscriberData.scans_used >= subscriberData.pro_scan_limit && (
+                  {subscriberData.plan !== "lifetime" && subscriberData.plan !== "pro" && subscriberData.scans_used >= subscriberData.pro_scan_limit && (
                     <p className="text-xs text-muted-foreground">
                       Unlimited basic scans available. Upgrade for full analysis.
                     </p>
@@ -159,7 +173,16 @@ export function UserProfile() {
                 </div>
 
                 <div className="pt-2">
-                  {subscriberData.plan === "pro" ? (
+                  {subscriberData.plan === "lifetime" ? (
+                    <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
+                      <p className="text-sm text-purple-700 font-medium">
+                        🎉 You have lifetime access!
+                      </p>
+                      <p className="text-xs text-purple-600 mt-1">
+                        Enjoy unlimited scans forever
+                      </p>
+                    </div>
+                  ) : subscriberData.plan === "pro" ? (
                     <Button 
                       variant="outline" 
                       onClick={handleManageSubscription} 

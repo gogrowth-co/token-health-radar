@@ -13,9 +13,11 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          name: string | null
           plan: string | null
           pro_scan_limit: number | null
           scans_used: number | null
+          source: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           updated_at: string | null
@@ -23,9 +25,11 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id: string
+          name?: string | null
           plan?: string | null
           pro_scan_limit?: number | null
           scans_used?: number | null
+          source?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string | null
@@ -33,9 +37,11 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          name?: string | null
           plan?: string | null
           pro_scan_limit?: number | null
           scans_used?: number | null
+          source?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string | null
@@ -383,7 +389,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      upsert_subscriber_by_email: {
+        Args: {
+          user_email: string
+          user_name?: string
+          user_plan?: string
+          user_source?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

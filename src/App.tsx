@@ -6,12 +6,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Landing from "./pages/Landing";
-import Auth from "./pages/Auth"; // Import the new Auth page
+import Auth from "./pages/Auth";
 import Confirm from "./pages/Confirm";
 import ScanLoading from "./pages/ScanLoading";
 import ScanResult from "./pages/ScanResult";
 import Pricing from "./pages/Pricing";
 import Dashboard from "./pages/Dashboard";
+import LTD from "./pages/LTD";
+import LTDThankYou from "./pages/LTDThankYou";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,12 +27,14 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/auth" element={<Auth />} /> {/* Add the new Auth route */}
+            <Route path="/auth" element={<Auth />} />
             <Route path="/confirm" element={<Confirm />} />
             <Route path="/scan-loading" element={<ScanLoading />} />
             <Route path="/scan-result" element={<ScanResult />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/ltd" element={<LTD />} />
+            <Route path="/ltd-thank-you" element={<LTDThankYou />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
