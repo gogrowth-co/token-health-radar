@@ -14,11 +14,47 @@ interface TokenResultProps {
 }
 
 export default function TokenResult({ token, onSelectToken }: TokenResultProps) {
-  // Determine if this is an ERC-20 token
-  const isErc20 = typeof token.isErc20 === 'boolean' ? token.isErc20 : false;
-  
   // Check if token is supported for full scanning
   const isFullySupported = isTokenScanSupported(token);
+  
+  console.log(`[TOKEN-RESULT] ${token.name} (${token.symbol}):`);
+  console.log(`  - Market cap:`, token.market_cap);
+  console.log(`  - Market cap rank:`, token.market_cap_rank);
+  console.log(`  - Price USD:`, token.price_usd);
+  console.log(`  - Price change 24h:`, token.price_change_24h);
+  console.log(`  - Platforms:`, token.platforms);
+  console.log(`  - Is fully supported:`, isFullySupported);
+
+  // Format market cap display - prioritize market cap value over rank
+  const getMarketCapDisplay = () => {
+    if (typeof token.market_cap === 'number' && token.market_cap > 0) {
+      return formatCurrencyValue(token.market_cap);
+    }
+    if (token.market_cap_rank) {
+      return `Rank #${token.market_cap_rank}`;
+    }
+    return 'N/A';
+  };
+
+  // Get real description or create a basic one
+  const getTokenDescription = () => {
+    // If we have a real description, use it
+    if (token.description && token.description.trim() && !token.description.includes('is a cryptocurrency')) {
+      return token.description;
+    }
+    
+    // Create a basic description with available data
+    let desc = `${token.name} (${token.symbol.toUpperCase()})`;
+    if (token.market_cap_rank) {
+      desc += ` is ranked #${token.market_cap_rank} by market capitalization`;
+    } else if (typeof token.market_cap === 'number' && token.market_cap > 0) {
+      desc += ` has a market cap of ${formatCurrencyValue(token.market_cap)}`;
+    } else {
+      desc += ` is a cryptocurrency token`;
+    }
+    
+    return desc;
+  };
 
   return (
     <div className="relative border rounded-lg overflow-hidden shadow-sm">
@@ -26,10 +62,10 @@ export default function TokenResult({ token, onSelectToken }: TokenResultProps) 
         name={token.name}
         symbol={token.symbol.toUpperCase()}
         logo={token.large || token.thumb}
-        marketCap={token.market_cap_rank ? `Rank #${token.market_cap_rank}` : (typeof token.market_cap === 'number' ? formatCurrencyValue(token.market_cap) : 'N/A')}
+        marketCap={getMarketCapDisplay()}
         price={token.price_usd || 0}
         priceChange={token.price_change_24h || 0}
-        description={`${token.name} (${token.symbol.toUpperCase()}) is a cryptocurrency${token.market_cap_rank ? ` ranked #${token.market_cap_rank}` : ''}`}
+        description={getTokenDescription()}
         showActions={false} /* Disable built-in actions for custom layout */
       />
 

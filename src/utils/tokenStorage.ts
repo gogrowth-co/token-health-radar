@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { TokenResult } from "@/components/token/types";
 import { getFirstValidEvmAddress } from "./addressUtils";
@@ -36,6 +35,9 @@ const getWellKnownAddress = (tokenId: string): string | null => {
  * Check if a token's blockchain is supported for full scanning
  */
 export const isChainSupported = (token: TokenResult): boolean => {
+  console.log(`[CHAIN-SUPPORT] Checking support for ${token.name} (${token.id})`);
+  console.log(`[CHAIN-SUPPORT] Platforms:`, token.platforms);
+  
   // Native L1 tokens that we can't scan
   const unsupportedNativeTokens = [
     'hyperliquid', 'solana', 'sui', 'ton-crystal', 'sei-network',
@@ -45,6 +47,7 @@ export const isChainSupported = (token: TokenResult): boolean => {
   ];
   
   if (unsupportedNativeTokens.includes(token.id)) {
+    console.log(`[CHAIN-SUPPORT] ${token.id} is in unsupported native tokens list`);
     return false;
   }
   
@@ -54,13 +57,24 @@ export const isChainSupported = (token: TokenResult): boolean => {
     const hasEvmPlatform = Object.keys(token.platforms).some(platform => 
       evmPlatforms.includes(platform)
     );
-    if (hasEvmPlatform) return true;
+    
+    console.log(`[CHAIN-SUPPORT] Has EVM platform:`, hasEvmPlatform);
+    console.log(`[CHAIN-SUPPORT] Available platforms:`, Object.keys(token.platforms));
+    
+    if (hasEvmPlatform) {
+      // Also check if we can get a valid address
+      const evmAddress = getFirstValidEvmAddress(token.platforms);
+      console.log(`[CHAIN-SUPPORT] EVM address found:`, evmAddress);
+      return !!evmAddress;
+    }
   }
   
   // Check if it's a well-known native token we support
   const wellKnownAddress = getWellKnownAddress(token.id);
+  console.log(`[CHAIN-SUPPORT] Well-known address:`, wellKnownAddress);
   if (wellKnownAddress) return true;
   
+  console.log(`[CHAIN-SUPPORT] ${token.name} is not supported`);
   return false;
 };
 
@@ -68,7 +82,9 @@ export const isChainSupported = (token: TokenResult): boolean => {
  * Check if a token is supported for full scanning based on its platforms
  */
 export const isTokenScanSupported = (token: TokenResult): boolean => {
-  return isChainSupported(token);
+  const supported = isChainSupported(token);
+  console.log(`[TOKEN-SCAN-SUPPORT] ${token.name} (${token.id}) is supported:`, supported);
+  return supported;
 };
 
 /**

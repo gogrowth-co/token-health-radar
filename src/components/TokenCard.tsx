@@ -43,6 +43,33 @@ export default function TokenCard({
   onClick,
   showActions = true
 }: TokenCardProps) {
+  // Helper function to format market cap for display
+  const formatMarketCapDisplay = (marketCap?: string) => {
+    if (!marketCap || marketCap === "N/A" || marketCap === "0") {
+      return null;
+    }
+    
+    // If it's already formatted (contains $), use as is
+    if (marketCap.includes('$')) {
+      return marketCap;
+    }
+    
+    // If it's a rank format, use as is
+    if (marketCap.includes('Rank #')) {
+      return marketCap;
+    }
+    
+    // Try to parse as number and format
+    const numValue = parseFloat(marketCap);
+    if (!isNaN(numValue) && numValue > 0) {
+      return formatCurrencyValue(numValue);
+    }
+    
+    return marketCap;
+  };
+
+  const formattedMarketCap = formatMarketCapDisplay(marketCap);
+
   return (
     <Card className="overflow-hidden bg-card border border-border shadow-sm">
       <CardContent className="p-8">
@@ -69,21 +96,23 @@ export default function TokenCard({
             )}
             
             {/* Address and Chain - clean positioning */}
-            <div className="flex items-center gap-3">
-              <TokenPrice 
-                price={undefined} 
-                priceChange={undefined} 
-                address={address}
-                showPriceData={false}
-              />
-            </div>
+            {address && (
+              <div className="flex items-center gap-3">
+                <TokenPrice 
+                  price={undefined} 
+                  priceChange={undefined} 
+                  address={address}
+                  showPriceData={false}
+                />
+              </div>
+            )}
           </div>
           
           {/* CENTER - Price & Market Data */}
           <div className="flex-shrink-0 lg:mx-8">
             <div className="space-y-4 text-center lg:text-left">
               {/* Price and change */}
-              {price !== undefined && (
+              {price !== undefined && price > 0 && (
                 <div>
                   <div className="text-3xl font-bold">${price.toLocaleString()}</div>
                   {priceChange !== undefined && (
@@ -95,11 +124,11 @@ export default function TokenCard({
               )}
               
               {/* Market Cap */}
-              {marketCap && (
+              {formattedMarketCap && (
                 <div>
                   <div className="text-sm text-muted-foreground mb-1">Market Cap</div>
                   <div className="text-xl font-semibold">
-                    {formatCurrencyValue(parseFloat(marketCap))}
+                    {formattedMarketCap}
                   </div>
                 </div>
               )}

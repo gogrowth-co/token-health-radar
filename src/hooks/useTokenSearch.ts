@@ -66,7 +66,10 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                   // Add basic data without details if other errors occur
                   enhancedResults.push({
                     ...coin,
-                    isErc20: KNOWN_ERC20_TOKENS.includes(coin.id) // Check whitelist as fallback
+                    isErc20: KNOWN_ERC20_TOKENS.includes(coin.id), // Check whitelist as fallback
+                    price_usd: 0,
+                    price_change_24h: 0,
+                    market_cap: 0
                   });
                   continue;
                 }
@@ -79,22 +82,38 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 platforms: platforms
               });
               
+              // Extract description - get the English description if available
+              let description = '';
+              if (detailData.description && detailData.description.en) {
+                // Remove HTML tags and take first sentence
+                description = detailData.description.en
+                  .replace(/<[^>]*>/g, '')
+                  .split('.')[0] + '.';
+                
+                // Limit description length
+                if (description.length > 200) {
+                  description = description.substring(0, 200) + '...';
+                }
+              }
+              
               // Enhanced debugging
               console.log(`[Token Debug] ${coin.id} (${coin.symbol}):`);
               console.log(` - Platforms data:`, platforms);
               console.log(` - Is valid ERC-20:`, isErc20Compatible);
-              console.log(` - Platform addresses:`, Object.values(platforms).filter(addr => 
-                typeof addr === 'string' && addr.trim().toLowerCase().startsWith('0x')
-              ));
+              console.log(` - Market cap USD:`, detailData.market_data?.market_cap?.usd);
+              console.log(` - Current price USD:`, detailData.market_data?.current_price?.usd);
+              console.log(` - Price change 24h:`, detailData.market_data?.price_change_percentage_24h);
+              console.log(` - Description:`, description);
               
-              // Return enhanced coin data with explicit ERC-20 status
+              // Return enhanced coin data with proper field mapping
               enhancedResults.push({
                 ...coin,
                 platforms: platforms,
                 price_usd: detailData.market_data?.current_price?.usd || 0,
                 price_change_24h: detailData.market_data?.price_change_percentage_24h || 0,
                 market_cap: detailData.market_data?.market_cap?.usd || 0,
-                isErc20: isErc20Compatible
+                isErc20: isErc20Compatible,
+                description: description
               });
             } catch (err: any) {
               // If it's a rate limit error, propagate it up
@@ -103,7 +122,13 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               }
               
               console.error(`Error processing ${coin.id}:`, err);
-              enhancedResults.push({...coin, isErc20: KNOWN_ERC20_TOKENS.includes(coin.id)});
+              enhancedResults.push({
+                ...coin, 
+                isErc20: KNOWN_ERC20_TOKENS.includes(coin.id),
+                price_usd: 0,
+                price_change_24h: 0,
+                market_cap: 0
+              });
             }
           }
           

@@ -11,4 +11,5 @@ export interface TokenResult {
   price_usd?: number;
   price_change_24h?: number;
   isErc20?: boolean;
+  description?: string;
 }
