@@ -7,6 +7,24 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Helper function to add timeout to fetch requests
+async function fetchWithTimeout(url: string, options: any = {}, timeoutMs: number = 10000) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    })
+    clearTimeout(timeoutId)
+    return response
+  } catch (error) {
+    clearTimeout(timeoutId)
+    throw error
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -56,7 +74,7 @@ serve(async (req) => {
 
     console.log(`[TOKEN-SCAN] CoinGecko API URL: ${coinGeckoUrl}`)
     
-    const coinGeckoResponse = await fetch(coinGeckoUrl)
+    const coinGeckoResponse = await fetchWithTimeout(coinGeckoUrl)
     const coinGeckoData = await coinGeckoResponse.json()
 
     console.log(`[TOKEN-SCAN] CoinGecko data received: {
@@ -98,25 +116,50 @@ serve(async (req) => {
 
     console.log(`[TOKEN-SCAN] Successfully updated token with CoinGecko data`)
 
-    // Process Security Data with GoPlus API
+    // Process Security Data with GoPlus API - SEQUENTIAL PROCESSING
     console.log(`[TOKEN-SCAN] Processing security data with GoPlus API`)
     let securityData = await processSecurityData(token_address, supabaseClient)
+    
+    // Memory cleanup
+    if (typeof globalThis.gc === 'function') {
+      globalThis.gc()
+    }
 
     // Process Tokenomics Data with real CoinGecko API data
     console.log(`[TOKEN-SCAN] Processing tokenomics data with real CoinGecko API data`)
     let tokenomicsData = await processTokenomicsData(token_address, coinGeckoData, coingecko_id, supabaseClient)
+    
+    // Memory cleanup
+    if (typeof globalThis.gc === 'function') {
+      globalThis.gc()
+    }
 
     // Process Liquidity Data with real API integrations (GeckoTerminal + Etherscan)
     console.log(`[TOKEN-SCAN] Processing liquidity data with real API integrations (GeckoTerminal + Etherscan)`)
     let liquidityData = await processLiquidityData(token_address, coingecko_id, coinGeckoData, supabaseClient)
+    
+    // Memory cleanup
+    if (typeof globalThis.gc === 'function') {
+      globalThis.gc()
+    }
 
     // Process Community Data (score set to 0 - temporarily disabled)
     console.log(`[TOKEN-SCAN] Processing community data (score set to 0 - temporarily disabled)`)
     let communityData = await processCommunityData(token_address, coinGeckoData, supabaseClient)
 
+    // Memory cleanup
+    if (typeof globalThis.gc === 'function') {
+      globalThis.gc()
+    }
+
     // Process Development Data with real GitHub API
     console.log(`[TOKEN-SCAN] Processing development data with real GitHub API`)
     let developmentData = await processDevelopmentData(token_address, coinGeckoData, supabaseClient)
+
+    // Memory cleanup
+    if (typeof globalThis.gc === 'function') {
+      globalThis.gc()
+    }
 
     // Calculate overall score - TEMPORARILY EXCLUDING COMMUNITY
     const scores = [securityData?.score, tokenomicsData?.score, liquidityData?.score, developmentData?.score].filter(s => s !== null && s !== undefined)
@@ -197,7 +240,7 @@ serve(async (req) => {
   }
 })
 
-// Security Data Processing with GoPlus API
+// Security Data Processing with GoPlus API - OPTIMIZED
 async function processSecurityData(tokenAddress: string, supabaseClient: any) {
   try {
     console.log(`[SECURITY-SCAN] Fetching GoPlus security data for: ${tokenAddress}`)
@@ -205,7 +248,7 @@ async function processSecurityData(tokenAddress: string, supabaseClient: any) {
     const goPlusUrl = `https://api.gopluslabs.io/api/v1/token_security/1/${tokenAddress}`
     console.log(`[SECURITY-SCAN] GoPlus API URL: ${goPlusUrl}`)
     
-    const response = await fetch(goPlusUrl)
+    const response = await fetchWithTimeout(goPlusUrl, {}, 8000) // 8 second timeout
     
     if (!response.ok) {
       console.error(`[SECURITY-SCAN] GoPlus API error: ${response.status} ${response.statusText}`)
@@ -213,7 +256,7 @@ async function processSecurityData(tokenAddress: string, supabaseClient: any) {
     }
     
     const data = await response.json()
-    console.log(`[SECURITY-SCAN] GoPlus response:`, JSON.stringify(data, null, 2))
+    console.log(`[SECURITY-SCAN] GoPlus response received successfully`)
     
     const tokenData = data.result?.[tokenAddress.toLowerCase()]
     
@@ -222,11 +265,12 @@ async function processSecurityData(tokenAddress: string, supabaseClient: any) {
       throw new Error('No security data available')
     }
     
+    // Extract only needed fields immediately to reduce memory usage
     const securityData = {
       token_address: tokenAddress,
       ownership_renounced: tokenData.owner_address === "0x0000000000000000000000000000000000000000",
       audit_status: tokenData.trust_list ? "Verified" : "Unverified",
-      multisig_status: null, // GoPlus doesn't provide this directly
+      multisig_status: null,
       honeypot_detected: tokenData.honeypot_with_same_creator === "1" || tokenData.is_honeypot === "1",
       freeze_authority: tokenData.can_take_back_ownership === "1",
       can_mint: tokenData.is_mintable === "1",
@@ -278,15 +322,15 @@ async function processSecurityData(tokenAddress: string, supabaseClient: any) {
   }
 }
 
-// Enhanced Tokenomics Data Processing
+// Enhanced Tokenomics Data Processing - OPTIMIZED
 async function processTokenomicsData(tokenAddress: string, coinGeckoData: any, coinGeckoId: string, supabaseClient: any) {
   console.log(`[TOKENOMICS] Extracting real tokenomics data from CoinGecko`)
   
-  // Fetch TVL from DeFiLlama if available
+  // Fetch TVL from DeFiLlama if available - with timeout
   let tvlUsd = null
   try {
     console.log(`[TVL-FETCH] Attempting to fetch TVL from DeFiLlama for: ${coinGeckoId}`)
-    const defiLlamaResponse = await fetch(`https://api.llama.fi/protocol/${coinGeckoId}`)
+    const defiLlamaResponse = await fetchWithTimeout(`https://api.llama.fi/protocol/${coinGeckoId}`, {}, 5000)
     if (defiLlamaResponse.ok) {
       const tvlData = await defiLlamaResponse.json()
       tvlUsd = tvlData.tvl?.[tvlData.tvl.length - 1]?.totalLiquidityUSD || null
@@ -296,7 +340,7 @@ async function processTokenomicsData(tokenAddress: string, coinGeckoData: any, c
     console.log(`[TVL-FETCH] DeFiLlama TVL fetch failed: ${error.message}`)
   }
 
-  // Extract treasury balance from CoinGecko
+  // Extract treasury balance from CoinGecko - only needed fields
   let treasuryUsd = null
   try {
     if (coinGeckoData.community_data?.treasury) {
@@ -312,8 +356,8 @@ async function processTokenomicsData(tokenAddress: string, coinGeckoData: any, c
     circulating_supply: coinGeckoData.market_data?.circulating_supply || null,
     supply_cap: coinGeckoData.market_data?.max_supply || coinGeckoData.market_data?.total_supply || null,
     tvl_usd: tvlUsd,
-    vesting_schedule: null, // Requires contract analysis
-    distribution_score: null, // Will be calculated from holder data
+    vesting_schedule: null,
+    distribution_score: null,
     treasury_usd: treasuryUsd,
     burn_mechanism: coinGeckoData.description?.en?.toLowerCase()?.includes('burn') || 
                    coinGeckoData.description?.en?.toLowerCase()?.includes('deflationary') || false,
@@ -332,12 +376,12 @@ async function processTokenomicsData(tokenAddress: string, coinGeckoData: any, c
   
   if (tokenomicsData.circulating_supply && tokenomicsData.supply_cap) {
     const supplyRatio = tokenomicsData.circulating_supply / tokenomicsData.supply_cap
-    if (supplyRatio < 0.8) score += 15 // Good supply ratio
+    if (supplyRatio < 0.8) score += 15
     console.log(`[SCORE-CALC] Tokenomics: +15 for fair supply ratio`)
   }
   
   if (tokenomicsData.supply_cap) {
-    score += 15 // Has defined supply cap
+    score += 15
     console.log(`[SCORE-CALC] Tokenomics: +15 for defined supply cap`)
   }
   
@@ -347,7 +391,7 @@ async function processTokenomicsData(tokenAddress: string, coinGeckoData: any, c
   }
   
   if (tokenomicsData.tvl_usd && tokenomicsData.tvl_usd > 1000000) {
-    score += 20 // High TVL
+    score += 20
     console.log(`[SCORE-CALC] Tokenomics: +20 for high TVL`)
   }
 
@@ -362,16 +406,15 @@ async function processTokenomicsData(tokenAddress: string, coinGeckoData: any, c
   return tokenomicsData
 }
 
-// Enhanced Liquidity Data Processing
+// Enhanced Liquidity Data Processing - OPTIMIZED WITH SEQUENTIAL CALLS
 async function processLiquidityData(tokenAddress: string, coinGeckoId: string, coinGeckoData: any, supabaseClient: any) {
   console.log(`[LIQUIDITY-SCAN] Fetching real liquidity data for: ${tokenAddress}`)
 
-  // Get 24h volume from CoinGecko
-  console.log(`[LIQUIDITY-SCAN] Fetching CoinGecko data for volume: ${coinGeckoId}`)
+  // Get 24h volume from CoinGecko - already available, no extra call needed
   const volume24h = coinGeckoData.market_data?.total_volume?.usd || 0
   console.log(`[LIQUIDITY-SCAN] CoinGecko volume: ${volume24h}`)
 
-  // Fetch holder distribution from Etherscan
+  // Fetch holder distribution from Etherscan - WITH TIMEOUT
   console.log(`[LIQUIDITY-SCAN] Fetching holder data from Etherscan`)
   let holderDistribution = null
   let topHoldersData = null
@@ -382,13 +425,13 @@ async function processLiquidityData(tokenAddress: string, coinGeckoId: string, c
       const etherscanUrl = `https://api.etherscan.io/api?module=token&action=tokenholderlist&contractaddress=${tokenAddress}&page=1&offset=10&apikey=${etherscanApiKey}`
       console.log(`[LIQUIDITY-SCAN] Etherscan API URL: ${etherscanUrl}`)
       
-      const etherscanResponse = await fetch(etherscanUrl)
+      const etherscanResponse = await fetchWithTimeout(etherscanUrl, {}, 8000)
       const etherscanData = await etherscanResponse.json()
       
       if (etherscanData.status === '1' && etherscanData.result) {
         console.log(`[LIQUIDITY-SCAN] Etherscan holders found: ${etherscanData.result.length}`)
         
-        // Calculate top 10 holders percentage
+        // Calculate top 10 holders percentage - only process needed data
         const totalSupply = coinGeckoData.market_data?.circulating_supply || 1
         let top10Percentage = 0
         
@@ -403,7 +446,7 @@ async function processLiquidityData(tokenAddress: string, coinGeckoId: string, c
           }
         })
         
-        // Calculate distribution score (lower concentration = higher score)
+        // Calculate distribution score
         let distributionScore = 100
         if (top10Percentage > 80) distributionScore = 20
         else if (top10Percentage > 60) distributionScore = 40
@@ -423,7 +466,7 @@ async function processLiquidityData(tokenAddress: string, coinGeckoId: string, c
     console.error(`[LIQUIDITY-SCAN] Etherscan holder fetch failed: ${error.message}`)
   }
 
-  // Fetch DEX data from GeckoTerminal with better network detection
+  // Fetch DEX data from GeckoTerminal - SEQUENTIAL NETWORK CHECKS WITH TIMEOUT
   console.log(`[LIQUIDITY-SCAN] Fetching DEX data from GeckoTerminal`)
   let dexDepthStatus = null
   let liquidityUsd = 0
@@ -435,11 +478,9 @@ async function processLiquidityData(tokenAddress: string, coinGeckoId: string, c
       console.log(`[LIQUIDITY-SCAN] Trying GeckoTerminal network: ${network}`)
       const geckoTerminalUrl = `https://api.geckoterminal.com/api/v2/networks/${network}/tokens/${tokenAddress}`
       
-      const response = await fetch(geckoTerminalUrl, {
-        headers: {
-          'Accept': 'application/json'
-        }
-      })
+      const response = await fetchWithTimeout(geckoTerminalUrl, {
+        headers: { 'Accept': 'application/json' }
+      }, 6000)
       
       if (response.ok) {
         const data = await response.json()
@@ -467,7 +508,7 @@ async function processLiquidityData(tokenAddress: string, coinGeckoId: string, c
     console.log(`[LIQUIDITY-SCAN] No liquidity data found on any supported network`)
   }
 
-  // Fetch CEX listings from CoinGecko
+  // Fetch CEX listings from CoinGecko - WITH TIMEOUT
   console.log(`[LIQUIDITY-SCAN] Fetching exchange data from CoinGecko`)
   let cexListings = 0
   
@@ -478,7 +519,7 @@ async function processLiquidityData(tokenAddress: string, coinGeckoId: string, c
       exchangeUrl += `?x_cg_demo_api_key=${coinGeckoApiKey}`
     }
     
-    const exchangeResponse = await fetch(exchangeUrl)
+    const exchangeResponse = await fetchWithTimeout(exchangeUrl, {}, 8000)
     const exchangeData = await exchangeResponse.json()
     
     if (exchangeData.tickers) {
@@ -496,13 +537,13 @@ async function processLiquidityData(tokenAddress: string, coinGeckoId: string, c
   
   console.log(`[LIQUIDITY-SCAN] CEX listings found: ${cexListings}`)
 
-  // Check liquidity lock with GoPlus (enhanced)
+  // Check liquidity lock with GoPlus - WITH TIMEOUT
   console.log(`[LIQUIDITY-SCAN] Checking liquidity lock status with GoPlus`)
   let liquidityLockedDays = null
   
   try {
     const goPlusUrl = `https://api.gopluslabs.io/api/v1/token_security/1/${tokenAddress}`
-    const goPlusResponse = await fetch(goPlusUrl)
+    const goPlusResponse = await fetchWithTimeout(goPlusUrl, {}, 6000)
     
     if (goPlusResponse.ok) {
       const goPlusData = await goPlusResponse.json()
@@ -518,7 +559,6 @@ async function processLiquidityData(tokenAddress: string, coinGeckoId: string, c
         const lpHolders = tokenData.lp_holders
         for (const holder of lpHolders) {
           if (lockerContracts.includes(holder.address.toLowerCase())) {
-            // Estimate lock time (simplified)
             liquidityLockedDays = 365 // Default assumption for locked liquidity
             console.log(`[LIQUIDITY-SCAN] Liquidity appears to be locked: ${liquidityLockedDays} days`)
             break
@@ -546,7 +586,7 @@ async function processLiquidityData(tokenAddress: string, coinGeckoId: string, c
   let score = 20 // Base score
   
   if (volume24h > 10000000) {
-    score += 30 // High volume
+    score += 30
     console.log(`[SCORE-CALC] Liquidity: +30 for high volume`)
   } else if (volume24h > 1000000) {
     score += 20
@@ -606,7 +646,7 @@ async function processCommunityData(tokenAddress: string, coinGeckoData: any, su
   return communityData
 }
 
-// Enhanced Development Data Processing
+// Enhanced Development Data Processing - OPTIMIZED
 async function processDevelopmentData(tokenAddress: string, coinGeckoData: any, supabaseClient: any) {
   const githubUrl = coinGeckoData.links?.repos_url?.github?.[0]
   
@@ -646,26 +686,26 @@ async function processDevelopmentData(tokenAddress: string, coinGeckoData: any, 
   }
 
   try {
-    // Fetch repository info
+    // Fetch repository info - WITH TIMEOUT
     console.log(`[DEVELOPMENT-SCAN] Fetching repository info`)
-    const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers })
+    const repoResponse = await fetchWithTimeout(`https://api.github.com/repos/${owner}/${repo}`, { headers }, 8000)
     const repoData = await repoResponse.json()
     
     const isOpenSource = !repoData.private
     console.log(`[DEVELOPMENT-SCAN] Repository is open source: ${isOpenSource}`)
 
-    // Fetch contributors count
+    // Fetch contributors count - WITH TIMEOUT
     console.log(`[DEVELOPMENT-SCAN] Fetching contributors count`)
-    const contributorsResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contributors?per_page=100`, { headers })
+    const contributorsResponse = await fetchWithTimeout(`https://api.github.com/repos/${owner}/${repo}/contributors?per_page=100`, { headers }, 8000)
     const contributorsData = await contributorsResponse.json()
     const contributorsCount = Array.isArray(contributorsData) ? contributorsData.length : 0
     console.log(`[DEVELOPMENT-SCAN] Contributors count: ${contributorsCount}`)
 
-    // Fetch recent commits (fix: get latest commits first, then count recent ones)
+    // Fetch recent commits - WITH TIMEOUT
     console.log(`[DEVELOPMENT-SCAN] Fetching recent commits`)
     
     // First, get the latest commit
-    const latestCommitsResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`, { headers })
+    const latestCommitsResponse = await fetchWithTimeout(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`, { headers }, 6000)
     const latestCommits = await latestCommitsResponse.json()
     
     let lastCommitDate = null
@@ -678,9 +718,10 @@ async function processDevelopmentData(tokenAddress: string, coinGeckoData: any, 
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
     
-    const recentCommitsResponse = await fetch(
+    const recentCommitsResponse = await fetchWithTimeout(
       `https://api.github.com/repos/${owner}/${repo}/commits?since=${thirtyDaysAgo.toISOString()}&per_page=100`, 
-      { headers }
+      { headers },
+      8000
     )
     const recentCommits = await recentCommitsResponse.json()
     const commits30d = Array.isArray(recentCommits) ? recentCommits.length : 0
