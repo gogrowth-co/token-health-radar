@@ -1,81 +1,11 @@
 
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
-import { CheckCircle, Star, Shield, Zap, Clock, Users } from "lucide-react";
+import { CheckCircle, Star, Shield, Droplet, BarChart3, Globe, Code, ArrowRight, Users, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function LTD() {
-  const { user, signIn, signUp, isAuthenticated } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (user?.email) {
-      setEmail(user.email);
-    }
-  }, [user]);
-
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      toast({
-        title: "Missing information",
-        description: "Please provide both email and password.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      if (isSignUp) {
-        await signUp(email, password);
-      } else {
-        await signIn(email, password);
-      }
-    } catch (error) {
-      console.error("Auth error:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleGoogleAuth = async () => {
-    setIsSubmitting(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin + '/ltd'
-        }
-      });
-      
-      if (error) {
-        toast({
-          title: "Google authentication failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    } catch (error: any) {
-      console.error("Google auth error:", error);
-      toast({
-        title: "Google authentication failed",
-        description: "An error occurred during Google authentication.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handlePurchaseClick = () => {
     // GA4 event tracking
     if (typeof gtag !== 'undefined') {
@@ -91,33 +21,39 @@ export default function LTD() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
+    <div className="flex flex-col min-h-screen">
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container px-4 md:px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Token Health Scan</h1>
-            <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-              Limited Time Offer
+            <Link to="/" className="text-2xl font-bold hover:text-primary transition-colors">
+              Token Health Scan
+            </Link>
+            <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
+              🚀 Limited Time Offer
             </Badge>
           </div>
         </div>
       </div>
 
-      <div className="container px-4 md:px-6 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Hero Section */}
-          <div className="text-center mb-12">
-            <Badge className="mb-4 bg-green-100 text-green-800 border-green-200">
-              🚀 Lifetime Deal - 90% OFF
-            </Badge>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-              Token Health Scan
-              <span className="block text-primary">Lifetime Access</span>
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Get unlimited token scans forever. Normally $20/month, now just $97 one-time payment.
-            </p>
+      <main className="flex-1">
+        {/* Section 1: Hero */}
+        <section className="relative py-20 md:py-32 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-radial from-primary/10 to-transparent -z-10"></div>
+          
+          <div className="container px-4 md:px-6 space-y-10 text-center">
+            <div className="space-y-4 max-w-3xl mx-auto">
+              <Badge className="mb-4 bg-green-100 text-green-800 border-green-200">
+                🚀 Lifetime Deal - 90% OFF
+              </Badge>
+              <h1 className="text-3xl md:text-5xl font-bold tracking-tighter">
+                Token Health Scan
+                <span className="block text-primary">Lifetime Access</span>
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Get 10 Pro Token Scans per Month for LIFE. Normally $20/month, now just $97 one-time payment.
+              </p>
+            </div>
             
             <div className="flex items-center justify-center gap-4 mb-8">
               <div className="text-center">
@@ -130,137 +66,144 @@ export default function LTD() {
                 <div className="text-sm text-muted-foreground">One-time payment</div>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            {/* Features */}
-            <div>
-              <h2 className="text-2xl font-bold mb-6">What You Get Forever</h2>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <div className="font-medium">Unlimited Token Scans</div>
-                    <div className="text-sm text-muted-foreground">Scan as many tokens as you want, forever</div>
-                  </div>
+            <Button onClick={handlePurchaseClick} size="lg" className="text-lg py-6 px-8">
+              🚀 Unlock Lifetime Access - $97
+            </Button>
+            <p className="text-sm text-muted-foreground">
+              No account required. Get instant access after purchase.
+            </p>
+          </div>
+        </section>
+
+        {/* Section 2: Core Benefits */}
+        <section className="py-16 bg-muted">
+          <div className="container px-4 md:px-6">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold tracking-tighter">What You Get Forever</h2>
+              <p className="text-lg text-muted-foreground mt-2 max-w-2xl mx-auto">
+                Lifetime access to professional token analysis tools
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="flex flex-col items-center p-6 bg-card rounded-lg border shadow-sm text-center">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Shield className="h-6 w-6 text-primary" />
                 </div>
-                <div className="flex items-start gap-3">
-                  <Shield className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <div className="font-medium">Full Security Analysis</div>
-                    <div className="text-sm text-muted-foreground">Contract audits, honeypot detection, and risk assessment</div>
-                  </div>
+                <h3 className="text-lg font-medium mb-2">Security Risks</h3>
+                <p className="text-sm text-muted-foreground">
+                  Detect honeypots, mint functions, and backdoor risks in smart contracts
+                </p>
+              </div>
+              
+              <div className="flex flex-col items-center p-6 bg-card rounded-lg border shadow-sm text-center">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Droplet className="h-6 w-6 text-primary" />
                 </div>
-                <div className="flex items-start gap-3">
-                  <Zap className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <div className="font-medium">All 5 Categories</div>
-                    <div className="text-sm text-muted-foreground">Security, Liquidity, Tokenomics, Community, Development</div>
-                  </div>
+                <h3 className="text-lg font-medium mb-2">Liquidity Analysis</h3>
+                <p className="text-sm text-muted-foreground">
+                  Examine lock periods, holder distribution, and pull indicators
+                </p>
+              </div>
+              
+              <div className="flex flex-col items-center p-6 bg-card rounded-lg border shadow-sm text-center">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <BarChart3 className="h-6 w-6 text-primary" />
                 </div>
-                <div className="flex items-start gap-3">
-                  <Clock className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <div className="font-medium">Scan History</div>
-                    <div className="text-sm text-muted-foreground">Access all your previous scans anytime</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Users className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <div className="font-medium">Priority Support</div>
-                    <div className="text-sm text-muted-foreground">Get help when you need it</div>
-                  </div>
-                </div>
+                <h3 className="text-lg font-medium mb-2">Tokenomics</h3>
+                <p className="text-sm text-muted-foreground">
+                  Review supply constraints, circulation metrics, and allocation models
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 3: Feature Grid */}
+        <section className="py-16">
+          <div className="container px-4 md:px-6">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold tracking-tighter">Comprehensive Token Analysis</h2>
+              <p className="text-lg text-muted-foreground mt-2 max-w-2xl mx-auto">
+                Get detailed insights across 5 critical categories with your lifetime access
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+              <div className="bg-card rounded-lg border p-4 text-center hover:shadow-md transition-shadow">
+                <Shield className="h-8 w-8 mx-auto mb-2 text-primary" />
+                <h3 className="font-medium">Security</h3>
+                <p className="text-sm text-muted-foreground mt-1">Contract & vulnerability analysis</p>
+              </div>
+              
+              <div className="bg-card rounded-lg border p-4 text-center hover:shadow-md transition-shadow">
+                <Droplet className="h-8 w-8 mx-auto mb-2 text-primary" />
+                <h3 className="font-medium">Liquidity</h3>
+                <p className="text-sm text-muted-foreground mt-1">Depth & lock-up periods</p>
+              </div>
+              
+              <div className="bg-card rounded-lg border p-4 text-center hover:shadow-md transition-shadow">
+                <BarChart3 className="h-8 w-8 mx-auto mb-2 text-primary" />
+                <h3 className="font-medium">Tokenomics</h3>
+                <p className="text-sm text-muted-foreground mt-1">Supply model & distribution</p>
+              </div>
+              
+              <div className="bg-card rounded-lg border p-4 text-center hover:shadow-md transition-shadow">
+                <Globe className="h-8 w-8 mx-auto mb-2 text-primary" />
+                <h3 className="font-medium">Community</h3>
+                <p className="text-sm text-muted-foreground mt-1">Social presence & growth</p>
+              </div>
+              
+              <div className="bg-card rounded-lg border p-4 text-center hover:shadow-md transition-shadow">
+                <Code className="h-8 w-8 mx-auto mb-2 text-primary" />
+                <h3 className="font-medium">Development</h3>
+                <p className="text-sm text-muted-foreground mt-1">Activity & contributor metrics</p>
               </div>
             </div>
 
-            {/* Auth Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  {isAuthenticated ? "You're Ready!" : "Sign In to Continue"}
-                </CardTitle>
-                <CardDescription>
-                  {isAuthenticated 
-                    ? `Logged in as ${user?.email}. Click below to get lifetime access.`
-                    : "Sign in or create an account to purchase your lifetime deal."
-                  }
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {!isAuthenticated ? (
+            <div className="max-w-2xl mx-auto">
+              <Card className="border-primary bg-primary/5">
+                <CardContent className="pt-6">
                   <div className="space-y-4">
-                    <Button 
-                      variant="outline" 
-                      className="w-full" 
-                      onClick={handleGoogleAuth}
-                      disabled={isSubmitting}
-                    >
-                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                      </svg>
-                      Continue with Google
-                    </Button>
-                    
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">Or</span>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <div>
+                        <div className="font-medium">10 Pro Token Scans per Month for LIFE</div>
+                        <div className="text-sm text-muted-foreground">Never expires, scan your favorite tokens monthly</div>
                       </div>
                     </div>
-
-                    <form onSubmit={handleAuth} className="space-y-4">
-                      <Input
-                        type="email"
-                        placeholder="your@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                      <Input
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                      <Button type="submit" className="w-full" disabled={isSubmitting}>
-                        {isSignUp ? "Create Account" : "Sign In"}
-                      </Button>
-                    </form>
-                    
-                    <div className="text-center text-sm">
-                      <button 
-                        type="button"
-                        onClick={() => setIsSignUp(!isSignUp)}
-                        className="text-primary hover:underline"
-                      >
-                        {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
-                      </button>
+                    <div className="flex items-start gap-3">
+                      <Clock className="h-5 w-5 text-green-500 mt-0.5" />
+                      <div>
+                        <div className="font-medium">Scan History Access</div>
+                        <div className="text-sm text-muted-foreground">Access all your previous scans anytime</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Users className="h-5 w-5 text-green-500 mt-0.5" />
+                      <div>
+                        <div className="font-medium">Priority Support</div>
+                        <div className="text-sm text-muted-foreground">Get help when you need it</div>
+                      </div>
                     </div>
                   </div>
-                ) : (
-                  <Button 
-                    onClick={handlePurchaseClick}
-                    size="lg" 
-                    className="w-full text-lg py-6"
-                  >
-                    🚀 Unlock Lifetime Access - $97
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </div>
+        </section>
 
-          {/* Testimonials */}
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold text-center mb-8">What Users Are Saying</h2>
+        {/* Section 4: Social Proof */}
+        <section className="py-16 bg-muted">
+          <div className="container px-4 md:px-6">
+            <div className="text-center mb-8">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Users className="h-6 w-6 text-primary" />
+                <span className="text-lg font-medium">Join 1,000+ users already scanning tokens safely</span>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card>
                 <CardContent className="pt-6">
@@ -297,15 +240,17 @@ export default function LTD() {
               </Card>
             </div>
           </div>
+        </section>
 
-          {/* FAQ */}
-          <div className="mb-12">
+        {/* Section 5: FAQ */}
+        <section className="py-16">
+          <div className="container px-4 md:px-6">
             <h2 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h2>
             <div className="space-y-4 max-w-2xl mx-auto">
               <Card>
                 <CardContent className="pt-6">
                   <h3 className="font-medium mb-2">Is this really lifetime access?</h3>
-                  <p className="text-sm text-muted-foreground">Yes! Pay once, use forever. No monthly fees, no hidden costs.</p>
+                  <p className="text-sm text-muted-foreground">Yes! Pay once, get 10 Pro scans per month for life. No monthly fees, no hidden costs.</p>
                 </CardContent>
               </Card>
               <Card>
@@ -316,35 +261,36 @@ export default function LTD() {
               </Card>
               <Card>
                 <CardContent className="pt-6">
-                  <h3 className="font-medium mb-2">How many tokens can I scan?</h3>
-                  <p className="text-sm text-muted-foreground">Unlimited! Scan as many tokens as you want with no restrictions.</p>
+                  <h3 className="font-medium mb-2">How do I access my account after purchase?</h3>
+                  <p className="text-sm text-muted-foreground">Create an account using the same email address you used for checkout. Your lifetime access will be automatically activated.</p>
                 </CardContent>
               </Card>
             </div>
           </div>
+        </section>
 
-          {/* Final CTA */}
-          <div className="text-center">
-            <Card className="border-primary bg-primary/5">
-              <CardContent className="pt-6">
-                <h2 className="text-2xl font-bold mb-4">Don't Miss This Opportunity</h2>
-                <p className="text-muted-foreground mb-6">This lifetime deal is only available for a limited time. Secure your access now.</p>
-                {isAuthenticated ? (
-                  <Button 
-                    onClick={handlePurchaseClick}
-                    size="lg" 
-                    className="text-lg py-6 px-8"
-                  >
-                    🚀 Get Lifetime Access - $97
-                  </Button>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Sign in above to purchase</p>
-                )}
-              </CardContent>
-            </Card>
+        {/* Section 6: Final CTA */}
+        <section className="py-16 bg-primary text-primary-foreground">
+          <div className="container px-4 md:px-6 text-center">
+            <div className="max-w-2xl mx-auto">
+              <h2 className="text-3xl font-bold tracking-tighter mb-4">
+                Don't Miss This Opportunity
+              </h2>
+              <p className="text-lg opacity-90 mb-8">
+                This lifetime deal is only available for a limited time. Secure your access now and never pay monthly fees again.
+              </p>
+              <Button 
+                onClick={handlePurchaseClick}
+                variant="outline" 
+                size="lg" 
+                className="bg-transparent border-white hover:bg-white hover:text-primary text-lg py-6 px-8"
+              >
+                🚀 Get Lifetime Access - $97
+              </Button>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
