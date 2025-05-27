@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Star, Shield, Droplet, BarChart3, Globe, Code, Users, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
-import TokenSearchInput from "@/components/TokenSearchInput";
 
 export default function LTD() {
   const handlePurchaseClick = () => {
@@ -68,13 +67,6 @@ export default function LTD() {
               </div>
             </div>
 
-            <div className="max-w-lg mx-auto">
-              <TokenSearchInput large={true} placeholder="Try it now - enter any token name or address" />
-              <p className="text-sm text-muted-foreground mt-2">
-                Free to use. No wallet required.
-              </p>
-            </div>
-
             <Button onClick={handlePurchaseClick} size="lg" className="text-lg py-6 px-8">
               🚀 Unlock Lifetime Access - $97
             </Button>
@@ -84,39 +76,56 @@ export default function LTD() {
           </div>
         </section>
 
-        {/* Section 2: Core Benefits */}
+        {/* Section 2: LTD Benefits - Moved up for prominence */}
         <section className="py-16 bg-muted">
           <div className="container px-4 md:px-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="flex flex-col items-center p-6 bg-card rounded-lg border shadow-sm text-center">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <Shield className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">Security Risks</h3>
-                <p className="text-sm text-muted-foreground">
-                  Detect honeypots, mint functions, and backdoor risks in smart contracts
-                </p>
-              </div>
-              
-              <div className="flex flex-col items-center p-6 bg-card rounded-lg border shadow-sm text-center">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <Droplet className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">Liquidity Analysis</h3>
-                <p className="text-sm text-muted-foreground">
-                  Examine lock periods, holder distribution, and pull indicators
-                </p>
-              </div>
-              
-              <div className="flex flex-col items-center p-6 bg-card rounded-lg border shadow-sm text-center">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <BarChart3 className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">Tokenomics</h3>
-                <p className="text-sm text-muted-foreground">
-                  Review supply constraints, circulation metrics, and allocation models
-                </p>
-              </div>
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold tracking-tighter mb-4">What You Get Forever</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Pay once, scan tokens for life. Never worry about monthly subscriptions again.
+              </p>
+            </div>
+
+            <div className="max-w-2xl mx-auto">
+              <Card className="border-primary bg-primary/5">
+                <CardContent className="pt-6">
+                  <div className="space-y-6">
+                    <div className="flex items-start gap-4">
+                      <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div>
+                        <div className="text-xl font-semibold mb-2">10 Pro Token Scans per Month for LIFE</div>
+                        <div className="text-muted-foreground">Never expires, scan your favorite tokens monthly</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <Clock className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="text-xl font-semibold mb-2">Scan History Access</div>
+                        <div className="text-muted-foreground">Access all your previous scans anytime</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                        <Users className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <div className="text-xl font-semibold mb-2">Priority Support</div>
+                        <div className="text-muted-foreground">Get help when you need it</div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="text-center mt-8">
+              <Button onClick={handlePurchaseClick} size="lg" className="text-lg py-6 px-8">
+                🚀 Secure Your Lifetime Access Now - $97
+              </Button>
             </div>
           </div>
         </section>
