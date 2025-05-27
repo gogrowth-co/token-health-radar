@@ -1,9 +1,10 @@
 
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Star, Shield, Droplet, BarChart3, Globe, Code, ArrowRight, Users, Clock } from "lucide-react";
+import { CheckCircle, Star, Shield, Droplet, BarChart3, Globe, Code, Users, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
+import TokenSearchInput from "@/components/TokenSearchInput";
 
 export default function LTD() {
   const handlePurchaseClick = () => {
@@ -47,11 +48,11 @@ export default function LTD() {
                 🚀 Lifetime Deal - 90% OFF
               </Badge>
               <h1 className="text-3xl md:text-5xl font-bold tracking-tighter">
-                Token Health Scan
+                Find Hidden Risks Before You Dive In
                 <span className="block text-primary">Lifetime Access</span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Get 10 Pro Token Scans per Month for LIFE. Normally $20/month, now just $97 one-time payment.
+                Scan any project and uncover critical risks — from contract flaws to liquidity traps — in seconds. Get 10 Pro Token Scans per Month for LIFE.
               </p>
             </div>
             
@@ -67,6 +68,13 @@ export default function LTD() {
               </div>
             </div>
 
+            <div className="max-w-lg mx-auto">
+              <TokenSearchInput large={true} placeholder="Try it now - enter any token name or address" />
+              <p className="text-sm text-muted-foreground mt-2">
+                Free to use. No wallet required.
+              </p>
+            </div>
+
             <Button onClick={handlePurchaseClick} size="lg" className="text-lg py-6 px-8">
               🚀 Unlock Lifetime Access - $97
             </Button>
@@ -79,13 +87,6 @@ export default function LTD() {
         {/* Section 2: Core Benefits */}
         <section className="py-16 bg-muted">
           <div className="container px-4 md:px-6">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold tracking-tighter">What You Get Forever</h2>
-              <p className="text-lg text-muted-foreground mt-2 max-w-2xl mx-auto">
-                Lifetime access to professional token analysis tools
-              </p>
-            </div>
-            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="flex flex-col items-center p-6 bg-card rounded-lg border shadow-sm text-center">
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -120,13 +121,70 @@ export default function LTD() {
           </div>
         </section>
 
-        {/* Section 3: Feature Grid */}
+        {/* Section 3: How It Works */}
         <section className="py-16">
+          <div className="container px-4 md:px-6">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold tracking-tighter">How It Works</h2>
+              <p className="text-lg text-muted-foreground mt-2 max-w-2xl mx-auto">
+                Get comprehensive token analysis in three simple steps
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="flex flex-col items-center text-center">
+                <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg mb-4">
+                  1
+                </div>
+                <h3 className="text-lg font-medium mb-2">Enter Token</h3>
+                <p className="text-muted-foreground">
+                  Search by name or paste the contract address of any token
+                </p>
+              </div>
+              
+              <div className="flex flex-col items-center text-center">
+                <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg mb-4">
+                  2
+                </div>
+                <h3 className="text-lg font-medium mb-2">Scan Process</h3>
+                <p className="text-muted-foreground">
+                  Our system analyzes on-chain and off-chain data sources
+                </p>
+              </div>
+              
+              <div className="flex flex-col items-center text-center">
+                <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg mb-4">
+                  3
+                </div>
+                <h3 className="text-lg font-medium mb-2">Review Results</h3>
+                <p className="text-muted-foreground">
+                  Get detailed insights across all categories with actionable data
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 4: Feature Grid with Screenshot */}
+        <section className="py-16 bg-muted">
           <div className="container px-4 md:px-6">
             <div className="text-center mb-10">
               <h2 className="text-3xl font-bold tracking-tighter">Comprehensive Token Analysis</h2>
               <p className="text-lg text-muted-foreground mt-2 max-w-2xl mx-auto">
                 Get detailed insights across 5 critical categories with your lifetime access
+              </p>
+            </div>
+            
+            <div className="max-w-4xl mx-auto mb-12">
+              <div className="relative rounded-lg overflow-hidden shadow-2xl border">
+                <img 
+                  src="/lovable-uploads/c705b444-0cef-46bf-b4a1-c6663acf1164.png" 
+                  alt="Token Health Scan Report Example showing Pendle token analysis" 
+                  className="w-full h-auto"
+                />
+              </div>
+              <p className="text-center text-sm text-muted-foreground mt-4">
+                Real report showing smart contract flags, liquidity, and token data
               </p>
             </div>
             
@@ -194,8 +252,8 @@ export default function LTD() {
           </div>
         </section>
 
-        {/* Section 4: Social Proof */}
-        <section className="py-16 bg-muted">
+        {/* Section 5: Social Proof */}
+        <section className="py-16">
           <div className="container px-4 md:px-6">
             <div className="text-center mb-8">
               <div className="flex items-center justify-center gap-2 mb-4">
@@ -242,8 +300,8 @@ export default function LTD() {
           </div>
         </section>
 
-        {/* Section 5: FAQ */}
-        <section className="py-16">
+        {/* Section 6: FAQ */}
+        <section className="py-16 bg-muted">
           <div className="container px-4 md:px-6">
             <h2 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h2>
             <div className="space-y-4 max-w-2xl mx-auto">
@@ -269,7 +327,7 @@ export default function LTD() {
           </div>
         </section>
 
-        {/* Section 6: Final CTA */}
+        {/* Section 7: Final CTA */}
         <section className="py-16 bg-primary text-primary-foreground">
           <div className="container px-4 md:px-6 text-center">
             <div className="max-w-2xl mx-auto">
