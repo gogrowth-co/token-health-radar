@@ -9,17 +9,43 @@
  * @returns First valid EVM address or empty string
  */
 export const getFirstValidEvmAddress = (platforms: Record<string, string> | undefined): string => {
-  if (!platforms) return "";
+  if (!platforms) {
+    console.log("[ADDRESS-UTILS] No platforms data provided");
+    return "";
+  }
+  
+  console.log("[ADDRESS-UTILS] Checking platforms for EVM addresses:", platforms);
   
   // Look through all platform values for a valid Ethereum-style address
   const evmAddressPattern = /^0x[a-fA-F0-9]{40}$/;
   
-  for (const [_, address] of Object.entries(platforms)) {
-    if (typeof address === 'string' && evmAddressPattern.test(address.toLowerCase())) {
-      return address;
+  // Prioritize main EVM networks
+  const priorityNetworks = ['ethereum', 'polygon-pos', 'binance-smart-chain', 'arbitrum-one', 'avalanche'];
+  
+  // First check priority networks
+  for (const network of priorityNetworks) {
+    if (platforms[network]) {
+      const address = platforms[network];
+      console.log(`[ADDRESS-UTILS] Checking ${network}: ${address}`);
+      if (typeof address === 'string' && evmAddressPattern.test(address.toLowerCase())) {
+        console.log(`[ADDRESS-UTILS] Found valid EVM address on ${network}: ${address}`);
+        return address;
+      }
     }
   }
   
+  // Then check all other platforms
+  for (const [network, address] of Object.entries(platforms)) {
+    if (!priorityNetworks.includes(network)) {
+      console.log(`[ADDRESS-UTILS] Checking ${network}: ${address}`);
+      if (typeof address === 'string' && evmAddressPattern.test(address.toLowerCase())) {
+        console.log(`[ADDRESS-UTILS] Found valid EVM address on ${network}: ${address}`);
+        return address;
+      }
+    }
+  }
+  
+  console.log("[ADDRESS-UTILS] No valid EVM address found in platforms");
   return "";
 };
 

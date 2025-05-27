@@ -76,13 +76,17 @@ export default function useTokenSelection() {
    */
   const handleSelectToken = useCallback(async (token: TokenResult) => {
     try {
-      console.log(`Selected token: ${token.name}, id: ${token.id}`);
+      console.log(`[TOKEN-SELECTION] Selected token: ${token.name} (${token.symbol}), CoinGecko ID: ${token.id}`);
+      console.log(`[TOKEN-SELECTION] Token platforms:`, token.platforms);
+      console.log(`[TOKEN-SELECTION] Token isErc20 property:`, token.isErc20);
       
       // Check if token is supported for full scanning
       const isSupported = isTokenScanSupported(token);
+      console.log(`[TOKEN-SELECTION] Is token supported for full scan:`, isSupported);
       
       if (!isSupported) {
         // For unsupported tokens, show a toast and navigate to a limited info page
+        console.log(`[TOKEN-SELECTION] Token ${token.name} not supported - showing limited info`);
         toast.info("Limited Support", {
           description: `${token.name} is not fully supported. Showing basic information only.`
         });
@@ -107,49 +111,52 @@ export default function useTokenSelection() {
       }
       
       // For supported tokens, proceed with normal flow
-      if (!token.isErc20) {
-        toast.error("Unsupported Token", {
-          description: "This token is not ERC-20 compatible. We're adding support for more blockchains soon."
-        });
-        return;
-      }
+      console.log(`[TOKEN-SELECTION] Token ${token.name} is supported - proceeding with full scan`);
       
       // Get the first valid EVM address from any platform
       let tokenAddress = getFirstValidEvmAddress(token.platforms);
+      console.log(`[TOKEN-SELECTION] EVM address from platforms:`, tokenAddress);
       
       // If no valid address found, try well-known addresses for native tokens
       if (!tokenAddress) {
         tokenAddress = getWellKnownAddress(token.id);
+        console.log(`[TOKEN-SELECTION] Well-known address lookup:`, tokenAddress);
       }
       
       // If still no valid address, show error and don't proceed
       if (!tokenAddress) {
-        console.error(`No valid address found for ${token.name} (${token.id})`);
+        console.error(`[TOKEN-SELECTION] No valid address found for ${token.name} (${token.id})`);
         toast.error("Token Not Supported", {
           description: `Unable to find a valid contract address for ${token.name}. This token may not be supported yet.`
         });
         return;
       }
       
-      // Validate the address format
+      // Validate the address format before proceeding
       const isValidAddress = /^0x[a-fA-F0-9]{40}$/.test(tokenAddress);
       const isSpecialAddress = tokenAddress === '0x0000000000000000000000000000000000000000' || 
                                tokenAddress === '0x0000000000000000000000000000000000001010';
       
       if (!isValidAddress && !isSpecialAddress) {
-        console.error(`Invalid address format for ${token.name}: ${tokenAddress}`);
+        console.error(`[TOKEN-SELECTION] Invalid address format for ${token.name}: ${tokenAddress}`);
         toast.error("Invalid Token Address", {
           description: `The contract address for ${token.name} appears to be invalid. Please try a different token.`
         });
         return;
       }
       
+      console.log(`[TOKEN-SELECTION] Valid token address found: ${tokenAddress}`);
+      
       // Check if user has access to perform a scan
       const hasAccess = await checkScanAccess();
-      if (!hasAccess) return;
+      if (!hasAccess) {
+        console.log(`[TOKEN-SELECTION] User does not have scan access`);
+        return;
+      }
       
       // Save token to database (only if we have a valid address)
       try {
+        console.log(`[TOKEN-SELECTION] Saving token to database`);
         await saveTokenToDatabase(token);
       } catch (error) {
         console.error("Error saving token to database:", error);
@@ -159,6 +166,7 @@ export default function useTokenSelection() {
       // Save token to localStorage
       saveTokenToLocalStorage(token, tokenAddress);
       
+      console.log(`[TOKEN-SELECTION] Navigating to scan loading page`);
       // Navigate to scan loading page
       navigate(`/scan-loading?token=${encodeURIComponent(tokenAddress)}&id=${token.id}`);
       
