@@ -15,7 +15,7 @@ export default function Footer() {
           <Link to="/privacy" className="text-sm text-muted-foreground hover:underline underline-offset-4">
             Privacy
           </Link>
-          <Link to="/" className="text-sm text-muted-foreground hover:underline underline-offset-4">
+          <Link to="/terms" className="text-sm text-muted-foreground hover:underline underline-offset-4">
             Terms
           </Link>
         </nav>
