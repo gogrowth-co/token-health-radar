@@ -5,13 +5,6 @@ export default function Footer() {
   return (
     <footer className="border-t">
       <div className="container flex flex-col items-center py-10 space-y-6">
-        {/* Disclaimer */}
-        <div className="max-w-4xl text-center">
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Token Health Scan provides automated token assessments using public data from third-party sources. This information is for informational purposes only and does not constitute financial, legal, or investment advice. Cryptoassets carry significant risk, including loss of capital. Always do your own research.
-          </p>
-        </div>
-        
         {/* Footer Content */}
         <div className="flex flex-col md:flex-row items-center justify-between w-full">
           <p className="text-center text-sm text-muted-foreground md:text-left">
@@ -28,6 +21,13 @@ export default function Footer() {
               Terms
             </Link>
           </nav>
+        </div>
+        
+        {/* Disclaimer */}
+        <div className="max-w-4xl text-center">
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Token Health Scan provides automated token assessments using public data from third-party sources. This information is for informational purposes only and does not constitute financial, legal, or investment advice. Cryptoassets carry significant risk, including loss of capital. Always do your own research.
+          </p>
         </div>
       </div>
     </footer>
