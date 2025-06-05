@@ -130,32 +130,32 @@ export default function TokenSearchInput({
   return (
     <>
       <div className={textPosition === "below" ? "w-full max-w-lg" : ""}>
-        <form onSubmit={handleSubmit} className={`flex w-full max-w-lg gap-2 ${large ? 'flex-col md:flex-row' : ''}`}>
+        <form onSubmit={handleSubmit} className={`flex w-full max-w-lg gap-2 ${large ? 'flex-col sm:flex-row' : ''}`}>
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={tokenInput}
               onChange={(e) => setTokenInput(e.target.value)}
               placeholder={placeholder}
-              className={`pl-9 ${large ? 'h-12 text-lg' : ''}`}
+              className={`pl-9 ${large ? 'h-12 text-base md:text-lg' : 'h-11'} min-h-[44px]`}
             />
           </div>
           <Button 
             type="submit" 
-            className={large ? 'h-12 px-8' : ''} 
+            className={`${large ? 'h-12 px-6 md:px-8 text-base' : 'h-11 px-4'} min-h-[44px] min-w-[120px]`}
             disabled={isCheckingAccess}
           >
             {isCheckingAccess ? "Checking..." : "Scan Now"}
           </Button>
         </form>
         {textPosition === "below" && (
-          <p className="text-xs text-muted-foreground mt-1 text-center">
+          <p className="text-xs text-muted-foreground mt-2 text-center">
             EVM tokens only
           </p>
         )}
       </div>
       {textPosition === "right" && (
-        <p className="text-xs text-muted-foreground mt-1 text-center">
+        <p className="text-xs text-muted-foreground mt-2 text-center">
           EVM tokens only
         </p>
       )}

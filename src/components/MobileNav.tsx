@@ -1,0 +1,69 @@
+
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { AuthButton } from "./auth/AuthButton";
+
+export default function MobileNav() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleNav = () => setIsOpen(!isOpen);
+  const closeNav = () => setIsOpen(false);
+
+  return (
+    <>
+      {/* Mobile menu button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="md:hidden"
+        onClick={toggleNav}
+        aria-label="Toggle menu"
+      >
+        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+      </Button>
+
+      {/* Mobile menu overlay */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="fixed inset-0 bg-black/20" onClick={closeNav} />
+          <div className="fixed top-0 right-0 bottom-0 w-64 bg-background border-l shadow-lg">
+            <div className="flex items-center justify-between p-4 border-b">
+              <span className="font-semibold">Menu</span>
+              <Button variant="ghost" size="icon" onClick={closeNav}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <nav className="flex flex-col p-4 space-y-4">
+              <Link 
+                to="/" 
+                className="text-base font-medium py-2 px-2 rounded hover:bg-accent"
+                onClick={closeNav}
+              >
+                Home
+              </Link>
+              <Link 
+                to="/dashboard" 
+                className="text-base font-medium py-2 px-2 rounded hover:bg-accent"
+                onClick={closeNav}
+              >
+                Dashboard
+              </Link>
+              <Link 
+                to="/pricing" 
+                className="text-base font-medium py-2 px-2 rounded hover:bg-accent"
+                onClick={closeNav}
+              >
+                Pricing
+              </Link>
+              <div className="pt-4 border-t">
+                <AuthButton />
+              </div>
+            </nav>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
