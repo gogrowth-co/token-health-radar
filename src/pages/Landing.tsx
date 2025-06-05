@@ -1,14 +1,11 @@
-
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TokenSearchInput from "@/components/TokenSearchInput";
 import { Button } from "@/components/ui/button";
 import { Shield, Droplet, BarChart3, Globe, Code, ArrowRight, Users, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
-
 export default function Landing() {
-  return (
-    <div className="flex flex-col min-h-screen">
+  return <div className="flex flex-col min-h-screen">
       <Navbar />
       
       <main className="flex-1">
@@ -129,11 +126,7 @@ export default function Landing() {
             
             <div className="max-w-4xl mx-auto">
               <div className="relative rounded-lg overflow-hidden shadow-2xl border">
-                <img 
-                  src="/lovable-uploads/139caadb-8984-4e76-900b-60aa83141ba5.png" 
-                  alt="Token Health Scan Report Example" 
-                  className="w-full h-auto"
-                />
+                <img src="/lovable-uploads/139caadb-8984-4e76-900b-60aa83141ba5.png" alt="Token Health Scan Report Example" className="w-full h-auto" />
               </div>
               <p className="text-center text-sm text-muted-foreground mt-4">
                 Real report showing smart contract flags, liquidity, and token data
@@ -217,7 +210,7 @@ export default function Landing() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Free Plan */}
                 <div className="bg-card rounded-lg border p-6 text-center">
-                  <h3 className="text-xl font-bold mb-2">Free</h3>
+                  <h3 className="text-xl font-bold mb-2">Free Trial</h3>
                   <div className="text-3xl font-bold mb-4">$0</div>
                   <ul className="space-y-2 mb-6">
                     <li className="flex items-center gap-2">
@@ -295,6 +288,5 @@ export default function Landing() {
       </main>
       
       <Footer />
-    </div>
-  );
+    </div>;
 }
