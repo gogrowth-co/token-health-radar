@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -145,6 +144,9 @@ export default function TokenSearchInput({
           {isCheckingAccess ? "Checking..." : "Scan Now"}
         </Button>
       </form>
+      <p className="text-xs text-muted-foreground mt-1 text-center">
+        EVM tokens only
+      </p>
 
       <AlertDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
         <AlertDialogContent>
