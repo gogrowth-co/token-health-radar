@@ -10,12 +10,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { logError, safePerformanceTrack } from "@/utils/errorTracking";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [googleAuthAttempted, setGoogleAuthAttempted] = useState(false);
   const navigate = useNavigate();
   const { signIn, signUp, isAuthenticated, loading } = useAuth();
   
@@ -23,6 +25,11 @@ export default function Auth() {
   useEffect(() => {
     // Skip if not authenticated or still loading
     if (!isAuthenticated || loading) return;
+
+    safePerformanceTrack('auth_redirect_check', { 
+      hasAuth: isAuthenticated,
+      isLoading: loading 
+    });
 
     // Check if we have a saved token search to continue with
     const pendingTokenSearch = localStorage.getItem("pendingTokenSearch");
@@ -68,6 +75,7 @@ export default function Auth() {
       await signIn(email, password);
     } catch (error: any) {
       console.error("Sign in error:", error);
+      logError(error, { context: 'signin_form_submission', email });
     } finally {
       setIsSubmitting(false);
     }
@@ -95,6 +103,7 @@ export default function Auth() {
       });
     } catch (error: any) {
       console.error("Sign up error:", error);
+      logError(error, { context: 'signup_form_submission', email });
     } finally {
       setIsSubmitting(false);
     }
@@ -102,27 +111,73 @@ export default function Auth() {
 
   const handleGoogleAuth = async () => {
     setIsSubmitting(true);
+    setGoogleAuthAttempted(true);
+    
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      safePerformanceTrack('google_auth_attempt_start');
+      
+      // Add timeout for Google auth
+      const authPromise = supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/auth'
+          redirectTo: window.location.origin + '/auth',
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
       
+      // Set a timeout for the auth request
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Google auth timeout')), 10000)
+      );
+      
+      const { error } = await Promise.race([authPromise, timeoutPromise]) as any;
+      
       if (error) {
+        logError(error, { 
+          context: 'google_oauth_error',
+          userAgent: navigator.userAgent,
+          url: window.location.href 
+        });
+        
         toast({
           title: "Google authentication failed",
           description: error.message,
           variant: "destructive",
         });
+      } else {
+        safePerformanceTrack('google_auth_attempt_success');
       }
     } catch (error: any) {
       console.error("Google auth error:", error);
-      toast({
-        title: "Google authentication failed",
-        description: "An error occurred during Google authentication.",
-        variant: "destructive",
+      
+      // Handle specific error types
+      if (error.message === 'Google auth timeout') {
+        toast({
+          title: "Authentication timeout",
+          description: "Google authentication is taking too long. Please try again.",
+          variant: "destructive",
+        });
+      } else if (error.name === 'PopupBlockedError') {
+        toast({
+          title: "Popup blocked",
+          description: "Please allow popups for this site and try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Google authentication failed",
+          description: "An error occurred during Google authentication. Please try again.",
+          variant: "destructive",
+        });
+      }
+      
+      logError(error, { 
+        context: 'google_auth_failure',
+        errorType: error.name || 'unknown',
+        userAgent: navigator.userAgent 
       });
     } finally {
       setIsSubmitting(false);
@@ -209,6 +264,12 @@ export default function Auth() {
                     )}
                     Continue with Google
                   </Button>
+                  
+                  {googleAuthAttempted && (
+                    <div className="text-xs text-muted-foreground text-center">
+                      Having trouble? Make sure popups are enabled for this site.
+                    </div>
+                  )}
                   
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">

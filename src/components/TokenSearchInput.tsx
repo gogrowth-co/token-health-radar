@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { logError, safePerformanceTrack } from "@/utils/errorTracking";
 
 interface TokenSearchInputProps {
   large?: boolean;
@@ -42,6 +43,11 @@ export default function TokenSearchInput({
       return;
     }
     
+    safePerformanceTrack('token_search_attempt', { 
+      isAuthenticated, 
+      hasInput: !!tokenInput.trim() 
+    });
+    
     // If user is not authenticated, store the search query and redirect to auth page
     if (!isAuthenticated) {
       console.log("User not authenticated. Storing search query:", tokenInput);
@@ -57,10 +63,17 @@ export default function TokenSearchInput({
     // Check if user has access to perform a search (not incrementing scan counter here)
     setIsCheckingAccess(true);
     try {
+      safePerformanceTrack('scan_access_check_start');
+      
       const { data, error } = await supabase.functions.invoke('check-scan-access');
       
       if (error) {
         console.error("Error checking search access:", error);
+        logError(error, { 
+          context: 'scan_access_check_error',
+          tokenInput: tokenInput.substring(0, 10) // Only log first 10 chars for privacy
+        });
+        
         toast({
           title: "Error",
           description: "Could not check access. Please try again.",
@@ -68,6 +81,8 @@ export default function TokenSearchInput({
         });
         return;
       }
+      
+      safePerformanceTrack('scan_access_check_success', { canScan: data?.canScan });
       
       // Initial search is always allowed, token selection is what counts against the scan limit
       if (!data.canScan) {
@@ -79,14 +94,23 @@ export default function TokenSearchInput({
         return;
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error checking search access:", error);
+      logError(error, { 
+        context: 'scan_access_check_exception',
+        errorMessage: error.message || 'unknown error'
+      });
     } finally {
       setIsCheckingAccess(false);
     }
     
     // CRITICAL: Use consistent 'token' parameter name for the search flow
     console.log("Navigating with token parameter:", tokenInput);
+    safePerformanceTrack('token_search_navigation', { 
+      isAddress, 
+      destination: isAddress ? 'confirm' : 'confirm' 
+    });
+    
     if (isAddress) {
       // If it's an address, still go to confirm page to verify token
       navigate(`/confirm?token=${encodeURIComponent(tokenInput)}`);

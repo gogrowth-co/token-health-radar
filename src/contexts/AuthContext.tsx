@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/components/ui/use-toast";
+import { logError, safePerformanceTrack } from '@/utils/errorTracking';
 
 type AuthContextType = {
   session: Session | null;
@@ -30,50 +31,89 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initial session check
+    let mounted = true;
+    
+    // Initial session check with enhanced error handling
     const getSession = async () => {
+      if (!mounted) return;
+      
       setLoading(true);
       
       try {
+        safePerformanceTrack('auth_session_check_start');
+        
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Error getting auth session:', error);
+          logError(error, { context: 'initial_session_check' });
         }
         
-        setSession(data.session);
-        setUser(data.session?.user || null);
-      } catch (error) {
+        if (mounted) {
+          setSession(data.session);
+          setUser(data.session?.user || null);
+          safePerformanceTrack('auth_session_check_complete', { 
+            hasSession: !!data.session 
+          });
+        }
+      } catch (error: any) {
         console.error('Unexpected error during auth check:', error);
+        logError(error, { context: 'auth_initialization_error' });
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     getSession();
 
-    // Subscribe to auth changes
+    // Subscribe to auth changes with enhanced error handling
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        setSession(newSession);
-        setUser(newSession?.user || null);
-        setLoading(false);
+        try {
+          console.log('Auth state change:', event, !!newSession);
+          
+          if (mounted) {
+            setSession(newSession);
+            setUser(newSession?.user || null);
+            setLoading(false);
+            
+            safePerformanceTrack('auth_state_change', { 
+              event, 
+              hasSession: !!newSession 
+            });
+          }
+        } catch (error: any) {
+          console.error('Error in auth state change handler:', error);
+          logError(error, { 
+            context: 'auth_state_change', 
+            event 
+          });
+        }
       }
     );
 
     return () => {
+      mounted = false;
       authListener.subscription.unsubscribe();
     };
   }, []);
 
   const signUp = async (email: string, password: string) => {
     try {
+      safePerformanceTrack('auth_signup_start');
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`
+        }
       });
 
       if (error) {
+        logError(error, { context: 'signup_attempt', email });
         toast({
           title: "Registration failed",
           description: error.message,
@@ -82,6 +122,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw error;
       }
 
+      safePerformanceTrack('auth_signup_success');
       toast({
         title: "Registration successful",
         description: "Please check your email for the confirmation link.",
@@ -89,18 +130,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     } catch (error: any) {
       console.error('Error during sign up:', error);
+      logError(error, { context: 'signup_error', email });
       throw error;
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
+      safePerformanceTrack('auth_signin_start');
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        logError(error, { context: 'signin_attempt', email });
         toast({
           title: "Login failed",
           description: error.message,
@@ -109,6 +154,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw error;
       }
 
+      safePerformanceTrack('auth_signin_success');
       toast({
         title: "Login successful",
         description: "Welcome back!",
@@ -116,15 +162,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     } catch (error: any) {
       console.error('Error during sign in:', error);
+      logError(error, { context: 'signin_error', email });
       throw error;
     }
   };
 
   const signOut = async () => {
     try {
+      safePerformanceTrack('auth_signout_start');
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
+        logError(error, { context: 'signout_attempt' });
         toast({
           title: "Sign out failed",
           description: error.message,
@@ -133,6 +183,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw error;
       }
 
+      safePerformanceTrack('auth_signout_success');
       toast({
         title: "Signed out",
         description: "You have been successfully signed out.",
@@ -140,6 +191,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     } catch (error: any) {
       console.error('Error during sign out:', error);
+      logError(error, { context: 'signout_error' });
       throw error;
     }
   };
