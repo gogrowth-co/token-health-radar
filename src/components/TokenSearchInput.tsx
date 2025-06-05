@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,11 +13,13 @@ import { logError, safePerformanceTrack } from "@/utils/errorTracking";
 interface TokenSearchInputProps {
   large?: boolean;
   placeholder?: string;
+  textPosition?: "right" | "below";
 }
 
 export default function TokenSearchInput({ 
   large = false, 
-  placeholder = "Enter token name or contract address"
+  placeholder = "Enter token name or contract address",
+  textPosition = "right"
 }: TokenSearchInputProps) {
   const [tokenInput, setTokenInput] = useState("");
   const [isCheckingAccess, setIsCheckingAccess] = useState(false);
@@ -126,27 +129,36 @@ export default function TokenSearchInput({
 
   return (
     <>
-      <form onSubmit={handleSubmit} className={`flex w-full max-w-lg gap-2 ${large ? 'flex-col md:flex-row' : ''}`}>
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={tokenInput}
-            onChange={(e) => setTokenInput(e.target.value)}
-            placeholder={placeholder}
-            className={`pl-9 ${large ? 'h-12 text-lg' : ''}`}
-          />
-        </div>
-        <Button 
-          type="submit" 
-          className={large ? 'h-12 px-8' : ''} 
-          disabled={isCheckingAccess}
-        >
-          {isCheckingAccess ? "Checking..." : "Scan Now"}
-        </Button>
-      </form>
-      <p className="text-xs text-muted-foreground mt-1 text-center">
-        EVM tokens only
-      </p>
+      <div className={textPosition === "below" ? "w-full max-w-lg" : ""}>
+        <form onSubmit={handleSubmit} className={`flex w-full max-w-lg gap-2 ${large ? 'flex-col md:flex-row' : ''}`}>
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={tokenInput}
+              onChange={(e) => setTokenInput(e.target.value)}
+              placeholder={placeholder}
+              className={`pl-9 ${large ? 'h-12 text-lg' : ''}`}
+            />
+          </div>
+          <Button 
+            type="submit" 
+            className={large ? 'h-12 px-8' : ''} 
+            disabled={isCheckingAccess}
+          >
+            {isCheckingAccess ? "Checking..." : "Scan Now"}
+          </Button>
+        </form>
+        {textPosition === "below" && (
+          <p className="text-xs text-muted-foreground mt-1 text-center">
+            EVM tokens only
+          </p>
+        )}
+      </div>
+      {textPosition === "right" && (
+        <p className="text-xs text-muted-foreground mt-1 text-center">
+          EVM tokens only
+        </p>
+      )}
 
       <AlertDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
         <AlertDialogContent>

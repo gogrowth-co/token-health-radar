@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Shield, Droplet, BarChart3, Globe, Code, ArrowRight, Users, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 export default function Landing() {
-  return <div className="flex flex-col min-h-screen">
+  return (
+    <div className="flex flex-col min-h-screen">
       <Navbar />
       
       <main className="flex-1">
@@ -112,7 +113,7 @@ export default function Landing() {
             </div>
             
             <div className="flex justify-center mt-10">
-              <TokenSearchInput placeholder="Try it now - enter any token name or address" />
+              <TokenSearchInput placeholder="Try it now - enter any token name or address" textPosition="below" />
             </div>
           </div>
         </section>
@@ -288,5 +289,6 @@ export default function Landing() {
       </main>
       
       <Footer />
-    </div>;
+    </div>
+  );
 }
