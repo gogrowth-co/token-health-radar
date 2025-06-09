@@ -386,7 +386,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      hubspot_contact_data: {
+        Row: {
+          email: string | null
+          last_scan_date: string | null
+          name: string | null
+          plan: string | null
+          pro_scan_limit: number | null
+          pro_subscriber: boolean | null
+          scan_credits_remaining: number | null
+          scans_used: number | null
+          signup_date: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       upsert_subscriber_by_email: {
