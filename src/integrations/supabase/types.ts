@@ -399,10 +399,38 @@ export type Database = {
           signup_date: string | null
           user_id: string | null
         }
+        Insert: {
+          email?: never
+          last_scan_date?: never
+          name?: never
+          plan?: string | null
+          pro_scan_limit?: number | null
+          pro_subscriber?: never
+          scan_credits_remaining?: never
+          scans_used?: number | null
+          signup_date?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          email?: never
+          last_scan_date?: never
+          name?: never
+          plan?: string | null
+          pro_scan_limit?: number | null
+          pro_subscriber?: never
+          scan_credits_remaining?: never
+          scans_used?: number | null
+          signup_date?: string | null
+          user_id?: string | null
+        }
         Relationships: []
       }
     }
     Functions: {
+      get_user_email_for_hubspot: {
+        Args: { user_id: string }
+        Returns: string
+      }
       upsert_subscriber_by_email: {
         Args: {
           user_email: string
