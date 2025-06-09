@@ -45,3 +45,6 @@ verify_jwt = true
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.hubspot-sync]
+verify_jwt = true

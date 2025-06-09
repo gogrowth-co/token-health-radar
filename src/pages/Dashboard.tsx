@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowRight, Loader2, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { triggerHubSpotSync } from "@/utils/hubspotSync";
+import { useToast } from "@/hooks/use-toast";
 
 type ScanHistory = {
   id: string;
@@ -24,6 +26,8 @@ export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
   const [scans, setScans] = useState<ScanHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncingHubSpot, setSyncingHubSpot] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchScanHistory = async () => {
@@ -75,6 +79,28 @@ export default function Dashboard() {
     fetchScanHistory();
   }, [user]);
 
+  const handleHubSpotSync = async () => {
+    if (!user) return;
+    
+    setSyncingHubSpot(true);
+    try {
+      await triggerHubSpotSync(user.id);
+      toast({
+        title: "HubSpot Sync Successful",
+        description: "Your contact data has been synced to HubSpot.",
+      });
+    } catch (error) {
+      console.error("HubSpot sync failed:", error);
+      toast({
+        title: "HubSpot Sync Failed",
+        description: "Failed to sync contact data to HubSpot. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncingHubSpot(false);
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -110,7 +136,22 @@ export default function Dashboard() {
       
       <main className="flex-1 container px-4 py-8">
         <div className="max-w-5xl mx-auto space-y-8">
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <Button 
+              onClick={handleHubSpotSync}
+              disabled={syncingHubSpot}
+              variant="outline"
+              size="sm"
+            >
+              {syncingHubSpot ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              Sync to HubSpot
+            </Button>
+          </div>
           
           <div className="grid gap-8 md:grid-cols-3">
             <div className="md:col-span-1">
