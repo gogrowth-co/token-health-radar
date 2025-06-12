@@ -5,9 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type SubscriberData = {
   plan: string;
@@ -21,32 +22,62 @@ export function UserProfile() {
   const [subscriberData, setSubscriberData] = useState<SubscriberData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSubscriberData = async () => {
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       try {
-        const { data, error } = await supabase
-          .from("subscribers")
-          .select("plan, scans_used, pro_scan_limit, source")
-          .eq("id", user.id)
-          .single();
+        console.log('Fetching subscriber data for user:', user.id);
+        
+        // Use the check-scan-access function to get consistent data
+        const { data, error } = await supabase.functions.invoke('check-scan-access');
 
         if (error) {
-          console.error("Error fetching subscriber data:", error);
-          toast({
-            title: "Error",
-            description: "Could not fetch your subscription data",
-            variant: "destructive",
-          });
-          return;
-        }
+          console.error("Error checking scan access:", error);
+          setError("Could not load subscription data");
+          
+          // Fallback to direct database query
+          const { data: directData, error: directError } = await supabase
+            .from("subscribers")
+            .select("plan, scans_used, pro_scan_limit, source")
+            .eq("id", user.id)
+            .single();
 
-        setSubscriberData(data);
+          if (directError) {
+            console.error("Direct query also failed:", directError);
+            // Set defaults if everything fails
+            setSubscriberData({
+              plan: "free",
+              scans_used: 0,
+              pro_scan_limit: 3
+            });
+          } else {
+            setSubscriberData(directData);
+          }
+        } else {
+          console.log('Access data received:', data);
+          setSubscriberData({
+            plan: data.plan || "free",
+            scans_used: data.scansUsed || 0,
+            pro_scan_limit: data.scanLimit || 3
+          });
+          setError(null);
+        }
       } catch (error) {
         console.error("Error in subscriber data fetch:", error);
+        setError("Could not load subscription data");
+        // Set defaults
+        setSubscriberData({
+          plan: "free",
+          scans_used: 0,
+          pro_scan_limit: 3
+        });
       } finally {
         setLoading(false);
       }
@@ -116,6 +147,13 @@ export function UserProfile() {
               <p className="text-sm font-medium">Email</p>
               <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
+
+            {error && (
+              <Alert variant="destructive" className="my-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
             {subscriberData && (
               <>

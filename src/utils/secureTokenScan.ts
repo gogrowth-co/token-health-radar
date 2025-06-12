@@ -53,7 +53,7 @@ export const scanTokenSecurely = async ({ tokenAddress, proScan = false }: ScanT
 };
 
 /**
- * Check if user has available scan credits
+ * Check if user has available scan credits using the improved function
  */
 export const checkScanAccess = async () => {
   try {
@@ -66,19 +66,39 @@ export const checkScanAccess = async () => {
     
     if (error) {
       console.error('❌ Error checking scan access:', error);
-      throw new Error(createSecureErrorMessage(error, 'Unable to check scan access'));
+      // Return safe defaults instead of throwing
+      return {
+        hasPro: false,
+        proScanAvailable: false,
+        plan: 'free',
+        scansUsed: 0,
+        scanLimit: 3,
+        canScan: true,
+        canSelectToken: true
+      };
     }
 
     return {
       hasPro: data?.hasPro || false,
       proScanAvailable: data?.proScanAvailable || false,
-      plan: data?.plan,
+      plan: data?.plan || 'free',
       scansUsed: data?.scansUsed || 0,
-      scanLimit: data?.scanLimit || 0
+      scanLimit: data?.scanLimit || 3,
+      canScan: data?.canScan !== false, // Default to true
+      canSelectToken: data?.canSelectToken !== false // Default to true
     };
   } catch (error) {
     console.error('💥 Failed to check scan access:', error);
-    throw error;
+    // Return safe defaults instead of throwing
+    return {
+      hasPro: false,
+      proScanAvailable: false,
+      plan: 'free',
+      scansUsed: 0,
+      scanLimit: 3,
+      canScan: true,
+      canSelectToken: true
+    };
   }
 };
 

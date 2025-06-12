@@ -24,6 +24,7 @@ export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
   const [scans, setScans] = useState<ScanHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchScanHistory = async () => {
@@ -33,40 +34,53 @@ export default function Dashboard() {
       }
 
       try {
-        const { data: scanData, error } = await supabase
+        console.log('Fetching scan history for user:', user.id);
+        
+        // Fetch token scans directly - RLS will filter by user_id automatically
+        const { data: scanData, error: scanError } = await supabase
           .from("token_scans")
-          .select(`
-            id, 
-            token_address,
-            score_total,
-            scanned_at,
-            token_data_cache (
-              name,
-              symbol
-            )
-          `)
-          .eq("user_id", user.id)
+          .select("id, token_address, score_total, scanned_at")
           .order("scanned_at", { ascending: false })
           .limit(10);
 
-        if (error) {
-          console.error("Error fetching scan history:", error);
+        if (scanError) {
+          console.error("Error fetching scan history:", scanError);
+          setError("Could not load scan history");
           return;
         }
 
-        // Transform the data to include token name and symbol
-        const formattedScans = scanData.map(scan => ({
-          id: scan.id,
-          token_address: scan.token_address,
-          score_total: scan.score_total,
-          scanned_at: scan.scanned_at,
-          token_name: scan.token_data_cache?.name || "Unknown Token",
-          token_symbol: scan.token_data_cache?.symbol || "???"
-        }));
+        console.log('Scan data fetched:', scanData);
 
-        setScans(formattedScans);
+        // For each scan, try to get token info from cache
+        const scansWithTokenInfo = await Promise.all(
+          (scanData || []).map(async (scan) => {
+            try {
+              const { data: tokenData } = await supabase
+                .from("token_data_cache")
+                .select("name, symbol")
+                .eq("token_address", scan.token_address)
+                .single();
+
+              return {
+                ...scan,
+                token_name: tokenData?.name || "Unknown Token",
+                token_symbol: tokenData?.symbol || "???"
+              };
+            } catch (error) {
+              console.error(`Error fetching token data for ${scan.token_address}:`, error);
+              return {
+                ...scan,
+                token_name: "Unknown Token",
+                token_symbol: "???"
+              };
+            }
+          })
+        );
+
+        setScans(scansWithTokenInfo);
       } catch (error) {
         console.error("Error in scan history fetch:", error);
+        setError("Failed to load scan history");
       } finally {
         setLoading(false);
       }
@@ -129,6 +143,16 @@ export default function Dashboard() {
                   {loading ? (
                     <div className="flex justify-center py-8">
                       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : error ? (
+                    <div className="text-center py-8">
+                      <Alert variant="destructive" className="mb-4">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                      <Button onClick={() => window.location.reload()} variant="outline">
+                        Try Again
+                      </Button>
                     </div>
                   ) : scans.length > 0 ? (
                     <div className="space-y-4">
