@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Trigger HubSpot sync for a specific user or all users
+ * This is now mainly used for manual syncing since automatic sync happens via database triggers
  * @param userId - Optional user ID to sync specific user, if not provided syncs all users
  */
 export const triggerHubSpotSync = async (userId?: string) => {
@@ -28,6 +29,7 @@ export const triggerHubSpotSync = async (userId?: string) => {
 
 /**
  * Sync current user to HubSpot
+ * This is now mainly used for manual syncing since automatic sync happens via database triggers
  */
 export const syncCurrentUserToHubSpot = async () => {
   try {

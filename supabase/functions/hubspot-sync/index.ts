@@ -40,6 +40,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const hubspotApiKey = Deno.env.get('HUBSPOT_API_KEY');
     if (!hubspotApiKey) {
+      console.error('HUBSPOT_API_KEY is not configured');
       throw new Error('HUBSPOT_API_KEY is not configured');
     }
 
@@ -49,7 +50,8 @@ const handler = async (req: Request): Promise<Response> => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get the request body
-    const { user_id } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { user_id } = body;
     
     if (!user_id) {
       console.log('No user_id provided, syncing all contacts');
@@ -72,7 +74,11 @@ const handler = async (req: Request): Promise<Response> => {
     if (!contacts || contacts.length === 0) {
       console.log('No contacts found to sync');
       return new Response(
-        JSON.stringify({ message: 'No contacts found to sync' }),
+        JSON.stringify({ 
+          message: 'No contacts found to sync',
+          success: true,
+          synced_count: 0
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -81,8 +87,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Process each contact
     const results = [];
+    let successCount = 0;
+    let errorCount = 0;
+
     for (const contact of contacts as HubSpotContactData[]) {
       try {
+        if (!contact.email) {
+          console.log(`Skipping contact ${contact.user_id} - no email`);
+          continue;
+        }
+
         // First, try to find existing contact by email
         const searchResponse = await fetch(
           `https://api.hubapi.com/crm/v3/objects/contacts/search`,
@@ -104,6 +118,18 @@ const handler = async (req: Request): Promise<Response> => {
             })
           }
         );
+
+        if (!searchResponse.ok) {
+          const errorText = await searchResponse.text();
+          console.error(`HubSpot search error for ${contact.email}:`, errorText);
+          results.push({
+            email: contact.email,
+            status: 'error',
+            error: `Search failed: ${errorText}`
+          });
+          errorCount++;
+          continue;
+        }
 
         const searchData = await searchResponse.json();
         
@@ -159,11 +185,59 @@ const handler = async (req: Request): Promise<Response> => {
         if (!hubspotResponse.ok) {
           const errorText = await hubspotResponse.text();
           console.error(`HubSpot API error for ${contact.email}:`, errorText);
-          results.push({
-            email: contact.email,
-            status: 'error',
-            error: errorText
-          });
+          
+          // Check if it's a property error and handle gracefully
+          if (errorText.includes('Property') && errorText.includes('does not exist')) {
+            console.log(`Retrying without custom properties for ${contact.email}`);
+            
+            // Retry with only standard properties
+            const standardProperties = {
+              email: contact.email,
+              firstname: contact.name
+            };
+
+            const retryResponse = await fetch(
+              searchData.results && searchData.results.length > 0 
+                ? `https://api.hubapi.com/crm/v3/objects/contacts/${searchData.results[0].id}`
+                : `https://api.hubapi.com/crm/v3/objects/contacts`,
+              {
+                method: searchData.results && searchData.results.length > 0 ? 'PATCH' : 'POST',
+                headers: {
+                  'Authorization': `Bearer ${hubspotApiKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ properties: standardProperties })
+              }
+            );
+
+            if (retryResponse.ok) {
+              const responseData = await retryResponse.json();
+              console.log(`Successfully synced ${contact.email} with standard properties only`);
+              results.push({
+                email: contact.email,
+                status: 'partial_success',
+                hubspot_id: responseData.id,
+                note: 'Synced with standard properties only - custom properties may need to be created in HubSpot'
+              });
+              successCount++;
+            } else {
+              const retryErrorText = await retryResponse.text();
+              console.error(`Retry failed for ${contact.email}:`, retryErrorText);
+              results.push({
+                email: contact.email,
+                status: 'error',
+                error: retryErrorText
+              });
+              errorCount++;
+            }
+          } else {
+            results.push({
+              email: contact.email,
+              status: 'error',
+              error: errorText
+            });
+            errorCount++;
+          }
         } else {
           const responseData = await hubspotResponse.json();
           console.log(`Successfully synced ${contact.email} to HubSpot`);
@@ -172,6 +246,7 @@ const handler = async (req: Request): Promise<Response> => {
             status: 'success',
             hubspot_id: responseData.id
           });
+          successCount++;
         }
       } catch (contactError) {
         console.error(`Error processing contact ${contact.email}:`, contactError);
@@ -180,12 +255,16 @@ const handler = async (req: Request): Promise<Response> => {
           status: 'error',
           error: contactError.message
         });
+        errorCount++;
       }
     }
 
     return new Response(
       JSON.stringify({
         message: `Processed ${contacts.length} contacts`,
+        success: true,
+        synced_count: successCount,
+        error_count: errorCount,
         results: results
       }),
       {
@@ -197,7 +276,10 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error) {
     console.error('Error in hubspot-sync function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        success: false
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
