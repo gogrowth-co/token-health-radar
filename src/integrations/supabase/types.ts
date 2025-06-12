@@ -435,6 +435,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      sync_all_users_to_hubspot_debug: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       upsert_subscriber_by_email: {
         Args: {
           user_email: string
