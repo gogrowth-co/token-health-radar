@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowRight, Loader2, Bug } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
 type ScanHistory = {
   id: string;
@@ -24,6 +25,8 @@ export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
   const [scans, setScans] = useState<ScanHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [debugSyncing, setDebugSyncing] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchScanHistory = async () => {
@@ -75,6 +78,44 @@ export default function Dashboard() {
     fetchScanHistory();
   }, [user]);
 
+  const handleDebugHubSpotSync = async () => {
+    if (!user) return;
+    
+    setDebugSyncing(true);
+    console.log('Starting debug HubSpot sync for user:', user.id);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('hubspot-sync', {
+        body: { user_id: user.id }
+      });
+
+      console.log('HubSpot sync response:', data);
+      console.log('HubSpot sync error:', error);
+
+      if (error) {
+        toast({
+          title: "Debug Sync Error",
+          description: `Error: ${error.message}`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Debug Sync Complete",
+          description: `Status: ${data?.success ? 'Success' : 'Failed'}. Synced: ${data?.synced_count || 0}, Errors: ${data?.error_count || 0}`,
+        });
+      }
+    } catch (err) {
+      console.error('Debug sync exception:', err);
+      toast({
+        title: "Debug Sync Failed",
+        description: `Exception: ${err.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setDebugSyncing(false);
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -112,6 +153,20 @@ export default function Dashboard() {
         <div className="max-w-5xl mx-auto space-y-8">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            {/* Debug button - temporary for testing */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleDebugHubSpotSync}
+              disabled={debugSyncing}
+            >
+              {debugSyncing ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Bug className="h-4 w-4 mr-2" />
+              )}
+              Debug HubSpot Sync
+            </Button>
           </div>
           
           <div className="grid gap-8 md:grid-cols-3">

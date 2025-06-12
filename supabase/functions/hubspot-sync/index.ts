@@ -32,29 +32,58 @@ interface HubSpotContact {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log('HubSpot sync function called at:', new Date().toISOString());
+  console.log('Request method:', req.method);
+  console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const hubspotApiKey = Deno.env.get('HUBSPOT_API_KEY');
+    console.log('HubSpot API key exists:', !!hubspotApiKey);
+    
     if (!hubspotApiKey) {
       console.error('HUBSPOT_API_KEY is not configured');
-      throw new Error('HUBSPOT_API_KEY is not configured');
+      return new Response(
+        JSON.stringify({ 
+          error: 'HUBSPOT_API_KEY is not configured',
+          success: false
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    console.log('Supabase URL exists:', !!supabaseUrl);
+    console.log('Service key exists:', !!supabaseServiceKey);
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get the request body
-    const body = await req.json().catch(() => ({}));
+    let body;
+    try {
+      body = await req.json();
+      console.log('Request body parsed:', body);
+    } catch (e) {
+      console.log('No JSON body or parse error:', e.message);
+      body = {};
+    }
+    
     const { user_id } = body;
     
     if (!user_id) {
       console.log('No user_id provided, syncing all contacts');
+    } else {
+      console.log('Syncing specific user:', user_id);
     }
 
     // Fetch contact data from our view
@@ -64,12 +93,24 @@ const handler = async (req: Request): Promise<Response> => {
       query = query.eq('user_id', user_id);
     }
 
+    console.log('Executing Supabase query...');
     const { data: contacts, error } = await query;
 
     if (error) {
       console.error('Error fetching contact data:', error);
-      throw error;
+      return new Response(
+        JSON.stringify({ 
+          error: `Database error: ${error.message}`,
+          success: false
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
+
+    console.log(`Found ${contacts?.length || 0} contacts to sync`);
 
     if (!contacts || contacts.length === 0) {
       console.log('No contacts found to sync');
@@ -83,7 +124,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`Syncing ${contacts.length} contacts to HubSpot`);
+    console.log(`Processing ${contacts.length} contacts for HubSpot sync`);
 
     // Process each contact
     const results = [];
@@ -91,6 +132,8 @@ const handler = async (req: Request): Promise<Response> => {
     let errorCount = 0;
 
     for (const contact of contacts as HubSpotContactData[]) {
+      console.log(`Processing contact: ${contact.email}`);
+      
       try {
         if (!contact.email) {
           console.log(`Skipping contact ${contact.user_id} - no email`);
@@ -98,6 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         // First, try to find existing contact by email
+        console.log(`Searching for existing contact: ${contact.email}`);
         const searchResponse = await fetch(
           `https://api.hubapi.com/crm/v3/objects/contacts/search`,
           {
@@ -114,38 +158,41 @@ const handler = async (req: Request): Promise<Response> => {
                   value: contact.email
                 }]
               }],
-              properties: ['email', 'firstname']
+              properties: ['email', 'firstname', 'scan_credits_remaining', 'pro_subscriber']
             })
           }
         );
 
         if (!searchResponse.ok) {
           const errorText = await searchResponse.text();
-          console.error(`HubSpot search error for ${contact.email}:`, errorText);
+          console.error(`HubSpot search error for ${contact.email}:`, searchResponse.status, errorText);
           results.push({
             email: contact.email,
             status: 'error',
-            error: `Search failed: ${errorText}`
+            error: `Search failed: ${searchResponse.status} - ${errorText}`
           });
           errorCount++;
           continue;
         }
 
         const searchData = await searchResponse.json();
+        console.log(`Search result for ${contact.email}:`, searchData.results?.length || 0, 'contacts found');
         
         // Prepare contact properties
         const contactProperties: HubSpotContact['properties'] = {
           email: contact.email,
-          firstname: contact.name,
-          scan_credits_remaining: contact.scan_credits_remaining,
-          signup_date: new Date(contact.signup_date).toISOString().split('T')[0], // Format as YYYY-MM-DD
-          pro_subscriber: contact.pro_subscriber
+          firstname: contact.name || 'Unknown',
+          scan_credits_remaining: contact.scan_credits_remaining || 0,
+          signup_date: new Date(contact.signup_date).toISOString().split('T')[0],
+          pro_subscriber: contact.pro_subscriber || false
         };
 
         // Add last scan date if available
         if (contact.last_scan_date) {
           contactProperties.last_scan_date = new Date(contact.last_scan_date).toISOString().split('T')[0];
         }
+
+        console.log(`Contact properties for ${contact.email}:`, contactProperties);
 
         let hubspotResponse;
         
@@ -184,7 +231,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         if (!hubspotResponse.ok) {
           const errorText = await hubspotResponse.text();
-          console.error(`HubSpot API error for ${contact.email}:`, errorText);
+          console.error(`HubSpot API error for ${contact.email}:`, hubspotResponse.status, errorText);
           
           // Check if it's a property error and handle gracefully
           if (errorText.includes('Property') && errorText.includes('does not exist')) {
@@ -193,7 +240,7 @@ const handler = async (req: Request): Promise<Response> => {
             // Retry with only standard properties
             const standardProperties = {
               email: contact.email,
-              firstname: contact.name
+              firstname: contact.name || 'Unknown'
             };
 
             const retryResponse = await fetch(
@@ -222,11 +269,11 @@ const handler = async (req: Request): Promise<Response> => {
               successCount++;
             } else {
               const retryErrorText = await retryResponse.text();
-              console.error(`Retry failed for ${contact.email}:`, retryErrorText);
+              console.error(`Retry failed for ${contact.email}:`, retryResponse.status, retryErrorText);
               results.push({
                 email: contact.email,
                 status: 'error',
-                error: retryErrorText
+                error: `${retryResponse.status} - ${retryErrorText}`
               });
               errorCount++;
             }
@@ -234,13 +281,13 @@ const handler = async (req: Request): Promise<Response> => {
             results.push({
               email: contact.email,
               status: 'error',
-              error: errorText
+              error: `${hubspotResponse.status} - ${errorText}`
             });
             errorCount++;
           }
         } else {
           const responseData = await hubspotResponse.json();
-          console.log(`Successfully synced ${contact.email} to HubSpot`);
+          console.log(`Successfully synced ${contact.email} to HubSpot (ID: ${responseData.id})`);
           results.push({
             email: contact.email,
             status: 'success',
@@ -259,13 +306,20 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    console.log(`Sync completed. Success: ${successCount}, Errors: ${errorCount}`);
+
     return new Response(
       JSON.stringify({
         message: `Processed ${contacts.length} contacts`,
         success: true,
         synced_count: successCount,
         error_count: errorCount,
-        results: results
+        results: results,
+        debug_info: {
+          function_called_at: new Date().toISOString(),
+          total_contacts_found: contacts.length,
+          hubspot_api_key_configured: !!hubspotApiKey
+        }
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -278,7 +332,11 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        success: false
+        success: false,
+        debug_info: {
+          function_called_at: new Date().toISOString(),
+          error_stack: error.stack
+        }
       }),
       {
         status: 500,
