@@ -1,9 +1,14 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { validateScanRequest, createSecureErrorMessage } from "./validation";
+import { 
+  validateScanRequestSecure, 
+  createSecureErrorMessage, 
+  scanRateLimiter,
+  sanitizeForDisplay 
+} from "./secureValidation";
 
 /**
- * Secure token scanning utilities with proper validation and error handling
+ * Secure token scanning utilities with enhanced validation and error handling
  */
 
 interface ScanTokenParams {
@@ -12,12 +17,31 @@ interface ScanTokenParams {
 }
 
 /**
+ * Get user identifier for rate limiting
+ */
+const getUserIdentifier = async (): Promise<string> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || 'anonymous';
+};
+
+/**
  * Securely scan a token with proper authentication and validation
  */
 export const scanTokenSecurely = async ({ tokenAddress, proScan = false }: ScanTokenParams) => {
   try {
-    // Validate input
-    const validation = validateScanRequest({ token_address: tokenAddress, pro_scan: proScan });
+    // Rate limiting check
+    const userIdentifier = await getUserIdentifier();
+    if (!scanRateLimiter.isAllowed(userIdentifier)) {
+      const remaining = scanRateLimiter.getRemainingRequests(userIdentifier);
+      throw new Error(`Rate limit exceeded. Try again in a few minutes. Remaining requests: ${remaining}`);
+    }
+
+    // Enhanced input validation
+    const validation = validateScanRequestSecure({ 
+      token_address: tokenAddress, 
+      pro_scan: proScan 
+    });
+    
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
@@ -28,13 +52,16 @@ export const scanTokenSecurely = async ({ tokenAddress, proScan = false }: ScanT
       throw new Error('Authentication required for token scanning');
     }
 
-    console.log('🔍 Starting secure token scan for:', tokenAddress);
+    console.log('🔍 Starting secure token scan for:', sanitizeForDisplay(tokenAddress));
+
+    // Use sanitized input
+    const sanitizedRequest = validation.sanitizedInput!;
 
     // Call the secure edge function
     const { data, error } = await supabase.functions.invoke('run-token-scan', {
       body: {
-        token_address: tokenAddress,
-        pro_scan: proScan,
+        token_address: sanitizedRequest.token_address,
+        pro_scan: sanitizedRequest.pro_scan,
         user_id: user.id
       }
     });
@@ -71,7 +98,7 @@ export const checkScanAccess = async () => {
       };
     }
 
-    console.log('🔍 Checking scan access for user:', user.id);
+    console.log('🔍 Checking scan access for user:', sanitizeForDisplay(user.id));
 
     const { data, error } = await supabase.functions.invoke('check-scan-access');
     
@@ -89,7 +116,7 @@ export const checkScanAccess = async () => {
       };
     }
 
-    console.log('✅ Scan access data received:', data);
+    console.log('✅ Scan access data received');
 
     return {
       hasPro: data?.hasPro || false,
@@ -125,16 +152,29 @@ export const recordTokenScan = async (tokenAddress: string, scoreTotal: number, 
       throw new Error('Authentication required to record scan');
     }
 
-    console.log('📝 Recording token scan for user:', user.id);
+    // Validate input
+    const validation = validateScanRequestSecure({
+      token_address: tokenAddress,
+      pro_scan: proScan,
+      user_id: user.id
+    });
+
+    if (!validation.isValid) {
+      throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+    }
+
+    console.log('📝 Recording token scan for user:', sanitizeForDisplay(user.id));
+
+    const sanitizedRequest = validation.sanitizedInput!;
 
     // Insert with RLS protection - user_id is automatically validated by RLS policies
     const { data, error } = await supabase
       .from('token_scans')
       .insert({
         user_id: user.id,
-        token_address: tokenAddress,
-        score_total: scoreTotal,
-        pro_scan: proScan
+        token_address: sanitizedRequest.token_address,
+        score_total: Math.max(0, Math.min(100, scoreTotal)), // Clamp score between 0-100
+        pro_scan: sanitizedRequest.pro_scan
       })
       .select()
       .single();
@@ -151,3 +191,4 @@ export const recordTokenScan = async (tokenAddress: string, scoreTotal: number, 
     throw error;
   }
 };
+
