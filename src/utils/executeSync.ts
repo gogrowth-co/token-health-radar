@@ -3,7 +3,7 @@ import { triggerHubSpotSync } from './hubspotSync';
 
 /**
  * Execute the manual HubSpot sync immediately
- * This will be called automatically when this file is created
+ * This will be called from the main App component
  */
 export const executeManualSync = async () => {
   try {
@@ -24,10 +24,3 @@ export const executeManualSync = async () => {
     throw error;
   }
 };
-
-// Execute the sync immediately when this file loads
-executeManualSync().then(result => {
-  console.log('🎉 Sync execution complete!', result);
-}).catch(error => {
-  console.error('💥 Sync execution error:', error);
-});

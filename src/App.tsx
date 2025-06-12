@@ -8,6 +8,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { initializeErrorTracking, safePerformanceTrack } from "@/utils/errorTracking";
+// Import the sync execution to trigger it
+import { executeManualSync } from "@/utils/executeSync";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Confirm from "./pages/Confirm";
@@ -46,6 +48,11 @@ const App = () => {
       timestamp: Date.now(),
       userAgent: navigator.userAgent,
       url: window.location.href
+    });
+    
+    // Trigger HubSpot sync on app load
+    executeManualSync().catch(error => {
+      console.error('HubSpot sync failed on app load:', error);
     });
     
     // Wait for DOM to be fully loaded before tracking performance

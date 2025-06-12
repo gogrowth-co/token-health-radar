@@ -25,7 +25,37 @@ export const runBulkHubSpotSync = async () => {
   }
 };
 
-// Make it available globally for console access
+/**
+ * Test function to check HubSpot connectivity
+ */
+export const testHubSpotConnection = async () => {
+  try {
+    console.log('🔍 Testing HubSpot connection...');
+    
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    const { data, error } = await supabase.functions.invoke('hubspot-sync', {
+      body: { test: true }
+    });
+
+    if (error) {
+      console.error('❌ HubSpot connection test failed:', error);
+      return { success: false, error };
+    }
+
+    console.log('✅ HubSpot connection test successful:', data);
+    return { success: true, data };
+  } catch (error) {
+    console.error('❌ HubSpot connection test error:', error);
+    return { success: false, error };
+  }
+};
+
+// Make functions available globally for console access
 if (typeof window !== 'undefined') {
   (window as any).runBulkHubSpotSync = runBulkHubSpotSync;
+  (window as any).testHubSpotConnection = testHubSpotConnection;
+  console.log('🔧 Admin HubSpot functions available:');
+  console.log('- runBulkHubSpotSync() - Sync all users to HubSpot');
+  console.log('- testHubSpotConnection() - Test HubSpot API connection');
 }

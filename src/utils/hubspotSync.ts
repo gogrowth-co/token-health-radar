@@ -8,21 +8,21 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const triggerHubSpotSync = async (userId?: string) => {
   try {
-    console.log('Triggering HubSpot sync for user:', userId || 'all users');
+    console.log('🔄 Triggering HubSpot sync for user:', userId || 'all users');
     
     const { data, error } = await supabase.functions.invoke('hubspot-sync', {
       body: { user_id: userId }
     });
 
     if (error) {
-      console.error('Error triggering HubSpot sync:', error);
+      console.error('❌ Error triggering HubSpot sync:', error);
       throw error;
     }
 
-    console.log('HubSpot sync completed:', data);
+    console.log('✅ HubSpot sync completed:', data);
     return data;
   } catch (error) {
-    console.error('Failed to trigger HubSpot sync:', error);
+    console.error('💥 Failed to trigger HubSpot sync:', error);
     throw error;
   }
 };
@@ -36,13 +36,14 @@ export const syncCurrentUserToHubSpot = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      console.log('No authenticated user found');
+      console.log('⚠️ No authenticated user found');
       return;
     }
 
+    console.log('👤 Syncing current user to HubSpot:', user.email);
     await triggerHubSpotSync(user.id);
   } catch (error) {
-    console.error('Failed to sync current user to HubSpot:', error);
+    console.error('❌ Failed to sync current user to HubSpot:', error);
     throw error;
   }
 };
@@ -53,14 +54,14 @@ export const syncCurrentUserToHubSpot = async () => {
  */
 export const bulkSyncUsersToHubSpot = async () => {
   try {
-    console.log('Starting bulk HubSpot sync for all users');
+    console.log('📦 Starting bulk HubSpot sync for all users');
     
     const result = await triggerHubSpotSync(); // No user ID = sync all
     
-    console.log('Bulk sync completed:', result);
+    console.log('✅ Bulk sync completed:', result);
     return result;
   } catch (error) {
-    console.error('Failed to bulk sync users to HubSpot:', error);
+    console.error('❌ Failed to bulk sync users to HubSpot:', error);
     throw error;
   }
 };
