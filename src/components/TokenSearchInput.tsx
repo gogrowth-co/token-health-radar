@@ -14,11 +14,15 @@ import {
 interface TokenSearchInputProps {
   placeholder?: string;
   className?: string;
+  large?: boolean;
+  textPosition?: "below" | "above";
 }
 
 export default function TokenSearchInput({ 
   placeholder = "Enter token name or contract address...",
-  className = ""
+  className = "",
+  large = false,
+  textPosition = "below"
 }: TokenSearchInputProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -70,16 +74,24 @@ export default function TokenSearchInput({
     setSearchTerm(sanitized);
   };
 
+  const helpText = "Search by token name (e.g., USDC) or contract address";
+
   return (
     <form onSubmit={handleSearch} className={`relative ${className}`}>
+      {textPosition === "above" && (
+        <p className={`text-muted-foreground mb-2 ${large ? 'text-sm' : 'text-xs'}`}>
+          {helpText}
+        </p>
+      )}
+      
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className={`absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground ${large ? 'h-5 w-5' : 'h-4 w-4'}`} />
           <Input
             value={searchTerm}
             onChange={handleInputChange}
             placeholder={placeholder}
-            className="pl-9 pr-4"
+            className={`${large ? 'pl-10 pr-4 h-12 text-base' : 'pl-9 pr-4'}`}
             disabled={isSearching}
             maxLength={100}
             autoComplete="off"
@@ -89,25 +101,27 @@ export default function TokenSearchInput({
         <Button 
           type="submit" 
           disabled={isSearching || !searchTerm.trim()}
-          className="px-6"
+          className={large ? "px-8 h-12 text-base" : "px-6"}
         >
           {isSearching ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              <Loader2 className={`animate-spin mr-2 ${large ? 'h-5 w-5' : 'h-4 w-4'}`} />
               Searching
             </>
           ) : (
             <>
-              <Search className="h-4 w-4 mr-2" />
+              <Search className={`mr-2 ${large ? 'h-5 w-5' : 'h-4 w-4'}`} />
               Search
             </>
           )}
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground mt-1">
-        Search by token name (e.g., USDC) or contract address
-      </p>
+      
+      {textPosition === "below" && (
+        <p className={`text-muted-foreground mt-1 ${large ? 'text-sm' : 'text-xs'}`}>
+          {helpText}
+        </p>
+      )}
     </form>
   );
 }
-
