@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Shield, TrendingUp, Users, Code, BarChart3, ArrowRight } from "lucide-react";
 
 const Index = () => {
-  const [searchValue, setSearchValue] = useState("");
   const navigate = useNavigate();
 
   const handleSearch = (token: string) => {
@@ -45,6 +44,38 @@ const Index = () => {
     }
   ];
 
+  // Features for CategoryFeatureGrid component
+  const categoryFeatures = [
+    {
+      icon: Shield,
+      title: "Ownership Renounced",
+      description: "Contract ownership status (renounced = more secure)",
+      badgeLabel: "Yes",
+      badgeVariant: "green" as const
+    },
+    {
+      icon: Shield,
+      title: "Audit Status",
+      description: "Security audit verification by third-party firm",
+      badgeLabel: "Not Verified",
+      badgeVariant: "red" as const
+    },
+    {
+      icon: BarChart3,
+      title: "Liquidity Lock",
+      description: "Duration of liquidity pool locks",
+      badgeLabel: "180 days",
+      badgeVariant: "green" as const
+    },
+    {
+      icon: TrendingUp,
+      title: "Supply Model",
+      description: "Token supply mechanics and inflation",
+      badgeLabel: "Capped",
+      badgeVariant: "green" as const
+    }
+  ];
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -65,9 +96,6 @@ const Index = () => {
               
               <div className="max-w-2xl mx-auto">
                 <TokenSearchInput
-                  value={searchValue}
-                  onChange={setSearchValue}
-                  onSearch={handleSearch}
                   placeholder="Enter token name or contract address..."
                 />
                 <p className="text-sm text-muted-foreground mt-2">
@@ -116,7 +144,17 @@ const Index = () => {
         {/* Category Feature Grid */}
         <section className="py-16 bg-muted">
           <div className="container px-4 md:px-6">
-            <CategoryFeatureGrid />
+            <CategoryFeatureGrid 
+              features={categoryFeatures}
+              description={
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold mb-4">Deep Analysis Examples</h2>
+                  <p className="text-lg text-muted-foreground">
+                    See the kind of detailed metrics our scans provide for each token
+                  </p>
+                </div>
+              }
+            />
           </div>
         </section>
 
