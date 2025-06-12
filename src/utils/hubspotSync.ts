@@ -1,67 +1,34 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { triggerSecureHubSpotSync, syncCurrentUserToHubSpotSecurely } from './secureHubspotSync';
 
 /**
- * Trigger HubSpot sync for a specific user or all users
- * This function directly calls the edge function to bypass pg_net issues
- * @param userId - Optional user ID to sync specific user, if not provided syncs all users
+ * Legacy HubSpot sync functions - updated to use secure methods
+ * These maintain backward compatibility while using secure implementations
  */
-export const triggerHubSpotSync = async (userId?: string) => {
-  try {
-    console.log('🔄 Triggering HubSpot sync for user:', userId || 'all users');
-    
-    const { data, error } = await supabase.functions.invoke('hubspot-sync', {
-      body: { user_id: userId }
-    });
-
-    if (error) {
-      console.error('❌ Error triggering HubSpot sync:', error);
-      throw error;
-    }
-
-    console.log('✅ HubSpot sync completed:', data);
-    return data;
-  } catch (error) {
-    console.error('💥 Failed to trigger HubSpot sync:', error);
-    throw error;
-  }
-};
 
 /**
- * Sync current user to HubSpot
- * Called when user completes signup or profile updates
+ * @deprecated Use triggerSecureHubSpotSync instead
  */
-export const syncCurrentUserToHubSpot = async () => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.log('⚠️ No authenticated user found');
-      return;
-    }
-
-    console.log('👤 Syncing current user to HubSpot:', user.email);
-    await triggerHubSpotSync(user.id);
-  } catch (error) {
-    console.error('❌ Failed to sync current user to HubSpot:', error);
-    throw error;
-  }
-};
+export const triggerHubSpotSync = triggerSecureHubSpotSync;
 
 /**
- * Bulk sync all users to HubSpot
- * Administrative function to sync all existing users
+ * @deprecated Use syncCurrentUserToHubSpotSecurely instead
+ */
+export const syncCurrentUserToHubSpot = syncCurrentUserToHubSpotSecurely;
+
+/**
+ * Bulk sync all users to HubSpot using secure methods
  */
 export const bulkSyncUsersToHubSpot = async () => {
   try {
-    console.log('📦 Starting bulk HubSpot sync for all users');
+    console.log('📦 Starting secure bulk HubSpot sync for all users');
     
-    const result = await triggerHubSpotSync(); // No user ID = sync all
+    const result = await triggerSecureHubSpotSync(); // No user ID = sync all
     
-    console.log('✅ Bulk sync completed:', result);
+    console.log('✅ Secure bulk sync completed:', result);
     return result;
   } catch (error) {
-    console.error('❌ Failed to bulk sync users to HubSpot:', error);
+    console.error('❌ Failed to securely bulk sync users to HubSpot:', error);
     throw error;
   }
 };

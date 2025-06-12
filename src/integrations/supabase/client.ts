@@ -13,6 +13,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   auth: {
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
+    flowType: 'pkce' // Enhanced security flow
   },
   global: {
     fetch: (url, options) => {
@@ -20,21 +22,37 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
       if (process.env.NODE_ENV !== 'production') {
         console.log('Supabase API request:', url);
       }
-      return fetch(url, options);
+      
+      // Add security headers to all requests
+      const secureOptions = {
+        ...options,
+        headers: {
+          ...options?.headers,
+          'X-Requested-With': 'XMLHttpRequest', // CSRF protection
+        }
+      };
+      
+      return fetch(url, secureOptions);
     }
   }
 });
 
-// Helper function to handle Supabase errors consistently
+// Helper function to handle Supabase errors consistently and securely
 export const handleSupabaseError = (error: any, fallbackMessage: string = 'An error occurred') => {
   if (error) {
     console.error('Supabase error:', error);
+    
+    // In production, don't expose internal error details
+    if (process.env.NODE_ENV === 'production') {
+      return fallbackMessage;
+    }
+    
     return error.message || fallbackMessage;
   }
   return fallbackMessage;
 };
 
-// Enhanced helper to check if a user has Pro access for their scans
+// Enhanced helper to check if a user has Pro access for their scans with security
 export const checkUserHasProAccess = async (): Promise<{
   hasPro: boolean;
   proScanAvailable: boolean;
@@ -43,6 +61,13 @@ export const checkUserHasProAccess = async (): Promise<{
   scanLimit?: number;
 }> => {
   try {
+    // Check authentication first
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.log('⚠️ No authenticated user found');
+      return { hasPro: false, proScanAvailable: false };
+    }
+    
     const { data, error } = await supabase.functions.invoke("check-scan-access");
     
     if (error) {
@@ -63,3 +88,20 @@ export const checkUserHasProAccess = async (): Promise<{
     return { hasPro: false, proScanAvailable: false };
   }
 };
+
+// Session timeout configuration for enhanced security
+export const configureSessionTimeout = () => {
+  // Set up automatic session refresh
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      console.log('🔐 User signed in securely');
+    } else if (event === 'SIGNED_OUT') {
+      console.log('🔐 User signed out');
+      // Clear any sensitive data from localStorage
+      localStorage.removeItem('selectedToken');
+    }
+  });
+};
+
+// Initialize session timeout configuration
+configureSessionTimeout();

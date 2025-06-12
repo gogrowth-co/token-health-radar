@@ -1,17 +1,17 @@
 
-import { triggerHubSpotSync } from './hubspotSync';
+import { triggerSecureHubSpotSync } from './secureHubspotSync';
 
 /**
- * Execute the manual HubSpot sync immediately
- * This will be called from the main App component
+ * Execute the manual HubSpot sync securely
+ * Updated to use secure methods without hardcoded credentials
  */
 export const executeManualSync = async () => {
   try {
-    console.log('🚀 Starting manual HubSpot sync execution...');
+    console.log('🚀 Starting secure manual HubSpot sync execution...');
     
-    const result = await triggerHubSpotSync(); // No user ID = sync all users
+    const result = await triggerSecureHubSpotSync(); // No user ID = sync all users
     
-    console.log('✅ Manual sync completed successfully:', result);
+    console.log('✅ Secure manual sync completed successfully:', result);
     console.log(`📊 Results: Synced ${result.synced_count || 0}, Errors: ${result.error_count || 0}`);
     
     if (result.results) {
@@ -20,7 +20,7 @@ export const executeManualSync = async () => {
     
     return result;
   } catch (error) {
-    console.error('❌ Manual sync failed:', error);
+    console.error('❌ Secure manual sync failed:', error);
     throw error;
   }
 };

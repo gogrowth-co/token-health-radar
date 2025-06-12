@@ -8,7 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { initializeErrorTracking, safePerformanceTrack } from "@/utils/errorTracking";
-// Import the sync execution to trigger it
+// Import the secure sync execution
 import { executeManualSync } from "@/utils/executeSync";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
@@ -27,14 +27,18 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error: any) => {
-        // Don't retry on 4xx errors
+        // Don't retry on 4xx errors (client errors)
         if (error?.status >= 400 && error?.status < 500) {
           return false;
         }
         return failureCount < 2;
       },
       staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
     },
+    mutations: {
+      retry: false, // Don't retry mutations by default for security
+    }
   },
 });
 
@@ -50,9 +54,10 @@ const App = () => {
       url: window.location.href
     });
     
-    // Trigger HubSpot sync on app load
+    // Trigger secure HubSpot sync on app load (with error handling)
     executeManualSync().catch(error => {
-      console.error('HubSpot sync failed on app load:', error);
+      console.error('Secure HubSpot sync failed on app load:', error);
+      // Don't throw - this shouldn't break the app
     });
     
     // Wait for DOM to be fully loaded before tracking performance
@@ -63,6 +68,18 @@ const App = () => {
         safePerformanceTrack('app_loaded_complete');
       });
     }
+
+    // Security: Clear sensitive data on page unload
+    const handleBeforeUnload = () => {
+      // Clear any sensitive temporary data
+      sessionStorage.clear();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, []);
 
   return (
