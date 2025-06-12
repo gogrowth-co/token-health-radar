@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Trigger HubSpot sync for a specific user or all users
- * This is now mainly used for manual syncing since automatic sync happens via database triggers
+ * This function directly calls the edge function to bypass pg_net issues
  * @param userId - Optional user ID to sync specific user, if not provided syncs all users
  */
 export const triggerHubSpotSync = async (userId?: string) => {
@@ -29,7 +29,7 @@ export const triggerHubSpotSync = async (userId?: string) => {
 
 /**
  * Sync current user to HubSpot
- * This is now mainly used for manual syncing since automatic sync happens via database triggers
+ * Called when user completes signup or profile updates
  */
 export const syncCurrentUserToHubSpot = async () => {
   try {
@@ -43,6 +43,24 @@ export const syncCurrentUserToHubSpot = async () => {
     await triggerHubSpotSync(user.id);
   } catch (error) {
     console.error('Failed to sync current user to HubSpot:', error);
+    throw error;
+  }
+};
+
+/**
+ * Bulk sync all users to HubSpot
+ * Administrative function to sync all existing users
+ */
+export const bulkSyncUsersToHubSpot = async () => {
+  try {
+    console.log('Starting bulk HubSpot sync for all users');
+    
+    const result = await triggerHubSpotSync(); // No user ID = sync all
+    
+    console.log('Bulk sync completed:', result);
+    return result;
+  } catch (error) {
+    console.error('Failed to bulk sync users to HubSpot:', error);
     throw error;
   }
 };
