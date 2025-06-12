@@ -33,35 +33,45 @@ export function UserProfile() {
       }
 
       try {
-        console.log('Fetching subscriber data for user:', user.id);
+        console.log('👤 Fetching subscriber data for user:', user.id);
         
         // Use the check-scan-access function to get consistent data
         const { data, error } = await supabase.functions.invoke('check-scan-access');
 
         if (error) {
-          console.error("Error checking scan access:", error);
+          console.error("❌ Error checking scan access:", error);
           setError("Could not load subscription data");
           
-          // Fallback to direct database query
+          // Try direct database query as fallback
+          console.log('🔄 Attempting direct database query as fallback');
           const { data: directData, error: directError } = await supabase
             .from("subscribers")
             .select("plan, scans_used, pro_scan_limit, source")
             .eq("id", user.id)
-            .single();
+            .maybeSingle();
 
           if (directError) {
-            console.error("Direct query also failed:", directError);
+            console.error("❌ Direct query also failed:", directError);
             // Set defaults if everything fails
             setSubscriberData({
               plan: "free",
               scans_used: 0,
               pro_scan_limit: 3
             });
-          } else {
+          } else if (directData) {
+            console.log('✅ Direct query succeeded:', directData);
             setSubscriberData(directData);
+            setError(null);
+          } else {
+            console.log('ℹ️ No subscriber record found, using defaults');
+            setSubscriberData({
+              plan: "free",
+              scans_used: 0,
+              pro_scan_limit: 3
+            });
           }
         } else {
-          console.log('Access data received:', data);
+          console.log('✅ Access data received:', data);
           setSubscriberData({
             plan: data.plan || "free",
             scans_used: data.scansUsed || 0,
@@ -70,7 +80,7 @@ export function UserProfile() {
           setError(null);
         }
       } catch (error) {
-        console.error("Error in subscriber data fetch:", error);
+        console.error("💥 Error in subscriber data fetch:", error);
         setError("Could not load subscription data");
         // Set defaults
         setSubscriberData({

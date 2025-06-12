@@ -59,8 +59,19 @@ export const checkScanAccess = async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      throw new Error('Authentication required');
+      console.log('⚠️ No authenticated user found');
+      return {
+        hasPro: false,
+        proScanAvailable: false,
+        plan: 'free',
+        scansUsed: 0,
+        scanLimit: 3,
+        canScan: true,
+        canSelectToken: true
+      };
     }
+
+    console.log('🔍 Checking scan access for user:', user.id);
 
     const { data, error } = await supabase.functions.invoke('check-scan-access');
     
@@ -77,6 +88,8 @@ export const checkScanAccess = async () => {
         canSelectToken: true
       };
     }
+
+    console.log('✅ Scan access data received:', data);
 
     return {
       hasPro: data?.hasPro || false,
@@ -111,6 +124,8 @@ export const recordTokenScan = async (tokenAddress: string, scoreTotal: number, 
     if (!user) {
       throw new Error('Authentication required to record scan');
     }
+
+    console.log('📝 Recording token scan for user:', user.id);
 
     // Insert with RLS protection - user_id is automatically validated by RLS policies
     const { data, error } = await supabase

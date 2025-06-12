@@ -25,7 +25,20 @@ serve(async (req) => {
     // Get the authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("No authorization header");
+      console.log("No authorization header provided");
+      return new Response(
+        JSON.stringify({ 
+          error: "No authorization header",
+          canScan: true,
+          canSelectToken: true,
+          hasPro: false,
+          proScanAvailable: false,
+          plan: "free",
+          scansUsed: 0,
+          scanLimit: 3
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
     }
 
     // Extract the token
@@ -36,7 +49,20 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseAnon.auth.getUser(token);
     
     if (userError || !user) {
-      throw new Error("Invalid user token");
+      console.log("Invalid user token:", userError?.message);
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid user token",
+          canScan: true,
+          canSelectToken: true,
+          hasPro: false,
+          proScanAvailable: false,
+          plan: "free",
+          scansUsed: 0,
+          scanLimit: 3
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
     }
 
     console.log(`User authenticated: ${user.id}`);
@@ -46,13 +72,16 @@ serve(async (req) => {
       .from("subscribers")
       .select("plan, scans_used, pro_scan_limit")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     let plan = "free";
     let scansUsed = 0;
     let scanLimit = 3;
 
     if (subscriberError) {
+      console.error(`Error fetching subscriber data: ${subscriberError.message}`);
+      // Use defaults if query fails
+    } else if (!subscriberData) {
       console.log(`No subscriber record found for user ${user.id}, creating default record`);
       
       // Create a default subscriber record if none exists
@@ -76,9 +105,9 @@ serve(async (req) => {
         scanLimit = newSubscriber?.pro_scan_limit || 3;
       }
     } else {
-      plan = subscriberData?.plan || "free";
-      scansUsed = subscriberData?.scans_used || 0;
-      scanLimit = subscriberData?.pro_scan_limit || 3;
+      plan = subscriberData.plan || "free";
+      scansUsed = subscriberData.scans_used || 0;
+      scanLimit = subscriberData.pro_scan_limit || 3;
     }
 
     console.log(`User plan: ${plan}, scans used: ${scansUsed}, scan limit: ${scanLimit}`);
@@ -108,7 +137,7 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Can scan: ${canScan}, can select token: ${canSelectToken}, has pro: ${hasPro}, pro scan available: ${proScanAvailable}`);
+    console.log(`Access determined - Can scan: ${canScan}, can select token: ${canSelectToken}, has pro: ${hasPro}, pro scan available: ${proScanAvailable}`);
 
     return new Response(
       JSON.stringify({
@@ -123,10 +152,12 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
-    console.error(`Error checking scan access: ${error.message}`);
+    console.error(`Error in check-scan-access function: ${error.message}`);
+    console.error(`Error stack: ${error.stack}`);
+    
     return new Response(
       JSON.stringify({ 
-        error: error.message, 
+        error: "Internal server error",
         canScan: true,  // Allow basic scanning even on error
         canSelectToken: true,
         hasPro: false,

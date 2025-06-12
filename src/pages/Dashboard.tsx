@@ -34,9 +34,9 @@ export default function Dashboard() {
       }
 
       try {
-        console.log('Fetching scan history for user:', user.id);
+        console.log('📋 Fetching scan history for user:', user.id);
         
-        // Fetch token scans directly - RLS will filter by user_id automatically
+        // Fetch token scans - RLS will filter by user_id automatically
         const { data: scanData, error: scanError } = await supabase
           .from("token_scans")
           .select("id, token_address, score_total, scanned_at")
@@ -44,12 +44,12 @@ export default function Dashboard() {
           .limit(10);
 
         if (scanError) {
-          console.error("Error fetching scan history:", scanError);
+          console.error("❌ Error fetching scan history:", scanError);
           setError("Could not load scan history");
           return;
         }
 
-        console.log('Scan data fetched:', scanData);
+        console.log('✅ Scan data fetched:', scanData?.length || 0, 'scans');
 
         // For each scan, try to get token info from cache
         const scansWithTokenInfo = await Promise.all(
@@ -59,7 +59,7 @@ export default function Dashboard() {
                 .from("token_data_cache")
                 .select("name, symbol")
                 .eq("token_address", scan.token_address)
-                .single();
+                .maybeSingle();
 
               return {
                 ...scan,
@@ -78,8 +78,9 @@ export default function Dashboard() {
         );
 
         setScans(scansWithTokenInfo);
+        setError(null);
       } catch (error) {
-        console.error("Error in scan history fetch:", error);
+        console.error("💥 Error in scan history fetch:", error);
         setError("Failed to load scan history");
       } finally {
         setLoading(false);
