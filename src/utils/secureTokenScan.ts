@@ -104,7 +104,41 @@ export const checkScanAccess = async () => {
     
     if (error) {
       console.error('❌ Error checking scan access:', error);
-      // Return safe defaults instead of throwing
+      
+      // Try to create subscriber record if missing
+      try {
+        console.log('🔄 Attempting to create subscriber record');
+        const { error: insertError } = await supabase
+          .from('subscribers')
+          .insert({
+            id: user.id,
+            plan: 'free',
+            scans_used: 0,
+            pro_scan_limit: 3,
+            source: 'auto-created'
+          });
+          
+        if (!insertError) {
+          console.log('✅ Subscriber record created, retrying access check');
+          // Retry the access check after creating the record
+          const { data: retryData, error: retryError } = await supabase.functions.invoke('check-scan-access');
+          if (!retryError && retryData) {
+            return {
+              hasPro: retryData?.hasPro || false,
+              proScanAvailable: retryData?.proScanAvailable || false,
+              plan: retryData?.plan || 'free',
+              scansUsed: retryData?.scansUsed || 0,
+              scanLimit: retryData?.scanLimit || 3,
+              canScan: retryData?.canScan !== false,
+              canSelectToken: retryData?.canSelectToken !== false
+            };
+          }
+        }
+      } catch (createError) {
+        console.error('❌ Failed to create subscriber record:', createError);
+      }
+      
+      // Return safe defaults if everything fails
       return {
         hasPro: false,
         proScanAvailable: false,
@@ -191,4 +225,3 @@ export const recordTokenScan = async (tokenAddress: string, scoreTotal: number, 
     throw error;
   }
 };
-

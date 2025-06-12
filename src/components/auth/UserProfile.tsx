@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,9 +39,8 @@ export function UserProfile() {
 
         if (error) {
           console.error("❌ Error checking scan access:", error);
-          setError("Could not load subscription data");
           
-          // Try direct database query as fallback
+          // Try direct database query as fallback with user authentication
           console.log('🔄 Attempting direct database query as fallback');
           const { data: directData, error: directError } = await supabase
             .from("subscribers")
@@ -51,13 +49,34 @@ export function UserProfile() {
             .maybeSingle();
 
           if (directError) {
-            console.error("❌ Direct query also failed:", directError);
-            // Set defaults if everything fails
-            setSubscriberData({
-              plan: "free",
-              scans_used: 0,
-              pro_scan_limit: 3
-            });
+            console.error("❌ Direct query failed:", directError);
+            
+            // Try to create a subscriber record if none exists
+            console.log('🔄 Creating subscriber record for user');
+            const { data: insertData, error: insertError } = await supabase
+              .from("subscribers")
+              .insert({
+                id: user.id,
+                plan: "free",
+                scans_used: 0,
+                pro_scan_limit: 3,
+                source: "manual"
+              })
+              .select("plan, scans_used, pro_scan_limit, source")
+              .maybeSingle();
+
+            if (insertError) {
+              console.error("❌ Insert failed:", insertError);
+              setError("Could not create user profile. Please contact support.");
+            } else {
+              console.log('✅ Created subscriber record:', insertData);
+              setSubscriberData(insertData || {
+                plan: "free",
+                scans_used: 0,
+                pro_scan_limit: 3
+              });
+              setError(null);
+            }
           } else if (directData) {
             console.log('✅ Direct query succeeded:', directData);
             setSubscriberData(directData);
@@ -82,7 +101,7 @@ export function UserProfile() {
       } catch (error) {
         console.error("💥 Error in subscriber data fetch:", error);
         setError("Could not load subscription data");
-        // Set defaults
+        // Set safe defaults
         setSubscriberData({
           plan: "free",
           scans_used: 0,
