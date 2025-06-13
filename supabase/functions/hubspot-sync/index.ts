@@ -76,7 +76,21 @@ const handler = async (req: Request): Promise<Response> => {
       body = {};
     }
     
-    const { user_id } = body;
+    const { user_id, test } = body;
+    
+    // Handle test requests
+    if (test) {
+      console.log('🧪 Test request received');
+      return new Response(
+        JSON.stringify({
+          message: 'HubSpot sync function is working',
+          success: true,
+          timestamp: new Date().toISOString(),
+          hubspot_api_configured: !!hubspotApiKey
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     if (!user_id) {
       console.log('📢 No user_id provided, syncing all contacts');

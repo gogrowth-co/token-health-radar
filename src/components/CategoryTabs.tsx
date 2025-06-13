@@ -20,6 +20,8 @@ import {
   DevelopmentData
 } from "@/utils/categoryTransformers";
 
+// Removing the duplicate interface definitions and using the ones imported from categoryTransformers
+
 enum ScanCategory {
   Security = "security",
   Tokenomics = "tokenomics",
@@ -29,23 +31,14 @@ enum ScanCategory {
 }
 
 interface CategoryTabsProps {
-  activeTab?: ScanCategory;
-  securityData: any;
-  tokenomicsData: any;
-  liquidityData: any;
-  communityData: any;
-  developmentData: any;
+  activeTab: ScanCategory;
+  securityData: SecurityData | null;
+  tokenomicsData: TokenomicsData | null;
+  liquidityData: LiquidityData | null;
+  communityData: CommunityData | null;
+  developmentData: DevelopmentData | null;
   isPro: boolean;
-  onCategoryChange?: (category: ScanCategory) => void;
-  scanData?: {
-    security: any;
-    liquidity: any;
-    tokenomics: any;
-    community: any;
-    development: any;
-    overallScore: number;
-    redFlags: number;
-  };
+  onCategoryChange: (value: ScanCategory) => void;
 }
 
 // Format numbers in a user-friendly way
@@ -93,22 +86,17 @@ const BooleanIndicator = ({ value, positive }: { value: boolean | null | undefin
   );
 };
 
-export default function CategoryTabs({ 
-  activeTab: propActiveTab, 
-  securityData, 
-  tokenomicsData, 
-  liquidityData, 
-  communityData, 
-  developmentData, 
+export default function CategoryTabs({
+  activeTab,
+  securityData,
+  tokenomicsData,
+  liquidityData,
+  communityData,
+  developmentData,
   isPro,
-  onCategoryChange,
-  scanData 
+  onCategoryChange
 }: CategoryTabsProps) {
   const navigate = useNavigate();
-  const [internalActiveTab, setInternalActiveTab] = useState<ScanCategory>(ScanCategory.Security);
-  
-  // Use prop activeTab if provided, otherwise use internal state
-  const activeTab = propActiveTab || internalActiveTab;
   
   // Define category descriptions with explanations for tooltips
   const categoryDescriptions = {
@@ -119,38 +107,54 @@ export default function CategoryTabs({
     [ScanCategory.Development]: "Development metrics assess code quality, team contributions, and roadmap progress - important signals of project activity and technical health."
   };
   
+  // Use state to track blur status for non-pro users
+  const [showProCTA, setShowProCTA] = useState(false);
+  
   // Handle tab change
   const handleTabChange = (value: string) => {
-    const category = value as ScanCategory;
-    if (onCategoryChange) {
-      onCategoryChange(category);
-    } else {
-      setInternalActiveTab(category);
+    onCategoryChange(value as ScanCategory);
+    
+    // Show CTA if user is not pro
+    if (!isPro) {
+      setShowProCTA(true);
     }
   };
   
-  // Create tab content
+  // Create tab content with blur effect for non-pro users
   const renderTabContent = (categoryData: any, children: ReactNode, category: ScanCategory) => {
+    const isActiveTab = activeTab === category;
+    const shouldBlur = !isPro && isActiveTab;
+    
     return (
-      <TabsContent value={category}>
+      <TabsContent value={category} className="relative">
         <Card>
           <CardHeader className="pb-4">
             <h3 className="text-lg font-semibold">{category.charAt(0).toUpperCase() + category.slice(1)} Analysis</h3>
           </CardHeader>
-          <CardContent>
+          <CardContent className={shouldBlur ? "filter blur-sm" : ""}>
             {children}
           </CardContent>
+          
+          {shouldBlur && showProCTA && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 p-4 z-10">
+              <Lock className="h-6 w-6 mb-2" />
+              <h3 className="text-xl font-bold mb-2">Pro Feature</h3>
+              <p className="text-center text-muted-foreground mb-4">
+                Upgrade to Pro for full access to detailed token health metrics
+              </p>
+              <Button onClick={() => navigate("/pricing")}>
+                Upgrade to Pro
+              </Button>
+              
+              <Button variant="ghost" className="mt-2" onClick={() => setShowProCTA(false)}>
+                Return to Summary
+              </Button>
+            </div>
+          )}
         </Card>
       </TabsContent>
     );
   };
-  
-  // Use scanData if provided, otherwise use individual data props
-  const securityDataToUse = scanData?.security || securityData;
-  const tokenomicsDataToUse = scanData?.tokenomics || tokenomicsData;
-  const liquidityDataToUse = scanData?.liquidity || liquidityData;
-  const communityDataToUse = scanData?.community || communityData;
-  const developmentDataToUse = scanData?.development || developmentData;
   
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
@@ -237,41 +241,41 @@ export default function CategoryTabs({
       </TabsList>
       
       {/* Security Tab Content */}
-      {renderTabContent(securityDataToUse, (
+      {renderTabContent(securityData, (
         <CategoryFeatureGrid 
-          features={transformSecurityData(securityDataToUse)}
+          features={transformSecurityData(securityData)}
           description="Key security indicators for this token's smart contract"
         />
       ), ScanCategory.Security)}
       
       {/* Tokenomics Tab Content */}
-      {renderTabContent(tokenomicsDataToUse, (
+      {renderTabContent(tokenomicsData, (
         <CategoryFeatureGrid
-          features={transformTokenomicsData(tokenomicsDataToUse)}
+          features={transformTokenomicsData(tokenomicsData)}
           description="Economic metrics and token supply analysis"
         />
       ), ScanCategory.Tokenomics)}
       
       {/* Liquidity Tab Content */}
-      {renderTabContent(liquidityDataToUse, (
+      {renderTabContent(liquidityData, (
         <CategoryFeatureGrid
-          features={transformLiquidityData(liquidityDataToUse)}
+          features={transformLiquidityData(liquidityData)}
           description="Measures of token trading activity and accessibility"
         />
       ), ScanCategory.Liquidity)}
       
       {/* Community Tab Content */}
-      {renderTabContent(communityDataToUse, (
+      {renderTabContent(communityData, (
         <CategoryFeatureGrid
-          features={transformCommunityData(communityDataToUse)}
+          features={transformCommunityData(communityData)}
           description="Social media presence and community engagement metrics"
         />
       ), ScanCategory.Community)}
       
       {/* Development Tab Content */}
-      {renderTabContent(developmentDataToUse, (
+      {renderTabContent(developmentData, (
         <CategoryFeatureGrid
-          features={transformDevelopmentData(developmentDataToUse)}
+          features={transformDevelopmentData(developmentData)}
           description="GitHub activity and development progress metrics"
         />
       ), ScanCategory.Development)}

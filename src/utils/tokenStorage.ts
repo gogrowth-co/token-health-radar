@@ -1,7 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { TokenResult } from "@/components/token/types";
-import { getFirstValidEvmAddress, getWellKnownAddress } from "./addressUtils";
+import { getFirstValidEvmAddress } from "./addressUtils";
 
 /**
  * Utility functions for storing and retrieving token data
@@ -19,38 +18,17 @@ interface TokenInfo {
 }
 
 /**
- * EVM-compatible chains that we support for full scanning
+ * Get a well-known contract address for native tokens
  */
-const SUPPORTED_EVM_CHAINS = [
-  'ethereum', 'polygon-pos', 'binance-smart-chain', 'arbitrum-one', 
-  'avalanche', 'optimistic-ethereum', 'base', 'fantom', 'cronos',
-  'harmony-shard-0', 'moonbeam', 'aurora', 'celo', 'metis-andromeda'
-];
-
-/**
- * Get a valid contract address for a token with comprehensive fallback logic
- */
-export const getTokenAddress = (token: TokenResult): string | null => {
-  console.log(`[TOKEN-ADDRESS] Getting address for ${token.name} (${token.id})`);
+const getWellKnownAddress = (tokenId: string): string | null => {
+  const wellKnownAddresses: Record<string, string> = {
+    'ethereum': '0x0000000000000000000000000000000000000000', // ETH native
+    'binancecoin': '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', // BNB on BSC
+    'matic-network': '0x0000000000000000000000000000000000001010', // MATIC native
+    'avalanche-2': '0x0000000000000000000000000000000000000000', // AVAX native
+  };
   
-  // First try to extract from platform data
-  let tokenAddress = getFirstValidEvmAddress(token.platforms);
-  
-  if (tokenAddress) {
-    console.log(`[TOKEN-ADDRESS] Found address from platforms: ${tokenAddress}`);
-    return tokenAddress;
-  }
-  
-  // Fallback to well-known addresses
-  tokenAddress = getWellKnownAddress(token.id);
-  
-  if (tokenAddress) {
-    console.log(`[TOKEN-ADDRESS] Found well-known address: ${tokenAddress}`);
-    return tokenAddress;
-  }
-  
-  console.log(`[TOKEN-ADDRESS] No valid address found for ${token.name}`);
-  return null;
+  return wellKnownAddresses[tokenId] || null;
 };
 
 /**
@@ -60,20 +38,43 @@ export const isChainSupported = (token: TokenResult): boolean => {
   console.log(`[CHAIN-SUPPORT] Checking support for ${token.name} (${token.id})`);
   console.log(`[CHAIN-SUPPORT] Platforms:`, token.platforms);
   
-  // Check if we can get a valid address (includes well-known addresses)
-  const tokenAddress = getTokenAddress(token);
-  if (tokenAddress) {
-    console.log(`[CHAIN-SUPPORT] ${token.name} has valid address: ${tokenAddress}`);
-    return true;
+  // Native L1 tokens that we can't scan
+  const unsupportedNativeTokens = [
+    'hyperliquid', 'solana', 'sui', 'ton-crystal', 'sei-network',
+    'aptos', 'cardano', 'polkadot', 'cosmos', 'near', 'algorand',
+    'hedera-hashgraph', 'internet-computer', 'stellar', 'monero',
+    'kaspa', 'cronos', 'fantom', 'klay-token'
+  ];
+  
+  if (unsupportedNativeTokens.includes(token.id)) {
+    console.log(`[CHAIN-SUPPORT] ${token.id} is in unsupported native tokens list`);
+    return false;
   }
   
-  // Check if it's marked as ERC-20 compatible
-  if (token.isErc20) {
-    console.log(`[CHAIN-SUPPORT] ${token.name} is marked as ERC-20 compatible`);
-    return true;
+  // Check if token has EVM-compatible platforms
+  if (token.platforms && Object.keys(token.platforms).length > 0) {
+    const evmPlatforms = ['ethereum', 'polygon-pos', 'binance-smart-chain', 'arbitrum-one', 'avalanche'];
+    const hasEvmPlatform = Object.keys(token.platforms).some(platform => 
+      evmPlatforms.includes(platform)
+    );
+    
+    console.log(`[CHAIN-SUPPORT] Has EVM platform:`, hasEvmPlatform);
+    console.log(`[CHAIN-SUPPORT] Available platforms:`, Object.keys(token.platforms));
+    
+    if (hasEvmPlatform) {
+      // Also check if we can get a valid address
+      const evmAddress = getFirstValidEvmAddress(token.platforms);
+      console.log(`[CHAIN-SUPPORT] EVM address found:`, evmAddress);
+      return !!evmAddress;
+    }
   }
   
-  console.log(`[CHAIN-SUPPORT] ${token.name} is not supported for full scanning`);
+  // Check if it's a well-known native token we support
+  const wellKnownAddress = getWellKnownAddress(token.id);
+  console.log(`[CHAIN-SUPPORT] Well-known address:`, wellKnownAddress);
+  if (wellKnownAddress) return true;
+  
+  console.log(`[CHAIN-SUPPORT] ${token.name} is not supported`);
   return false;
 };
 
@@ -86,9 +87,18 @@ export const isTokenScanSupported = (token: TokenResult): boolean => {
   return supported;
 };
 
+/**
+ * Save token data to Supabase database
+ * @param token - Token data to save
+ * @returns Promise that resolves when the data is saved
+ */
 export const saveTokenToDatabase = async (token: TokenResult): Promise<void> => {
-  // Get token address using enhanced logic
-  const tokenAddress = getTokenAddress(token);
+  // Only save tokens that have valid addresses or are well-known
+  let tokenAddress = getFirstValidEvmAddress(token.platforms);
+  
+  if (!tokenAddress) {
+    tokenAddress = getWellKnownAddress(token.id);
+  }
   
   if (!tokenAddress) {
     console.warn(`No valid address found for ${token.name} (${token.id}), skipping database storage`);
@@ -154,6 +164,11 @@ export const saveTokenToDatabase = async (token: TokenResult): Promise<void> => 
   return;
 };
 
+/**
+ * Save token info to localStorage for persistence
+ * @param token - Token data to save
+ * @param tokenAddress - Token address to use as identifier
+ */
 export const saveTokenToLocalStorage = (token: TokenResult, tokenAddress: string): void => {
   const tokenInfo: TokenInfo = {
     address: tokenAddress,
