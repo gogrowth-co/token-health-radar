@@ -133,9 +133,21 @@ export default function ScanLoading() {
         
         const startTime = Date.now();
         
-        // Call the edge function with better error handling
+        // Get current session to ensure we have valid auth
+        const { data: session } = await supabase.auth.getSession();
+        if (!session?.session) {
+          throw new Error("No valid session found. Please log in again.");
+        }
+        
+        console.log("🔐 ScanLoading: Valid session found, proceeding with scan");
+        
+        // Call the edge function with enhanced configuration
         const { data, error } = await supabase.functions.invoke('run-token-scan', {
-          body: scanParams
+          body: scanParams,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.session.access_token}`
+          }
         });
         
         const endTime = Date.now();
@@ -160,6 +172,8 @@ export default function ScanLoading() {
             userFriendlyMessage = "Invalid token address or the token is not supported.";
           } else if (error.message?.includes('Missing')) {
             userFriendlyMessage = "Invalid scan request. Please try selecting the token again.";
+          } else if (error.message?.includes('Authentication')) {
+            userFriendlyMessage = "Authentication error. Please log in again.";
           }
           
           setScanFailed(true);
@@ -215,6 +229,8 @@ export default function ScanLoading() {
             errorMsg = "Network connection error. Please check your internet connection and try again.";
           } else if (error.message.includes('timeout')) {
             errorMsg = "Request timed out. Please try again.";
+          } else if (error.message.includes('session')) {
+            errorMsg = "Session expired. Please log in again.";
           } else {
             errorMsg = error.message;
           }
