@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { cryptoTrivia } from "@/lib/mock-data";
-import { AlertCircle, Loader2, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function ScanLoading() {
@@ -21,7 +21,6 @@ export default function ScanLoading() {
   const [errorMessage, setErrorMessage] = useState("");
   const [retryCount, setRetryCount] = useState(0);
   const [currentStep, setCurrentStep] = useState("Starting scan...");
-  const [debugInfo, setDebugInfo] = useState<any>({});
   const { user } = useAuth();
   
   const tokenAddress = searchParams.get("token") || "";
@@ -67,7 +66,6 @@ export default function ScanLoading() {
       setProgress(prevProgress => {
         const newProgress = prevProgress + 1.2;
         
-        // Update step messages based on progress
         if (newProgress >= 15 && newProgress < 35) {
           setCurrentStep("Fetching token data...");
         } else if (newProgress >= 35 && newProgress < 55) {
@@ -93,87 +91,41 @@ export default function ScanLoading() {
           return;
         }
 
-        console.log("🚀 ScanLoading: Starting token scan with address:", tokenAddress, "and CoinGecko ID:", coinGeckoId);
-        setDebugInfo({ 
-          step: "initialization", 
-          tokenAddress, 
-          coinGeckoId, 
-          userId: user.id 
-        });
+        console.log("🚀 ScanLoading: Starting token scan with simplified approach");
+        console.log("📋 ScanLoading: Token address:", tokenAddress);
+        console.log("📋 ScanLoading: CoinGecko ID:", coinGeckoId);
+        console.log("📋 ScanLoading: User ID:", user.id);
 
-        const savedTokenInfo = localStorage.getItem("selectedToken");
-        const selectedToken = savedTokenInfo ? JSON.parse(savedTokenInfo) : null;
-        
-        console.log("📋 ScanLoading: Selected token from localStorage:", selectedToken);
-        
-        let tokenToScan = selectedToken;
-        if (!tokenToScan || selectedToken?.address !== tokenAddress) {
-          tokenToScan = {
-            address: tokenAddress,
-            name: `Token ${tokenAddress.substring(0, 6)}...`,
-            symbol: "???",
-            id: coinGeckoId
-          };
-        }
-        
-        setDebugInfo(prev => ({ 
-          ...prev, 
-          selectedToken, 
-          tokenToScan 
-        }));
-        
         const scanParams = {
           token_address: tokenAddress,
           coingecko_id: coinGeckoId,
           user_id: user.id,
         };
         
-        console.log("📞 ScanLoading: Calling run-token-scan with params:", scanParams);
-        setDebugInfo(prev => ({ ...prev, scanParams }));
+        console.log("📞 ScanLoading: Calling run-token-scan with simplified params:", scanParams);
         
         const startTime = Date.now();
         
-        // Get current session to ensure we have valid auth
-        const { data: session } = await supabase.auth.getSession();
-        if (!session?.session) {
-          throw new Error("No valid session found. Please log in again.");
-        }
-        
-        console.log("🔐 ScanLoading: Valid session found, proceeding with scan");
-        
-        // Call the edge function with enhanced configuration
+        // Simplified function invocation - let Supabase handle authentication automatically
         const { data, error } = await supabase.functions.invoke('run-token-scan', {
-          body: scanParams,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.session.access_token}`
-          }
+          body: scanParams
         });
         
         const endTime = Date.now();
         console.log(`⏱️ ScanLoading: Scan took ${endTime - startTime}ms`);
-        
-        setDebugInfo(prev => ({ 
-          ...prev, 
-          scanDuration: endTime - startTime, 
-          scanResponse: data, 
-          scanError: error 
-        }));
+        console.log("📊 ScanLoading: Raw response data:", data);
+        console.log("❗ ScanLoading: Raw response error:", error);
 
         if (error) {
           console.error("❌ ScanLoading: Edge function error:", error);
           
           let userFriendlyMessage = "Failed to scan token. Please try again.";
-          if (error.message?.includes('timeout') || error.message?.includes('network')) {
+          if (error.message?.includes('timeout')) {
             userFriendlyMessage = "Network timeout occurred. Please try again.";
-          } else if (error.message?.includes('rate limit')) {
-            userFriendlyMessage = "Too many requests. Please wait a moment and try again.";
+          } else if (error.message?.includes('FunctionsFetchError')) {
+            userFriendlyMessage = "Connection error. Please check your internet connection and try again.";
           } else if (error.message?.includes('Invalid token')) {
             userFriendlyMessage = "Invalid token address or the token is not supported.";
-          } else if (error.message?.includes('Missing')) {
-            userFriendlyMessage = "Invalid scan request. Please try selecting the token again.";
-          } else if (error.message?.includes('Authentication')) {
-            userFriendlyMessage = "Authentication error. Please log in again.";
           }
           
           setScanFailed(true);
@@ -229,17 +181,11 @@ export default function ScanLoading() {
             errorMsg = "Network connection error. Please check your internet connection and try again.";
           } else if (error.message.includes('timeout')) {
             errorMsg = "Request timed out. Please try again.";
-          } else if (error.message.includes('session')) {
-            errorMsg = "Session expired. Please log in again.";
           } else {
             errorMsg = error.message;
           }
         }
         
-        setDebugInfo(prev => ({ 
-          ...prev, 
-          criticalError: error instanceof Error ? error.message : String(error) 
-        }));
         setScanFailed(true);
         setErrorMessage(errorMsg);
       } finally {
@@ -283,7 +229,6 @@ export default function ScanLoading() {
     setProgress(0);
     setCurrentStep("Starting scan...");
     setRetryCount(prev => prev + 1);
-    setDebugInfo({});
   };
 
   const handleBackToSearch = () => {
@@ -344,15 +289,6 @@ export default function ScanLoading() {
               <p className="text-muted-foreground mt-2 max-w-md">
                 {errorMessage || "We encountered an error while scanning this token. Please try again."}
               </p>
-              
-              {Object.keys(debugInfo).length > 0 && (
-                <details className="mt-4 text-left max-w-md">
-                  <summary className="text-sm text-muted-foreground cursor-pointer">Debug Information</summary>
-                  <pre className="text-xs bg-muted p-2 rounded mt-2 overflow-auto max-h-32">
-                    {JSON.stringify(debugInfo, null, 2)}
-                  </pre>
-                </details>
-              )}
               
               <div className="flex gap-4 mt-8">
                 <Button variant="outline" onClick={handleBackToSearch}>

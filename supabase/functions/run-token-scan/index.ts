@@ -38,19 +38,19 @@ async function fetchWithTimeout(url: string, options: any = {}, timeoutMs: numbe
 }
 
 serve(async (req) => {
+  const correlationId = `scan-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    console.log('🔄 Handling CORS preflight request')
+    console.log(`🔄 [${correlationId}] Handling CORS preflight request`)
     return new Response('ok', { headers: corsHeaders })
   }
 
-  const correlationId = `scan-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
   console.log(`🚀 [${correlationId}] Starting token scan function - Method: ${req.method}`)
   console.log(`🚀 [${correlationId}] Request URL: ${req.url}`)
-  console.log(`🚀 [${correlationId}] Request headers:`, Object.fromEntries(req.headers.entries()))
 
   try {
-    // Parse request body with error handling
+    // Parse request body with enhanced error handling
     let requestBody;
     try {
       const bodyText = await req.text();
@@ -61,6 +61,7 @@ serve(async (req) => {
       }
       
       requestBody = JSON.parse(bodyText);
+      console.log(`📋 [${correlationId}] Parsed request body:`, JSON.stringify(requestBody));
     } catch (parseError) {
       console.error(`❌ [${correlationId}] Failed to parse request body:`, parseError);
       return new Response(
@@ -75,8 +76,6 @@ serve(async (req) => {
         }
       );
     }
-
-    console.log(`📋 [${correlationId}] Parsed request body:`, JSON.stringify(requestBody));
 
     const { token_address, user_id, coingecko_id } = requestBody;
     
@@ -143,7 +142,7 @@ serve(async (req) => {
 
     console.log(`✅ [${correlationId}] All parameters validated successfully`);
 
-    // Initialize Supabase client with enhanced error handling
+    // Initialize Supabase client
     console.log(`🔍 [${correlationId}] Initializing Supabase client...`);
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
