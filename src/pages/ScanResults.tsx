@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, AlertTriangle, TrendingDown, TrendingUp } from "lucide-react";
@@ -164,7 +163,7 @@ export default function ScanResults() {
           {/* Token Info */}
           <Card>
             <CardContent className="p-6">
-              <TokenInfo tokenData={tokenData} />
+              <TokenInfo name={tokenData.name} symbol={tokenData.symbol} />
             </CardContent>
           </Card>
 

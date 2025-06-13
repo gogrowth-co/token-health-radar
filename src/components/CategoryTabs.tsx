@@ -1,4 +1,3 @@
-
 import { useState, ReactNode } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -21,16 +20,6 @@ import {
   DevelopmentData
 } from "@/utils/categoryTransformers";
 
-interface ScanData {
-  security: any;
-  liquidity: any;
-  tokenomics: any;
-  community: any;
-  development: any;
-  overallScore: number;
-  redFlags: number;
-}
-
 enum ScanCategory {
   Security = "security",
   Tokenomics = "tokenomics",
@@ -40,7 +29,23 @@ enum ScanCategory {
 }
 
 interface CategoryTabsProps {
-  scanData: ScanData;
+  activeTab?: ScanCategory;
+  securityData: any;
+  tokenomicsData: any;
+  liquidityData: any;
+  communityData: any;
+  developmentData: any;
+  isPro: boolean;
+  onCategoryChange?: (category: ScanCategory) => void;
+  scanData?: {
+    security: any;
+    liquidity: any;
+    tokenomics: any;
+    community: any;
+    development: any;
+    overallScore: number;
+    redFlags: number;
+  };
 }
 
 // Format numbers in a user-friendly way
@@ -88,9 +93,22 @@ const BooleanIndicator = ({ value, positive }: { value: boolean | null | undefin
   );
 };
 
-export default function CategoryTabs({ scanData }: CategoryTabsProps) {
+export default function CategoryTabs({ 
+  activeTab: propActiveTab, 
+  securityData, 
+  tokenomicsData, 
+  liquidityData, 
+  communityData, 
+  developmentData, 
+  isPro,
+  onCategoryChange,
+  scanData 
+}: CategoryTabsProps) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<ScanCategory>(ScanCategory.Security);
+  const [internalActiveTab, setInternalActiveTab] = useState<ScanCategory>(ScanCategory.Security);
+  
+  // Use prop activeTab if provided, otherwise use internal state
+  const activeTab = propActiveTab || internalActiveTab;
   
   // Define category descriptions with explanations for tooltips
   const categoryDescriptions = {
@@ -103,7 +121,12 @@ export default function CategoryTabs({ scanData }: CategoryTabsProps) {
   
   // Handle tab change
   const handleTabChange = (value: string) => {
-    setActiveTab(value as ScanCategory);
+    const category = value as ScanCategory;
+    if (onCategoryChange) {
+      onCategoryChange(category);
+    } else {
+      setInternalActiveTab(category);
+    }
   };
   
   // Create tab content
@@ -121,6 +144,13 @@ export default function CategoryTabs({ scanData }: CategoryTabsProps) {
       </TabsContent>
     );
   };
+  
+  // Use scanData if provided, otherwise use individual data props
+  const securityDataToUse = scanData?.security || securityData;
+  const tokenomicsDataToUse = scanData?.tokenomics || tokenomicsData;
+  const liquidityDataToUse = scanData?.liquidity || liquidityData;
+  const communityDataToUse = scanData?.community || communityData;
+  const developmentDataToUse = scanData?.development || developmentData;
   
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
@@ -207,41 +237,41 @@ export default function CategoryTabs({ scanData }: CategoryTabsProps) {
       </TabsList>
       
       {/* Security Tab Content */}
-      {renderTabContent(scanData.security, (
+      {renderTabContent(securityDataToUse, (
         <CategoryFeatureGrid 
-          features={transformSecurityData(scanData.security)}
+          features={transformSecurityData(securityDataToUse)}
           description="Key security indicators for this token's smart contract"
         />
       ), ScanCategory.Security)}
       
       {/* Tokenomics Tab Content */}
-      {renderTabContent(scanData.tokenomics, (
+      {renderTabContent(tokenomicsDataToUse, (
         <CategoryFeatureGrid
-          features={transformTokenomicsData(scanData.tokenomics)}
+          features={transformTokenomicsData(tokenomicsDataToUse)}
           description="Economic metrics and token supply analysis"
         />
       ), ScanCategory.Tokenomics)}
       
       {/* Liquidity Tab Content */}
-      {renderTabContent(scanData.liquidity, (
+      {renderTabContent(liquidityDataToUse, (
         <CategoryFeatureGrid
-          features={transformLiquidityData(scanData.liquidity)}
+          features={transformLiquidityData(liquidityDataToUse)}
           description="Measures of token trading activity and accessibility"
         />
       ), ScanCategory.Liquidity)}
       
       {/* Community Tab Content */}
-      {renderTabContent(scanData.community, (
+      {renderTabContent(communityDataToUse, (
         <CategoryFeatureGrid
-          features={transformCommunityData(scanData.community)}
+          features={transformCommunityData(communityDataToUse)}
           description="Social media presence and community engagement metrics"
         />
       ), ScanCategory.Community)}
       
       {/* Development Tab Content */}
-      {renderTabContent(scanData.development, (
+      {renderTabContent(developmentDataToUse, (
         <CategoryFeatureGrid
-          features={transformDevelopmentData(scanData.development)}
+          features={transformDevelopmentData(developmentDataToUse)}
           description="GitHub activity and development progress metrics"
         />
       ), ScanCategory.Development)}
