@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { cryptoTrivia } from "@/lib/mock-data";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function ScanLoading() {
@@ -21,6 +21,7 @@ export default function ScanLoading() {
   const [scanFailed, setScanFailed] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [retryCount, setRetryCount] = useState(0);
+  const [currentStep, setCurrentStep] = useState("Starting scan...");
   const { user } = useAuth();
   
   const tokenAddress = searchParams.get("token") || "";
@@ -54,12 +55,27 @@ export default function ScanLoading() {
     const randomTrivia = cryptoTrivia[Math.floor(Math.random() * cryptoTrivia.length)];
     setTrivia(randomTrivia);
 
+    // Enhanced progress animation with steps
     const interval = setInterval(() => {
       setProgress(prevProgress => {
-        const newProgress = prevProgress + 2;
+        const newProgress = prevProgress + 1.5;
+        
+        // Update step messages based on progress
+        if (newProgress >= 20 && newProgress < 40) {
+          setCurrentStep("Fetching token data...");
+        } else if (newProgress >= 40 && newProgress < 60) {
+          setCurrentStep("Analyzing security...");
+        } else if (newProgress >= 60 && newProgress < 80) {
+          setCurrentStep("Checking liquidity...");
+        } else if (newProgress >= 80 && newProgress < 95) {
+          setCurrentStep("Calculating scores...");
+        } else if (newProgress >= 95) {
+          setCurrentStep("Finalizing results...");
+        }
+        
         return newProgress >= 100 ? 100 : newProgress;
       });
-    }, 50);
+    }, 100);
 
     const scanToken = async () => {
       try {
@@ -139,7 +155,7 @@ export default function ScanLoading() {
           user_id: user.id,
         });
         
-        // Enhanced scan call with better error handling
+        // Enhanced scan call with better timeout handling
         const { data, error } = await supabase.functions.invoke('run-token-scan', {
           body: {
             token_address: tokenAddress,
@@ -159,6 +175,8 @@ export default function ScanLoading() {
             userFriendlyMessage = "Too many requests. Please wait a moment and try again.";
           } else if (error.message?.includes('Invalid token')) {
             userFriendlyMessage = "Invalid token address or the token is not supported.";
+          } else if (error.message?.includes('Missing required parameters')) {
+            userFriendlyMessage = "Invalid scan request. Please try selecting the token again.";
           }
           
           setScanFailed(true);
@@ -190,6 +208,12 @@ export default function ScanLoading() {
         }
 
         setTokenInfo(data.token_info || data);
+        setCurrentStep("Scan completed!");
+        
+        // Complete the progress animation
+        setTimeout(() => {
+          setProgress(100);
+        }, 500);
         
         setTimeout(() => {
           const resultData = data.token_info || data;
@@ -202,7 +226,8 @@ export default function ScanLoading() {
           });
           
           navigate(`/scan-result?token=${tokenAddress}${coinGeckoId ? `&id=${coinGeckoId}` : (tokenToScan?.id ? `&id=${tokenToScan.id}` : '')}`);
-        }, 1000);
+        }, 1500);
+        
       } catch (error) {
         console.error("ScanLoading: Error during token scan:", error instanceof Error ? error.message : String(error));
         
@@ -259,6 +284,7 @@ export default function ScanLoading() {
     setIsScanning(true);
     setScanFailed(false);
     setProgress(0);
+    setCurrentStep("Starting scan...");
     setRetryCount(prev => prev + 1);
   };
 
@@ -292,11 +318,17 @@ export default function ScanLoading() {
             </div>
             
             <div className="w-full">
-              <Progress value={progress} className="h-2 mb-2" />
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Scanning...</span>
-                <span>{progress}%</span>
+              <Progress value={progress} className="h-3 mb-3" />
+              <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                <span>{currentStep}</span>
+                <span>{Math.round(progress)}%</span>
               </div>
+              {progress === 100 && (
+                <div className="flex items-center justify-center text-green-600 mt-2">
+                  <CheckCircle className="h-5 w-5 mr-2" />
+                  <span className="text-sm font-medium">Scan completed successfully!</span>
+                </div>
+              )}
             </div>
             
             <div className="py-6 px-6 rounded-lg bg-muted">

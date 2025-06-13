@@ -46,7 +46,7 @@ export const scanTokenSecurely = async ({ tokenAddress, proScan = false }: ScanT
     // Use sanitized input
     const sanitizedRequest = validation.sanitizedInput!;
 
-    // Call the secure edge function
+    // Call the secure edge function with enhanced timeout handling
     const { data, error } = await supabase.functions.invoke('run-token-scan', {
       body: {
         token_address: sanitizedRequest.token_address,
@@ -58,6 +58,11 @@ export const scanTokenSecurely = async ({ tokenAddress, proScan = false }: ScanT
     if (error) {
       console.error('❌ Token scan error:', error);
       throw new Error(createSecureErrorMessage(error, 'Token scan failed'));
+    }
+
+    if (!data || !data.success) {
+      console.error('❌ Token scan returned unsuccessful result:', data);
+      throw new Error(data?.error_message || 'Token scan failed to complete successfully');
     }
 
     console.log('✅ Token scan completed successfully');
