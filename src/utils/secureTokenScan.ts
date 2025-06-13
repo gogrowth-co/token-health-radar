@@ -80,13 +80,15 @@ export const scanTokenSecurely = async ({ tokenAddress, proScan = false }: ScanT
 };
 
 /**
- * Check if user has available scan credits using the improved function
+ * Check if user has available scan credits with improved authentication
  */
 export const checkScanAccess = async () => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.log('⚠️ No authenticated user found');
+    // Get the current session to ensure we have a valid auth token
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      console.log('⚠️ No active session found');
       return {
         hasPro: false,
         proScanAvailable: false,
@@ -98,47 +100,20 @@ export const checkScanAccess = async () => {
       };
     }
 
-    console.log('🔍 Checking scan access for user:', sanitizeForDisplay(user.id));
+    const user = session.user;
+    console.log('🔍 Checking scan access for authenticated user:', sanitizeForDisplay(user.id));
 
-    const { data, error } = await supabase.functions.invoke('check-scan-access');
+    // Call the edge function with explicit authentication
+    const { data, error } = await supabase.functions.invoke('check-scan-access', {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      }
+    });
     
     if (error) {
       console.error('❌ Error checking scan access:', error);
       
-      // Try to create subscriber record if missing
-      try {
-        console.log('🔄 Attempting to create subscriber record');
-        const { error: insertError } = await supabase
-          .from('subscribers')
-          .insert({
-            id: user.id,
-            plan: 'free',
-            scans_used: 0,
-            pro_scan_limit: 3,
-            source: 'auto-created'
-          });
-          
-        if (!insertError) {
-          console.log('✅ Subscriber record created, retrying access check');
-          // Retry the access check after creating the record
-          const { data: retryData, error: retryError } = await supabase.functions.invoke('check-scan-access');
-          if (!retryError && retryData) {
-            return {
-              hasPro: retryData?.hasPro || false,
-              proScanAvailable: retryData?.proScanAvailable || false,
-              plan: retryData?.plan || 'free',
-              scansUsed: retryData?.scansUsed || 0,
-              scanLimit: retryData?.scanLimit || 3,
-              canScan: retryData?.canScan !== false,
-              canSelectToken: retryData?.canSelectToken !== false
-            };
-          }
-        }
-      } catch (createError) {
-        console.error('❌ Failed to create subscriber record:', createError);
-      }
-      
-      // Return safe defaults if everything fails
+      // Return safe defaults with access allowed to prevent blocking users
       return {
         hasPro: false,
         proScanAvailable: false,
@@ -150,7 +125,7 @@ export const checkScanAccess = async () => {
       };
     }
 
-    console.log('✅ Scan access data received');
+    console.log('✅ Scan access data received:', data);
 
     return {
       hasPro: data?.hasPro || false,
