@@ -29,27 +29,37 @@ export default function Index() {
     {
       icon: Shield,
       title: "Security Analysis",
-      description: "Detect honeypots, rug pulls, and contract vulnerabilities"
+      description: "Detect honeypots, rug pulls, and contract vulnerabilities",
+      badgeLabel: "Critical",
+      badgeVariant: "red" as const
     },
     {
       icon: TrendingUp,
       title: "Liquidity Health",
-      description: "Analyze trading volume, depth, and market stability"
+      description: "Analyze trading volume, depth, and market stability",
+      badgeLabel: "High",
+      badgeVariant: "green" as const
     },
     {
       icon: Coins,
       title: "Tokenomics Review",
-      description: "Evaluate supply distribution and inflation mechanics"
+      description: "Evaluate supply distribution and inflation mechanics",
+      badgeLabel: "Medium",
+      badgeVariant: "yellow" as const
     },
     {
       icon: Users,
       title: "Community Strength",
-      description: "Assess social presence and engagement metrics"
+      description: "Assess social presence and engagement metrics",
+      badgeLabel: "Active",
+      badgeVariant: "blue" as const
     },
     {
       icon: Code,
       title: "Development Activity",
-      description: "Track code commits and project maintenance"
+      description: "Track code commits and project maintenance",
+      badgeLabel: "Updated",
+      badgeVariant: "green" as const
     }
   ];
 
@@ -121,7 +131,7 @@ export default function Index() {
 
         {/* Category Features */}
         <section className="container px-4 py-16 bg-muted/50">
-          <CategoryFeatureGrid />
+          <CategoryFeatureGrid features={features} />
         </section>
 
         {/* CTA Section */}

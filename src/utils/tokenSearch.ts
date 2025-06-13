@@ -87,3 +87,51 @@ export const callCoinGeckoAPI = async (url: string, isDetailRequest = false) => 
     throw error;
   }
 };
+
+// Main search function for tokens
+export const searchTokens = async (searchTerm: string): Promise<TokenResult[]> => {
+  console.log("Searching for tokens with term:", searchTerm);
+  
+  // Check if search term looks like an address
+  const isAddress = searchTerm.startsWith('0x') && searchTerm.length === 42;
+  
+  try {
+    if (isAddress) {
+      // Search by contract address
+      const url = `https://api.coingecko.com/api/v3/coins/ethereum/contract/${searchTerm}`;
+      const tokenData = await callCoinGeckoAPI(url, true);
+      
+      return [{
+        id: tokenData.id,
+        name: tokenData.name,
+        symbol: tokenData.symbol,
+        thumb: tokenData.image?.thumb || '',
+        large: tokenData.image?.large || '',
+        platforms: tokenData.platforms || {},
+        market_cap: tokenData.market_data?.market_cap?.usd,
+        price_usd: tokenData.market_data?.current_price?.usd,
+        price_change_24h: tokenData.market_data?.price_change_percentage_24h,
+        isErc20: isValidErc20Token(tokenData),
+        description: tokenData.description?.en
+      }];
+    } else {
+      // Search by name
+      const url = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(searchTerm)}`;
+      const searchData = await callCoinGeckoAPI(url);
+      
+      return searchData.coins?.map((coin: any) => ({
+        id: coin.id,
+        name: coin.name,
+        symbol: coin.symbol,
+        market_cap_rank: coin.market_cap_rank,
+        thumb: coin.thumb,
+        large: coin.large,
+        platforms: {},
+        isErc20: KNOWN_ERC20_TOKENS.includes(coin.id)
+      })) || [];
+    }
+  } catch (error) {
+    console.error("Token search error:", error);
+    throw error;
+  }
+};
