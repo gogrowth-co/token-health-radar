@@ -151,13 +151,13 @@ export const checkTokenCache = async (searchTerm: string): Promise<TokenResult[]
         symbol: token.symbol,
         large: token.logo_url,
         thumb: token.logo_url,
-        market_cap_rank: token.market_cap_rank,
-        platforms: token.platforms || {},
-        price_usd: token.current_price || 0,
+        market_cap_rank: null, // Database doesn't store market_cap_rank
+        platforms: token.platforms || {}, // Use platforms from database or empty object
+        price_usd: token.current_price_usd || 0, // Map to correct property
         price_change_24h: token.price_change_24h || 0,
-        market_cap: token.market_cap || 0,
+        market_cap: token.market_cap_usd || 0, // Map to correct property
         isErc20: isValidErc20Token({ platforms: token.platforms }),
-        description: `${token.name} (${token.symbol}) - Cached data`
+        description: token.description || `${token.name} (${token.symbol}) - Cached data`
       }));
     }
     
@@ -178,9 +178,9 @@ export const cacheTokenData = async (tokens: any[]) => {
       symbol: token.symbol,
       logo_url: token.large || token.thumb,
       market_cap_rank: token.market_cap_rank,
-      current_price: token.price_usd || 0,
+      current_price_usd: token.price_usd || 0,
       price_change_24h: token.price_change_24h || 0,
-      market_cap: token.market_cap || 0,
+      market_cap_usd: token.market_cap || 0,
       platforms: token.platforms || {},
       last_updated: new Date().toISOString()
     }));
