@@ -1,98 +1,16 @@
 
-import { useState, useCallback } from "react";
-import { toast } from "sonner";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import { TokenResult } from "./types";
-import { getFirstValidEvmAddress } from "@/utils/addressUtils";
-import { saveTokenToDatabase, saveTokenToLocalStorage, isTokenScanSupported } from "@/utils/tokenStorage";
-
-interface ScanAccessData {
-  plan: string;
-  scansUsed: number;
-  scanLimit: number;
-}
-
-/**
- * Get a well-known contract address for native tokens
- */
-const getWellKnownAddress = (tokenId: string): string | null => {
-  const wellKnownAddresses: Record<string, string> = {
-    'ethereum': '0x0000000000000000000000000000000000000000', // ETH native
-    'binancecoin': '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', // BNB on BSC
-    'matic-network': '0x0000000000000000000000000000000000001010', // MATIC native
-    'avalanche-2': '0x0000000000000000000000000000000000000000', // AVAX native
-  };
-  
-  return wellKnownAddresses[tokenId] || null;
-};
+import { useScanAccessCheck } from "./hooks/useScanAccessCheck";
+import { useUpgradeDialog } from "./hooks/useUpgradeDialog";
+import { processTokenForScanning } from "./utils/tokenProcessor";
 
 export default function useTokenSelection() {
-  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
-  const [scanAccessData, setScanAccessData] = useState<ScanAccessData | null>(null);
   const navigate = useNavigate();
-  const { user } = useAuth();
-
-  /**
-   * Checks if user has scan access with improved error handling and fallbacks
-   * @returns Promise<boolean> - True if user has access, false otherwise
-   */
-  const checkScanAccess = async (): Promise<boolean> => {
-    try {
-      console.log('🔍 Checking scan access for user:', user?.id);
-      
-      // Always allow access for authenticated users - we'll handle limits in the backend
-      if (!user) {
-        console.log('⚠️ No authenticated user - allowing guest access');
-        return true; // Allow guest access for basic scanning
-      }
-
-      console.log('🚀 Calling check-scan-access edge function');
-      const { data: accessData, error: accessError } = await supabase.functions.invoke('check-scan-access');
-      
-      console.log('📊 Access check response:', { accessData, accessError });
-      
-      // If there's an error, log it but don't block the user
-      if (accessError) {
-        console.error('❌ Error checking scan access:', accessError);
-        // Don't show error toast for now - allow the user to proceed
-        return true; // Fallback: allow access
-      }
-      
-      // Extract access data with safe defaults
-      const canSelectToken = accessData?.canSelectToken !== false; // Default to true
-      const plan = accessData?.plan || 'free';
-      const scansUsed = accessData?.scansUsed || 0;
-      const scanLimit = accessData?.scanLimit || 3;
-      
-      console.log(`✅ Access check complete - Can select: ${canSelectToken}, Plan: ${plan}, Used: ${scansUsed}/${scanLimit}`);
-      
-      // Check if the user has reached their scan limit
-      if (!canSelectToken) {
-        console.log('🚫 User has reached scan limit - showing upgrade dialog');
-        // Store the data for the upgrade dialog
-        setScanAccessData({
-          plan,
-          scansUsed,
-          scanLimit
-        });
-        
-        // Show upgrade dialog
-        setShowUpgradeDialog(true);
-        return false;
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('💥 Error in checkScanAccess:', error);
-      
-      // Don't show error toast or block user - allow them to proceed
-      // This ensures the app remains functional even if the access check fails
-      console.log('🔄 Falling back to allowing access due to error');
-      return true;
-    }
-  };
+  const { checkScanAccess, scanAccessData, setScanAccessData } = useScanAccessCheck();
+  const { showUpgradeDialog, setShowUpgradeDialog, handleUpgrade } = useUpgradeDialog();
 
   /**
    * Handles token selection and initiates the scan process
@@ -100,21 +18,15 @@ export default function useTokenSelection() {
    */
   const handleSelectToken = useCallback(async (token: TokenResult) => {
     try {
-      console.log(`[TOKEN-SELECTION] Selected token: ${token.name} (${token.symbol}), CoinGecko ID: ${token.id}`);
-      console.log(`[TOKEN-SELECTION] Token platforms:`, token.platforms);
-      console.log(`[TOKEN-SELECTION] Token isErc20 property:`, token.isErc20);
+      // Process the token (validation, address resolution, storage)
+      const { isSupported, tokenAddress, shouldProceed } = await processTokenForScanning(token);
       
-      // Check if token is supported for full scanning
-      const isSupported = isTokenScanSupported(token);
-      console.log(`[TOKEN-SELECTION] Is token supported for full scan:`, isSupported);
-      
+      if (!shouldProceed) {
+        return;
+      }
+
+      // Handle unsupported tokens
       if (!isSupported) {
-        // For unsupported tokens, show a toast and navigate to a limited info page
-        console.log(`[TOKEN-SELECTION] Token ${token.name} not supported - showing limited info`);
-        toast.info("Limited Support", {
-          description: `${token.name} is not fully supported. Showing basic information only.`
-        });
-        
         // Save basic token info for display
         const tokenInfo = {
           address: `unsupported-${token.id}`, // Use a special identifier
@@ -133,66 +45,19 @@ export default function useTokenSelection() {
         navigate(`/scan-result?token=unsupported-${token.id}&id=${token.id}&limited=true`);
         return;
       }
-      
-      // For supported tokens, proceed with normal flow
-      console.log(`[TOKEN-SELECTION] Token ${token.name} is supported - proceeding with full scan`);
-      
-      // Get the first valid EVM address from any platform
-      let tokenAddress = getFirstValidEvmAddress(token.platforms);
-      console.log(`[TOKEN-SELECTION] EVM address from platforms:`, tokenAddress);
-      
-      // If no valid address found, try well-known addresses for native tokens
-      if (!tokenAddress) {
-        tokenAddress = getWellKnownAddress(token.id);
-        console.log(`[TOKEN-SELECTION] Well-known address lookup:`, tokenAddress);
-      }
-      
-      // If still no valid address, show error and don't proceed
-      if (!tokenAddress) {
-        console.error(`[TOKEN-SELECTION] No valid address found for ${token.name} (${token.id})`);
-        toast.error("Token Not Supported", {
-          description: `Unable to find a valid contract address for ${token.name}. This token may not be supported yet.`
-        });
-        return;
-      }
-      
-      // Validate the address format before proceeding
-      const isValidAddress = /^0x[a-fA-F0-9]{40}$/.test(tokenAddress);
-      const isSpecialAddress = tokenAddress === '0x0000000000000000000000000000000000000000' || 
-                               tokenAddress === '0x0000000000000000000000000000000000001010';
-      
-      if (!isValidAddress && !isSpecialAddress) {
-        console.error(`[TOKEN-SELECTION] Invalid address format for ${token.name}: ${tokenAddress}`);
-        toast.error("Invalid Token Address", {
-          description: `The contract address for ${token.name} appears to be invalid. Please try a different token.`
-        });
-        return;
-      }
-      
-      console.log(`[TOKEN-SELECTION] Valid token address found: ${tokenAddress}`);
-      
-      // Check if user has access to perform a scan - with improved error handling
+
+      // Check if user has access to perform a scan
       const hasAccess = await checkScanAccess();
       if (!hasAccess) {
         console.log(`[TOKEN-SELECTION] User does not have scan access`);
+        // Set the upgrade dialog data and show it
+        setShowUpgradeDialog(true);
         return;
       }
       
-      // Save token to database (only if we have a valid address)
-      try {
-        console.log(`[TOKEN-SELECTION] Saving token to database`);
-        await saveTokenToDatabase(token);
-      } catch (error) {
-        console.error("Error saving token to database:", error);
-        // Continue with scan even if database save fails
-      }
-      
-      // Save token to localStorage
-      saveTokenToLocalStorage(token, tokenAddress);
-      
       console.log(`[TOKEN-SELECTION] Navigating to scan loading page`);
       // Navigate to scan loading page
-      navigate(`/scan-loading?token=${encodeURIComponent(tokenAddress)}&id=${token.id}`);
+      navigate(`/scan-loading?token=${encodeURIComponent(tokenAddress!)}&id=${token.id}`);
       
     } catch (error) {
       console.error("Error in handleSelectToken:", error);
@@ -200,15 +65,7 @@ export default function useTokenSelection() {
         description: "Failed to process token selection. Please try again."
       });
     }
-  }, [navigate, user]);
-
-  /**
-   * Handles upgrade button click
-   */
-  const handleUpgrade = useCallback(() => {
-    navigate('/pricing');
-    setShowUpgradeDialog(false);
-  }, [navigate]);
+  }, [navigate, checkScanAccess, setShowUpgradeDialog]);
 
   return {
     handleSelectToken,
