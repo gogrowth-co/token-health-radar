@@ -7,7 +7,7 @@ export interface CategoryFeature {
   title: string;
   description: string;
   badgeLabel: string;
-  badgeVariant: "default" | "secondary" | "destructive" | "outline" | "blue" | "green" | "yellow" | "red";
+  badgeVariant: "default" | "secondary" | "destructive" | "outline" | "blue" | "green" | "yellow" | "red" | "orange" | "gray";
 }
 
 interface CategoryFeatureGridProps {

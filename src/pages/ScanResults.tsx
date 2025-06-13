@@ -223,7 +223,15 @@ export default function ScanResults() {
             isBlurred={shouldBlurCategories}
             isProLimitReached={isProLimitReached}
           >
-            <CategoryTabs scanData={scanData} />
+            <CategoryTabs 
+              securityData={scanData.security}
+              tokenomicsData={scanData.tokenomics}
+              liquidityData={scanData.liquidity}
+              communityData={scanData.community}
+              developmentData={scanData.development}
+              isPro={!shouldBlurCategories}
+              scanData={scanData}
+            />
           </BlurredCategory>
 
           {/* Sticky CTA for anonymous users */}
