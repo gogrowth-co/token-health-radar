@@ -32,49 +32,55 @@ const getWellKnownAddress = (tokenId: string): string | null => {
 };
 
 /**
+ * EVM-compatible chains that we support for full scanning
+ */
+const SUPPORTED_EVM_CHAINS = [
+  'ethereum', 'polygon-pos', 'binance-smart-chain', 'arbitrum-one', 
+  'avalanche', 'optimistic-ethereum', 'base', 'fantom', 'cronos',
+  'harmony-shard-0', 'moonbeam', 'aurora', 'celo', 'metis-andromeda'
+];
+
+/**
  * Check if a token's blockchain is supported for full scanning
  */
 export const isChainSupported = (token: TokenResult): boolean => {
   console.log(`[CHAIN-SUPPORT] Checking support for ${token.name} (${token.id})`);
   console.log(`[CHAIN-SUPPORT] Platforms:`, token.platforms);
   
-  // Native L1 tokens that we can't scan
-  const unsupportedNativeTokens = [
-    'hyperliquid', 'solana', 'sui', 'ton-crystal', 'sei-network',
-    'aptos', 'cardano', 'polkadot', 'cosmos', 'near', 'algorand',
-    'hedera-hashgraph', 'internet-computer', 'stellar', 'monero',
-    'kaspa', 'cronos', 'fantom', 'klay-token'
-  ];
-  
-  if (unsupportedNativeTokens.includes(token.id)) {
-    console.log(`[CHAIN-SUPPORT] ${token.id} is in unsupported native tokens list`);
-    return false;
-  }
-  
-  // Check if token has EVM-compatible platforms
+  // Check if token has EVM-compatible platforms with valid addresses
   if (token.platforms && Object.keys(token.platforms).length > 0) {
-    const evmPlatforms = ['ethereum', 'polygon-pos', 'binance-smart-chain', 'arbitrum-one', 'avalanche'];
-    const hasEvmPlatform = Object.keys(token.platforms).some(platform => 
-      evmPlatforms.includes(platform)
-    );
+    const hasValidEvmPlatform = Object.entries(token.platforms).some(([platform, address]) => {
+      const isEvmChain = SUPPORTED_EVM_CHAINS.includes(platform);
+      const hasValidAddress = address && 
+        typeof address === 'string' && 
+        address.trim().toLowerCase().startsWith('0x') &&
+        (address.length === 42 || address.length === 40);
+      
+      console.log(`[CHAIN-SUPPORT] Platform ${platform}: isEVM=${isEvmChain}, validAddress=${hasValidAddress}, address=${address}`);
+      
+      return isEvmChain && hasValidAddress;
+    });
     
-    console.log(`[CHAIN-SUPPORT] Has EVM platform:`, hasEvmPlatform);
-    console.log(`[CHAIN-SUPPORT] Available platforms:`, Object.keys(token.platforms));
-    
-    if (hasEvmPlatform) {
-      // Also check if we can get a valid address
-      const evmAddress = getFirstValidEvmAddress(token.platforms);
-      console.log(`[CHAIN-SUPPORT] EVM address found:`, evmAddress);
-      return !!evmAddress;
+    if (hasValidEvmPlatform) {
+      console.log(`[CHAIN-SUPPORT] ${token.name} has valid EVM platform`);
+      return true;
     }
   }
   
   // Check if it's a well-known native token we support
   const wellKnownAddress = getWellKnownAddress(token.id);
-  console.log(`[CHAIN-SUPPORT] Well-known address:`, wellKnownAddress);
-  if (wellKnownAddress) return true;
+  if (wellKnownAddress) {
+    console.log(`[CHAIN-SUPPORT] ${token.name} is a well-known EVM token`);
+    return true;
+  }
   
-  console.log(`[CHAIN-SUPPORT] ${token.name} is not supported`);
+  // Check if this token is marked as ERC-20 compatible
+  if (token.isErc20) {
+    console.log(`[CHAIN-SUPPORT] ${token.name} is marked as ERC-20 compatible`);
+    return true;
+  }
+  
+  console.log(`[CHAIN-SUPPORT] ${token.name} is not supported for full scanning`);
   return false;
 };
 
@@ -87,11 +93,6 @@ export const isTokenScanSupported = (token: TokenResult): boolean => {
   return supported;
 };
 
-/**
- * Save token data to Supabase database
- * @param token - Token data to save
- * @returns Promise that resolves when the data is saved
- */
 export const saveTokenToDatabase = async (token: TokenResult): Promise<void> => {
   // Only save tokens that have valid addresses or are well-known
   let tokenAddress = getFirstValidEvmAddress(token.platforms);
@@ -164,11 +165,6 @@ export const saveTokenToDatabase = async (token: TokenResult): Promise<void> => 
   return;
 };
 
-/**
- * Save token info to localStorage for persistence
- * @param token - Token data to save
- * @param tokenAddress - Token address to use as identifier
- */
 export const saveTokenToLocalStorage = (token: TokenResult, tokenAddress: string): void => {
   const tokenInfo: TokenInfo = {
     address: tokenAddress,
