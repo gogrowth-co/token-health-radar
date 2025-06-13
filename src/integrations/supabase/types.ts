@@ -241,7 +241,7 @@ export type Database = {
           scanned_at: string | null
           score_total: number | null
           token_address: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           id?: string
@@ -249,7 +249,7 @@ export type Database = {
           scanned_at?: string | null
           score_total?: number | null
           token_address?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           id?: string
@@ -257,7 +257,7 @@ export type Database = {
           scanned_at?: string | null
           score_total?: number | null
           token_address?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {

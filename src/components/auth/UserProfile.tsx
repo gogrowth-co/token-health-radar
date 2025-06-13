@@ -2,7 +2,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSubscriberData } from "./hooks/useSubscriberData";
 import { useSubscriptionActions } from "./hooks/useSubscriptionActions";
@@ -28,10 +28,19 @@ export function UserProfile() {
     );
   }
 
+  const handleRefresh = () => {
+    window.location.reload();
+  };
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>User Profile</CardTitle>
+        {error && (
+          <Button variant="outline" size="sm" onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         {loading ? (
@@ -45,7 +54,12 @@ export function UserProfile() {
             {error && (
               <Alert variant="destructive" className="my-4">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>
+                  {error}
+                  <Button variant="link" onClick={handleRefresh} className="p-0 ml-2 h-auto">
+                    Refresh
+                  </Button>
+                </AlertDescription>
               </Alert>
             )}
 

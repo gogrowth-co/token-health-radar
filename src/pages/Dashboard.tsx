@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowRight, Loader2, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type ScanHistory = {
@@ -26,67 +26,73 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchScanHistory = async () => {
-      if (!user) {
-        setLoading(false);
+  const fetchScanHistory = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      console.log('📋 Fetching scan history for user:', user.id);
+      setLoading(true);
+      setError(null);
+      
+      // Fetch token scans with proper authentication
+      const { data: scanData, error: scanError } = await supabase
+        .from("token_scans")
+        .select("id, token_address, score_total, scanned_at")
+        .order("scanned_at", { ascending: false })
+        .limit(10);
+
+      if (scanError) {
+        console.error("❌ Error fetching scan history:", scanError);
+        if (scanError.message?.includes('RLS')) {
+          setError("Authentication required. Please refresh the page and try again.");
+        } else {
+          setError("Could not load scan history. Please try again.");
+        }
         return;
       }
 
-      try {
-        console.log('📋 Fetching scan history for user:', user.id);
-        
-        // Fetch token scans - RLS will filter by user_id automatically
-        const { data: scanData, error: scanError } = await supabase
-          .from("token_scans")
-          .select("id, token_address, score_total, scanned_at")
-          .order("scanned_at", { ascending: false })
-          .limit(10);
+      console.log('✅ Scan data fetched:', scanData?.length || 0, 'scans');
 
-        if (scanError) {
-          console.error("❌ Error fetching scan history:", scanError);
-          setError("Could not load scan history");
-          return;
-        }
+      // For each scan, try to get token info from cache
+      const scansWithTokenInfo = await Promise.all(
+        (scanData || []).map(async (scan) => {
+          try {
+            const { data: tokenData } = await supabase
+              .from("token_data_cache")
+              .select("name, symbol")
+              .eq("token_address", scan.token_address)
+              .maybeSingle();
 
-        console.log('✅ Scan data fetched:', scanData?.length || 0, 'scans');
+            return {
+              ...scan,
+              token_name: tokenData?.name || `Token ${scan.token_address.substring(0, 8)}...`,
+              token_symbol: tokenData?.symbol || "???"
+            };
+          } catch (error) {
+            console.error(`Error fetching token data for ${scan.token_address}:`, error);
+            return {
+              ...scan,
+              token_name: `Token ${scan.token_address.substring(0, 8)}...`,
+              token_symbol: "???"
+            };
+          }
+        })
+      );
 
-        // For each scan, try to get token info from cache
-        const scansWithTokenInfo = await Promise.all(
-          (scanData || []).map(async (scan) => {
-            try {
-              const { data: tokenData } = await supabase
-                .from("token_data_cache")
-                .select("name, symbol")
-                .eq("token_address", scan.token_address)
-                .maybeSingle();
+      setScans(scansWithTokenInfo);
+      setError(null);
+    } catch (error) {
+      console.error("💥 Error in scan history fetch:", error);
+      setError("Failed to load scan history. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-              return {
-                ...scan,
-                token_name: tokenData?.name || "Unknown Token",
-                token_symbol: tokenData?.symbol || "???"
-              };
-            } catch (error) {
-              console.error(`Error fetching token data for ${scan.token_address}:`, error);
-              return {
-                ...scan,
-                token_name: "Unknown Token",
-                token_symbol: "???"
-              };
-            }
-          })
-        );
-
-        setScans(scansWithTokenInfo);
-        setError(null);
-      } catch (error) {
-        console.error("💥 Error in scan history fetch:", error);
-        setError("Failed to load scan history");
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  useEffect(() => {
     fetchScanHistory();
   }, [user]);
 
@@ -136,9 +142,19 @@ export default function Dashboard() {
             
             <div className="md:col-span-2">
               <Card>
-                <CardHeader>
-                  <CardTitle>Recent Scans</CardTitle>
-                  <CardDescription>Your most recent token health scans</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Recent Scans</CardTitle>
+                    <CardDescription>Your most recent token health scans</CardDescription>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={fetchScanHistory}
+                    disabled={loading}
+                  >
+                    <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   {loading ? (
@@ -151,7 +167,7 @@ export default function Dashboard() {
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription>{error}</AlertDescription>
                       </Alert>
-                      <Button onClick={() => window.location.reload()} variant="outline">
+                      <Button onClick={fetchScanHistory} variant="outline">
                         Try Again
                       </Button>
                     </div>
