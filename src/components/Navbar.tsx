@@ -23,6 +23,9 @@ export default function Navbar() {
             <Link to="/" className="text-sm font-medium transition-colors hover:text-primary">
               Home
             </Link>
+            <Link to="/dashboard" className="text-sm font-medium transition-colors hover:text-primary">
+              Dashboard
+            </Link>
             <Link to="/pricing" className="text-sm font-medium transition-colors hover:text-primary">
               Pricing
             </Link>

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import { AlertCircle, ArrowRight, Loader2, RefreshCw } from "lucide-react";
+import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type ScanHistory = {
@@ -24,75 +24,54 @@ export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
   const [scans, setScans] = useState<ScanHistory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchScanHistory = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      console.log('📋 Fetching scan history for user:', user.id);
-      setLoading(true);
-      setError(null);
-      
-      // Fetch token scans with proper authentication
-      const { data: scanData, error: scanError } = await supabase
-        .from("token_scans")
-        .select("id, token_address, score_total, scanned_at")
-        .order("scanned_at", { ascending: false })
-        .limit(10);
-
-      if (scanError) {
-        console.error("❌ Error fetching scan history:", scanError);
-        if (scanError.message?.includes('RLS')) {
-          setError("Authentication required. Please refresh the page and try again.");
-        } else {
-          setError("Could not load scan history. Please try again.");
-        }
+  useEffect(() => {
+    const fetchScanHistory = async () => {
+      if (!user) {
+        setLoading(false);
         return;
       }
 
-      console.log('✅ Scan data fetched:', scanData?.length || 0, 'scans');
+      try {
+        const { data: scanData, error } = await supabase
+          .from("token_scans")
+          .select(`
+            id, 
+            token_address,
+            score_total,
+            scanned_at,
+            token_data_cache (
+              name,
+              symbol
+            )
+          `)
+          .eq("user_id", user.id)
+          .order("scanned_at", { ascending: false })
+          .limit(10);
 
-      // For each scan, try to get token info from cache
-      const scansWithTokenInfo = await Promise.all(
-        (scanData || []).map(async (scan) => {
-          try {
-            const { data: tokenData } = await supabase
-              .from("token_data_cache")
-              .select("name, symbol")
-              .eq("token_address", scan.token_address)
-              .maybeSingle();
+        if (error) {
+          console.error("Error fetching scan history:", error);
+          return;
+        }
 
-            return {
-              ...scan,
-              token_name: tokenData?.name || `Token ${scan.token_address.substring(0, 8)}...`,
-              token_symbol: tokenData?.symbol || "???"
-            };
-          } catch (error) {
-            console.error(`Error fetching token data for ${scan.token_address}:`, error);
-            return {
-              ...scan,
-              token_name: `Token ${scan.token_address.substring(0, 8)}...`,
-              token_symbol: "???"
-            };
-          }
-        })
-      );
+        // Transform the data to include token name and symbol
+        const formattedScans = scanData.map(scan => ({
+          id: scan.id,
+          token_address: scan.token_address,
+          score_total: scan.score_total,
+          scanned_at: scan.scanned_at,
+          token_name: scan.token_data_cache?.name || "Unknown Token",
+          token_symbol: scan.token_data_cache?.symbol || "???"
+        }));
 
-      setScans(scansWithTokenInfo);
-      setError(null);
-    } catch (error) {
-      console.error("💥 Error in scan history fetch:", error);
-      setError("Failed to load scan history. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+        setScans(formattedScans);
+      } catch (error) {
+        console.error("Error in scan history fetch:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  useEffect(() => {
     fetchScanHistory();
   }, [user]);
 
@@ -142,34 +121,14 @@ export default function Dashboard() {
             
             <div className="md:col-span-2">
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle>Recent Scans</CardTitle>
-                    <CardDescription>Your most recent token health scans</CardDescription>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={fetchScanHistory}
-                    disabled={loading}
-                  >
-                    <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                  </Button>
+                <CardHeader>
+                  <CardTitle>Recent Scans</CardTitle>
+                  <CardDescription>Your most recent token health scans</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {loading ? (
                     <div className="flex justify-center py-8">
                       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : error ? (
-                    <div className="text-center py-8">
-                      <Alert variant="destructive" className="mb-4">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{error}</AlertDescription>
-                      </Alert>
-                      <Button onClick={fetchScanHistory} variant="outline">
-                        Try Again
-                      </Button>
                     </div>
                   ) : scans.length > 0 ? (
                     <div className="space-y-4">

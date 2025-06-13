@@ -241,7 +241,7 @@ export type Database = {
           scanned_at: string | null
           score_total: number | null
           token_address: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           id?: string
@@ -249,7 +249,7 @@ export type Database = {
           scanned_at?: string | null
           score_total?: number | null
           token_address?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           id?: string
@@ -257,7 +257,7 @@ export type Database = {
           scanned_at?: string | null
           score_total?: number | null
           token_address?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -434,10 +434,6 @@ export type Database = {
       sync_all_users_to_hubspot: {
         Args: Record<PropertyKey, never>
         Returns: undefined
-      }
-      sync_all_users_to_hubspot_debug: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
       }
       upsert_subscriber_by_email: {
         Args: {

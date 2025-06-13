@@ -1,19 +1,91 @@
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useSubscriberData } from "./hooks/useSubscriberData";
-import { useSubscriptionActions } from "./hooks/useSubscriptionActions";
-import { UserProfileInfo } from "./components/UserProfileInfo";
-import { SubscriptionInfo } from "./components/SubscriptionInfo";
-import { SubscriptionActions } from "./components/SubscriptionActions";
+import { toast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+
+type SubscriberData = {
+  plan: string;
+  scans_used: number;
+  pro_scan_limit: number;
+  source?: string;
+};
 
 export function UserProfile() {
   const { user, signOut } = useAuth();
-  const { subscriberData, loading, error } = useSubscriberData();
-  const { isLoadingPortal, handleManageSubscription, handleUpgradePlan } = useSubscriptionActions();
+  const [subscriberData, setSubscriberData] = useState<SubscriberData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchSubscriberData = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("subscribers")
+          .select("plan, scans_used, pro_scan_limit, source")
+          .eq("id", user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching subscriber data:", error);
+          toast({
+            title: "Error",
+            description: "Could not fetch your subscription data",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setSubscriberData(data);
+      } catch (error) {
+        console.error("Error in subscriber data fetch:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSubscriberData();
+  }, [user]);
+
+  const handleManageSubscription = async () => {
+    if (!user) return;
+    
+    setIsLoadingPortal(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal', {
+        body: {
+          returnUrl: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw new Error(error.message);
+      
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error("Error creating customer portal session:", error);
+      toast({
+        title: "Error",
+        description: "Could not open subscription management portal",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingPortal(false);
+    }
+  };
+
+  const handleUpgradePlan = () => {
+    navigate('/pricing');
+  };
 
   if (!user) {
     return (
@@ -28,19 +100,10 @@ export function UserProfile() {
     );
   }
 
-  const handleRefresh = () => {
-    window.location.reload();
-  };
-
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader>
         <CardTitle>User Profile</CardTitle>
-        {error && (
-          <Button variant="outline" size="sm" onClick={handleRefresh}>
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-        )}
       </CardHeader>
       <CardContent className="space-y-4">
         {loading ? (
@@ -49,31 +112,99 @@ export function UserProfile() {
           </div>
         ) : (
           <>
-            <UserProfileInfo user={user} />
-
-            {error && (
-              <Alert variant="destructive" className="my-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  {error}
-                  <Button variant="link" onClick={handleRefresh} className="p-0 ml-2 h-auto">
-                    Refresh
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            )}
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Email</p>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
+            </div>
 
             {subscriberData && (
               <>
-                <SubscriptionInfo subscriberData={subscriberData} />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Plan</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm capitalize text-muted-foreground">
+                      {subscriberData.plan}
+                    </p>
+                    {subscriberData.plan === "lifetime" ? (
+                      <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                        Lifetime Access
+                      </Badge>
+                    ) : subscriberData.plan === "pro" ? (
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        Active
+                      </Badge>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">
+                    {subscriberData.plan === "lifetime" ? "Scans Used" : 
+                     subscriberData.plan === "pro" ? "Pro Scans (Monthly)" : "Pro Scans"}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground">
+                      {subscriberData.plan === "lifetime" ? 
+                        `${subscriberData.scans_used} scans used` :
+                        `${subscriberData.scans_used} / ${subscriberData.pro_scan_limit} used`
+                      }
+                    </p>
+                    {subscriberData.plan !== "lifetime" && subscriberData.scans_used >= subscriberData.pro_scan_limit && subscriberData.plan !== "pro" && (
+                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                        Limit Reached
+                      </Badge>
+                    )}
+                  </div>
+                  {subscriberData.plan === "lifetime" && (
+                    <p className="text-xs text-muted-foreground">
+                      Unlimited high-quality scans forever
+                    </p>
+                  )}
+                  {subscriberData.plan !== "lifetime" && subscriberData.plan !== "pro" && subscriberData.scans_used < subscriberData.pro_scan_limit && (
+                    <p className="text-xs text-muted-foreground">
+                      Full-quality scans with detailed analysis
+                    </p>
+                  )}
+                  {subscriberData.plan !== "lifetime" && subscriberData.plan !== "pro" && subscriberData.scans_used >= subscriberData.pro_scan_limit && (
+                    <p className="text-xs text-muted-foreground">
+                      Unlimited basic scans available. Upgrade for full analysis.
+                    </p>
+                  )}
+                </div>
 
                 <div className="pt-2">
-                  <SubscriptionActions
-                    subscriberData={subscriberData}
-                    isLoadingPortal={isLoadingPortal}
-                    onManageSubscription={() => handleManageSubscription(user)}
-                    onUpgradePlan={handleUpgradePlan}
-                  />
+                  {subscriberData.plan === "lifetime" ? (
+                    <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
+                      <p className="text-sm text-purple-700 font-medium">
+                        🎉 You have lifetime access!
+                      </p>
+                      <p className="text-xs text-purple-600 mt-1">
+                        Enjoy unlimited scans forever
+                      </p>
+                    </div>
+                  ) : subscriberData.plan === "pro" ? (
+                    <Button 
+                      variant="outline" 
+                      onClick={handleManageSubscription} 
+                      className="w-full"
+                      disabled={isLoadingPortal}
+                    >
+                      {isLoadingPortal ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Please wait...
+                        </>
+                      ) : "Manage Subscription"}
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="default" 
+                      onClick={handleUpgradePlan} 
+                      className="w-full"
+                    >
+                      Upgrade to Pro
+                    </Button>
+                  )}
                 </div>
               </>
             )}

@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { cryptoTrivia } from "@/lib/mock-data";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function ScanLoading() {
@@ -16,200 +16,233 @@ export default function ScanLoading() {
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
   const [trivia, setTrivia] = useState("");
+  const [tokenInfo, setTokenInfo] = useState<any>(null);
   const [isScanning, setIsScanning] = useState(true);
   const [scanFailed, setScanFailed] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [retryCount, setRetryCount] = useState(0);
-  const [currentStep, setCurrentStep] = useState("Starting scan...");
   const { user } = useAuth();
   
+  // Get token from URL params (parameter name is always 'token')
   const tokenAddress = searchParams.get("token") || "";
   const coinGeckoId = searchParams.get("id") || "";
   
+  // Make sure we have a token to scan
   useEffect(() => {
-    console.log("🔍 ScanLoading: URL parameters received:", Object.fromEntries(searchParams.entries()));
-    console.log("🔍 ScanLoading: tokenAddress =", tokenAddress);
-    console.log("🔍 ScanLoading: coinGeckoId =", coinGeckoId);
+    console.log("ScanLoading: URL parameters received:", Object.fromEntries(searchParams.entries()));
+    console.log("ScanLoading: tokenAddress =", tokenAddress);
+    console.log("ScanLoading: coinGeckoId =", coinGeckoId);
     
     if (!tokenAddress) {
-      console.error("❌ ScanLoading: No token address provided in URL parameters");
+      console.error("ScanLoading: No token address provided in URL parameters");
       toast.error("No token address provided");
       navigate("/");
       return;
     }
     
-    if (!coinGeckoId) {
-      console.error("❌ ScanLoading: No CoinGecko ID provided in URL parameters");
-      toast.error("No token ID provided");
-      navigate("/");
-      return;
-    }
-    
+    // Validate token address format (allow special addresses for native tokens)
     const isValidAddress = /^0x[a-fA-F0-9]{40}$/.test(tokenAddress);
     const isSpecialAddress = tokenAddress === '0x0000000000000000000000000000000000000000' || 
                              tokenAddress === '0x0000000000000000000000000000000000001010';
     
     if (!isValidAddress && !isSpecialAddress) {
-      console.error("❌ ScanLoading: Invalid token address format:", tokenAddress);
+      console.error("ScanLoading: Invalid token address format:", tokenAddress);
       toast.error("Invalid token address format");
       navigate("/");
       return;
     }
-  }, [tokenAddress, coinGeckoId, navigate, searchParams]);
+  }, [tokenAddress, navigate, searchParams]);
 
   useEffect(() => {
+    // Select random trivia
     const randomTrivia = cryptoTrivia[Math.floor(Math.random() * cryptoTrivia.length)];
     setTrivia(randomTrivia);
 
-    // Progress animation
+    // Simulate progress bar animation
     const interval = setInterval(() => {
       setProgress(prevProgress => {
-        const newProgress = prevProgress + 1.2;
-        
-        if (newProgress >= 15 && newProgress < 35) {
-          setCurrentStep("Fetching token data...");
-        } else if (newProgress >= 35 && newProgress < 55) {
-          setCurrentStep("Analyzing security...");
-        } else if (newProgress >= 55 && newProgress < 75) {
-          setCurrentStep("Checking liquidity...");
-        } else if (newProgress >= 75 && newProgress < 90) {
-          setCurrentStep("Calculating scores...");
-        } else if (newProgress >= 90) {
-          setCurrentStep("Finalizing results...");
-        }
-        
+        const newProgress = prevProgress + 2;
         return newProgress >= 100 ? 100 : newProgress;
       });
-    }, 120);
+    }, 50);
 
+    // Function to handle the token scan
     const scanToken = async () => {
       try {
+        // Make sure user is authenticated
         if (!user) {
-          console.error("❌ ScanLoading: User not authenticated");
+          console.error("ScanLoading: User not authenticated");
           toast.error("You must be logged in to scan tokens");
           navigate("/auth");
           return;
         }
 
-        console.log("🚀 ScanLoading: Starting token scan with simplified approach");
-        console.log("📋 ScanLoading: Token address:", tokenAddress);
-        console.log("📋 ScanLoading: CoinGecko ID:", coinGeckoId);
-        console.log("📋 ScanLoading: User ID:", user.id);
+        console.log("ScanLoading: Starting token scan with address:", tokenAddress, "and CoinGecko ID:", coinGeckoId);
 
-        const scanParams = {
-          token_address: tokenAddress,
-          coingecko_id: coinGeckoId,
-          user_id: user.id,
-        };
-        
-        console.log("📞 ScanLoading: Calling run-token-scan with simplified params:", scanParams);
-        
-        const startTime = Date.now();
-        
-        // Simplified function invocation - let Supabase handle authentication automatically
-        const { data, error } = await supabase.functions.invoke('run-token-scan', {
-          body: scanParams
-        });
-        
-        const endTime = Date.now();
-        console.log(`⏱️ ScanLoading: Scan took ${endTime - startTime}ms`);
-        console.log("📊 ScanLoading: Raw response data:", data);
-        console.log("❗ ScanLoading: Raw response error:", error);
-
-        if (error) {
-          console.error("❌ ScanLoading: Edge function error:", error);
-          
-          let userFriendlyMessage = "Failed to scan token. Please try again.";
-          if (error.message?.includes('timeout')) {
-            userFriendlyMessage = "Network timeout occurred. Please try again.";
-          } else if (error.message?.includes('FunctionsFetchError')) {
-            userFriendlyMessage = "Connection error. Please check your internet connection and try again.";
-          } else if (error.message?.includes('Invalid token')) {
-            userFriendlyMessage = "Invalid token address or the token is not supported.";
-          }
-          
-          setScanFailed(true);
-          setErrorMessage(userFriendlyMessage);
+        // Enhanced error logging
+        if (!tokenAddress) {
+          console.error("ScanLoading: Token address is missing");
+          toast.error("Token address is required");
+          navigate("/");
           return;
         }
 
-        console.log("✅ ScanLoading: Token scan response:", data);
+        // Get token info from localStorage if available
+        const savedTokenInfo = localStorage.getItem("selectedToken");
+        const selectedToken = savedTokenInfo ? JSON.parse(savedTokenInfo) : null;
+        
+        console.log("ScanLoading: Selected token from localStorage:", selectedToken);
+        
+        // Token address must match what's stored in localStorage or be present in params
+        let tokenToScan = selectedToken;
+        if (!tokenToScan || selectedToken?.address !== tokenAddress) {
+          // Attempt to load token data from the database using CoinGecko ID first
+          let tokenData = null;
+          
+          if (coinGeckoId) {
+            const { data } = await supabase
+              .from("token_data_cache")
+              .select("*")
+              .eq("coingecko_id", coinGeckoId)
+              .maybeSingle();
+            tokenData = data;
+          }
+          
+          // Fallback to address lookup if CoinGecko ID lookup failed
+          if (!tokenData) {
+            const { data } = await supabase
+              .from("token_data_cache")
+              .select("*")
+              .eq("token_address", tokenAddress)
+              .maybeSingle();
+            tokenData = data;
+          }
+            
+          if (tokenData) {
+            console.log("ScanLoading: Found token in database:", tokenData);
+            tokenToScan = {
+              address: tokenAddress,
+              name: tokenData.name,
+              symbol: tokenData.symbol,
+              logo: tokenData.logo_url,
+              id: tokenData.coingecko_id || coinGeckoId
+            };
+          } else {
+            console.log("ScanLoading: No token info available for address", tokenAddress);
+            tokenToScan = {
+              address: tokenAddress,
+              name: `Token ${tokenAddress.substring(0, 6)}...`,
+              symbol: "???",
+              id: coinGeckoId
+            };
+          }
+        }
+        
+        // Validate we have minimum required data for scanning
+        if (!coinGeckoId && !tokenToScan?.id) {
+          console.error("ScanLoading: No CoinGecko ID available for scanning");
+          setScanFailed(true);
+          setErrorMessage("Unable to scan token: Missing token identifier. Please try selecting the token again.");
+          return;
+        }
+        
+        // Call the run-token-scan edge function with consistently named parameters
+        console.log("ScanLoading: Calling run-token-scan with params:", {
+          token_address: tokenAddress,
+          coingecko_id: coinGeckoId || tokenToScan?.id || "",
+          user_id: user.id,
+          token_name: tokenToScan?.name,
+          token_symbol: tokenToScan?.symbol
+        });
+        
+        const { data, error } = await supabase.functions.invoke('run-token-scan', {
+          body: {
+            token_address: tokenAddress,
+            coingecko_id: coinGeckoId || tokenToScan?.id || "",
+            user_id: user.id,
+            token_name: tokenToScan?.name,
+            token_symbol: tokenToScan?.symbol
+          }
+        });
+
+        if (error) {
+          console.error("ScanLoading: Edge function error:", error);
+          setScanFailed(true);
+          setErrorMessage(error.message || "Failed to scan token. Please try again.");
+          return;
+        }
+
+        console.log("ScanLoading: Token scan response:", data);
 
         if (!data) {
-          console.error("❌ ScanLoading: No data returned from token scan");
+          console.error("ScanLoading: No data returned from token scan");
           setScanFailed(true);
           setErrorMessage("No data returned from scan. Please try again.");
           return;
         }
 
+        // Check if scan was successful
         if (!data.success) {
-          console.error("❌ ScanLoading: Scan failed:", data.error_message);
+          console.error("ScanLoading: Scan failed:", data.error_message);
           setScanFailed(true);
-          setErrorMessage(data.error_message || "Scan failed. Please try again.");
+          setErrorMessage(data.error_message || "Failed to retrieve token data. Please try again.");
           return;
         }
 
-        if (!data.token_info || data.overall_score === undefined) {
-          console.error("❌ ScanLoading: Incomplete scan results:", data);
+        // Validate that we have meaningful scan results
+        if (!data.token_info || !data.overall_score) {
+          console.error("ScanLoading: Incomplete scan results:", data);
           setScanFailed(true);
           setErrorMessage("Scan completed but returned incomplete results. Please try again.");
           return;
         }
 
-        setCurrentStep("Scan completed!");
+        setTokenInfo(data.token_info || data);
         
-        // Complete the progress animation
+        // Wait for the progress bar to reach 100%
         setTimeout(() => {
-          setProgress(100);
-        }, 500);
-        
-        setTimeout(() => {
+          // Save scan result to localStorage for persistence
           const resultData = data.token_info || data;
-          console.log("💾 ScanLoading: Saving scan result to localStorage:", resultData);
+          console.log("ScanLoading: Saving scan result to localStorage:", resultData);
           localStorage.setItem("lastScanResult", JSON.stringify(resultData));
           
-          console.log("🔄 ScanLoading: Redirecting to scan result page");
-          navigate(`/scan-result?token=${tokenAddress}&id=${coinGeckoId}`);
-        }, 1500);
-        
+          // CRITICAL: Make sure we pass the correct token address
+          console.log("ScanLoading: Redirecting to scan result page with parameters:", { 
+            token: tokenAddress, 
+            id: coinGeckoId || tokenToScan?.id || "" 
+          });
+          
+          navigate(`/scan-result?token=${tokenAddress}${coinGeckoId ? `&id=${coinGeckoId}` : (tokenToScan?.id ? `&id=${tokenToScan.id}` : '')}`);
+        }, 1000); // Short delay to ensure progress bar completes
       } catch (error) {
-        console.error("💥 ScanLoading: Error during token scan:", error);
-        
-        let errorMsg = "Unknown error occurred. Please try again.";
-        if (error instanceof Error) {
-          if (error.message.includes('Failed to fetch') || error.message.includes('network')) {
-            errorMsg = "Network connection error. Please check your internet connection and try again.";
-          } else if (error.message.includes('timeout')) {
-            errorMsg = "Request timed out. Please try again.";
-          } else {
-            errorMsg = error.message;
-          }
-        }
-        
+        console.error("ScanLoading: Error during token scan:", error instanceof Error ? error.message : String(error));
         setScanFailed(true);
-        setErrorMessage(errorMsg);
+        setErrorMessage(error instanceof Error ? error.message : "Unknown error occurred. Please try again.");
       } finally {
         setIsScanning(false);
       }
     };
 
+    // Start the scan
     scanToken();
 
     return () => {
       clearInterval(interval);
     };
-  }, [navigate, tokenAddress, coinGeckoId, user, retryCount]);
+  }, [navigate, tokenAddress, coinGeckoId, user]);
 
+  // Get token display information from localStorage if available
   const displayToken = (() => {
     try {
       const savedToken = localStorage.getItem("selectedToken");
       if (savedToken) {
         const parsedToken = JSON.parse(savedToken);
+        // Make sure the token address matches
         if (parsedToken && parsedToken.address === tokenAddress) {
           return parsedToken;
         }
       }
       
+      // Fallback display format
       return { 
         name: tokenAddress.substring(0, 8) + "..." + tokenAddress.substring(tokenAddress.length - 6),
         logo: null
@@ -227,8 +260,7 @@ export default function ScanLoading() {
     setIsScanning(true);
     setScanFailed(false);
     setProgress(0);
-    setCurrentStep("Starting scan...");
-    setRetryCount(prev => prev + 1);
+    window.location.reload();
   };
 
   const handleBackToSearch = () => {
@@ -261,17 +293,11 @@ export default function ScanLoading() {
             </div>
             
             <div className="w-full">
-              <Progress value={progress} className="h-3 mb-3" />
-              <div className="flex justify-between text-sm text-muted-foreground mb-2">
-                <span>{currentStep}</span>
-                <span>{Math.round(progress)}%</span>
+              <Progress value={progress} className="h-2 mb-2" />
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Scanning...</span>
+                <span>{progress}%</span>
               </div>
-              {progress === 100 && (
-                <div className="flex items-center justify-center text-green-600 mt-2">
-                  <CheckCircle className="h-5 w-5 mr-2" />
-                  <span className="text-sm font-medium">Scan completed successfully!</span>
-                </div>
-              )}
             </div>
             
             <div className="py-6 px-6 rounded-lg bg-muted">
@@ -298,12 +324,6 @@ export default function ScanLoading() {
                   Retry Scan
                 </Button>
               </div>
-              
-              {retryCount > 0 && (
-                <p className="text-sm text-muted-foreground mt-4">
-                  Retry attempt: {retryCount}
-                </p>
-              )}
             </div>
           </div>
         )}

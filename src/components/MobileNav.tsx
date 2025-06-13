@@ -44,6 +44,13 @@ export default function MobileNav() {
                 Home
               </Link>
               <Link 
+                to="/dashboard" 
+                className="text-base font-medium py-2 px-2 rounded hover:bg-accent"
+                onClick={closeNav}
+              >
+                Dashboard
+              </Link>
+              <Link 
                 to="/pricing" 
                 className="text-base font-medium py-2 px-2 rounded hover:bg-accent"
                 onClick={closeNav}
