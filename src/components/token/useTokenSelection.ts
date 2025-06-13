@@ -4,8 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { checkUserHasProAccess } from "@/integrations/supabase/client";
 import { TokenResult } from "./types";
-import { saveTokenToDatabase, saveTokenToLocalStorage, isTokenScanSupported } from "@/utils/tokenStorage";
-import { getFirstValidEvmAddress } from "@/utils/addressUtils";
+import { saveTokenToDatabase, saveTokenToLocalStorage, isTokenScanSupported, getTokenAddress } from "@/utils/tokenStorage";
 import { toast } from "sonner";
 
 interface ScanAccessData {
@@ -33,14 +32,23 @@ export default function useTokenSelection() {
       return;
     }
 
-    // Get token address
-    let tokenAddress = getFirstValidEvmAddress(token.platforms);
+    // Get token address using enhanced logic with fallbacks
+    const tokenAddress = getTokenAddress(token);
+    
     if (!tokenAddress) {
+      console.error(`[TOKEN-SELECTION] Failed to get address for ${token.name}`, {
+        platforms: token.platforms,
+        id: token.id,
+        isErc20: token.isErc20
+      });
+      
       toast.error("Address not found", {
-        description: "Could not find a valid contract address for this token."
+        description: `Could not find a valid contract address for ${token.name}. Please try a different token or contact support.`
       });
       return;
     }
+
+    console.log(`[TOKEN-SELECTION] Using address ${tokenAddress} for ${token.name}`);
 
     try {
       // Save token data
