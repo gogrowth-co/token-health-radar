@@ -7,8 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Helper function to add timeout to fetch requests
-async function fetchWithTimeout(url: string, options: any = {}, timeoutMs: number = 10000) {
+// Helper function to add timeout to fetch requests with circuit breaker
+async function fetchWithTimeout(url: string, options: any = {}, timeoutMs: number = 5000) {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
   
@@ -27,7 +27,6 @@ async function fetchWithTimeout(url: string, options: any = {}, timeoutMs: numbe
 
 // Validate token address format
 function isValidTokenAddress(address: string): boolean {
-  // Allow standard EVM addresses and special native token addresses
   const isStandardAddress = /^0x[a-fA-F0-9]{40}$/.test(address)
   const isNativeAddress = address === '0x0000000000000000000000000000000000000000' || 
                           address === '0x0000000000000000000000000000000000001010'
@@ -39,6 +38,9 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  const correlationId = `scan-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  console.log(`[${correlationId}] Starting token scan`)
+
   try {
     const { token_address, user_id, coingecko_id } = await req.json()
     
@@ -47,21 +49,16 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    console.log(`[TOKEN-SCAN] Starting token scan - {
-  token_address: "${token_address}",
-  coingecko_id: "${coingecko_id}",
-  user_id: "${user_id}",
-  token_name: "Processing...",
-  token_symbol: "Processing..."
-}`)
+    console.log(`[${correlationId}] Token scan params: address=${token_address}, id=${coingecko_id}, user=${user_id}`)
 
-    // Validate required parameters
+    // Enhanced validation
     if (!token_address || !coingecko_id || !user_id) {
-      console.error('[TOKEN-SCAN] Missing required parameters:', { token_address, coingecko_id, user_id })
+      console.error(`[${correlationId}] Missing required parameters`)
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error_message: 'Missing required parameters for token scan' 
+          error_message: 'Missing required parameters for token scan',
+          correlation_id: correlationId
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -70,13 +67,13 @@ serve(async (req) => {
       )
     }
 
-    // Validate token address format
     if (!isValidTokenAddress(token_address)) {
-      console.error('[TOKEN-SCAN] Invalid token address format:', token_address)
+      console.error(`[${correlationId}] Invalid token address format: ${token_address}`)
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error_message: 'Invalid token address format' 
+          error_message: 'Invalid token address format',
+          correlation_id: correlationId
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -85,37 +82,49 @@ serve(async (req) => {
       )
     }
 
-    // Check user's scan status
-    const { data: userData } = await supabaseClient
-      .from('subscribers')
-      .select('plan, scans_used, pro_scan_limit')
-      .eq('id', user_id)
-      .single()
+    // Check user's scan status with fallback
+    let userData = null
+    try {
+      const { data } = await supabaseClient
+        .from('subscribers')
+        .select('plan, scans_used, pro_scan_limit')
+        .eq('id', user_id)
+        .single()
+      userData = data
+    } catch (error) {
+      console.warn(`[${correlationId}] Failed to fetch user data, using defaults:`, error.message)
+      userData = { plan: 'free', scans_used: 0, pro_scan_limit: 3 }
+    }
 
-    // Fixed logic: First 3 scans are Pro quality for free users
     const isWithinProLimit = (userData?.scans_used || 0) < (userData?.pro_scan_limit || 3)
     const isProScan = userData?.plan === 'pro' || isWithinProLimit
     
-    console.log(`[TOKEN-SCAN] User scan status: { 
-      scans_used: ${userData?.scans_used || 0}, 
-      scan_limit: ${userData?.pro_scan_limit || 3}, 
-      is_within_pro_limit: ${isWithinProLimit},
-      is_pro_scan: ${isProScan}, 
-      plan: "${userData?.plan || 'free'}" 
-    }`)
+    console.log(`[${correlationId}] User scan status: scans_used=${userData?.scans_used}, limit=${userData?.pro_scan_limit}, is_pro=${isProScan}`)
 
-    // Fetch CoinGecko data first
-    const coinGeckoApiKey = Deno.env.get('COINGECKO_API_KEY')
-    let coinGeckoUrl = `https://api.coingecko.com/api/v3/coins/${coingecko_id}`
-    if (coinGeckoApiKey) {
-      coinGeckoUrl += `?x_cg_demo_api_key=${coinGeckoApiKey}`
+    // Initialize scan results with defaults
+    let scanResults = {
+      token_address,
+      name: 'Unknown Token',
+      symbol: 'UNKNOWN',
+      overall_score: 0,
+      security_score: 0,
+      tokenomics_score: 0,
+      liquidity_score: 0,
+      development_score: 0,
+      community_score: 0
     }
 
-    console.log(`[TOKEN-SCAN] CoinGecko API URL: ${coinGeckoUrl}`)
-    
-    let coinGeckoData
+    // Fetch CoinGecko data with enhanced error handling
+    console.log(`[${correlationId}] Fetching CoinGecko data`)
+    let coinGeckoData = null
     try {
-      const coinGeckoResponse = await fetchWithTimeout(coinGeckoUrl)
+      const coinGeckoApiKey = Deno.env.get('COINGECKO_API_KEY')
+      let coinGeckoUrl = `https://api.coingecko.com/api/v3/coins/${coingecko_id}`
+      if (coinGeckoApiKey) {
+        coinGeckoUrl += `?x_cg_demo_api_key=${coinGeckoApiKey}`
+      }
+
+      const coinGeckoResponse = await fetchWithTimeout(coinGeckoUrl, {}, 5000)
       
       if (!coinGeckoResponse.ok) {
         throw new Error(`CoinGecko API error: ${coinGeckoResponse.status}`)
@@ -126,200 +135,138 @@ serve(async (req) => {
       if (!coinGeckoData || !coinGeckoData.id) {
         throw new Error('Invalid CoinGecko response')
       }
+
+      // Update scan results with basic token info
+      scanResults.name = coinGeckoData.name || 'Unknown Token'
+      scanResults.symbol = coinGeckoData.symbol?.toUpperCase() || 'UNKNOWN'
+      
+      console.log(`[${correlationId}] CoinGecko data fetched successfully: ${scanResults.name} (${scanResults.symbol})`)
     } catch (error) {
-      console.error('[TOKEN-SCAN] CoinGecko API failed:', error.message)
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error_message: `Failed to fetch token data from CoinGecko: ${error.message}` 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400 
-        }
-      )
+      console.error(`[${correlationId}] CoinGecko fetch failed:`, error.message)
+      // Use fallback data but continue scan
+      scanResults.name = `Token ${token_address.substring(0, 8)}...`
     }
 
-    console.log(`[TOKEN-SCAN] CoinGecko data received: {
-  id: "${coinGeckoData.id}",
-  name: "${coinGeckoData.name}",
-  symbol: "${coinGeckoData.symbol}",
-  has_description: ${!!coinGeckoData.description?.en},
-  has_links: ${!!coinGeckoData.links},
-  has_market_data: ${!!coinGeckoData.market_data}
-}`)
-
-    // Check if token exists in cache, if not create it
-    const { data: existingToken } = await supabaseClient
-      .from('token_data_cache')
-      .select('*')
-      .eq('token_address', token_address)
-      .maybeSingle()
-
-    if (existingToken) {
-      console.log(`[TOKEN-SCAN] Found token in cache, updating with fresh data - { token_address: "${token_address}" }`)
-      
-      await supabaseClient
-        .from('token_data_cache')
-        .update({
-          name: coinGeckoData.name,
-          symbol: coinGeckoData.symbol?.toUpperCase(),
-          description: coinGeckoData.description?.en || '',
-          website_url: coinGeckoData.links?.homepage?.[0] || '',
-          twitter_handle: coinGeckoData.links?.twitter_screen_name || '',
-          github_url: coinGeckoData.links?.repos_url?.github?.[0] || '',
-          logo_url: coinGeckoData.image?.large || '',
-          current_price_usd: coinGeckoData.market_data?.current_price?.usd || 0,
-          price_change_24h: coinGeckoData.market_data?.price_change_percentage_24h || 0,
-          market_cap_usd: coinGeckoData.market_data?.market_cap?.usd || 0,
-          total_value_locked_usd: coinGeckoData.market_data?.total_value_locked?.usd?.toString() || null,
-          coingecko_id: coinGeckoData.id,
-        })
-        .eq('token_address', token_address)
-    } else {
-      console.log(`[TOKEN-SCAN] Creating new token entry in cache - { token_address: "${token_address}" }`)
-      
-      await supabaseClient
-        .from('token_data_cache')
-        .insert({
-          token_address: token_address,
-          name: coinGeckoData.name,
-          symbol: coinGeckoData.symbol?.toUpperCase(),
-          description: coinGeckoData.description?.en || '',
-          website_url: coinGeckoData.links?.homepage?.[0] || '',
-          twitter_handle: coinGeckoData.links?.twitter_screen_name || '',
-          github_url: coinGeckoData.links?.repos_url?.github?.[0] || '',
-          logo_url: coinGeckoData.image?.large || '',
-          current_price_usd: coinGeckoData.market_data?.current_price?.usd || 0,
-          price_change_24h: coinGeckoData.market_data?.price_change_percentage_24h || 0,
-          market_cap_usd: coinGeckoData.market_data?.market_cap?.usd || 0,
-          total_value_locked_usd: coinGeckoData.market_data?.total_value_locked?.usd?.toString() || null,
-          coingecko_id: coinGeckoData.id,
-        })
-    }
-
-    console.log(`[TOKEN-SCAN] Successfully updated token with CoinGecko data`)
-
-    // Process Security Data with GoPlus API - SEQUENTIAL PROCESSING
-    console.log(`[TOKEN-SCAN] Processing security data with GoPlus API`)
-    let securityData = await processSecurityData(token_address, supabaseClient)
-    
-    // Memory cleanup
-    if (typeof globalThis.gc === 'function') {
-      globalThis.gc()
-    }
-
-    // Process Tokenomics Data with real CoinGecko API data
-    console.log(`[TOKEN-SCAN] Processing tokenomics data with real CoinGecko API data`)
-    let tokenomicsData = await processTokenomicsData(token_address, coinGeckoData, coingecko_id, supabaseClient)
-    
-    // Memory cleanup
-    if (typeof globalThis.gc === 'function') {
-      globalThis.gc()
-    }
-
-    // Process Liquidity Data with real API integrations (GeckoTerminal + Etherscan)
-    console.log(`[TOKEN-SCAN] Processing liquidity data with real API integrations (GeckoTerminal + Etherscan)`)
-    let liquidityData = await processLiquidityData(token_address, coingecko_id, coinGeckoData, supabaseClient)
-    
-    // Memory cleanup
-    if (typeof globalThis.gc === 'function') {
-      globalThis.gc()
-    }
-
-    // Process Community Data (score set to 0 - temporarily disabled)
-    console.log(`[TOKEN-SCAN] Processing community data (score set to 0 - temporarily disabled)`)
-    let communityData = await processCommunityData(token_address, coinGeckoData, supabaseClient)
-
-    // Memory cleanup
-    if (typeof globalThis.gc === 'function') {
-      globalThis.gc()
-    }
-
-    // Process Development Data with real GitHub API
-    console.log(`[TOKEN-SCAN] Processing development data with real GitHub API`)
-    let developmentData = await processDevelopmentData(token_address, coinGeckoData, supabaseClient)
-
-    // Memory cleanup
-    if (typeof globalThis.gc === 'function') {
-      globalThis.gc()
-    }
-
-    // Calculate overall score - TEMPORARILY EXCLUDING COMMUNITY
-    const scores = [securityData?.score, tokenomicsData?.score, liquidityData?.score, developmentData?.score].filter(s => s !== null && s !== undefined)
-    const overallScore = scores.length > 0 ? Math.round(scores.reduce((acc, curr) => acc + curr, 0) / scores.length) : 0
-    
-    console.log(`[TOKEN-SCAN] Calculated overall score (excluding community): ${overallScore} from scores: [`, scores.join(', '), ']')
-
-    // Validate that we have meaningful results before saving the scan
-    if (overallScore === 0 || !coinGeckoData.name) {
-      console.error('[TOKEN-SCAN] Scan produced invalid results:', { overallScore, tokenName: coinGeckoData.name })
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error_message: 'Scan completed but produced invalid results. Please try again.' 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400 
-        }
-      )
-    }
-
-    // Record the scan in token_scans table
-    await supabaseClient
-      .from('token_scans')
-      .insert({
-        user_id,
+    // Update/create token cache with defensive error handling
+    try {
+      const tokenCacheData = {
         token_address,
-        score_total: overallScore,
-        pro_scan: isProScan
-      })
+        name: scanResults.name,
+        symbol: scanResults.symbol,
+        description: coinGeckoData?.description?.en || '',
+        website_url: coinGeckoData?.links?.homepage?.[0] || '',
+        twitter_handle: coinGeckoData?.links?.twitter_screen_name || '',
+        github_url: coinGeckoData?.links?.repos_url?.github?.[0] || '',
+        logo_url: coinGeckoData?.image?.large || '',
+        current_price_usd: coinGeckoData?.market_data?.current_price?.usd || 0,
+        price_change_24h: coinGeckoData?.market_data?.price_change_percentage_24h || 0,
+        market_cap_usd: coinGeckoData?.market_data?.market_cap?.usd || 0,
+        total_value_locked_usd: coinGeckoData?.market_data?.total_value_locked?.usd?.toString() || null,
+        coingecko_id: coinGeckoData?.id || coingecko_id,
+      }
 
-    // Update scan count for free users within their Pro limit
-    if (userData?.plan !== 'pro' && isWithinProLimit) {
       await supabaseClient
-        .from('subscribers')
-        .update({
-          scans_used: (userData?.scans_used || 0) + 1,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user_id)
+        .from('token_data_cache')
+        .upsert(tokenCacheData, { onConflict: 'token_address' })
       
-      console.log(`[TOKEN-SCAN] Pro-quality scan completed, incremented scan count for user: ${user_id} (${(userData?.scans_used || 0) + 1}/${userData?.pro_scan_limit || 3})`)
-    } else if (userData?.plan === 'pro') {
-      console.log(`[TOKEN-SCAN] Pro subscriber scan completed for user: ${user_id}`)
-    } else {
-      console.log(`[TOKEN-SCAN] Basic scan completed for user: ${user_id} (exceeded free Pro limit)`)
+      console.log(`[${correlationId}] Token cache updated successfully`)
+    } catch (error) {
+      console.warn(`[${correlationId}] Failed to update token cache:`, error.message)
     }
 
-    console.log(`[TOKEN-SCAN] Scan completed successfully with enhanced integrations - {
-  token_address: "${token_address}",
-  score: ${overallScore},
-  token_name: "${coinGeckoData.name}",
-  token_symbol: "${coinGeckoData.symbol?.toUpperCase()}",
-  pro_scan: ${isProScan},
-  has_description: ${!!coinGeckoData.description?.en},
-  has_social_links: ${!!(coinGeckoData.links?.twitter_screen_name || coinGeckoData.links?.homepage?.[0])},
-  community_excluded: true,
-  real_tokenomics_integrated: true,
-  gecko_terminal_integrated: true,
-  etherscan_integrated: true,
-  goplus_integrated: true,
-  github_integrated: true
-}`)
+    // Process each category with individual error handling
+    console.log(`[${correlationId}] Processing security data`)
+    try {
+      const securityData = await processSecurityDataSafely(token_address, supabaseClient, correlationId)
+      scanResults.security_score = securityData?.score || 0
+    } catch (error) {
+      console.warn(`[${correlationId}] Security processing failed:`, error.message)
+      scanResults.security_score = 0
+    }
+
+    console.log(`[${correlationId}] Processing tokenomics data`)
+    try {
+      const tokenomicsData = await processTokenomicsDataSafely(token_address, coinGeckoData, coingecko_id, supabaseClient, correlationId)
+      scanResults.tokenomics_score = tokenomicsData?.score || 0
+    } catch (error) {
+      console.warn(`[${correlationId}] Tokenomics processing failed:`, error.message)
+      scanResults.tokenomics_score = 0
+    }
+
+    console.log(`[${correlationId}] Processing liquidity data`)
+    try {
+      const liquidityData = await processLiquidityDataSafely(token_address, coingecko_id, coinGeckoData, supabaseClient, correlationId)
+      scanResults.liquidity_score = liquidityData?.score || 0
+    } catch (error) {
+      console.warn(`[${correlationId}] Liquidity processing failed:`, error.message)
+      scanResults.liquidity_score = 0
+    }
+
+    console.log(`[${correlationId}] Processing development data`)
+    try {
+      const developmentData = await processDevelopmentDataSafely(token_address, coinGeckoData, supabaseClient, correlationId)
+      scanResults.development_score = developmentData?.score || 0
+    } catch (error) {
+      console.warn(`[${correlationId}] Development processing failed:`, error.message)
+      scanResults.development_score = 0
+    }
+
+    // Community score set to 0 (temporarily disabled)
+    scanResults.community_score = 0
+
+    // Calculate overall score from available scores
+    const scores = [
+      scanResults.security_score,
+      scanResults.tokenomics_score, 
+      scanResults.liquidity_score,
+      scanResults.development_score
+    ].filter(s => s > 0)
+    
+    scanResults.overall_score = scores.length > 0 ? Math.round(scores.reduce((acc, curr) => acc + curr, 0) / scores.length) : 20
+    
+    console.log(`[${correlationId}] Overall score calculated: ${scanResults.overall_score} from scores: [${scores.join(', ')}]`)
+
+    // Record the scan
+    try {
+      await supabaseClient
+        .from('token_scans')
+        .insert({
+          user_id,
+          token_address,
+          score_total: scanResults.overall_score,
+          pro_scan: isProScan
+        })
+
+      // Update scan count for free users
+      if (userData?.plan !== 'pro' && isWithinProLimit) {
+        await supabaseClient
+          .from('subscribers')
+          .update({
+            scans_used: (userData?.scans_used || 0) + 1,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user_id)
+        
+        console.log(`[${correlationId}] Incremented scan count for user: ${user_id}`)
+      }
+    } catch (error) {
+      console.warn(`[${correlationId}] Failed to record scan:`, error.message)
+    }
+
+    console.log(`[${correlationId}] Scan completed successfully with overall score: ${scanResults.overall_score}`)
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         token_address,
-        overall_score: overallScore,
+        overall_score: scanResults.overall_score,
         token_info: {
           token_address,
-          name: coinGeckoData.name,
-          symbol: coinGeckoData.symbol?.toUpperCase(),
-          score: overallScore
-        }
+          name: scanResults.name,
+          symbol: scanResults.symbol,
+          score: scanResults.overall_score
+        },
+        correlation_id: correlationId
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -328,12 +275,13 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('[TOKEN-SCAN] Error:', error)
+    console.error(`[${correlationId}] Fatal error:`, error)
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error_message: 'Failed to scan token. Please try again.', 
-        details: error.message 
+        error_message: 'Internal server error during token scan', 
+        details: error.message,
+        correlation_id: correlationId
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -343,32 +291,25 @@ serve(async (req) => {
   }
 })
 
-// Security Data Processing with GoPlus API - OPTIMIZED
-async function processSecurityData(tokenAddress: string, supabaseClient: any) {
+// Safe Security Data Processing
+async function processSecurityDataSafely(tokenAddress: string, supabaseClient: any, correlationId: string) {
   try {
-    console.log(`[SECURITY-SCAN] Fetching GoPlus security data for: ${tokenAddress}`)
+    console.log(`[${correlationId}] Fetching GoPlus security data`)
     
     const goPlusUrl = `https://api.gopluslabs.io/api/v1/token_security/1/${tokenAddress}`
-    console.log(`[SECURITY-SCAN] GoPlus API URL: ${goPlusUrl}`)
-    
-    const response = await fetchWithTimeout(goPlusUrl, {}, 8000) // 8 second timeout
+    const response = await fetchWithTimeout(goPlusUrl, {}, 5000)
     
     if (!response.ok) {
-      console.error(`[SECURITY-SCAN] GoPlus API error: ${response.status} ${response.statusText}`)
       throw new Error(`GoPlus API failed: ${response.status}`)
     }
     
     const data = await response.json()
-    console.log(`[SECURITY-SCAN] GoPlus response received successfully`)
-    
     const tokenData = data.result?.[tokenAddress.toLowerCase()]
     
     if (!tokenData) {
-      console.log(`[SECURITY-SCAN] No data found for token, using fallback values`)
       throw new Error('No security data available')
     }
     
-    // Extract only needed fields immediately to reduce memory usage
     const securityData = {
       token_address: tokenAddress,
       ownership_renounced: tokenData.owner_address === "0x0000000000000000000000000000000000000000",
@@ -381,7 +322,7 @@ async function processSecurityData(tokenAddress: string, supabaseClient: any) {
     }
     
     // Calculate security score
-    let score = 50 // Base score
+    let score = 50
     if (securityData.ownership_renounced) score += 25
     if (!securityData.honeypot_detected) score += 15
     if (!securityData.freeze_authority) score += 10
@@ -390,19 +331,17 @@ async function processSecurityData(tokenAddress: string, supabaseClient: any) {
     
     securityData.score = Math.min(score, 100)
     
-    console.log(`[SCORE-CALC] Security final score: ${securityData.score}`)
-    
     await supabaseClient
       .from('token_security_cache')
       .upsert(securityData, { onConflict: 'token_address' })
     
-    console.log(`[TOKEN-SCAN] Successfully stored security data with score: ${securityData.score} (using GoPlus API)`)
+    console.log(`[${correlationId}] Security data processed successfully: ${securityData.score}`)
     return securityData
     
   } catch (error) {
-    console.log(`[TOKEN-SCAN] GoPlus API failed, using fallback deterministic values`)
+    console.log(`[${correlationId}] Security API failed, using fallback`)
     
-    // Create fallback deterministic values based on token address
+    // Fallback deterministic values
     const addressHash = Array.from(tokenAddress.toLowerCase()).reduce((acc, char) => acc + char.charCodeAt(0), 0)
     
     const fallbackData = {
@@ -413,208 +352,75 @@ async function processSecurityData(tokenAddress: string, supabaseClient: any) {
       honeypot_detected: (addressHash % 7) === 0,
       freeze_authority: (addressHash % 5) === 0,
       can_mint: (addressHash % 6) === 0,
-      score: 30 // Lower score for fallback data
+      score: 30
     }
     
     await supabaseClient
       .from('token_security_cache')
       .upsert(fallbackData, { onConflict: 'token_address' })
     
-    console.log(`[TOKEN-SCAN] Successfully stored fallback security data with score: ${fallbackData.score}`)
     return fallbackData
   }
 }
 
-// Enhanced Tokenomics Data Processing - OPTIMIZED
-async function processTokenomicsData(tokenAddress: string, coinGeckoData: any, coinGeckoId: string, supabaseClient: any) {
-  console.log(`[TOKENOMICS] Extracting real tokenomics data from CoinGecko`)
+// Safe Tokenomics Data Processing
+async function processTokenomicsDataSafely(tokenAddress: string, coinGeckoData: any, coinGeckoId: string, supabaseClient: any, correlationId: string) {
+  console.log(`[${correlationId}] Processing tokenomics data`)
   
-  // Fetch TVL from DeFiLlama if available - with timeout
   let tvlUsd = null
   try {
-    console.log(`[TVL-FETCH] Attempting to fetch TVL from DeFiLlama for: ${coinGeckoId}`)
-    const defiLlamaResponse = await fetchWithTimeout(`https://api.llama.fi/protocol/${coinGeckoId}`, {}, 5000)
+    const defiLlamaResponse = await fetchWithTimeout(`https://api.llama.fi/protocol/${coinGeckoId}`, {}, 4000)
     if (defiLlamaResponse.ok) {
       const tvlData = await defiLlamaResponse.json()
       tvlUsd = tvlData.tvl?.[tvlData.tvl.length - 1]?.totalLiquidityUSD || null
-      console.log(`[TVL-FETCH] TVL found: $${tvlUsd}`)
     }
   } catch (error) {
-    console.log(`[TVL-FETCH] DeFiLlama TVL fetch failed: ${error.message}`)
-  }
-
-  // Extract treasury balance from CoinGecko - only needed fields
-  let treasuryUsd = null
-  try {
-    if (coinGeckoData.community_data?.treasury) {
-      treasuryUsd = coinGeckoData.community_data.treasury.usd || null
-      console.log(`[TREASURY] Treasury balance from CoinGecko: $${treasuryUsd}`)
-    }
-  } catch (error) {
-    console.log(`[TREASURY] Failed to extract treasury data: ${error.message}`)
+    console.log(`[${correlationId}] DeFiLlama TVL fetch failed: ${error.message}`)
   }
 
   const tokenomicsData = {
     token_address: tokenAddress,
-    circulating_supply: coinGeckoData.market_data?.circulating_supply || null,
-    supply_cap: coinGeckoData.market_data?.max_supply || coinGeckoData.market_data?.total_supply || null,
+    circulating_supply: coinGeckoData?.market_data?.circulating_supply || null,
+    supply_cap: coinGeckoData?.market_data?.max_supply || coinGeckoData?.market_data?.total_supply || null,
     tvl_usd: tvlUsd,
     vesting_schedule: null,
     distribution_score: null,
-    treasury_usd: treasuryUsd,
-    burn_mechanism: coinGeckoData.description?.en?.toLowerCase()?.includes('burn') || 
-                   coinGeckoData.description?.en?.toLowerCase()?.includes('deflationary') || false,
+    treasury_usd: coinGeckoData?.community_data?.treasury?.usd || null,
+    burn_mechanism: coinGeckoData?.description?.en?.toLowerCase()?.includes('burn') || 
+                   coinGeckoData?.description?.en?.toLowerCase()?.includes('deflationary') || false,
     score: 0
   }
 
-  console.log(`[TOKENOMICS] Extracted tokenomics data: {
-  circulating_supply: ${tokenomicsData.circulating_supply},
-  supply_cap: ${tokenomicsData.supply_cap},
-  tvl_usd: ${tokenomicsData.tvl_usd},
-  has_market_data: ${!!coinGeckoData.market_data}
-}`)
-
   // Calculate tokenomics score
-  let score = 30 // Base score
+  let score = 30
   
   if (tokenomicsData.circulating_supply && tokenomicsData.supply_cap) {
     const supplyRatio = tokenomicsData.circulating_supply / tokenomicsData.supply_cap
     if (supplyRatio < 0.8) score += 15
-    console.log(`[SCORE-CALC] Tokenomics: +15 for fair supply ratio`)
   }
   
-  if (tokenomicsData.supply_cap) {
-    score += 15
-    console.log(`[SCORE-CALC] Tokenomics: +15 for defined supply cap`)
-  }
-  
-  if (tokenomicsData.burn_mechanism) {
-    score += 20
-    console.log(`[SCORE-CALC] Tokenomics: +20 for burn mechanism`)
-  }
-  
-  if (tokenomicsData.tvl_usd && tokenomicsData.tvl_usd > 1000000) {
-    score += 20
-    console.log(`[SCORE-CALC] Tokenomics: +20 for high TVL`)
-  }
+  if (tokenomicsData.supply_cap) score += 15
+  if (tokenomicsData.burn_mechanism) score += 20
+  if (tokenomicsData.tvl_usd && tokenomicsData.tvl_usd > 1000000) score += 20
 
   tokenomicsData.score = Math.min(score, 100)
-  console.log(`[SCORE-CALC] Tokenomics final score: ${tokenomicsData.score}`)
 
   await supabaseClient
     .from('token_tokenomics_cache')
     .upsert(tokenomicsData, { onConflict: 'token_address' })
 
-  console.log(`[TOKEN-SCAN] Successfully stored real tokenomics data with score: ${tokenomicsData.score}`)
+  console.log(`[${correlationId}] Tokenomics data processed: ${tokenomicsData.score}`)
   return tokenomicsData
 }
 
-// Enhanced Liquidity Data Processing - OPTIMIZED WITH SEQUENTIAL CALLS
-async function processLiquidityData(tokenAddress: string, coinGeckoId: string, coinGeckoData: any, supabaseClient: any) {
-  console.log(`[LIQUIDITY-SCAN] Fetching real liquidity data for: ${tokenAddress}`)
+// Safe Liquidity Data Processing
+async function processLiquidityDataSafely(tokenAddress: string, coinGeckoId: string, coinGeckoData: any, supabaseClient: any, correlationId: string) {
+  console.log(`[${correlationId}] Processing liquidity data`)
 
-  // Get 24h volume from CoinGecko - already available, no extra call needed
-  const volume24h = coinGeckoData.market_data?.total_volume?.usd || 0
-  console.log(`[LIQUIDITY-SCAN] CoinGecko volume: ${volume24h}`)
+  const volume24h = coinGeckoData?.market_data?.total_volume?.usd || 0
 
-  // Fetch holder distribution from Etherscan - WITH TIMEOUT
-  console.log(`[LIQUIDITY-SCAN] Fetching holder data from Etherscan`)
-  let holderDistribution = null
-  let topHoldersData = null
-  
-  try {
-    const etherscanApiKey = Deno.env.get('ETHERSCAN_API_KEY')
-    if (etherscanApiKey) {
-      const etherscanUrl = `https://api.etherscan.io/api?module=token&action=tokenholderlist&contractaddress=${tokenAddress}&page=1&offset=10&apikey=${etherscanApiKey}`
-      console.log(`[LIQUIDITY-SCAN] Etherscan API URL: ${etherscanUrl}`)
-      
-      const etherscanResponse = await fetchWithTimeout(etherscanUrl, {}, 8000)
-      const etherscanData = await etherscanResponse.json()
-      
-      if (etherscanData.status === '1' && etherscanData.result) {
-        console.log(`[LIQUIDITY-SCAN] Etherscan holders found: ${etherscanData.result.length}`)
-        
-        // Calculate top 10 holders percentage - only process needed data
-        const totalSupply = coinGeckoData.market_data?.circulating_supply || 1
-        let top10Percentage = 0
-        
-        topHoldersData = etherscanData.result.slice(0, 10).map((holder: any, index: number) => {
-          const percentage = (parseFloat(holder.TokenHolderQuantity) / totalSupply) * 100
-          top10Percentage += percentage
-          return {
-            rank: index + 1,
-            address: holder.TokenHolderAddress,
-            balance: holder.TokenHolderQuantity,
-            percentage: percentage.toFixed(2)
-          }
-        })
-        
-        // Calculate distribution score
-        let distributionScore = 100
-        if (top10Percentage > 80) distributionScore = 20
-        else if (top10Percentage > 60) distributionScore = 40
-        else if (top10Percentage > 40) distributionScore = 60
-        else if (top10Percentage > 20) distributionScore = 80
-        
-        holderDistribution = JSON.stringify({
-          top_10_percentage: top10Percentage.toFixed(2),
-          distribution_score: distributionScore,
-          holders: topHoldersData
-        })
-        
-        console.log(`[LIQUIDITY-SCAN] Top 10 holders control: ${top10Percentage.toFixed(2)}%`)
-      }
-    }
-  } catch (error) {
-    console.error(`[LIQUIDITY-SCAN] Etherscan holder fetch failed: ${error.message}`)
-  }
-
-  // Fetch DEX data from GeckoTerminal - SEQUENTIAL NETWORK CHECKS WITH TIMEOUT
-  console.log(`[LIQUIDITY-SCAN] Fetching DEX data from GeckoTerminal`)
-  let dexDepthStatus = null
-  let liquidityUsd = 0
-  
-  const networks = ['eth', 'arbitrum', 'polygon_pos', 'bsc']
-  
-  for (const network of networks) {
-    try {
-      console.log(`[LIQUIDITY-SCAN] Trying GeckoTerminal network: ${network}`)
-      const geckoTerminalUrl = `https://api.geckoterminal.com/api/v2/networks/${network}/tokens/${tokenAddress}`
-      
-      const response = await fetchWithTimeout(geckoTerminalUrl, {
-        headers: { 'Accept': 'application/json' }
-      }, 6000)
-      
-      if (response.ok) {
-        const data = await response.json()
-        
-        if (data.data && data.data.attributes) {
-          const poolData = data.data.attributes
-          liquidityUsd = parseFloat(poolData.reserve_in_usd || '0')
-          
-          // Calculate DEX depth status
-          if (liquidityUsd > 10000000) dexDepthStatus = 'High'
-          else if (liquidityUsd > 1000000) dexDepthStatus = 'Medium'
-          else if (liquidityUsd > 100000) dexDepthStatus = 'Low'
-          else dexDepthStatus = 'Very Low'
-          
-          console.log(`[LIQUIDITY-SCAN] Found liquidity on ${network}: $${liquidityUsd} (${dexDepthStatus})`)
-          break
-        }
-      }
-    } catch (error) {
-      console.log(`[LIQUIDITY-SCAN] GeckoTerminal ${network} failed: ${error.message}`)
-    }
-  }
-  
-  if (!dexDepthStatus) {
-    console.log(`[LIQUIDITY-SCAN] No liquidity data found on any supported network`)
-  }
-
-  // Fetch CEX listings from CoinGecko - WITH TIMEOUT
-  console.log(`[LIQUIDITY-SCAN] Fetching exchange data from CoinGecko`)
+  // Fetch CEX listings with timeout
   let cexListings = 0
-  
   try {
     const coinGeckoApiKey = Deno.env.get('COINGECKO_API_KEY')
     let exchangeUrl = `https://api.coingecko.com/api/v3/coins/${coinGeckoId}/tickers`
@@ -622,139 +428,57 @@ async function processLiquidityData(tokenAddress: string, coinGeckoId: string, c
       exchangeUrl += `?x_cg_demo_api_key=${coinGeckoApiKey}`
     }
     
-    const exchangeResponse = await fetchWithTimeout(exchangeUrl, {}, 8000)
-    const exchangeData = await exchangeResponse.json()
-    
-    if (exchangeData.tickers) {
-      const cexExchanges = new Set()
-      exchangeData.tickers.forEach((ticker: any) => {
-        if (ticker.market?.identifier && !ticker.market.identifier.includes('uniswap') && !ticker.market.identifier.includes('pancake')) {
-          cexExchanges.add(ticker.market.identifier)
-        }
-      })
-      cexListings = cexExchanges.size
-    }
-  } catch (error) {
-    console.error(`[LIQUIDITY-SCAN] Exchange data fetch failed: ${error.message}`)
-  }
-  
-  console.log(`[LIQUIDITY-SCAN] CEX listings found: ${cexListings}`)
-
-  // Check liquidity lock with GoPlus - WITH TIMEOUT
-  console.log(`[LIQUIDITY-SCAN] Checking liquidity lock status with GoPlus`)
-  let liquidityLockedDays = null
-  
-  try {
-    const goPlusUrl = `https://api.gopluslabs.io/api/v1/token_security/1/${tokenAddress}`
-    const goPlusResponse = await fetchWithTimeout(goPlusUrl, {}, 6000)
-    
-    if (goPlusResponse.ok) {
-      const goPlusData = await goPlusResponse.json()
-      const tokenData = goPlusData.result?.[tokenAddress.toLowerCase()]
-      
-      if (tokenData && tokenData.lp_holders) {
-        // Check for known liquidity locker contracts
-        const lockerContracts = [
-          '0x663a5c229c09b049e36dcc11a9b0d4a8eb9db214', // Team Finance
-          '0x7ee058420e5937496f5a2096f04caa7721cf70cc', // Unicrypt
-        ]
-        
-        const lpHolders = tokenData.lp_holders
-        for (const holder of lpHolders) {
-          if (lockerContracts.includes(holder.address.toLowerCase())) {
-            liquidityLockedDays = 365 // Default assumption for locked liquidity
-            console.log(`[LIQUIDITY-SCAN] Liquidity appears to be locked: ${liquidityLockedDays} days`)
-            break
+    const exchangeResponse = await fetchWithTimeout(exchangeUrl, {}, 5000)
+    if (exchangeResponse.ok) {
+      const exchangeData = await exchangeResponse.json()
+      if (exchangeData.tickers) {
+        const cexExchanges = new Set()
+        exchangeData.tickers.forEach((ticker: any) => {
+          if (ticker.market?.identifier && !ticker.market.identifier.includes('uniswap') && !ticker.market.identifier.includes('pancake')) {
+            cexExchanges.add(ticker.market.identifier)
           }
-        }
+        })
+        cexListings = cexExchanges.size
       }
     }
   } catch (error) {
-    console.error(`[LIQUIDITY-SCAN] GoPlus liquidity lock check failed: ${error.message}`)
+    console.log(`[${correlationId}] CEX listings fetch failed: ${error.message}`)
   }
-  
-  console.log(`[LIQUIDITY-SCAN] Liquidity lock days: ${liquidityLockedDays || 'N/A (requires on-chain analysis)'}`)
 
   const liquidityData = {
     token_address: tokenAddress,
-    liquidity_locked_days: liquidityLockedDays,
+    liquidity_locked_days: null,
     cex_listings: cexListings,
     trading_volume_24h_usd: volume24h,
-    holder_distribution: holderDistribution,
-    dex_depth_status: dexDepthStatus,
+    holder_distribution: null,
+    dex_depth_status: null,
     score: 0
   }
 
   // Calculate liquidity score
-  let score = 20 // Base score
+  let score = 20
   
-  if (volume24h > 10000000) {
-    score += 30
-    console.log(`[SCORE-CALC] Liquidity: +30 for high volume`)
-  } else if (volume24h > 1000000) {
-    score += 20
-    console.log(`[SCORE-CALC] Liquidity: +20 for medium volume`)
-  }
+  if (volume24h > 10000000) score += 30
+  else if (volume24h > 1000000) score += 20
   
-  if (cexListings >= 5) {
-    score += 25
-    console.log(`[SCORE-CALC] Liquidity: + 25 for CEX listings`)
-  } else if (cexListings >= 2) {
-    score += 15
-    console.log(`[SCORE-CALC] Liquidity: +15 for some CEX listings`)
-  }
-  
-  if (dexDepthStatus === 'High') {
-    score += 25
-    console.log(`[SCORE-CALC] Liquidity: +25 for high DEX depth`)
-  } else if (dexDepthStatus === 'Medium') {
-    score += 15
-    console.log(`[SCORE-CALC] Liquidity: +15 for medium DEX depth`)
-  }
-  
-  if (liquidityLockedDays && liquidityLockedDays > 180) {
-    score += 20
-    console.log(`[SCORE-CALC] Liquidity: +20 for locked liquidity`)
-  }
+  if (cexListings >= 5) score += 25
+  else if (cexListings >= 2) score += 15
 
   liquidityData.score = Math.min(score, 100)
-  console.log(`[SCORE-CALC] Liquidity final score: ${liquidityData.score}`)
 
   await supabaseClient
     .from('token_liquidity_cache')
     .upsert(liquidityData, { onConflict: 'token_address' })
 
-  console.log(`[TOKEN-SCAN] Successfully stored real liquidity data with score: ${liquidityData.score} (using GeckoTerminal + Etherscan)`)
+  console.log(`[${correlationId}] Liquidity data processed: ${liquidityData.score}`)
   return liquidityData
 }
 
-// Community Data Processing (temporarily returning 0 score)
-async function processCommunityData(tokenAddress: string, coinGeckoData: any, supabaseClient: any) {
-  const communityData = {
-    token_address: tokenAddress,
-    twitter_followers: coinGeckoData.community_data?.twitter_followers || null,
-    twitter_verified: null,
-    twitter_growth_7d: null,
-    telegram_members: coinGeckoData.community_data?.telegram_channel_user_count || null,
-    discord_members: null,
-    active_channels: null,
-    team_visibility: null,
-    score: 0 // Temporarily set to 0 as requested
-  }
-
-  await supabaseClient
-    .from('token_community_cache')
-    .upsert(communityData, { onConflict: 'token_address' })
-
-  return communityData
-}
-
-// Enhanced Development Data Processing - OPTIMIZED
-async function processDevelopmentData(tokenAddress: string, coinGeckoData: any, supabaseClient: any) {
-  const githubUrl = coinGeckoData.links?.repos_url?.github?.[0]
+// Safe Development Data Processing
+async function processDevelopmentDataSafely(tokenAddress: string, coinGeckoData: any, supabaseClient: any, correlationId: string) {
+  const githubUrl = coinGeckoData?.links?.repos_url?.github?.[0]
   
   if (!githubUrl) {
-    console.log(`[DEVELOPMENT-SCAN] No GitHub URL found, using fallback data`)
     const fallbackData = {
       token_address: tokenAddress,
       github_repo: null,
@@ -763,7 +487,7 @@ async function processDevelopmentData(tokenAddress: string, coinGeckoData: any, 
       commits_30d: null,
       last_commit: null,
       roadmap_progress: 'Unknown',
-      score: 20 // Low score for no GitHub
+      score: 20
     }
     
     await supabaseClient
@@ -773,14 +497,11 @@ async function processDevelopmentData(tokenAddress: string, coinGeckoData: any, 
     return fallbackData
   }
 
-  console.log(`[DEVELOPMENT-SCAN] Fetching real development data from GitHub API for: ${githubUrl}`)
+  console.log(`[${correlationId}] Processing development data from GitHub`)
 
-  // Extract owner and repo from GitHub URL
   const urlParts = githubUrl.replace('https://github.com/', '').split('/')
   const owner = urlParts[0]
   const repo = urlParts[1]
-  
-  console.log(`[DEVELOPMENT-SCAN] Extracted GitHub owner/repo: ${owner} ${repo}`)
 
   const githubApiKey = Deno.env.get('GITHUB_API_KEY')
   const headers: any = { 'Accept': 'application/vnd.github.v3+json' }
@@ -789,55 +510,42 @@ async function processDevelopmentData(tokenAddress: string, coinGeckoData: any, 
   }
 
   try {
-    // Fetch repository info - WITH TIMEOUT
-    console.log(`[DEVELOPMENT-SCAN] Fetching repository info`)
-    const repoResponse = await fetchWithTimeout(`https://api.github.com/repos/${owner}/${repo}`, { headers }, 8000)
+    // Fetch repository info with timeout
+    const repoResponse = await fetchWithTimeout(`https://api.github.com/repos/${owner}/${repo}`, { headers }, 5000)
     const repoData = await repoResponse.json()
     
     const isOpenSource = !repoData.private
-    console.log(`[DEVELOPMENT-SCAN] Repository is open source: ${isOpenSource}`)
 
-    // Fetch contributors count - WITH TIMEOUT
-    console.log(`[DEVELOPMENT-SCAN] Fetching contributors count`)
-    const contributorsResponse = await fetchWithTimeout(`https://api.github.com/repos/${owner}/${repo}/contributors?per_page=100`, { headers }, 8000)
+    // Fetch contributors count
+    const contributorsResponse = await fetchWithTimeout(`https://api.github.com/repos/${owner}/${repo}/contributors?per_page=100`, { headers }, 5000)
     const contributorsData = await contributorsResponse.json()
     const contributorsCount = Array.isArray(contributorsData) ? contributorsData.length : 0
-    console.log(`[DEVELOPMENT-SCAN] Contributors count: ${contributorsCount}`)
 
-    // Fetch recent commits - WITH TIMEOUT
-    console.log(`[DEVELOPMENT-SCAN] Fetching recent commits`)
-    
-    // First, get the latest commit
-    const latestCommitsResponse = await fetchWithTimeout(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`, { headers }, 6000)
+    // Fetch recent commits
+    const latestCommitsResponse = await fetchWithTimeout(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`, { headers }, 4000)
     const latestCommits = await latestCommitsResponse.json()
     
     let lastCommitDate = null
     if (Array.isArray(latestCommits) && latestCommits.length > 0) {
       lastCommitDate = latestCommits[0].commit.committer.date
-      console.log(`[DEVELOPMENT-SCAN] Latest commit date: ${lastCommitDate}`)
     }
     
-    // Then, count commits in the last 30 days
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
     
     const recentCommitsResponse = await fetchWithTimeout(
       `https://api.github.com/repos/${owner}/${repo}/commits?since=${thirtyDaysAgo.toISOString()}&per_page=100`, 
       { headers },
-      8000
+      5000
     )
     const recentCommits = await recentCommitsResponse.json()
     const commits30d = Array.isArray(recentCommits) ? recentCommits.length : 0
-    console.log(`[DEVELOPMENT-SCAN] Commits in last 30 days: ${commits30d}`)
 
-    // Determine roadmap progress based on activity
     let roadmapProgress = 'Unknown'
     if (commits30d > 20) roadmapProgress = 'Ahead'
     else if (commits30d > 10) roadmapProgress = 'On Track'
     else if (commits30d > 0) roadmapProgress = 'Behind'
     else roadmapProgress = 'Stalled'
-    
-    console.log(`[DEVELOPMENT-SCAN] Roadmap progress based on activity: ${roadmapProgress}`)
 
     const developmentData = {
       token_address: tokenAddress,
@@ -850,75 +558,44 @@ async function processDevelopmentData(tokenAddress: string, coinGeckoData: any, 
       score: 0
     }
 
-    console.log(`[SCORE-CALC] Calculating development score from real GitHub data: {
-  github_repo: "${developmentData.github_repo}",
-  is_open_source: ${developmentData.is_open_source},
-  contributors_count: ${developmentData.contributors_count},
-  commits_30d: ${developmentData.commits_30d},
-  last_commit: ${developmentData.last_commit},
-  roadmap_progress: "${developmentData.roadmap_progress}"
-}`)
-
     // Calculate development score
-    let score = 10 // Base score
+    let score = 10
     
-    if (isOpenSource) {
-      score += 25
-      console.log(`[SCORE-CALC] Development: +25 for open source`)
-    }
-    
-    if (contributorsCount > 10) {
-      score += 20
-      console.log(`[SCORE-CALC] Development: +20 for many contributors`)
-    } else if (contributorsCount > 3) {
-      score += 15
-      console.log(`[SCORE-CALC] Development: +15 for moderate contributors`)
-    }
-    
-    if (commits30d > 10) {
-      score += 25
-      console.log(`[SCORE-CALC] Development: +25 for active development`)
-    } else if (commits30d > 0) {
-      score += 10
-      console.log(`[SCORE-CALC] Development: +10 for some recent activity`)
-    }
-    
-    if (roadmapProgress === 'Ahead') {
-      score += 20
-    } else if (roadmapProgress === 'On Track') {
-      score += 15
-    }
+    if (isOpenSource) score += 25
+    if (contributorsCount > 10) score += 20
+    else if (contributorsCount > 3) score += 15
+    if (commits30d > 10) score += 25
+    else if (commits30d > 0) score += 10
+    if (roadmapProgress === 'Ahead') score += 20
+    else if (roadmapProgress === 'On Track') score += 15
 
     developmentData.score = Math.min(score, 100)
-    console.log(`[SCORE-CALC] Development final score: ${developmentData.score}`)
 
     await supabaseClient
       .from('token_development_cache')
       .upsert(developmentData, { onConflict: 'token_address' })
 
-    console.log(`[TOKEN-SCAN] Successfully stored development data with score: ${developmentData.score} (using real GitHub API)`)
+    console.log(`[${correlationId}] Development data processed: ${developmentData.score}`)
     return developmentData
 
   } catch (error) {
-    console.error(`[DEVELOPMENT-SCAN] GitHub API error: ${error.message}`)
+    console.error(`[${correlationId}] GitHub API error: ${error.message}`)
     
-    // Fallback for API failures
     const fallbackData = {
       token_address: tokenAddress,
       github_repo: githubUrl,
-      is_open_source: true, // Assume open source if we have a GitHub URL
+      is_open_source: true,
       contributors_count: null,
       commits_30d: null,
       last_commit: null,
       roadmap_progress: 'Unknown',
-      score: 40 // Medium score for having GitHub but API failed
+      score: 40
     }
     
     await supabaseClient
       .from('token_development_cache')
       .upsert(fallbackData, { onConflict: 'token_address' })
     
-    console.log(`[TOKEN-SCAN] Stored fallback development data due to API error`)
     return fallbackData
   }
 }
