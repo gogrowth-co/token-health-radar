@@ -190,7 +190,7 @@ export default function ScanResult() {
       console.log("Scan access response:", data);
       setIsPro(data.hasPro);
       
-      // New: Check if the user previously completed a Pro scan for this token
+      // Check if the user previously completed a Pro scan for this token
       if (user && tokenAddress && !data.hasPro) {
         console.log("Checking for previous Pro scans of this token");
         const { data: latestScan, error: scanError } = await supabase
@@ -206,7 +206,7 @@ export default function ScanResult() {
           console.error("Error checking previous scans:", scanError);
         } else if (latestScan?.pro_scan) {
           console.log("Found previous Pro scan, granting Pro access to this result");
-          setIsPro(true); // Override access control for previously completed Pro scans
+          setIsPro(true);
         }
       }
     } catch (error) {
@@ -269,72 +269,18 @@ export default function ScanResult() {
         throw new Error("Invalid token address format");
       }
       
-      // Try to get data from localStorage first
-      const cachedData = localStorage.getItem("lastScanResult");
-      let localCacheUsed = false;
-      
-      if (cachedData) {
-        try {
-          const parsedData = JSON.parse(cachedData);
-          console.log("ScanResult: Found cached scan result:", parsedData);
-          
-          if (parsedData.token_address === tokenAddress) {
-            // Use cached data if available
-            setTokenData(parsedData);
-            localCacheUsed = true;
-            console.log("ScanResult: Using local cache for initial data");
-          }
-        } catch (err) {
-          console.error("ScanResult: Error parsing cached data:", err);
-          // Continue with database fetch if cache parsing fails
-        }
-      }
-      
-      // Fetch basic token data from the database
       console.log("ScanResult: Fetching token data from database for:", tokenAddress);
-      const { data: basicData, error: basicError } = await supabase
-        .from("token_data_cache")
-        .select("*")
-        .eq("token_address", tokenAddress)
-        .maybeSingle();
-        
-      if (basicError) {
-        console.error("ScanResult: Error fetching token data:", basicError);
-        throw new Error(handleSupabaseError(basicError, "Failed to fetch token data"));
-      }
       
-      if (!basicData && !localCacheUsed) {
-        console.log("ScanResult: Token not found in database, and no cache available");
-        throw new Error("Token not found in our database");
-      } 
-      
-      if (basicData) {
-        console.log("ScanResult: Received token data from database:", basicData);
-        
-        // Create the enhanced TokenData with fallback values for potentially missing fields
-        const enhancedTokenData: TokenData = {
-          ...basicData,
-          current_price_usd: basicData.current_price_usd || 0,
-          price_usd: basicData.current_price_usd || 0,
-          price_change_24h: basicData.price_change_24h || 0,
-          market_cap_usd: basicData.market_cap_usd || "0",
-          total_value_locked_usd: basicData.total_value_locked_usd || "N/A"
-        };
-        
-        setTokenData(enhancedTokenData);
-      }
-      
-      // Log fetch attempt for category data
-      console.log("ScanResult: Fetching category data for token:", tokenAddress);
-      
-      // Fetch all category data in parallel with improved error handling
+      // Fetch all data in parallel with improved error handling
       const [
+        tokenResult,
         securityResult,
         tokenomicsResult,
         liquidityResult,
         communityResult,
         developmentResult
       ] = await Promise.all([
+        supabase.from("token_data_cache").select("*").eq("token_address", tokenAddress).maybeSingle(),
         supabase.from("token_security_cache").select("*").eq("token_address", tokenAddress).maybeSingle(),
         supabase.from("token_tokenomics_cache").select("*").eq("token_address", tokenAddress).maybeSingle(),
         supabase.from("token_liquidity_cache").select("*").eq("token_address", tokenAddress).maybeSingle(),
@@ -342,21 +288,38 @@ export default function ScanResult() {
         supabase.from("token_development_cache").select("*").eq("token_address", tokenAddress).maybeSingle()
       ]);
       
-      // Log each category result for debugging
+      // Log each result for debugging
+      console.log("ScanResult: Token data result:", tokenResult);
       console.log("ScanResult: Security data result:", securityResult);
       console.log("ScanResult: Tokenomics data result:", tokenomicsResult);
       console.log("ScanResult: Liquidity data result:", liquidityResult);
       console.log("ScanResult: Community data result:", communityResult);
       console.log("ScanResult: Development data result:", developmentResult);
       
-      // Handle potential errors in category data fetching
-      if (securityResult.error) console.error("ScanResult: Error fetching security data:", securityResult.error);
-      if (tokenomicsResult.error) console.error("ScanResult: Error fetching tokenomics data:", tokenomicsResult.error);
-      if (liquidityResult.error) console.error("ScanResult: Error fetching liquidity data:", liquidityResult.error);
-      if (communityResult.error) console.error("ScanResult: Error fetching community data:", communityResult.error);
-      if (developmentResult.error) console.error("ScanResult: Error fetching development data:", developmentResult.error);
+      // Handle errors in data fetching
+      if (tokenResult.error) {
+        console.error("ScanResult: Error fetching token data:", tokenResult.error);
+        throw new Error(handleSupabaseError(tokenResult.error, "Failed to fetch token data"));
+      }
       
-      // Set data with null fallbacks if there are errors
+      if (!tokenResult.data) {
+        console.log("ScanResult: Token not found in database");
+        throw new Error("Token not found in our database");
+      }
+      
+      // Set the token data
+      const enhancedTokenData: TokenData = {
+        ...tokenResult.data,
+        current_price_usd: tokenResult.data.current_price_usd || 0,
+        price_usd: tokenResult.data.current_price_usd || 0,
+        price_change_24h: tokenResult.data.price_change_24h || 0,
+        market_cap_usd: tokenResult.data.market_cap_usd || "0",
+        total_value_locked_usd: tokenResult.data.total_value_locked_usd || "N/A"
+      };
+      
+      setTokenData(enhancedTokenData);
+      
+      // Set category data with null fallbacks if there are errors
       if (securityResult.data) setSecurityData(securityResult.data);
       if (tokenomicsResult.data) setTokenomicsData(tokenomicsResult.data);
       if (liquidityResult.data) setLiquidityData(liquidityResult.data);
@@ -481,7 +444,7 @@ export default function ScanResult() {
     };
     
     loadData();
-  }, [searchParams]);
+  }, [searchParams, isLimitedSupport]);
 
   // Return the JSX for the component
   return (
@@ -567,7 +530,7 @@ export default function ScanResult() {
               
               {tokenData && (
                 <>
-                  {/* Token Card - Always visible */}
+                  {/* Token Card - Always visible and complete */}
                   <div className="mb-8">
                     <TokenCard 
                       name={tokenData.name}
@@ -627,7 +590,7 @@ export default function ScanResult() {
                         />
                       </div>
                       
-                      {/* Category Tabs - Blur only the detailed content */}
+                      {/* Category Tabs - Blur only the detailed content for non-authenticated users */}
                       <BlurredCategoryOverlay isBlurred={!isAuthenticated}>
                         <CategoryTabs
                           activeTab={activeTab}
