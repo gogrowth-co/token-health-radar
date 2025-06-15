@@ -376,7 +376,7 @@ export default function TokenProfile({
         </div>
 
         {/* RIGHT SECTION: Price/Market Cap on left, Health Score on right */}
-        <div className="flex items-center gap-16 min-w-[420px] ml-8">
+        <div className="flex items-center gap-20 min-w-[480px] ml-16">
           {/* Price and Market Cap Section */}
           <div className="flex flex-col items-start gap-4">
             {/* Price + Change */}
@@ -407,8 +407,8 @@ export default function TokenProfile({
             </div>
           </div>
 
-          {/* Health Score and Socials Section - moved further right */}
-          <div className="flex flex-col items-center gap-4 ml-12">
+          {/* Health Score and Socials Section - moved to far right */}
+          <div className="flex flex-col items-center gap-4 ml-16">
             {/* Health Score */}
             <MiniHealthScore score={overallScore} />
             
