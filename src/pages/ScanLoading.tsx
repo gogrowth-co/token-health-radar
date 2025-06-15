@@ -91,26 +91,28 @@ export default function ScanLoading() {
           return;
         }
         
-        // Prepare comprehensive scan request with all available token info
+        // Ensure passed token_info is maximally complete for edge scan
+        const tokenInfoForFunction = selectedToken?.completeTokenInfo || {
+          name: selectedToken?.name || `Token ${tokenAddress.substring(0, 8)}...`,
+          symbol: selectedToken?.symbol || 'UNKNOWN',
+          description: '',
+          website_url: '',
+          twitter_handle: '',
+          github_url: '',
+          logo_url: selectedToken?.logo || '',
+          coingecko_id: effectiveCoinGeckoId,
+          current_price_usd: selectedToken?.price_usd || 0,
+          price_change_24h: selectedToken?.price_change_24h || 0,
+          market_cap_usd: selectedToken?.market_cap_usd || 0,
+          total_value_locked_usd: 'N/A'
+        };
+
+        // Call edge function as before, passing in comprehensive info for internal caching/fallbacks
         const scanRequest = {
           token_address: tokenAddress,
           coingecko_id: effectiveCoinGeckoId,
           user_id: user?.id || null,
-          // Pass the complete token info if available
-          token_info: selectedToken?.completeTokenInfo || {
-            name: selectedToken?.name || `Token ${tokenAddress.substring(0, 8)}...`,
-            symbol: selectedToken?.symbol || 'UNKNOWN',
-            description: '',
-            website_url: '',
-            twitter_handle: '',
-            github_url: '',
-            logo_url: selectedToken?.logo || '',
-            coingecko_id: effectiveCoinGeckoId,
-            current_price_usd: selectedToken?.price_usd || 0,
-            price_change_24h: selectedToken?.price_change_24h || 0,
-            market_cap_usd: selectedToken?.market_cap_usd || 0,
-            total_value_locked_usd: 'N/A'
-          }
+          token_info: tokenInfoForFunction
         };
         
         console.log("ScanLoading: Calling run-token-scan with comprehensive request:", scanRequest);

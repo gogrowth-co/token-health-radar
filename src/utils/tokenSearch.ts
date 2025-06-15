@@ -41,50 +41,55 @@ export const isValidErc20Token = (token: any): boolean => {
   return false;
 }
 
-// Enhanced API call function with API key support
+// Enhanced API call function with API key support (updated for FREE API KEY, not paid/pro)
 export const callCoinGeckoAPI = async (url: string, isDetailRequest = false) => {
   const now = Date.now();
   const minInterval = isDetailRequest ? MIN_DETAIL_API_CALL_INTERVAL : MIN_API_CALL_INTERVAL;
   const lastTime = isDetailRequest ? lastDetailApiCallTime : lastApiCallTime;
-  
   if (now - lastTime < minInterval) {
-    await new Promise(resolve => 
+    await new Promise(resolve =>
       setTimeout(resolve, minInterval - (now - lastTime))
     );
   }
-  
   if (isDetailRequest) {
     lastDetailApiCallTime = Date.now();
   } else {
     lastApiCallTime = Date.now();
   }
-  
-  // Enhanced headers with potential API key support
+
   const headers: Record<string, string> = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
   };
 
-  // Note: In a production environment, the API key would be added here
-  // For now, we're using the free tier but with optimized rate limiting
-  
+  // Always prefer free endpoint with your API key if present (not Pro)
+  let urlWithKey = url;
+  if (
+    typeof window !== "undefined" &&
+    "SUPABASE_CG_API_KEY" in window &&
+    (window as any).SUPABASE_CG_API_KEY
+  ) {
+    // Append x_cg_pro_api_key param for free key
+    const key = (window as any).SUPABASE_CG_API_KEY;
+    // Support both ? and & in URL
+    urlWithKey = url + (url.includes('?') ? '&' : '?') + "x_cg_pro_api_key=" + encodeURIComponent(key);
+  }
+
   try {
-    console.log(`Making CoinGecko API call to: ${url}`);
-    const response = await fetch(url, { headers });
-    
-    // Handle rate limiting explicitly
+    console.log(`Making CoinGecko API call to: ${urlWithKey}`);
+    const response = await fetch(urlWithKey, { headers });
+
     if (response.status === 429) {
       const retryAfter = response.headers.get('retry-after');
       const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : 60000;
       console.warn(`Rate limit hit, suggested wait time: ${waitTime}ms`);
       throw new Error("API rate limit reached. Please try again in a few moments.");
     }
-    
     if (!response.ok) {
       console.error(`CoinGecko API error: ${response.status} ${response.statusText}`);
       throw new Error(`API Error: ${response.status}`);
     }
-    
+
     const data = await response.json();
     console.log(`CoinGecko API response received successfully`);
     return data;

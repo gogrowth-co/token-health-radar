@@ -126,19 +126,11 @@ export default function useTokenSelection() {
       
       console.log(`[TOKEN-SELECTION] Valid token address found: ${tokenAddress}`);
       
-      // Save token to database (only if authenticated)
-      if (isAuthenticated) {
-        try {
-          console.log(`[TOKEN-SELECTION] Saving token to database`);
-          await saveTokenToDatabase(token);
-        } catch (error) {
-          console.error("Error saving token to database:", error);
-        }
-      }
-      
-      // Save comprehensive token info to localStorage including the detailed tokenInfo
+      // Save comprehensive token info to localStorage including detailed tokenInfo
       const tokenInfoToSave = {
-        address: tokenAddress,
+        address: getFirstValidEvmAddress(token.platforms) ||
+          getWellKnownAddress(token.id) ||
+          `unsupported-${token.id}`,
         id: token.id,
         name: token.tokenInfo?.name || token.name,
         symbol: token.tokenInfo?.symbol || token.symbol,
@@ -146,16 +138,16 @@ export default function useTokenSelection() {
         price_usd: token.tokenInfo?.current_price_usd ?? token.price_usd ?? 0,
         price_change_24h: token.tokenInfo?.price_change_24h ?? token.price_change_24h ?? 0,
         market_cap_usd: token.tokenInfo?.market_cap_usd ?? token.market_cap ?? 0,
-        // Store complete token info from hook, fall back
-        completeTokenInfo: getComprehensiveTokenInfo(token)
+        // Save COMPLETE and consistently-structured token info directly for /scan-loading and /scan-result
+        completeTokenInfo: token.tokenInfo || getComprehensiveTokenInfo(token)
       };
-      
+
       console.log(`[TOKEN-SELECTION] Saving comprehensive token info to localStorage:`, tokenInfoToSave);
       localStorage.setItem("selectedToken", JSON.stringify(tokenInfoToSave));
-      
-      console.log(`[TOKEN-SELECTION] Navigating to scan loading page`);
-      navigate(`/scan-loading?token=${encodeURIComponent(tokenAddress)}&id=${token.id}`);
-      
+
+      // Classic flow: navigate to /scan-loading with token and id as params, actual scan/fetching/database insert will happen there, using passed-in localStorage data as needed.
+      navigate(`/scan-loading?token=${encodeURIComponent(tokenInfoToSave.address)}&id=${tokenInfoToSave.id}`);
+
     } catch (error) {
       console.error("Error in handleSelectToken:", error);
       toast.error("Error", {

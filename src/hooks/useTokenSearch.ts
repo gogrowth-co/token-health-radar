@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { TokenResult } from "@/components/token/types";
+import { TokenInfoEnriched } from "@/components/token/types"; // FIX: Import type
 import { callCoinGeckoAPI, tokenDetailCache, CACHE_VERSION, isValidErc20Token, KNOWN_ERC20_TOKENS } from "@/utils/tokenSearch";
 import { toast } from "sonner";
 
