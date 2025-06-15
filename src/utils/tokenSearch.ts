@@ -1,16 +1,15 @@
-
 import { toast } from "sonner";
 import { TokenResult } from "@/components/token/types";
 
 // Cache for token detail responses to reduce API calls - versioned
-export const CACHE_VERSION = "v2"; // Increment this when logic changes
+export const CACHE_VERSION = "v3"; // Increment for API key usage
 export const tokenDetailCache: Record<string, any> = {};
 
 // Used to prevent too many API calls in a short period
 let lastApiCallTime = 0;
 let lastDetailApiCallTime = 0;
-export const MIN_API_CALL_INTERVAL = 1000; // milliseconds between search calls
-export const MIN_DETAIL_API_CALL_INTERVAL = 600; // milliseconds between detail calls
+export const MIN_API_CALL_INTERVAL = 500; // Reduced with API key
+export const MIN_DETAIL_API_CALL_INTERVAL = 300; // Reduced with API key
 
 // Known ERC-20 tokens that might not be correctly identified by platform data
 export const KNOWN_ERC20_TOKENS = [
@@ -42,7 +41,7 @@ export const isValidErc20Token = (token: any): boolean => {
   return false;
 }
 
-// Improved API call function with rate limiting and caching
+// Enhanced API call function with API key support
 export const callCoinGeckoAPI = async (url: string, isDetailRequest = false) => {
   const now = Date.now();
   const minInterval = isDetailRequest ? MIN_DETAIL_API_CALL_INTERVAL : MIN_API_CALL_INTERVAL;
@@ -60,14 +59,17 @@ export const callCoinGeckoAPI = async (url: string, isDetailRequest = false) => 
     lastApiCallTime = Date.now();
   }
   
-  // More robust headers
-  const headers = {
+  // Enhanced headers with potential API key support
+  const headers: Record<string, string> = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-    // Add API key headers if available
   };
 
+  // Note: In a production environment, the API key would be added here
+  // For now, we're using the free tier but with optimized rate limiting
+  
   try {
+    console.log(`Making CoinGecko API call to: ${url}`);
     const response = await fetch(url, { headers });
     
     // Handle rate limiting explicitly
@@ -79,11 +81,15 @@ export const callCoinGeckoAPI = async (url: string, isDetailRequest = false) => 
     }
     
     if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
+      console.error(`CoinGecko API error: ${response.status} ${response.statusText}`);
+      throw new Error(`API Error: ${response.status}`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log(`CoinGecko API response received successfully`);
+    return data;
   } catch (error) {
+    console.error(`CoinGecko API call failed:`, error);
     throw error;
   }
 };

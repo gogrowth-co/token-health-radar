@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,7 +64,6 @@ export default function ScanLoading() {
       });
     }, 50);
 
-    // Function to handle the token scan
     const scanToken = async () => {
       try {
         console.log("ScanLoading: Starting token scan with address:", tokenAddress, "and CoinGecko ID:", coinGeckoId);
@@ -78,33 +76,47 @@ export default function ScanLoading() {
           return;
         }
 
-        // Get token info from localStorage if available
+        // Get comprehensive token info from localStorage
         const savedTokenInfo = localStorage.getItem("selectedToken");
         const selectedToken = savedTokenInfo ? JSON.parse(savedTokenInfo) : null;
         
         console.log("ScanLoading: Selected token from localStorage:", selectedToken);
         
         // Validate we have minimum required data for scanning
-        if (!coinGeckoId && !selectedToken?.id) {
+        const effectiveCoinGeckoId = coinGeckoId || selectedToken?.id;
+        if (!effectiveCoinGeckoId) {
           console.error("ScanLoading: No CoinGecko ID available for scanning");
           setScanFailed(true);
           setErrorMessage("Unable to scan token: Missing token identifier. Please try selecting the token again.");
           return;
         }
         
-        // Call the run-token-scan edge function
-        console.log("ScanLoading: Calling run-token-scan with params:", {
+        // Prepare comprehensive scan request with all available token info
+        const scanRequest = {
           token_address: tokenAddress,
-          coingecko_id: coinGeckoId || selectedToken?.id || "",
-          user_id: user?.id || null
-        });
+          coingecko_id: effectiveCoinGeckoId,
+          user_id: user?.id || null,
+          // Pass the complete token info if available
+          token_info: selectedToken?.completeTokenInfo || {
+            name: selectedToken?.name || `Token ${tokenAddress.substring(0, 8)}...`,
+            symbol: selectedToken?.symbol || 'UNKNOWN',
+            description: '',
+            website_url: '',
+            twitter_handle: '',
+            github_url: '',
+            logo_url: selectedToken?.logo || '',
+            coingecko_id: effectiveCoinGeckoId,
+            current_price_usd: selectedToken?.price_usd || 0,
+            price_change_24h: selectedToken?.price_change_24h || 0,
+            market_cap_usd: selectedToken?.market_cap_usd || 0,
+            total_value_locked_usd: 'N/A'
+          }
+        };
+        
+        console.log("ScanLoading: Calling run-token-scan with comprehensive request:", scanRequest);
         
         const { data, error } = await supabase.functions.invoke('run-token-scan', {
-          body: {
-            token_address: tokenAddress,
-            coingecko_id: coinGeckoId || selectedToken?.id || "",
-            user_id: user?.id || null
-          }
+          body: scanRequest
         });
 
         if (error) {
@@ -116,22 +128,14 @@ export default function ScanLoading() {
 
         console.log("ScanLoading: Token scan response:", data);
 
-        if (!data) {
-          console.error("ScanLoading: No data returned from token scan");
+        if (!data || !data.success) {
+          console.error("ScanLoading: Scan failed:", data?.error);
           setScanFailed(true);
-          setErrorMessage("No data returned from scan. Please try again.");
+          setErrorMessage(data?.error || "Failed to scan token. Please try again.");
           return;
         }
 
-        // Check if scan was successful
-        if (!data.success) {
-          console.error("ScanLoading: Scan failed:", data.error);
-          setScanFailed(true);
-          setErrorMessage(data.error || "Failed to scan token. Please try again.");
-          return;
-        }
-
-        // Validate that we have token info (the response should always have token_info now)
+        // The response should now have consistent structure
         if (!data.token_info || !data.token_info.name) {
           console.error("ScanLoading: Missing token info in scan results:", data);
           setScanFailed(true);
@@ -144,17 +148,11 @@ export default function ScanLoading() {
         
         // Wait for the progress bar to reach 100%
         setTimeout(() => {
-          // Save scan result to localStorage for persistence
           console.log("ScanLoading: Saving scan result to localStorage");
           localStorage.setItem("lastScanResult", JSON.stringify(data));
           
-          // Navigate to scan result page
-          console.log("ScanLoading: Redirecting to scan result page with parameters:", { 
-            token: tokenAddress, 
-            id: coinGeckoId || selectedToken?.id || "" 
-          });
-          
-          navigate(`/scan-result?token=${tokenAddress}${coinGeckoId ? `&id=${coinGeckoId}` : (selectedToken?.id ? `&id=${selectedToken.id}` : '')}`);
+          console.log("ScanLoading: Redirecting to scan result page");
+          navigate(`/scan-result?token=${tokenAddress}&id=${effectiveCoinGeckoId}`);
         }, 1000);
       } catch (error) {
         console.error("ScanLoading: Error during token scan:", error instanceof Error ? error.message : String(error));

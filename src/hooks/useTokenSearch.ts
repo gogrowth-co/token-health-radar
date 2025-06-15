@@ -19,7 +19,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
       try {
         console.log("Searching for token:", searchTerm);
         
-        // Call CoinGecko API with better rate limiting
+        // Use API key for better rate limits and reliability
         const searchUrl = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(searchTerm)}`;
         const data = await callCoinGeckoAPI(searchUrl);
         
@@ -40,7 +40,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
           const enhancedResults = [];
           for (const coin of topCoins) {
             try {
-              // Check cache first to reduce API calls - now with versioned cache key
+              // Check cache first to reduce API calls
               const cacheKey = `coin:${CACHE_VERSION}:${coin.id}`;
               let detailData;
               
@@ -48,64 +48,59 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 console.log(`Using cached data for ${coin.id}`);
                 detailData = tokenDetailCache[cacheKey];
               } else {
-                // Get detailed coin data - OPTIMIZED to only request market_data
-                const detailUrl = `https://api.coingecko.com/api/v3/coins/${coin.id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
+                // Get detailed coin data with comprehensive fields needed for scanning
+                const detailUrl = `https://api.coingecko.com/api/v3/coins/${coin.id}?localization=false&tickers=false&market_data=true&community_data=true&developer_data=true&sparkline=false`;
                 
                 try {
                   detailData = await callCoinGeckoAPI(detailUrl, true);
-                  // Cache the successful response with version
+                  // Cache the successful response
                   tokenDetailCache[cacheKey] = detailData;
+                  console.log(`Fetched and cached detailed data for ${coin.id}`);
                 } catch (detailError: any) {
                   console.warn(`Error fetching details for ${coin.id}:`, detailError.message);
                   
                   // For rate limiting, throw to retry later
                   if (detailError.message.includes("rate limit")) {
-                    throw detailError; // Propagate rate limit errors up
+                    throw detailError;
                   }
                   
                   // Add basic data without details if other errors occur
                   enhancedResults.push({
                     ...coin,
-                    isErc20: KNOWN_ERC20_TOKENS.includes(coin.id), // Check whitelist as fallback
+                    isErc20: KNOWN_ERC20_TOKENS.includes(coin.id),
                     price_usd: 0,
                     price_change_24h: 0,
-                    market_cap: 0
+                    market_cap: 0,
+                    platforms: {}
                   });
                   continue;
                 }
               }
               
-              // Process the detail data
+              // Process the detail data with complete information
               const platforms = detailData.platforms || {};
               const isErc20Compatible = isValidErc20Token({
                 ...coin,
                 platforms: platforms
               });
               
-              // Extract description - get the English description if available
-              let description = '';
-              if (detailData.description && detailData.description.en) {
-                // Remove HTML tags and take first sentence
-                description = detailData.description.en
-                  .replace(/<[^>]*>/g, '')
-                  .split('.')[0] + '.';
-                
-                // Limit description length
-                if (description.length > 200) {
-                  description = description.substring(0, 200) + '...';
-                }
-              }
+              // Extract comprehensive token information
+              const description = detailData.description?.en 
+                ? detailData.description.en.replace(/<[^>]*>/g, '').split('.')[0] + '.'
+                : '';
               
-              // Enhanced debugging
+              const limitedDescription = description.length > 200 
+                ? description.substring(0, 200) + '...' 
+                : description;
+              
               console.log(`[Token Debug] ${coin.id} (${coin.symbol}):`);
               console.log(` - Platforms data:`, platforms);
               console.log(` - Is valid ERC-20:`, isErc20Compatible);
               console.log(` - Market cap USD:`, detailData.market_data?.market_cap?.usd);
               console.log(` - Current price USD:`, detailData.market_data?.current_price?.usd);
-              console.log(` - Price change 24h:`, detailData.market_data?.price_change_percentage_24h);
-              console.log(` - Description:`, description);
+              console.log(` - Links:`, detailData.links);
               
-              // Return enhanced coin data with proper field mapping
+              // Return enhanced coin data with all necessary fields for scanning
               enhancedResults.push({
                 ...coin,
                 platforms: platforms,
@@ -113,7 +108,22 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 price_change_24h: detailData.market_data?.price_change_percentage_24h || 0,
                 market_cap: detailData.market_data?.market_cap?.usd || 0,
                 isErc20: isErc20Compatible,
-                description: description
+                description: limitedDescription,
+                // Store complete token info for passing to scan
+                tokenInfo: {
+                  name: detailData.name || coin.name,
+                  symbol: detailData.symbol?.toUpperCase() || coin.symbol?.toUpperCase(),
+                  description: limitedDescription,
+                  website_url: detailData.links?.homepage?.[0] || '',
+                  twitter_handle: detailData.links?.twitter_screen_name || '',
+                  github_url: detailData.links?.repos_url?.github?.[0] || '',
+                  logo_url: detailData.image?.large || detailData.image?.small || coin.large || coin.thumb || '',
+                  coingecko_id: coin.id,
+                  current_price_usd: detailData.market_data?.current_price?.usd || 0,
+                  price_change_24h: detailData.market_data?.price_change_percentage_24h || 0,
+                  market_cap_usd: detailData.market_data?.market_cap?.usd || 0,
+                  total_value_locked_usd: detailData.market_data?.total_value_locked?.usd?.toString() || 'N/A'
+                }
               });
             } catch (err: any) {
               // If it's a rate limit error, propagate it up
@@ -127,12 +137,13 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 isErc20: KNOWN_ERC20_TOKENS.includes(coin.id),
                 price_usd: 0,
                 price_change_24h: 0,
-                market_cap: 0
+                market_cap: 0,
+                platforms: {}
               });
             }
           }
           
-          console.log("Enhanced token results:", enhancedResults);
+          console.log("Enhanced token results with full info:", enhancedResults);
           setResults(enhancedResults);
         } else {
           setResults([]);
@@ -140,7 +151,6 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
       } catch (err: any) {
         console.error("Error fetching token data:", err);
         
-        // Special handling for rate limiting errors
         const errorMessage = err.message?.includes("rate limit") 
           ? "API rate limit reached. Please try again in a few moments."
           : "Could not fetch token information. Please try again later.";

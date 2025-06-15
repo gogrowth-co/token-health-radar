@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -41,23 +40,20 @@ export default function useTokenSelection() {
     try {
       console.log(`[TOKEN-SELECTION] Selected token: ${token.name} (${token.symbol}), CoinGecko ID: ${token.id}`);
       console.log(`[TOKEN-SELECTION] Token platforms:`, token.platforms);
-      console.log(`[TOKEN-SELECTION] Token isErc20 property:`, token.isErc20);
-      console.log(`[TOKEN-SELECTION] User authenticated:`, isAuthenticated);
+      console.log(`[TOKEN-SELECTION] Token info:`, token.tokenInfo);
       
       // Check if token is supported for full scanning
       const isSupported = isTokenScanSupported(token);
       console.log(`[TOKEN-SELECTION] Is token supported for full scan:`, isSupported);
       
       if (!isSupported) {
-        // For unsupported tokens, show a toast and navigate to a limited info page
         console.log(`[TOKEN-SELECTION] Token ${token.name} not supported - showing limited info`);
         toast.info("Limited Support", {
           description: `${token.name} is not fully supported. Showing basic information only.`
         });
         
-        // Save basic token info for display
         const tokenInfo = {
-          address: `unsupported-${token.id}`, // Use a special identifier
+          address: `unsupported-${token.id}`,
           id: token.id,
           name: token.name,
           symbol: token.symbol,
@@ -68,8 +64,6 @@ export default function useTokenSelection() {
         };
         
         localStorage.setItem("selectedToken", JSON.stringify(tokenInfo));
-        
-        // Navigate to scan result with limited support flag
         navigate(`/scan-result?token=unsupported-${token.id}&id=${token.id}&limited=true`);
         return;
       }
@@ -118,15 +112,27 @@ export default function useTokenSelection() {
           await saveTokenToDatabase(token);
         } catch (error) {
           console.error("Error saving token to database:", error);
-          // Continue with scan even if database save fails
         }
       }
       
-      // Save token to localStorage
-      saveTokenToLocalStorage(token, tokenAddress);
+      // Save comprehensive token info to localStorage including the detailed tokenInfo
+      const tokenInfoToSave = {
+        address: tokenAddress,
+        id: token.id,
+        name: token.tokenInfo?.name || token.name,
+        symbol: token.tokenInfo?.symbol || token.symbol,
+        logo: token.tokenInfo?.logo_url || token.large || token.thumb,
+        price_usd: token.tokenInfo?.current_price_usd || token.price_usd || 0,
+        price_change_24h: token.tokenInfo?.price_change_24h || token.price_change_24h || 0,
+        market_cap_usd: token.tokenInfo?.market_cap_usd || token.market_cap || 0,
+        // Store the complete token info for the scan
+        completeTokenInfo: token.tokenInfo
+      };
+      
+      console.log(`[TOKEN-SELECTION] Saving comprehensive token info to localStorage:`, tokenInfoToSave);
+      localStorage.setItem("selectedToken", JSON.stringify(tokenInfoToSave));
       
       console.log(`[TOKEN-SELECTION] Navigating to scan loading page`);
-      // Navigate to scan loading page - no auth required
       navigate(`/scan-loading?token=${encodeURIComponent(tokenAddress)}&id=${token.id}`);
       
     } catch (error) {
