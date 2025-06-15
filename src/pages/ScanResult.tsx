@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +13,7 @@ import { toast } from "sonner";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { checkUserHasProAccess } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 enum ScanCategory {
   Security = "security",
@@ -27,6 +27,7 @@ export default function ScanResult() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const isMobile = useIsMobile();
   const [scanData, setScanData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -184,7 +185,7 @@ export default function ScanResult() {
         <main className="flex-1 container px-4 py-8 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p>Loading scan results...</p>
+            <p className={isMobile ? "text-sm" : "text-base"}>Loading scan results...</p>
           </div>
         </main>
         <Footer />
@@ -197,21 +198,21 @@ export default function ScanResult() {
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-1 container px-4 py-8 flex items-center justify-center">
-          <div className="w-full max-w-md text-center space-y-6">
+          <div className={`w-full ${isMobile ? 'max-w-sm' : 'max-w-md'} text-center space-y-6`}>
             <div className="flex flex-col items-center">
-              <div className="w-20 h-20 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center mb-4">
-                <AlertCircle className="h-10 w-10 text-red-500" />
+              <div className={`${isMobile ? 'w-16 h-16' : 'w-20 h-20'} rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center mb-4`}>
+                <AlertCircle className={`${isMobile ? 'h-8 w-8' : 'h-10 w-10'} text-red-500`} />
               </div>
-              <h1 className="text-2xl font-bold">Failed to load scan results</h1>
-              <p className="text-muted-foreground mt-2">
+              <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>Failed to load scan results</h1>
+              <p className={`text-muted-foreground mt-2 ${isMobile ? 'text-sm' : 'text-base'}`}>
                 {error || "Token not found in our database."}
               </p>
               
-              <div className="flex gap-4 mt-6">
-                <Button variant="outline" onClick={() => navigate("/")}>
+              <div className={`flex ${isMobile ? 'flex-col w-full' : 'flex-row'} gap-4 mt-6`}>
+                <Button variant="outline" onClick={() => navigate("/")} className={isMobile ? 'w-full' : ''}>
                   Back to Search
                 </Button>
-                <Button onClick={() => window.location.reload()}>
+                <Button onClick={() => window.location.reload()} className={isMobile ? 'w-full' : ''}>
                   Retry
                 </Button>
               </div>
@@ -256,8 +257,8 @@ export default function ScanResult() {
     <div className="flex flex-col min-h-screen">
       <Navbar />
 
-      <main className="flex-1 container px-4 py-8 pb-24">
-        <div className="max-w-6xl mx-auto space-y-8">
+      <main className={`flex-1 container px-4 ${isMobile ? 'py-4 pb-32' : 'py-8 pb-24'}`}>
+        <div className={`${isMobile ? 'max-w-full' : 'max-w-6xl'} mx-auto space-y-${isMobile ? '6' : '8'}`}>
           {/* Show scan limit indicator for authenticated users */}
           {isAuthenticated && scanLimitData && (
             <ScanLimitIndicator
@@ -310,9 +311,9 @@ export default function ScanResult() {
       {!isPro() && (
         <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 z-50">
           <div className="container mx-auto max-w-6xl">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
+            <div className={`flex items-center ${isMobile ? 'flex-col gap-3' : 'justify-between'}`}>
+              <div className={`${isMobile ? 'text-center' : 'flex-1'}`}>
+                <p className={`${isMobile ? 'text-sm' : 'text-sm'} font-medium text-gray-900 dark:text-white`}>
                   {!isAuthenticated 
                     ? "Want the full picture? Create a free account to unlock detailed risk insights."
                     : "Upgrade to Pro for unlimited detailed scans and advanced features."
@@ -327,7 +328,8 @@ export default function ScanResult() {
                     setShowUpgradeModal(true);
                   }
                 }}
-                className="ml-4"
+                className={`${isMobile ? 'w-full' : 'ml-4'}`}
+                size={isMobile ? 'lg' : 'default'}
               >
                 {!isAuthenticated ? 'Create Free Account' : 'Upgrade to Pro'}
               </Button>

@@ -9,30 +9,29 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import * as React from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Mini health score widget with better visibility for dark and light themes
 function MiniHealthScore({ score = 0 }: { score: number }) {
-  // Arc is 220deg of 360deg
+  const isMobile = useIsMobile();
+  const size = isMobile ? 36 : 48;
+  const radius = isMobile ? 16 : 22;
+  const cx = size / 2;
+  const cy = size / 2;
   const angle = 220;
-  const radius = 22;
-  const cx = 24;
-  const cy = 24;
   const circumference = 2 * Math.PI * radius;
   const arcLength = (angle / 360) * circumference;
 
-  // Ensure text color is always readable
-  // Use CSS variables or tailwind "text-white"/"text-black" via "dark:" 
-  // dark -> white, light -> black
   return (
     <div className="flex flex-col items-center">
-      <svg width={48} height={48}>
+      <svg width={size} height={size}>
         <circle
           cx={cx}
           cy={cy}
           r={radius}
           fill="none"
           stroke="#232334"
-          strokeWidth={4}
+          strokeWidth={isMobile ? 3 : 4}
           style={{ transition: "stroke-dasharray 0.3s" }}
         />
         <circle
@@ -41,7 +40,7 @@ function MiniHealthScore({ score = 0 }: { score: number }) {
           r={radius}
           fill="none"
           stroke="#F59E0B"
-          strokeWidth={4}
+          strokeWidth={isMobile ? 3 : 4}
           strokeDasharray={`${arcLength} ${circumference - arcLength}`}
           strokeDashoffset={circumference * 0.2}
           strokeLinecap="round"
@@ -51,7 +50,7 @@ function MiniHealthScore({ score = 0 }: { score: number }) {
           x="50%"
           y="56%"
           textAnchor="middle"
-          fontSize="16"
+          fontSize={isMobile ? "12" : "16"}
           fontWeight="600"
           dy=".1em"
           className="fill-black dark:fill-white"
@@ -59,7 +58,7 @@ function MiniHealthScore({ score = 0 }: { score: number }) {
           {Math.round(score)}
         </text>
       </svg>
-      <span className="text-[12px] font-medium mt-1 text-[#9CA3AF] dark:text-[#A3A3B3]">
+      <span className={`${isMobile ? 'text-[10px]' : 'text-[12px]'} font-medium mt-1 text-[#9CA3AF] dark:text-[#A3A3B3]`}>
         Health Score
       </span>
     </div>
@@ -97,10 +96,12 @@ export default function TokenProfile({
   description,
   network = "ETH",
 }: TokenProfileProps) {
+  const isMobile = useIsMobile();
+  
   // Clamp and ellipsis for description
   const clampedDesc = description
-    ? description.length > 256
-      ? `${description.slice(0, 253)}...`
+    ? description.length > (isMobile ? 120 : 256)
+      ? `${description.slice(0, isMobile ? 117 : 253)}...`
       : description
     : "";
 
@@ -124,6 +125,160 @@ export default function TokenProfile({
     return `$${v.toFixed(2)}`;
   };
 
+  if (isMobile) {
+    return (
+      <Card
+        className="overflow-visible transition-all"
+        style={{
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: "var(--profile-border, #E6E8EC)",
+          background: "var(--profile-bg, #FFF)",
+          width: "100%",
+          padding: 0,
+          margin: "auto",
+        }}
+      >
+        <div className="p-4 space-y-4">
+          {/* Mobile Top Section: Logo + Name/Symbol */}
+          <div className="flex items-start gap-3">
+            <img
+              src={logo}
+              alt={`${name} logo`}
+              className="w-12 h-12 object-cover rounded-full flex-shrink-0"
+              style={{
+                background: "#F5F6FA",
+              }}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="font-semibold text-lg leading-tight text-gray-900 dark:text-gray-100 truncate">
+                  {name}
+                </h2>
+                <span className="font-medium text-xs px-2 py-1 bg-[#252534] text-gray-200 rounded-full flex-shrink-0">
+                  ${symbol.toUpperCase()}
+                </span>
+              </div>
+              
+              {/* Address and Network */}
+              <div className="flex items-center gap-2 mb-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={copyAddress}
+                        className="font-mono text-xs px-2 py-1 rounded bg-[#232334] text-[#A3A3B3] border-none focus:outline-none transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      >
+                        {shortenAddress(address)}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Click to copy address</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <span className="px-1.5 py-0.5 rounded bg-[#252534] text-[#A3A3B3] font-semibold text-xs">
+                  {network.toUpperCase()}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          {clampedDesc && (
+            <p className="text-sm leading-relaxed text-[#4B5563] dark:text-[#A3A3B3]">
+              {clampedDesc}
+            </p>
+          )}
+
+          {/* Mobile Bottom Section: Price/Market Cap + Health Score */}
+          <div className="flex items-center justify-between">
+            {/* Price and Market Cap */}
+            <div className="flex flex-col">
+              <div className="flex flex-col mb-3">
+                <span className="text-xl font-bold leading-none text-[#000] dark:text-[#fff]">
+                  ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+                <span
+                  className="text-sm font-medium mt-0.5"
+                  style={{
+                    color: priceChange >= 0 ? "#10B981" : "#DC2626",
+                  }}
+                >
+                  {priceChange >= 0 ? "+" : ""}
+                  {priceChange.toFixed(2)}%
+                </span>
+              </div>
+              
+              <div className="flex flex-col">
+                <span className="text-xs font-medium uppercase text-[#A3A3B3] tracking-wide mb-1">
+                  Market Cap
+                </span>
+                <span className="text-lg font-bold text-[#000] dark:text-white">
+                  {formatMarketCap(marketCap)}
+                </span>
+              </div>
+            </div>
+
+            {/* Health Score and Socials */}
+            <div className="flex flex-col items-center gap-3">
+              <MiniHealthScore score={overallScore} />
+              
+              {/* Socials */}
+              {(website || twitter || github) && (
+                <div className="flex items-center gap-3">
+                  {website && (
+                    <a
+                      href={website.startsWith("http") ? website : `https://${website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded transition-colors text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      aria-label="Website"
+                    >
+                      <Globe className="w-5 h-5" />
+                    </a>
+                  )}
+                  {twitter && (
+                    <a
+                      href={twitter.startsWith("http") ? twitter : `https://twitter.com/${twitter.replace("@", "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded transition-colors text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      aria-label="X/Twitter"
+                    >
+                      <Twitter className="w-5 h-5" />
+                    </a>
+                  )}
+                  {github && (
+                    <a
+                      href={github.startsWith("http") ? github : `https://github.com/${github.replace(/^@/, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded transition-colors text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      aria-label="GitHub"
+                    >
+                      <Github className="w-5 h-5" />
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        {/* CSS variables for theme */}
+        <style>{`
+          :root {
+            --profile-border: #E6E8EC;
+            --profile-bg: #FFF;
+          }
+          .dark {
+            --profile-border: #232334;
+            --profile-bg: #181826;
+          }
+        `}</style>
+      </Card>
+    );
+  }
+
+  // Desktop layout (existing code)
   return (
     <Card
       className="overflow-visible transition-all"
