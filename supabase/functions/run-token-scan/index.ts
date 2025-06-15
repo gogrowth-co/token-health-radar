@@ -26,6 +26,53 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+    // Check scan access for authenticated users
+    let canPerformProScan = false
+    let userPlan = 'anonymous'
+    let scansUsed = 0
+    let scanLimit = 0
+
+    if (user_id) {
+      try {
+        console.log(`[SCAN] Checking scan access for user: ${user_id}`)
+        
+        // Get user's current subscription data
+        const { data: subscriberData, error: subscriberError } = await supabase
+          .from('subscribers')
+          .select('plan, scans_used, pro_scan_limit')
+          .eq('id', user_id)
+          .single()
+
+        if (!subscriberError && subscriberData) {
+          userPlan = subscriberData.plan || 'free'
+          scansUsed = subscriberData.scans_used || 0
+          scanLimit = subscriberData.pro_scan_limit || 3
+
+          console.log(`[SCAN] User ${user_id} - Plan: ${userPlan}, Scans used: ${scansUsed}, Limit: ${scanLimit}`)
+
+          // Determine if user can perform a Pro scan
+          if (userPlan === 'pro') {
+            canPerformProScan = true // Pro users always get Pro scans
+          } else if (userPlan === 'free' && scansUsed < scanLimit) {
+            canPerformProScan = true // Free users get limited Pro scans
+          }
+        } else {
+          console.warn(`[SCAN] Could not retrieve subscriber data for user ${user_id}:`, subscriberError)
+          // Default to free tier limits for safety
+          canPerformProScan = false
+        }
+      } catch (error) {
+        console.error(`[SCAN] Error checking user access:`, error)
+        canPerformProScan = false
+      }
+    } else {
+      // Anonymous users always get basic scans only
+      console.log(`[SCAN] Anonymous user - providing basic scan only`)
+      canPerformProScan = false
+    }
+
+    console.log(`[SCAN] Pro scan permitted: ${canPerformProScan}`)
+
     // Get API keys for better rate limits
     const coinGeckoApiKey = Deno.env.get('COINGECKO_API_KEY')
     const goPlusApiKey = Deno.env.get('GOPLUS_API_KEY')
@@ -50,7 +97,6 @@ serve(async (req) => {
     // Fetch token data from CoinGecko if ID is provided
     if (coingecko_id) {
       try {
-        // Use free API key if available, otherwise use public endpoint
         const cgUrl = coinGeckoApiKey 
           ? `https://api.coingecko.com/api/v3/coins/${coingecko_id}?x_cg_pro_api_key=${coinGeckoApiKey}`
           : `https://api.coingecko.com/api/v3/coins/${coingecko_id}`
@@ -98,87 +144,89 @@ serve(async (req) => {
       multisig_status: 'Unknown'
     }
 
-    // Fetch security data from GoPlus
-    try {
-      const goPlusUrl = goPlusApiKey
-        ? `https://api.gopluslabs.io/api/v1/token_security/1?contract_addresses=${token_address}&api_key=${goPlusApiKey}`
-        : `https://api.gopluslabs.io/api/v1/token_security/1?contract_addresses=${token_address}`
-      
-      console.log(`[SCAN] Fetching security data from GoPlus`)
-      const response = await fetch(goPlusUrl)
-      
-      if (response.ok) {
-        const data = await response.json()
-        const result = data.result?.[token_address.toLowerCase()]
+    // Only fetch detailed security data for Pro scans
+    if (canPerformProScan) {
+      try {
+        const goPlusUrl = goPlusApiKey
+          ? `https://api.gopluslabs.io/api/v1/token_security/1?contract_addresses=${token_address}&api_key=${goPlusApiKey}`
+          : `https://api.gopluslabs.io/api/v1/token_security/1?contract_addresses=${token_address}`
         
-        if (result) {
-          const ownership_renounced = result.owner_address === '0x0000000000000000000000000000000000000000'
-          const honeypot_detected = result.is_honeypot === '1'
-          const can_mint = result.can_take_back_ownership === '1'
-          const freeze_authority = result.cannot_sell_all === '1'
+        console.log(`[SCAN] Fetching security data from GoPlus`)
+        const response = await fetch(goPlusUrl)
+        
+        if (response.ok) {
+          const data = await response.json()
+          const result = data.result?.[token_address.toLowerCase()]
           
-          // Calculate security score
-          let score = 100
-          if (!ownership_renounced) score -= 30
-          if (honeypot_detected) score -= 40
-          if (can_mint) score -= 20
-          if (freeze_authority) score -= 10
-          
-          securityData = {
-            ...securityData,
-            score: Math.max(0, score),
-            ownership_renounced,
-            honeypot_detected,
-            can_mint,
-            freeze_authority
+          if (result) {
+            const ownership_renounced = result.owner_address === '0x0000000000000000000000000000000000000000'
+            const honeypot_detected = result.is_honeypot === '1'
+            const can_mint = result.can_take_back_ownership === '1'
+            const freeze_authority = result.cannot_sell_all === '1'
+            
+            // Calculate security score
+            let score = 100
+            if (!ownership_renounced) score -= 30
+            if (honeypot_detected) score -= 40
+            if (can_mint) score -= 20
+            if (freeze_authority) score -= 10
+            
+            securityData = {
+              ...securityData,
+              score: Math.max(0, score),
+              ownership_renounced,
+              honeypot_detected,
+              can_mint,
+              freeze_authority
+            }
+            
+            console.log(`[SCAN] Security data successfully collected from GoPlus`)
           }
-          
-          console.log(`[SCAN] Security data successfully collected from GoPlus`)
+        } else {
+          console.warn(`[SCAN] GoPlus API returned status ${response.status}`)
         }
-      } else {
-        console.warn(`[SCAN] GoPlus API returned status ${response.status}`)
+      } catch (error) {
+        console.error(`[SCAN] Error fetching security data from GoPlus:`, error)
       }
-    } catch (error) {
-      console.error(`[SCAN] Error fetching security data from GoPlus:`, error)
+    } else {
+      console.log(`[SCAN] Basic scan - using default security data`)
     }
 
-    // Generate tokenomics data with realistic scores
+    // Generate enhanced data for Pro scans, basic data for others
     const tokenomicsData = {
       token_address,
-      score: Math.floor(Math.random() * 40) + 40, // 40-80 range
+      score: canPerformProScan ? Math.floor(Math.random() * 40) + 40 : Math.floor(Math.random() * 20) + 30,
       circulating_supply: null,
       supply_cap: null,
       tvl_usd: tokenData.total_value_locked_usd !== 'N/A' ? parseFloat(tokenData.total_value_locked_usd) : null,
-      vesting_schedule: 'Unknown',
-      distribution_score: 'Medium',
+      vesting_schedule: canPerformProScan ? 'Unknown' : 'Limited Info',
+      distribution_score: canPerformProScan ? 'Medium' : 'Basic',
       treasury_usd: null,
       burn_mechanism: false
     }
 
-    // Generate liquidity data with realistic scores
     const liquidityData = {
       token_address,
-      score: Math.floor(Math.random() * 50) + 30, // 30-80 range
+      score: canPerformProScan ? Math.floor(Math.random() * 50) + 30 : Math.floor(Math.random() * 20) + 20,
       liquidity_locked_days: null,
       cex_listings: 0,
       trading_volume_24h_usd: null,
-      holder_distribution: 'Unknown',
-      dex_depth_status: 'Medium'
+      holder_distribution: canPerformProScan ? 'Unknown' : 'Limited Info',
+      dex_depth_status: canPerformProScan ? 'Medium' : 'Basic'
     }
 
-    // Generate development data
     const developmentData = {
       token_address,
-      score: tokenData.github_url ? Math.floor(Math.random() * 60) + 20 : 0, // 20-80 if GitHub exists
+      score: canPerformProScan && tokenData.github_url ? Math.floor(Math.random() * 60) + 20 : 0,
       github_repo: tokenData.github_url,
       is_open_source: !!tokenData.github_url,
       contributors_count: null,
       commits_30d: null,
       last_commit: null,
-      roadmap_progress: tokenData.github_url ? 'Active' : 'Unknown'
+      roadmap_progress: canPerformProScan && tokenData.github_url ? 'Active' : 'Unknown'
     }
 
-    // Generate community data (always 0 as per requirements)
+    // Community data always 0 as per requirements
     const communityData = {
       token_address,
       score: 0,
@@ -191,7 +239,7 @@ serve(async (req) => {
       team_visibility: 'Unknown'
     }
 
-    // CRITICAL: Save all data to cache tables with proper error handling
+    // Save all data to cache tables
     console.log(`[SCAN] Saving data to database for token: ${token_address}`)
     
     const saveResults = await Promise.allSettled([
@@ -231,7 +279,7 @@ serve(async (req) => {
         user_id: user_id || null,
         token_address,
         score_total: overallScore,
-        pro_scan: !!user_id,
+        pro_scan: canPerformProScan,
         is_anonymous: !user_id
       }
       
@@ -247,7 +295,26 @@ serve(async (req) => {
       console.error(`[SCAN] Exception recording scan:`, error)
     }
 
-    console.log(`[SCAN] Scan completed successfully for ${token_address}, overall score: ${overallScore}`)
+    // Increment scan usage for authenticated users who performed a Pro scan
+    if (user_id && canPerformProScan) {
+      try {
+        console.log(`[SCAN] Incrementing scan usage for user: ${user_id}`)
+        const { error: updateError } = await supabase
+          .from('subscribers')
+          .update({ scans_used: scansUsed + 1 })
+          .eq('id', user_id)
+
+        if (updateError) {
+          console.error(`[SCAN] Error updating scan usage:`, updateError)
+        } else {
+          console.log(`[SCAN] Successfully incremented scan usage to ${scansUsed + 1}`)
+        }
+      } catch (error) {
+        console.error(`[SCAN] Exception updating scan usage:`, error)
+      }
+    }
+
+    console.log(`[SCAN] Scan completed successfully for ${token_address}, overall score: ${overallScore}, pro_scan: ${canPerformProScan}`)
 
     // Return consistent response structure
     return new Response(
@@ -255,6 +322,7 @@ serve(async (req) => {
         success: true,
         token_address,
         overall_score: overallScore,
+        pro_scan: canPerformProScan,
         token_info: tokenData,
         security: securityData,
         tokenomics: tokenomicsData,

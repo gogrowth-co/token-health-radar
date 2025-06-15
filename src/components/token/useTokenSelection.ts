@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -5,11 +6,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { TokenResult, TokenInfoEnriched } from "./types";
 import { getFirstValidEvmAddress } from "@/utils/addressUtils";
 import { saveTokenToDatabase, saveTokenToLocalStorage, isTokenScanSupported } from "@/utils/tokenStorage";
+import { checkUserHasProAccess } from "@/integrations/supabase/client";
 
 interface ScanAccessData {
   plan: string;
   scansUsed: number;
   scanLimit: number;
+  hasPro: boolean;
+  proScanAvailable: boolean;
 }
 
 /**
@@ -29,6 +33,7 @@ const getWellKnownAddress = (tokenId: string): string | null => {
 export default function useTokenSelection() {
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [scanAccessData, setScanAccessData] = useState<ScanAccessData | null>(null);
+  const [showScanLimitModal, setShowScanLimitModal] = useState(false);
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
 
@@ -54,6 +59,39 @@ export default function useTokenSelection() {
   };
 
   /**
+   * Check scan limits before allowing scan
+   */
+  const checkScanLimits = useCallback(async (): Promise<boolean> => {
+    if (!isAuthenticated) {
+      // Anonymous users can always scan (they get basic scans)
+      return true;
+    }
+
+    try {
+      const accessData = await checkUserHasProAccess();
+      
+      setScanAccessData({
+        plan: accessData.plan || 'free',
+        scansUsed: accessData.scansUsed || 0,
+        scanLimit: accessData.scanLimit || 3,
+        hasPro: accessData.hasPro,
+        proScanAvailable: accessData.proScanAvailable
+      });
+
+      // If user has no Pro scans available, show the upgrade modal
+      if (!accessData.proScanAvailable && accessData.scansUsed >= (accessData.scanLimit || 3)) {
+        setShowScanLimitModal(true);
+        return false; // Still allow scan but warn user
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error checking scan limits:", error);
+      return true; // Allow scan on error
+    }
+  }, [isAuthenticated]);
+
+  /**
    * Handles token selection and initiates the scan process
    * @param token - The selected token
    */
@@ -62,6 +100,9 @@ export default function useTokenSelection() {
       console.log(`[TOKEN-SELECTION] Selected token: ${token.name} (${token.symbol}), CoinGecko ID: ${token.id}`);
       console.log(`[TOKEN-SELECTION] Token platforms:`, token.platforms);
       console.log(`[TOKEN-SELECTION] Token info:`, token.tokenInfo);
+      
+      // Check scan limits for authenticated users
+      const canProceed = await checkScanLimits();
       
       // Check if token is supported for full scanning
       const isSupported = isTokenScanSupported(token);
@@ -145,7 +186,7 @@ export default function useTokenSelection() {
       console.log(`[TOKEN-SELECTION] Saving comprehensive token info to localStorage:`, tokenInfoToSave);
       localStorage.setItem("selectedToken", JSON.stringify(tokenInfoToSave));
 
-      // Classic flow: navigate to /scan-loading with token and id as params, actual scan/fetching/database insert will happen there, using passed-in localStorage data as needed.
+      // Navigate to scan loading - the actual limit enforcement happens in the backend
       navigate(`/scan-loading?token=${encodeURIComponent(tokenInfoToSave.address)}&id=${tokenInfoToSave.id}`);
 
     } catch (error) {
@@ -154,21 +195,28 @@ export default function useTokenSelection() {
         description: "Failed to process token selection. Please try again."
       });
     }
-  }, [navigate, user, isAuthenticated]);
+  }, [navigate, user, isAuthenticated, checkScanLimits]);
 
   /**
    * Handles upgrade button click
    */
   const handleUpgrade = useCallback(() => {
-    navigate('/pricing');
+    if (!isAuthenticated) {
+      navigate('/auth');
+    } else {
+      navigate('/pricing');
+    }
     setShowUpgradeDialog(false);
-  }, [navigate]);
+    setShowScanLimitModal(false);
+  }, [navigate, isAuthenticated]);
 
   return {
     handleSelectToken,
     handleUpgrade,
     showUpgradeDialog,
     setShowUpgradeDialog,
-    scanAccessData
+    scanAccessData,
+    showScanLimitModal,
+    setShowScanLimitModal
   };
 }

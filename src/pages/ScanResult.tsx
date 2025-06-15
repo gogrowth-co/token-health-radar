@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,9 +8,12 @@ import Footer from "@/components/Footer";
 import TokenProfile from "@/components/TokenProfile";
 import CategoryTabs from "@/components/CategoryTabs";
 import CategoryScoresGrid from "@/components/CategoryScoresGrid";
+import ScanLimitIndicator from "@/components/ScanLimitIndicator";
+import UpgradeModal from "@/components/UpgradeModal";
 import { toast } from "sonner";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { checkUserHasProAccess } from "@/integrations/supabase/client";
 
 enum ScanCategory {
   Security = "security",
@@ -27,14 +31,29 @@ export default function ScanResult() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ScanCategory>(ScanCategory.Security);
+  const [scanLimitData, setScanLimitData] = useState<any>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   // Get parameters from URL
   const tokenAddress = searchParams.get("token") || "";
   const coinGeckoId = searchParams.get("id") || "";
   const isLimited = searchParams.get("limited") === "true";
 
-  // Check if user is pro (simplified logic - could be enhanced with actual subscription check)
-  const isPro = isAuthenticated && !isLimited;
+  // Check user's scan access status
+  useEffect(() => {
+    const checkScanAccess = async () => {
+      if (isAuthenticated) {
+        try {
+          const accessData = await checkUserHasProAccess();
+          setScanLimitData(accessData);
+        } catch (error) {
+          console.error("Error checking scan access:", error);
+        }
+      }
+    };
+
+    checkScanAccess();
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const loadScanData = async () => {
@@ -49,10 +68,10 @@ export default function ScanResult() {
           return;
         }
 
-        // Only use maybeSingle - never .single() (lets us check for DB results cleanly)
+        // Load scan data from database
         const [
           { data: tokenData, error: tokenError },
-          { data: securityData }, // error logging handled below
+          { data: securityData },
           { data: tokenomicsData },
           { data: liquidityData },
           { data: developmentData },
@@ -66,13 +85,8 @@ export default function ScanResult() {
           supabase.from('token_community_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
         ]);
 
-        // Explicit logs for debugging
         console.log("[DB] token_data_cache result:", tokenData);
         console.log("[DB] token_security_cache result:", securityData);
-        console.log("[DB] token_tokenomics_cache result:", tokenomicsData);
-        console.log("[DB] token_liquidity_cache result:", liquidityData);
-        console.log("[DB] token_development_cache result:", developmentData);
-        console.log("[DB] token_community_cache result:", communityData);
 
         // If ANY critical field exists in tokenData, use DB; else fallback to localStorage
         if (tokenData && (tokenData.name || tokenData.symbol || tokenData.current_price_usd)) {
@@ -97,7 +111,7 @@ export default function ScanResult() {
           return;
         }
 
-        // Fallback: Try to get token info from localStorage (only if DB really has nothing)
+        // Fallback: Try to get token info from localStorage
         const selectedTokenData = localStorage.getItem("selectedToken");
         if (selectedTokenData) {
           try {
@@ -155,6 +169,14 @@ export default function ScanResult() {
     setActiveTab(category);
   };
 
+  // Determine isPro based on user status and scan limits
+  const isPro = () => {
+    if (!isAuthenticated) return false; // Anonymous users never get Pro view
+    if (isLimited) return false; // Explicitly limited
+    if (!scanLimitData) return true; // Default to Pro if no limit data (safety)
+    return scanLimitData.hasPro; // Use the actual check result
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -201,11 +223,6 @@ export default function ScanResult() {
     );
   }
 
-  if (!scanData) {
-    // Should never happen - fallback
-    return null;
-  }
-
   const tokenInfo = scanData.token_info;
 
   // Display logic: use DB values, fallback to empty string/0 if not found
@@ -226,7 +243,7 @@ export default function ScanResult() {
   const properDescription = tokenInfo?.description || "";
   const networkName = "ETH";
 
-  // Calculate the overall score (use all categories, weighted equally)
+  // Calculate the overall score
   const overallScore = [
     scanData.security?.score || 0,
     scanData.tokenomics?.score || 0,
@@ -241,6 +258,16 @@ export default function ScanResult() {
 
       <main className="flex-1 container px-4 py-8 pb-24">
         <div className="max-w-6xl mx-auto space-y-8">
+          {/* Show scan limit indicator for authenticated users */}
+          {isAuthenticated && scanLimitData && (
+            <ScanLimitIndicator
+              scansUsed={scanLimitData.scansUsed || 0}
+              scanLimit={scanLimitData.scanLimit || 3}
+              plan={scanLimitData.plan || 'free'}
+              className="mb-4"
+            />
+          )}
+
           <TokenProfile
             name={properName}
             symbol={properSymbol}
@@ -273,32 +300,51 @@ export default function ScanResult() {
             tokenomicsData={scanData.tokenomics}
             communityData={scanData.community}
             developmentData={scanData.development}
-            isPro={isPro}
+            isPro={isPro()}
             onCategoryChange={handleCategoryChange}
           />
         </div>
       </main>
 
       {/* Sticky CTA at bottom for non-pro users */}
-      {!isPro && (
+      {!isPro() && (
         <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 z-50">
           <div className="container mx-auto max-w-6xl">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  Want the full picture? Create a free account to unlock detailed risk insights.
+                  {!isAuthenticated 
+                    ? "Want the full picture? Create a free account to unlock detailed risk insights."
+                    : "Upgrade to Pro for unlimited detailed scans and advanced features."
+                  }
                 </p>
               </div>
               <Button 
-                onClick={() => navigate('/auth')}
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    navigate('/auth');
+                  } else {
+                    setShowUpgradeModal(true);
+                  }
+                }}
                 className="ml-4"
               >
-                Create Free Account
+                {!isAuthenticated ? 'Create Free Account' : 'Upgrade to Pro'}
               </Button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
+        scansUsed={scanLimitData?.scansUsed || 0}
+        scanLimit={scanLimitData?.scanLimit || 3}
+        plan={scanLimitData?.plan || 'free'}
+        isAnonymous={!isAuthenticated}
+      />
 
       <Footer />
     </div>
