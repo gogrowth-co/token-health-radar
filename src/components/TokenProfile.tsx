@@ -376,7 +376,7 @@ export default function TokenProfile({
         </div>
 
         {/* RIGHT SECTION: Price/Market Cap on left, Health Score on right */}
-        <div className="flex items-center gap-20 min-w-[480px] ml-16">
+        <div className="flex items-center gap-20 min-w-[480px] ml-24">
           {/* Price and Market Cap Section */}
           <div className="flex flex-col items-start gap-4">
             {/* Price + Change */}
