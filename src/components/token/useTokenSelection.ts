@@ -2,7 +2,6 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { TokenResult } from "./types";
 import { getFirstValidEvmAddress } from "@/utils/addressUtils";
@@ -32,43 +31,7 @@ export default function useTokenSelection() {
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [scanAccessData, setScanAccessData] = useState<ScanAccessData | null>(null);
   const navigate = useNavigate();
-  const { user } = useAuth();
-
-  /**
-   * Checks if user has scan access and shows upgrade dialog if needed
-   * @returns Promise<boolean> - True if user has access, false otherwise
-   */
-  const checkScanAccess = async (): Promise<boolean> => {
-    try {
-      const { data: accessData, error: accessError } = await supabase.functions.invoke('check-scan-access');
-      
-      if (accessError) {
-        console.error("Error checking scan access:", accessError);
-        toast.error("Could not check scan access. Please try again.");
-        return false;
-      }
-      
-      // Check if the user can select a token (this is the actual scan count check)
-      if (!accessData.canSelectToken) {
-        // Store the data for the upgrade dialog
-        setScanAccessData({
-          plan: accessData.plan,
-          scansUsed: accessData.scansUsed,
-          scanLimit: accessData.scanLimit
-        });
-        
-        // Show upgrade dialog
-        setShowUpgradeDialog(true);
-        return false;
-      }
-      
-      return true;
-    } catch (error) {
-      console.error("Error in checkScanAccess:", error);
-      toast.error("Error checking scan access. Please try again.");
-      return false;
-    }
-  };
+  const { user, isAuthenticated } = useAuth();
 
   /**
    * Handles token selection and initiates the scan process
@@ -79,6 +42,7 @@ export default function useTokenSelection() {
       console.log(`[TOKEN-SELECTION] Selected token: ${token.name} (${token.symbol}), CoinGecko ID: ${token.id}`);
       console.log(`[TOKEN-SELECTION] Token platforms:`, token.platforms);
       console.log(`[TOKEN-SELECTION] Token isErc20 property:`, token.isErc20);
+      console.log(`[TOKEN-SELECTION] User authenticated:`, isAuthenticated);
       
       // Check if token is supported for full scanning
       const isSupported = isTokenScanSupported(token);
@@ -111,7 +75,7 @@ export default function useTokenSelection() {
       }
       
       // For supported tokens, proceed with normal flow
-      console.log(`[TOKEN-SELECTION] Token ${token.name} is supported - proceeding with full scan`);
+      console.log(`[TOKEN-SELECTION] Token ${token.name} is supported - proceeding with scan`);
       
       // Get the first valid EVM address from any platform
       let tokenAddress = getFirstValidEvmAddress(token.platforms);
@@ -147,27 +111,22 @@ export default function useTokenSelection() {
       
       console.log(`[TOKEN-SELECTION] Valid token address found: ${tokenAddress}`);
       
-      // Check if user has access to perform a scan
-      const hasAccess = await checkScanAccess();
-      if (!hasAccess) {
-        console.log(`[TOKEN-SELECTION] User does not have scan access`);
-        return;
-      }
-      
-      // Save token to database (only if we have a valid address)
-      try {
-        console.log(`[TOKEN-SELECTION] Saving token to database`);
-        await saveTokenToDatabase(token);
-      } catch (error) {
-        console.error("Error saving token to database:", error);
-        // Continue with scan even if database save fails
+      // Save token to database (only if authenticated)
+      if (isAuthenticated) {
+        try {
+          console.log(`[TOKEN-SELECTION] Saving token to database`);
+          await saveTokenToDatabase(token);
+        } catch (error) {
+          console.error("Error saving token to database:", error);
+          // Continue with scan even if database save fails
+        }
       }
       
       // Save token to localStorage
       saveTokenToLocalStorage(token, tokenAddress);
       
       console.log(`[TOKEN-SELECTION] Navigating to scan loading page`);
-      // Navigate to scan loading page
+      // Navigate to scan loading page - no auth required
       navigate(`/scan-loading?token=${encodeURIComponent(tokenAddress)}&id=${token.id}`);
       
     } catch (error) {
@@ -176,7 +135,7 @@ export default function useTokenSelection() {
         description: "Failed to process token selection. Please try again."
       });
     }
-  }, [navigate, user]);
+  }, [navigate, user, isAuthenticated]);
 
   /**
    * Handles upgrade button click

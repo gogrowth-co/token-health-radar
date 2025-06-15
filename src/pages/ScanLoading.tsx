@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +19,7 @@ export default function ScanLoading() {
   const [isScanning, setIsScanning] = useState(true);
   const [scanFailed, setScanFailed] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   
   // Get token from URL params (parameter name is always 'token')
   const tokenAddress = searchParams.get("token") || "";
@@ -68,15 +67,8 @@ export default function ScanLoading() {
     // Function to handle the token scan
     const scanToken = async () => {
       try {
-        // Make sure user is authenticated
-        if (!user) {
-          console.error("ScanLoading: User not authenticated");
-          toast.error("You must be logged in to scan tokens");
-          navigate("/auth");
-          return;
-        }
-
         console.log("ScanLoading: Starting token scan with address:", tokenAddress, "and CoinGecko ID:", coinGeckoId);
+        console.log("ScanLoading: User authenticated:", isAuthenticated);
 
         // Enhanced error logging
         if (!tokenAddress) {
@@ -145,11 +137,11 @@ export default function ScanLoading() {
           return;
         }
         
-        // Call the run-token-scan edge function with consistently named parameters
+        // Call the run-token-scan edge function - pass user_id only if authenticated
         console.log("ScanLoading: Calling run-token-scan with params:", {
           token_address: tokenAddress,
           coingecko_id: coinGeckoId || tokenToScan?.id || "",
-          user_id: user.id,
+          user_id: user?.id || null, // Allow anonymous scans
           token_name: tokenToScan?.name,
           token_symbol: tokenToScan?.symbol
         });
@@ -158,7 +150,7 @@ export default function ScanLoading() {
           body: {
             token_address: tokenAddress,
             coingecko_id: coinGeckoId || tokenToScan?.id || "",
-            user_id: user.id,
+            user_id: user?.id || null, // Pass null for anonymous users
             token_name: tokenToScan?.name,
             token_symbol: tokenToScan?.symbol
           }
@@ -189,7 +181,7 @@ export default function ScanLoading() {
         }
 
         // Validate that we have meaningful scan results
-        if (!data.token_info || !data.overall_score) {
+        if (!data.token_info) {
           console.error("ScanLoading: Incomplete scan results:", data);
           setScanFailed(true);
           setErrorMessage("Scan completed but returned incomplete results. Please try again.");
@@ -228,7 +220,7 @@ export default function ScanLoading() {
     return () => {
       clearInterval(interval);
     };
-  }, [navigate, tokenAddress, coinGeckoId, user]);
+  }, [navigate, tokenAddress, coinGeckoId, user, isAuthenticated]);
 
   // Get token display information from localStorage if available
   const displayToken = (() => {
@@ -236,13 +228,11 @@ export default function ScanLoading() {
       const savedToken = localStorage.getItem("selectedToken");
       if (savedToken) {
         const parsedToken = JSON.parse(savedToken);
-        // Make sure the token address matches
         if (parsedToken && parsedToken.address === tokenAddress) {
           return parsedToken;
         }
       }
       
-      // Fallback display format
       return { 
         name: tokenAddress.substring(0, 8) + "..." + tokenAddress.substring(tokenAddress.length - 6),
         logo: null

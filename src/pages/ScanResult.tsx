@@ -12,6 +12,7 @@ import TokenProfile from "@/components/TokenProfile";
 import TokenCard from "@/components/TokenCard";
 import CategoryScoreCard from "@/components/CategoryScoreCard";
 import CategoryTabs from "@/components/CategoryTabs";
+import BlurredCategoryOverlay from "@/components/BlurredCategoryOverlay";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -144,7 +145,7 @@ export default function ScanResult() {
 
   // Calculate the overall score - TEMPORARILY EXCLUDING COMMUNITY
   const calculateOverallScore = (): number => {
-    if (isLimitedSupport) return 0; // No scoring for limited support tokens
+    if (isLimitedSupport) return 0;
     
     const scores = [
       securityData?.score, 
@@ -587,56 +588,83 @@ export default function ScanResult() {
                   {!isLimitedSupport && (
                     <>
                       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-                        <CategoryScoreCard
-                          category="Security"
-                          score={securityData?.score ?? 0}
-                          level={getScoreLevel(securityData?.score ?? 0)}
-                          color={getScoreColor(securityData?.score ?? 0)}
-                          onClick={() => setActiveTab(ScanCategory.Security)}
-                        />
-                        <CategoryScoreCard
-                          category="Tokenomics"
-                          score={tokenomicsData?.score ?? 0}
-                          level={getScoreLevel(tokenomicsData?.score ?? 0)}
-                          color={getScoreColor(tokenomicsData?.score ?? 0)}
-                          onClick={() => setActiveTab(ScanCategory.Tokenomics)}
-                        />
-                        <CategoryScoreCard
-                          category="Liquidity"
-                          score={liquidityData?.score ?? 0}
-                          level={getScoreLevel(liquidityData?.score ?? 0)}
-                          color={getScoreColor(liquidityData?.score ?? 0)}
-                          onClick={() => setActiveTab(ScanCategory.Liquidity)}
-                        />
-                        <CategoryScoreCard
-                          category="Community"
-                          score={communityData?.score ?? 0}
-                          level={getScoreLevel(communityData?.score ?? 0)}
-                          color={getScoreColor(communityData?.score ?? 0)}
-                          onClick={() => setActiveTab(ScanCategory.Community)}
-                        />
-                        <CategoryScoreCard
-                          category="Development"
-                          score={developmentData?.score ?? 0}
-                          level={getScoreLevel(developmentData?.score ?? 0)}
-                          color={getScoreColor(developmentData?.score ?? 0)}
-                          onClick={() => setActiveTab(ScanCategory.Development)}
-                        />
+                        <BlurredCategoryOverlay isBlurred={!isAuthenticated}>
+                          <CategoryScoreCard
+                            category="Security"
+                            score={securityData?.score ?? 0}
+                            level={getScoreLevel(securityData?.score ?? 0)}
+                            color={getScoreColor(securityData?.score ?? 0)}
+                            onClick={() => setActiveTab(ScanCategory.Security)}
+                          />
+                        </BlurredCategoryOverlay>
+                        <BlurredCategoryOverlay isBlurred={!isAuthenticated}>
+                          <CategoryScoreCard
+                            category="Tokenomics"
+                            score={tokenomicsData?.score ?? 0}
+                            level={getScoreLevel(tokenomicsData?.score ?? 0)}
+                            color={getScoreColor(tokenomicsData?.score ?? 0)}
+                            onClick={() => setActiveTab(ScanCategory.Tokenomics)}
+                          />
+                        </BlurredCategoryOverlay>
+                        <BlurredCategoryOverlay isBlurred={!isAuthenticated}>
+                          <CategoryScoreCard
+                            category="Liquidity"
+                            score={liquidityData?.score ?? 0}
+                            level={getScoreLevel(liquidityData?.score ?? 0)}
+                            color={getScoreColor(liquidityData?.score ?? 0)}
+                            onClick={() => setActiveTab(ScanCategory.Liquidity)}
+                          />
+                        </BlurredCategoryOverlay>
+                        <BlurredCategoryOverlay isBlurred={!isAuthenticated}>
+                          <CategoryScoreCard
+                            category="Community"
+                            score={communityData?.score ?? 0}
+                            level={getScoreLevel(communityData?.score ?? 0)}
+                            color={getScoreColor(communityData?.score ?? 0)}
+                            onClick={() => setActiveTab(ScanCategory.Community)}
+                          />
+                        </BlurredCategoryOverlay>
+                        <BlurredCategoryOverlay isBlurred={!isAuthenticated}>
+                          <CategoryScoreCard
+                            category="Development"
+                            score={developmentData?.score ?? 0}
+                            level={getScoreLevel(developmentData?.score ?? 0)}
+                            color={getScoreColor(developmentData?.score ?? 0)}
+                            onClick={() => setActiveTab(ScanCategory.Development)}
+                          />
+                        </BlurredCategoryOverlay>
                       </div>
                       
-                      <CategoryTabs
-                        activeTab={activeTab}
-                        securityData={securityData}
-                        tokenomicsData={tokenomicsData}
-                        liquidityData={liquidityData}
-                        communityData={communityData}
-                        developmentData={developmentData}
-                        isPro={isPro}
-                        onCategoryChange={setActiveTab}
-                      />
+                      <BlurredCategoryOverlay isBlurred={!isAuthenticated}>
+                        <CategoryTabs
+                          activeTab={activeTab}
+                          securityData={securityData}
+                          tokenomicsData={tokenomicsData}
+                          liquidityData={liquidityData}
+                          communityData={communityData}
+                          developmentData={developmentData}
+                          isPro={isPro}
+                          onCategoryChange={setActiveTab}
+                        />
+                      </BlurredCategoryOverlay>
                     </>
                   )}
                 </>
+              )}
+              
+              {/* Sticky CTA for anonymous users */}
+              {!isAuthenticated && !isLimitedSupport && (
+                <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t shadow-lg p-4 z-50">
+                  <div className="container mx-auto max-w-4xl flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold">Want the full picture?</h3>
+                      <p className="text-sm text-muted-foreground">Create a free account to unlock detailed risk insights</p>
+                    </div>
+                    <Button onClick={() => navigate('/auth')} className="bg-primary hover:bg-primary/90">
+                      Create Free Account
+                    </Button>
+                  </div>
+                </div>
               )}
             </>
           )}

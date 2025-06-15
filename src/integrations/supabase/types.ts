@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      anonymous_scan_attempts: {
+        Row: {
+          attempted_at: string
+          id: string
+          ip_address: unknown | null
+          success: boolean | null
+          token_address: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          ip_address?: unknown | null
+          success?: boolean | null
+          token_address?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          ip_address?: unknown | null
+          success?: boolean | null
+          token_address?: string | null
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string | null
@@ -237,6 +261,7 @@ export type Database = {
       token_scans: {
         Row: {
           id: string
+          is_anonymous: boolean | null
           pro_scan: boolean | null
           scanned_at: string | null
           score_total: number | null
@@ -245,6 +270,7 @@ export type Database = {
         }
         Insert: {
           id?: string
+          is_anonymous?: boolean | null
           pro_scan?: boolean | null
           scanned_at?: string | null
           score_total?: number | null
@@ -253,6 +279,7 @@ export type Database = {
         }
         Update: {
           id?: string
+          is_anonymous?: boolean | null
           pro_scan?: boolean | null
           scanned_at?: string | null
           score_total?: number | null
@@ -434,6 +461,10 @@ export type Database = {
       sync_all_users_to_hubspot: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      sync_all_users_to_hubspot_debug: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       upsert_subscriber_by_email: {
         Args: {
