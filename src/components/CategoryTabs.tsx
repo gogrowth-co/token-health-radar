@@ -1,12 +1,11 @@
-import { useState, ReactNode } from "react";
+import { ReactNode } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Check, X, Lock, Info } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import CategoryFeatureGrid from "./CategoryFeatureGrid";
+import BlurredCategoryOverlay from "./BlurredCategoryOverlay";
 import { 
   transformSecurityData, 
   transformTokenomicsData,
@@ -19,8 +18,6 @@ import {
   CommunityData,
   DevelopmentData
 } from "@/utils/categoryTransformers";
-
-// Removing the duplicate interface definitions and using the ones imported from categoryTransformers
 
 enum ScanCategory {
   Security = "security",
@@ -96,7 +93,6 @@ export default function CategoryTabs({
   isPro,
   onCategoryChange
 }: CategoryTabsProps) {
-  const navigate = useNavigate();
   
   // Define category descriptions with explanations for tooltips
   const categoryDescriptions = {
@@ -107,50 +103,24 @@ export default function CategoryTabs({
     [ScanCategory.Development]: "Development metrics assess code quality, team contributions, and roadmap progress - important signals of project activity and technical health."
   };
   
-  // Use state to track blur status for non-pro users
-  const [showProCTA, setShowProCTA] = useState(false);
-  
   // Handle tab change
   const handleTabChange = (value: string) => {
     onCategoryChange(value as ScanCategory);
-    
-    // Show CTA if user is not pro
-    if (!isPro) {
-      setShowProCTA(true);
-    }
   };
   
-  // Create tab content with blur effect for non-pro users
+  // Create tab content with BlurredCategoryOverlay for non-pro users
   const renderTabContent = (categoryData: any, children: ReactNode, category: ScanCategory) => {
-    const isActiveTab = activeTab === category;
-    const shouldBlur = !isPro && isActiveTab;
-    
     return (
-      <TabsContent value={category} className="relative">
+      <TabsContent value={category}>
         <Card>
           <CardHeader className="pb-4">
             <h3 className="text-lg font-semibold">{category.charAt(0).toUpperCase() + category.slice(1)} Analysis</h3>
           </CardHeader>
-          <CardContent className={shouldBlur ? "filter blur-sm" : ""}>
-            {children}
+          <CardContent>
+            <BlurredCategoryOverlay isBlurred={!isPro}>
+              {children}
+            </BlurredCategoryOverlay>
           </CardContent>
-          
-          {shouldBlur && showProCTA && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 p-4 z-10">
-              <Lock className="h-6 w-6 mb-2" />
-              <h3 className="text-xl font-bold mb-2">Pro Feature</h3>
-              <p className="text-center text-muted-foreground mb-4">
-                Upgrade to Pro for full access to detailed token health metrics
-              </p>
-              <Button onClick={() => navigate("/pricing")}>
-                Upgrade to Pro
-              </Button>
-              
-              <Button variant="ghost" className="mt-2" onClick={() => setShowProCTA(false)}>
-                Return to Summary
-              </Button>
-            </div>
-          )}
         </Card>
       </TabsContent>
     );
