@@ -408,7 +408,7 @@ export default function TokenProfile({
           </div>
 
           {/* Health Score and Socials Section - moved further right */}
-          <div className="flex flex-col items-center gap-4 ml-8">
+          <div className="flex flex-col items-center gap-4 ml-12">
             {/* Health Score */}
             <MiniHealthScore score={overallScore} />
             
