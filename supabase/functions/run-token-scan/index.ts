@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -50,13 +49,13 @@ serve(async (req) => {
     console.log(`[TOKEN-SCAN] Starting token scan - {
   token_address: "${token_address}",
   coingecko_id: "${coingecko_id}",
-  user_id: "${user_id}",
+  user_id: "${user_id || 'anonymous'}",
   token_name: "Processing...",
   token_symbol: "Processing..."
 }`)
 
-    // Validate required parameters
-    if (!token_address || !coingecko_id || !user_id) {
+    // Validate required parameters - user_id is now optional for anonymous scans
+    if (!token_address || !coingecko_id) {
       console.error('[TOKEN-SCAN] Missing required parameters:', { token_address, coingecko_id, user_id })
       return new Response(
         JSON.stringify({ 
@@ -85,24 +84,34 @@ serve(async (req) => {
       )
     }
 
-    // Check user's scan status
-    const { data: userData } = await supabaseClient
-      .from('subscribers')
-      .select('plan, scans_used, pro_scan_limit')
-      .eq('id', user_id)
-      .single()
-
-    // Fixed logic: First 3 scans are Pro quality for free users
-    const isWithinProLimit = (userData?.scans_used || 0) < (userData?.pro_scan_limit || 3)
-    const isProScan = userData?.plan === 'pro' || isWithinProLimit
+    // Check user's scan status only if user_id is provided (authenticated user)
+    let userData = null
+    let isProScan = false
     
-    console.log(`[TOKEN-SCAN] User scan status: { 
-      scans_used: ${userData?.scans_used || 0}, 
-      scan_limit: ${userData?.pro_scan_limit || 3}, 
-      is_within_pro_limit: ${isWithinProLimit},
-      is_pro_scan: ${isProScan}, 
-      plan: "${userData?.plan || 'free'}" 
-    }`)
+    if (user_id) {
+      const { data } = await supabaseClient
+        .from('subscribers')
+        .select('plan, scans_used, pro_scan_limit')
+        .eq('id', user_id)
+        .single()
+      
+      userData = data
+      
+      // Fixed logic: First 3 scans are Pro quality for free users
+      const isWithinProLimit = (userData?.scans_used || 0) < (userData?.pro_scan_limit || 3)
+      isProScan = userData?.plan === 'pro' || isWithinProLimit
+      
+      console.log(`[TOKEN-SCAN] User scan status: { 
+        scans_used: ${userData?.scans_used || 0}, 
+        scan_limit: ${userData?.pro_scan_limit || 3}, 
+        is_within_pro_limit: ${isWithinProLimit},
+        is_pro_scan: ${isProScan}, 
+        plan: "${userData?.plan || 'free'}" 
+      }`)
+    } else {
+      console.log(`[TOKEN-SCAN] Anonymous scan - providing basic scan results`)
+      isProScan = false // Anonymous users get basic scans
+    }
 
     // Fetch CoinGecko data first
     const coinGeckoApiKey = Deno.env.get('COINGECKO_API_KEY')
@@ -266,31 +275,35 @@ serve(async (req) => {
       )
     }
 
-    // Record the scan in token_scans table
-    await supabaseClient
-      .from('token_scans')
-      .insert({
-        user_id,
-        token_address,
-        score_total: overallScore,
-        pro_scan: isProScan
-      })
-
-    // Update scan count for free users within their Pro limit
-    if (userData?.plan !== 'pro' && isWithinProLimit) {
+    // Record the scan in token_scans table only if user is authenticated
+    if (user_id) {
       await supabaseClient
-        .from('subscribers')
-        .update({
-          scans_used: (userData?.scans_used || 0) + 1,
-          updated_at: new Date().toISOString()
+        .from('token_scans')
+        .insert({
+          user_id,
+          token_address,
+          score_total: overallScore,
+          pro_scan: isProScan
         })
-        .eq('id', user_id)
+
+      // Update scan count for free users within their Pro limit
+      if (userData?.plan !== 'pro' && isProScan) {
+        await supabaseClient
+          .from('subscribers')
+          .update({
+            scans_used: (userData?.scans_used || 0) + 1,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user_id)
       
-      console.log(`[TOKEN-SCAN] Pro-quality scan completed, incremented scan count for user: ${user_id} (${(userData?.scans_used || 0) + 1}/${userData?.pro_scan_limit || 3})`)
-    } else if (userData?.plan === 'pro') {
-      console.log(`[TOKEN-SCAN] Pro subscriber scan completed for user: ${user_id}`)
+        console.log(`[TOKEN-SCAN] Pro-quality scan completed, incremented scan count for user: ${user_id} (${(userData?.scans_used || 0) + 1}/${userData?.pro_scan_limit || 3})`)
+      } else if (userData?.plan === 'pro') {
+        console.log(`[TOKEN-SCAN] Pro subscriber scan completed for user: ${user_id}`)
+      } else {
+        console.log(`[TOKEN-SCAN] Basic scan completed for user: ${user_id} (exceeded free Pro limit)`)
+      }
     } else {
-      console.log(`[TOKEN-SCAN] Basic scan completed for user: ${user_id} (exceeded free Pro limit)`)
+      console.log(`[TOKEN-SCAN] Anonymous scan completed - no database record created`)
     }
 
     console.log(`[TOKEN-SCAN] Scan completed successfully with enhanced integrations - {
@@ -299,6 +312,7 @@ serve(async (req) => {
   token_name: "${coinGeckoData.name}",
   token_symbol: "${coinGeckoData.symbol?.toUpperCase()}",
   pro_scan: ${isProScan},
+  is_anonymous: ${!user_id},
   has_description: ${!!coinGeckoData.description?.en},
   has_social_links: ${!!(coinGeckoData.links?.twitter_screen_name || coinGeckoData.links?.homepage?.[0])},
   community_excluded: true,
