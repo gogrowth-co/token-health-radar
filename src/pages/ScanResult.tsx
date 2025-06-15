@@ -11,6 +11,14 @@ import { toast } from "sonner";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+enum ScanCategory {
+  Security = "security",
+  Tokenomics = "tokenomics",
+  Liquidity = "liquidity",
+  Community = "community",
+  Development = "development"
+}
+
 export default function ScanResult() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -18,11 +26,15 @@ export default function ScanResult() {
   const [scanData, setScanData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<ScanCategory>(ScanCategory.Security);
   
   // Get parameters from URL
   const tokenAddress = searchParams.get("token") || "";
   const coinGeckoId = searchParams.get("id") || "";
   const isLimited = searchParams.get("limited") === "true";
+
+  // Check if user is pro (simplified logic - could be enhanced with actual subscription check)
+  const isPro = isAuthenticated && !isLimited;
 
   useEffect(() => {
     const loadScanData = async () => {
@@ -163,6 +175,10 @@ export default function ScanResult() {
     loadScanData();
   }, [tokenAddress, coinGeckoId]);
 
+  const handleCategoryChange = (category: ScanCategory) => {
+    setActiveTab(category);
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -209,6 +225,8 @@ export default function ScanResult() {
     );
   }
 
+  const tokenInfo = scanData.token_info;
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -216,19 +234,29 @@ export default function ScanResult() {
       <main className="flex-1 container px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <TokenProfile 
-            tokenInfo={scanData.token_info}
-            overallScore={Math.round(scanData.overall_score || 0)}
-            isLimited={isLimited}
+            name={tokenInfo.name || "Unknown Token"}
+            symbol={tokenInfo.symbol || "???"}
+            logo={tokenInfo.logo_url || "/placeholder.svg"}
+            address={tokenAddress}
+            website={tokenInfo.website_url || ""}
+            twitter={tokenInfo.twitter_handle ? `https://twitter.com/${tokenInfo.twitter_handle}` : ""}
+            github={tokenInfo.github_url || ""}
+            price={tokenInfo.current_price_usd || 0}
+            priceChange={tokenInfo.price_change_24h || 0}
+            marketCap={tokenInfo.market_cap_usd ? `${(tokenInfo.market_cap_usd / 1000000).toFixed(2)}M` : "N/A"}
+            tvl={tokenInfo.total_value_locked_usd || "N/A"}
+            launchDate={tokenInfo.launch_date || new Date().toISOString()}
           />
           
           <CategoryTabs 
+            activeTab={activeTab}
             securityData={scanData.security}
             liquidityData={scanData.liquidity}
             tokenomicsData={scanData.tokenomics}
             communityData={scanData.community}
             developmentData={scanData.development}
-            isAuthenticated={isAuthenticated}
-            isLimited={isLimited}
+            isPro={isPro}
+            onCategoryChange={handleCategoryChange}
           />
         </div>
       </main>
