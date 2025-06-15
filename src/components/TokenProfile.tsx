@@ -1,5 +1,5 @@
 
-import { ExternalLink, Github, Twitter, Globe } from "lucide-react";
+import { Globe, Github, Twitter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,9 +55,7 @@ export default function TokenProfile({
     // Remove any existing formatting and convert to number
     const cleanValue = marketCapString.replace(/[^0-9.]/g, '');
     const value = parseFloat(cleanValue);
-    
     if (isNaN(value)) return "N/A";
-    
     if (value >= 1000000000) {
       return `$${(value / 1000000000).toFixed(2)}B`;
     } else if (value >= 1000000) {
@@ -72,109 +70,101 @@ export default function TokenProfile({
   return (
     <Card className="overflow-hidden border-none shadow-md bg-card">
       <CardContent className="p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Left Column: Token Info */}
-          <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Left Column: Token Info, Address, Links */}
+          <div className="flex flex-col gap-6">
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <img src={logo} alt={`${name} logo`} className="w-16 h-16 rounded-full" />
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h2 className="text-2xl font-bold">{name}</h2>
-                  <Badge variant="outline" className="text-sm py-0.5">{symbol}</Badge>
+              <img src={logo} alt={`${name} logo`} className="w-16 h-16 rounded-full border" />
+              <div className="flex flex-col gap-1 flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-2xl md:text-3xl font-bold">{name}</h2>
+                  <Badge variant="outline" className="text-base px-2 py-0.5">{symbol}</Badge>
                 </div>
-                
                 {description && (
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {description.length > 150 ? `${description.substring(0, 150)}...` : description}
+                  <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
+                    {description.length > 160 ? `${description.substring(0, 160)}...` : description}
                   </p>
                 )}
               </div>
             </div>
-          </div>
 
-          {/* Middle Column: Address & Links */}
-          <div className="flex flex-col gap-4">
-            <div>
-              <div className="text-sm text-muted-foreground mb-2">Contract Address</div>
-              <div className="flex items-center gap-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="h-8 px-3 font-mono text-xs"
-                        onClick={copyAddress}
-                      >
-                        {shortenAddress(address)}
+            <div className="flex flex-col gap-2 mt-2">
+              {/* Address */}
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Contract Address</div>
+                <div className="flex items-center gap-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 px-2 font-mono text-[13px]"
+                          onClick={copyAddress}
+                        >
+                          {shortenAddress(address)}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Click to copy address</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <Badge variant="secondary" className="text-xs px-2 py-1">{network}</Badge>
+                </div>
+              </div>
+              {/* Links */}
+              {(website || twitter || github) && (
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">Official Links</div>
+                  <div className="flex items-center gap-2">
+                    {website && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                        <a href={website} target="_blank" rel="noopener noreferrer" aria-label="Website">
+                          <Globe className="h-4 w-4" />
+                        </a>
                       </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Click to copy address</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <Badge variant="secondary" className="text-xs px-2 py-1">
-                  {network}
-                </Badge>
-              </div>
-            </div>
-
-            <div>
-              <div className="text-sm text-muted-foreground mb-2">Official Links</div>
-              <div className="flex items-center gap-2">
-                {website && (
-                  <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                    <a href={website} target="_blank" rel="noopener noreferrer" aria-label="Website">
-                      <Globe className="h-4 w-4" />
-                    </a>
-                  </Button>
-                )}
-                {twitter && (
-                  <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                    <a href={twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter">
-                      <Twitter className="h-4 w-4" />
-                    </a>
-                  </Button>
-                )}
-                {github && (
-                  <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                    <a href={github} target="_blank" rel="noopener noreferrer" aria-label="GitHub">
-                      <Github className="h-4 w-4" />
-                    </a>
-                  </Button>
-                )}
-              </div>
+                    )}
+                    {twitter && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                        <a href={twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+                          <Twitter className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    )}
+                    {github && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                        <a href={github} target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                          <Github className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Right Column: Price & Health Score */}
-          <div className="flex flex-col gap-6">
-            {/* Health Score */}
-            <div className="flex justify-center lg:justify-end">
+          {/* Right Column: Health Score, Price, Market Cap */}
+          <div className="flex flex-col gap-8 h-full justify-between items-stretch md:items-end">
+            {/* Health Score - prominent & top right */}
+            <div className="flex md:justify-end justify-center">
               <OverallHealthScore score={overallScore} />
             </div>
-
-            {/* Price Information */}
-            <div className="text-center lg:text-right">
-              <div className="text-sm text-muted-foreground mb-1">Current Price</div>
-              <div className="flex flex-col items-center lg:items-end gap-1">
-                <span className="text-3xl font-bold">${price.toFixed(2)}</span>
-                <span className={`text-sm font-medium ${priceChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            {/* Price */}
+            <div className="text-center md:text-right">
+              <div className="text-xs text-muted-foreground mb-1">Current Price</div>
+              <div className="flex flex-col items-center md:items-end gap-1">
+                <span className="text-4xl md:text-5xl font-extrabold leading-tight">${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                <span className={`text-base font-medium ${priceChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                   {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}% (24h)
                 </span>
               </div>
             </div>
-
             {/* Market Cap */}
-            <div className="text-center lg:text-right">
-              <div className="text-sm text-muted-foreground mb-1">Market Cap</div>
-              <div className="text-lg font-semibold">{formatMarketCap(marketCap)}</div>
+            <div className="text-center md:text-right">
+              <div className="text-xs text-muted-foreground mb-1">Market Cap</div>
+              <div className="text-xl font-semibold">{formatMarketCap(marketCap)}</div>
             </div>
           </div>
         </div>
