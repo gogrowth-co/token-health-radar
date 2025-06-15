@@ -1,3 +1,4 @@
+
 import { Globe, Github, Twitter } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
@@ -218,81 +219,89 @@ export default function TokenProfile({
             </div>
           </div>
         </div>
-        {/* RIGHT: 3 Columns (Price, Market Cap, Health Score) */}
-        <div className="flex flex-row gap-12 items-start min-w-[420px]">
-          {/* Price + Change */}
-          <div className="flex flex-col items-end min-w-[120px] ml-2">
-            <span className="text-[28px] font-bold leading-[36px] text-[#fff] dark:text-[#fff]">
-              ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-            <span
-              className="text-[16px] font-medium"
-              style={{
-                color: priceChange >= 0 ? "#10B981" : "#DC2626",
-                marginTop: 2,
-              }}
-            >
-              {priceChange >= 0 ? "+" : ""}
-              {priceChange.toFixed(2)}%
-            </span>
-          </div>
-          {/* Market Cap */}
-          <div className="flex flex-col items-end justify-center min-w-[110px]">
-            <span className="text-[13px] font-medium uppercase text-[#A3A3B3] dark:text-[#A3A3B3] tracking-wide mb-1">
-              Market Cap
-            </span>
-            <span className="text-[20px] font-bold text-white dark:text-white" style={{ }}>
-              {formatMarketCap(marketCap)}
-            </span>
-          </div>
-          {/* Health Score */}
-          <div className="flex flex-col items-center min-w-[90px] mr-2">
-            <MiniHealthScore score={overallScore} />
-          </div>
-        </div>
-        {/* Socials */}
-        {(website || twitter || github) && (
-          <div className="flex flex-col justify-end items-end min-h-[120px] ml-4">
-            <div className="flex items-center gap-6 mt-auto mb-0.5">
-              {website && (
-                <a
-                  href={website.startsWith("http") ? website : `https://${website}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1 rounded transition-colors text-[#A3A3B3] dark:text-[#A3A3B3] hover:text-[#fff] dark:hover:text-white focus:outline-none"
-                  aria-label="Website"
-                  style={{ lineHeight: 0 }}
-                >
-                  <Globe className="w-5 h-5" />
-                </a>
-              )}
-              {twitter && (
-                <a
-                  href={twitter.startsWith("http") ? twitter : `https://twitter.com/${twitter.replace("@", "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1 rounded transition-colors text-[#A3A3B3] dark:text-[#A3A3B3] hover:text-[#fff] dark:hover:text-white focus:outline-none"
-                  aria-label="X/Twitter"
-                  style={{ lineHeight: 0 }}
-                >
-                  <Twitter className="w-5 h-5" />
-                </a>
-              )}
-              {github && (
-                <a
-                  href={github.startsWith("http") ? github : `https://github.com/${github.replace(/^@/, "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1 rounded transition-colors text-[#A3A3B3] dark:text-[#A3A3B3] hover:text-[#fff] dark:hover:text-white focus:outline-none"
-                  aria-label="GitHub"
-                  style={{ lineHeight: 0 }}
-                >
-                  <Github className="w-5 h-5" />
-                </a>
-              )}
+
+        {/* RIGHT SECTION: Price, Market Cap, Health Score, and Socials */}
+        <div className="flex flex-col items-end justify-between min-w-[300px] h-full">
+          {/* Top: Price + Change and Market Cap */}
+          <div className="flex flex-col items-end gap-4">
+            {/* Price + Change */}
+            <div className="flex flex-col items-end">
+              <span className="text-[28px] font-bold leading-[36px] text-[#000] dark:text-[#fff]">
+                ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+              <span
+                className="text-[16px] font-medium"
+                style={{
+                  color: priceChange >= 0 ? "#10B981" : "#DC2626",
+                  marginTop: 2,
+                }}
+              >
+                {priceChange >= 0 ? "+" : ""}
+                {priceChange.toFixed(2)}%
+              </span>
+            </div>
+            
+            {/* Market Cap */}
+            <div className="flex flex-col items-end">
+              <span className="text-[13px] font-medium uppercase text-[#A3A3B3] dark:text-[#A3A3B3] tracking-wide mb-1">
+                Market Cap
+              </span>
+              <span className="text-[20px] font-bold text-[#000] dark:text-white">
+                {formatMarketCap(marketCap)}
+              </span>
             </div>
           </div>
-        )}
+
+          {/* Bottom: Health Score and Socials */}
+          <div className="flex flex-col items-end gap-4">
+            {/* Health Score */}
+            <div className="flex flex-col items-center">
+              <MiniHealthScore score={overallScore} />
+            </div>
+            
+            {/* Socials */}
+            {(website || twitter || github) && (
+              <div className="flex items-center gap-4">
+                {website && (
+                  <a
+                    href={website.startsWith("http") ? website : `https://${website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1 rounded transition-colors text-[#A3A3B3] dark:text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none"
+                    aria-label="Website"
+                    style={{ lineHeight: 0 }}
+                  >
+                    <Globe className="w-5 h-5" />
+                  </a>
+                )}
+                {twitter && (
+                  <a
+                    href={twitter.startsWith("http") ? twitter : `https://twitter.com/${twitter.replace("@", "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1 rounded transition-colors text-[#A3A3B3] dark:text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none"
+                    aria-label="X/Twitter"
+                    style={{ lineHeight: 0 }}
+                  >
+                    <Twitter className="w-5 h-5" />
+                  </a>
+                )}
+                {github && (
+                  <a
+                    href={github.startsWith("http") ? github : `https://github.com/${github.replace(/^@/, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1 rounded transition-colors text-[#A3A3B3] dark:text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none"
+                    aria-label="GitHub"
+                    style={{ lineHeight: 0 }}
+                  >
+                    <Github className="w-5 h-5" />
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
       {/* CSS variables for theme */}
       <style>{`
