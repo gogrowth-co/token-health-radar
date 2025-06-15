@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { TokenResult } from "@/components/token/types";
-import { TokenInfoEnriched } from "@/components/token/types"; // FIX: Import type
+import { TokenInfoEnriched } from "@/components/token/types";
 import { callCoinGeckoAPI, tokenDetailCache, CACHE_VERSION, isValidErc20Token, KNOWN_ERC20_TOKENS } from "@/utils/tokenSearch";
 import { toast } from "sonner";
 
@@ -19,24 +20,14 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
       try {
         console.log("Searching for token:", searchTerm);
 
-        // Use API key for better rate limits and reliability (now supports key from Supabase edge if available)
-        let coingeckoApiKey = '';
-        if (window && 'SUPABASE_CG_API_KEY' in window) {
-          coingeckoApiKey = (window as any).SUPABASE_CG_API_KEY;
-        }
-        // See if we can support key from env; fallback to public if not found
-        const apiBaseUrl = coingeckoApiKey
-          ? `https://pro-api.coingecko.com/api/v3`
-          : `https://api.coingecko.com/api/v3`;
-
-        const searchUrl = coingeckoApiKey
-          ? `${apiBaseUrl}/search?query=${encodeURIComponent(searchTerm)}&x_cg_pro_api_key=${coingeckoApiKey}`
-          : `${apiBaseUrl}/search?query=${encodeURIComponent(searchTerm)}`;
+        // Always use free API endpoint consistently
+        const apiBaseUrl = `https://api.coingecko.com/api/v3`;
+        const searchUrl = `${apiBaseUrl}/search?query=${encodeURIComponent(searchTerm)}`;
 
         const data = await callCoinGeckoAPI(searchUrl);
 
         if (data && data.coins) {
-          // Sort results by market cap rank
+          // Sort results by market cap rank and take only top 3 to reduce API calls
           const sortedCoins = data.coins
             .filter((coin: any) => coin)
             .sort((a: any, b: any) => {
@@ -45,11 +36,12 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               return rankA - rankB;
             });
             
-          // Take only top results
-          const topCoins = sortedCoins.slice(0, 5);
+          // Reduce to top 3 results to minimize API calls
+          const topCoins = sortedCoins.slice(0, 3);
           
-          // Enhanced results with full token data and better error handling
+          // Process results sequentially instead of parallel to avoid rate limits
           const enhancedResults: TokenResult[] = [];
+          
           for (const coin of topCoins) {
             try {
               // Check cache first to reduce API calls
@@ -60,22 +52,23 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 console.log(`Using cached data for ${coin.id}`);
                 detailData = tokenDetailCache[cacheKey];
               } else {
-                // Get detailed coin data with all fields. Use API key if available.
-                const detailUrl = coingeckoApiKey
-                  ? `${apiBaseUrl}/coins/${coin.id}?localization=false&tickers=false&market_data=true&community_data=true&developer_data=true&sparkline=false&x_cg_pro_api_key=${coingeckoApiKey}`
-                  : `${apiBaseUrl}/coins/${coin.id}?localization=false&tickers=false&market_data=true&community_data=true&developer_data=true&sparkline=false`;
+                console.log(`Fetching detail data for ${coin.id} (sequential processing)`);
+                
+                // Always use free API endpoint
+                const detailUrl = `${apiBaseUrl}/coins/${coin.id}?localization=false&tickers=false&market_data=true&community_data=true&developer_data=true&sparkline=false`;
                 
                 try {
                   detailData = await callCoinGeckoAPI(detailUrl, true);
-                  // Cache the successful response
+                  // Cache the successful response with longer duration
                   tokenDetailCache[cacheKey] = detailData;
                   console.log(`Fetched and cached detailed data for ${coin.id}`);
                 } catch (detailError: any) {
                   console.warn(`Error fetching details for ${coin.id}:`, detailError.message);
                   
-                  // For rate limiting, throw to retry later
+                  // For rate limiting, show user-friendly error and stop processing
                   if (detailError.message.includes("rate limit")) {
-                    throw detailError;
+                    setError("API rate limit reached. Please wait a moment and try again.");
+                    break;
                   }
                   
                   // Add basic data without details if other errors occur
@@ -108,11 +101,9 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 : description;
               
               console.log(`[Token Debug] ${coin.id} (${coin.symbol}):`);
-              console.log(` - Platforms data:`, platforms);
               console.log(` - Is valid ERC-20:`, isErc20Compatible);
               console.log(` - Market cap USD:`, detailData.market_data?.market_cap?.usd);
               console.log(` - Current price USD:`, detailData.market_data?.current_price?.usd);
-              console.log(` - Links:`, detailData.links);
               
               // Compose the full enriched info structure
               const tokenInfo: TokenInfoEnriched = {
@@ -139,8 +130,14 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 market_cap: detailData.market_data?.market_cap?.usd || 0,
                 isErc20: isErc20Compatible,
                 description: limitedDescription,
-                tokenInfo // The magic: full tokenInfo is now on the object!
+                tokenInfo
               });
+              
+              // Small delay between sequential API calls
+              if (topCoins.indexOf(coin) < topCoins.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+              }
+              
             } catch (err: any) {
               // If it's a rate limit error, propagate it up
               if (err.message.includes("rate limit")) {
@@ -159,7 +156,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
             }
           }
           
-          console.log("Enhanced token results with full info:", enhancedResults);
+          console.log("Enhanced token results with sequential processing:", enhancedResults);
           setResults(enhancedResults);
         } else {
           setResults([]);
@@ -168,7 +165,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
         console.error("Error fetching token data:", err);
         
         const errorMessage = err.message?.includes("rate limit") 
-          ? "API rate limit reached. Please try again in a few moments."
+          ? "API rate limit reached. Please wait a moment and try again."
           : "Could not fetch token information. Please try again later.";
           
         setError(errorMessage);
@@ -180,7 +177,9 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
       }
     };
 
-    searchTokens();
+    // Debounce search to avoid rapid API calls
+    const timeoutId = setTimeout(searchTokens, 300);
+    return () => clearTimeout(timeoutId);
   }, [searchTerm, isAuthenticated]);
 
   return { results, isLoading, error };
