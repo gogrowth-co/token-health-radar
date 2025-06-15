@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +39,15 @@ export default function ScanLoading() {
       return;
     }
     
+    // Allow unsupported tokens to pass through for basic info display
+    if (tokenAddress.startsWith('unsupported-')) {
+      console.log("ScanLoading: Unsupported token detected, redirecting to result with limited info");
+      const limitedParam = searchParams.get("limited");
+      const redirectUrl = `/scan-result?token=${tokenAddress}&id=${coinGeckoId}&limited=${limitedParam}`;
+      navigate(redirectUrl);
+      return;
+    }
+    
     // Validate token address format (allow special addresses for native tokens)
     const isValidAddress = /^0x[a-fA-F0-9]{40}$/.test(tokenAddress);
     const isSpecialAddress = tokenAddress === '0x0000000000000000000000000000000000000000' || 
@@ -49,7 +59,7 @@ export default function ScanLoading() {
       navigate("/");
       return;
     }
-  }, [tokenAddress, navigate, searchParams]);
+  }, [tokenAddress, navigate, searchParams, coinGeckoId]);
 
   useEffect(() => {
     // Select random trivia
@@ -69,10 +79,8 @@ export default function ScanLoading() {
         console.log("ScanLoading: Starting token scan with address:", tokenAddress, "and CoinGecko ID:", coinGeckoId);
         console.log("ScanLoading: User authenticated:", isAuthenticated);
 
-        if (!tokenAddress) {
-          console.error("ScanLoading: Token address is missing");
-          toast.error("Token address is required");
-          navigate("/");
+        if (!tokenAddress || tokenAddress.startsWith('unsupported-')) {
+          console.error("ScanLoading: Token address is missing or unsupported");
           return;
         }
 
@@ -91,31 +99,14 @@ export default function ScanLoading() {
           return;
         }
         
-        // Ensure passed token_info is maximally complete for edge scan
-        const tokenInfoForFunction = selectedToken?.completeTokenInfo || {
-          name: selectedToken?.name || `Token ${tokenAddress.substring(0, 8)}...`,
-          symbol: selectedToken?.symbol || 'UNKNOWN',
-          description: '',
-          website_url: '',
-          twitter_handle: '',
-          github_url: '',
-          logo_url: selectedToken?.logo || '',
-          coingecko_id: effectiveCoinGeckoId,
-          current_price_usd: selectedToken?.price_usd || 0,
-          price_change_24h: selectedToken?.price_change_24h || 0,
-          market_cap_usd: selectedToken?.market_cap_usd || 0,
-          total_value_locked_usd: 'N/A'
-        };
-
-        // Call edge function as before, passing in comprehensive info for internal caching/fallbacks
+        // Build the scan request with all necessary data
         const scanRequest = {
           token_address: tokenAddress,
           coingecko_id: effectiveCoinGeckoId,
-          user_id: user?.id || null,
-          token_info: tokenInfoForFunction
+          user_id: user?.id || null
         };
         
-        console.log("ScanLoading: Calling run-token-scan with comprehensive request:", scanRequest);
+        console.log("ScanLoading: Calling run-token-scan with request:", scanRequest);
         
         const { data, error } = await supabase.functions.invoke('run-token-scan', {
           body: scanRequest

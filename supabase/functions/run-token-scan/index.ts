@@ -50,8 +50,9 @@ serve(async (req) => {
     // Fetch token data from CoinGecko if ID is provided
     if (coingecko_id) {
       try {
+        // Use free API key if available, otherwise use public endpoint
         const cgUrl = coinGeckoApiKey 
-          ? `https://pro-api.coingecko.com/api/v3/coins/${coingecko_id}?x_cg_pro_api_key=${coinGeckoApiKey}`
+          ? `https://api.coingecko.com/api/v3/coins/${coingecko_id}?x_cg_pro_api_key=${coinGeckoApiKey}`
           : `https://api.coingecko.com/api/v3/coins/${coingecko_id}`
         
         console.log(`[SCAN] Fetching token data from CoinGecko: ${coingecko_id}`)
@@ -64,7 +65,7 @@ serve(async (req) => {
             ...tokenData,
             name: data.name || tokenData.name,
             symbol: data.symbol?.toUpperCase() || tokenData.symbol,
-            description: data.description?.en || '',
+            description: data.description?.en ? data.description.en.replace(/<[^>]*>/g, '').substring(0, 200) : '',
             website_url: data.links?.homepage?.[0] || '',
             twitter_handle: data.links?.twitter_screen_name || '',
             github_url: data.links?.repos_url?.github?.[0] || '',
