@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import OverallHealthScore from "./OverallHealthScore";
 
 interface TokenProfileProps {
   name: string;
@@ -19,6 +20,7 @@ interface TokenProfileProps {
   marketCap: string;
   tvl: string;
   launchDate: string;
+  overallScore?: number;
 }
 
 export default function TokenProfile({
@@ -33,7 +35,8 @@ export default function TokenProfile({
   priceChange,
   marketCap,
   tvl,
-  launchDate
+  launchDate,
+  overallScore = 0
 }: TokenProfileProps) {
   const shortenAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -56,8 +59,8 @@ export default function TokenProfile({
   return (
     <Card className="overflow-hidden border-none shadow-md bg-card">
       <CardContent className="p-6">
-        <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          <div className="flex items-center gap-4 flex-1">
             <div className="flex-shrink-0">
               <img src={logo} alt={`${name} logo`} className="w-16 h-16 rounded-full" />
             </div>
@@ -107,8 +110,13 @@ export default function TokenProfile({
               </div>
             </div>
           </div>
+
+          {/* Overall Health Score */}
+          <div className="flex-shrink-0">
+            <OverallHealthScore score={overallScore} />
+          </div>
           
-          <div className="flex flex-col md:flex-row gap-4 md:gap-8 ml-0 md:ml-auto">
+          <div className="flex flex-col md:flex-row gap-4 md:gap-8">
             <div>
               <div className="text-sm text-muted-foreground">Price (USD)</div>
               <div className="flex items-center gap-2">

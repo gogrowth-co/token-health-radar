@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TokenProfile from "@/components/TokenProfile";
 import CategoryTabs from "@/components/CategoryTabs";
+import CategoryScoresGrid from "@/components/CategoryScoresGrid";
 import { toast } from "sonner";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -179,6 +180,11 @@ export default function ScanResult() {
     setActiveTab(category);
   };
 
+  const handleCategoryClick = (categoryName: string) => {
+    const category = categoryName as ScanCategory;
+    setActiveTab(category);
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -226,6 +232,15 @@ export default function ScanResult() {
   }
 
   const tokenInfo = scanData.token_info;
+  
+  // Calculate overall score from category scores
+  const overallScore = [
+    scanData.security?.score || 0,
+    scanData.tokenomics?.score || 0,
+    scanData.liquidity?.score || 0,
+    scanData.community?.score || 0,
+    scanData.development?.score || 0
+  ].reduce((acc, score) => acc + score, 0) / 5;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -246,6 +261,16 @@ export default function ScanResult() {
             marketCap={tokenInfo.market_cap_usd ? `${(tokenInfo.market_cap_usd / 1000000).toFixed(2)}M` : "N/A"}
             tvl={tokenInfo.total_value_locked_usd || "N/A"}
             launchDate={tokenInfo.launch_date || new Date().toISOString()}
+            overallScore={overallScore}
+          />
+          
+          <CategoryScoresGrid
+            securityScore={scanData.security?.score || 0}
+            tokenomicsScore={scanData.tokenomics?.score || 0}
+            liquidityScore={scanData.liquidity?.score || 0}
+            communityScore={scanData.community?.score || 0}
+            developmentScore={scanData.development?.score || 0}
+            onCategoryClick={handleCategoryClick}
           />
           
           <CategoryTabs 
