@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { TokenResult } from "./types";
+import { TokenResult, TokenInfoEnriched } from "./types";
 import { getFirstValidEvmAddress } from "@/utils/addressUtils";
 import { saveTokenToDatabase, saveTokenToLocalStorage, isTokenScanSupported } from "@/utils/tokenStorage";
 
@@ -31,6 +31,27 @@ export default function useTokenSelection() {
   const [scanAccessData, setScanAccessData] = useState<ScanAccessData | null>(null);
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+
+  /**
+   * Helper - return completeTokenInfo (TokenInfoEnriched), fallback to base fields
+   */
+  const getComprehensiveTokenInfo = (token: TokenResult): TokenInfoEnriched => {
+    if (token.tokenInfo) return token.tokenInfo;
+    return {
+      name: token.name,
+      symbol: token.symbol,
+      description: token.description,
+      website_url: "",
+      twitter_handle: "",
+      github_url: "",
+      logo_url: token.large || token.thumb,
+      coingecko_id: token.id,
+      current_price_usd: token.price_usd ?? 0,
+      price_change_24h: token.price_change_24h ?? 0,
+      market_cap_usd: typeof token.market_cap === 'number' ? token.market_cap : 0,
+      total_value_locked_usd: "N/A"
+    };
+  };
 
   /**
    * Handles token selection and initiates the scan process
@@ -122,11 +143,11 @@ export default function useTokenSelection() {
         name: token.tokenInfo?.name || token.name,
         symbol: token.tokenInfo?.symbol || token.symbol,
         logo: token.tokenInfo?.logo_url || token.large || token.thumb,
-        price_usd: token.tokenInfo?.current_price_usd || token.price_usd || 0,
-        price_change_24h: token.tokenInfo?.price_change_24h || token.price_change_24h || 0,
-        market_cap_usd: token.tokenInfo?.market_cap_usd || token.market_cap || 0,
-        // Store the complete token info for the scan
-        completeTokenInfo: token.tokenInfo
+        price_usd: token.tokenInfo?.current_price_usd ?? token.price_usd ?? 0,
+        price_change_24h: token.tokenInfo?.price_change_24h ?? token.price_change_24h ?? 0,
+        market_cap_usd: token.tokenInfo?.market_cap_usd ?? token.market_cap ?? 0,
+        // Store complete token info from hook, fall back
+        completeTokenInfo: getComprehensiveTokenInfo(token)
       };
       
       console.log(`[TOKEN-SELECTION] Saving comprehensive token info to localStorage:`, tokenInfoToSave);

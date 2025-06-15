@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { TokenResult } from "@/components/token/types";
 import { callCoinGeckoAPI, tokenDetailCache, CACHE_VERSION, isValidErc20Token, KNOWN_ERC20_TOKENS } from "@/utils/tokenSearch";
@@ -18,11 +17,23 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
       
       try {
         console.log("Searching for token:", searchTerm);
-        
-        // Use API key for better rate limits and reliability
-        const searchUrl = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(searchTerm)}`;
+
+        // Use API key for better rate limits and reliability (now supports key from Supabase edge if available)
+        let coingeckoApiKey = '';
+        if (window && 'SUPABASE_CG_API_KEY' in window) {
+          coingeckoApiKey = (window as any).SUPABASE_CG_API_KEY;
+        }
+        // See if we can support key from env; fallback to public if not found
+        const apiBaseUrl = coingeckoApiKey
+          ? `https://pro-api.coingecko.com/api/v3`
+          : `https://api.coingecko.com/api/v3`;
+
+        const searchUrl = coingeckoApiKey
+          ? `${apiBaseUrl}/search?query=${encodeURIComponent(searchTerm)}&x_cg_pro_api_key=${coingeckoApiKey}`
+          : `${apiBaseUrl}/search?query=${encodeURIComponent(searchTerm)}`;
+
         const data = await callCoinGeckoAPI(searchUrl);
-        
+
         if (data && data.coins) {
           // Sort results by market cap rank
           const sortedCoins = data.coins
@@ -37,7 +48,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
           const topCoins = sortedCoins.slice(0, 5);
           
           // Enhanced results with full token data and better error handling
-          const enhancedResults = [];
+          const enhancedResults: TokenResult[] = [];
           for (const coin of topCoins) {
             try {
               // Check cache first to reduce API calls
@@ -48,8 +59,10 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 console.log(`Using cached data for ${coin.id}`);
                 detailData = tokenDetailCache[cacheKey];
               } else {
-                // Get detailed coin data with comprehensive fields needed for scanning
-                const detailUrl = `https://api.coingecko.com/api/v3/coins/${coin.id}?localization=false&tickers=false&market_data=true&community_data=true&developer_data=true&sparkline=false`;
+                // Get detailed coin data with all fields. Use API key if available.
+                const detailUrl = coingeckoApiKey
+                  ? `${apiBaseUrl}/coins/${coin.id}?localization=false&tickers=false&market_data=true&community_data=true&developer_data=true&sparkline=false&x_cg_pro_api_key=${coingeckoApiKey}`
+                  : `${apiBaseUrl}/coins/${coin.id}?localization=false&tickers=false&market_data=true&community_data=true&developer_data=true&sparkline=false`;
                 
                 try {
                   detailData = await callCoinGeckoAPI(detailUrl, true);
@@ -77,7 +90,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 }
               }
               
-              // Process the detail data with complete information
+              // Process the detail data
               const platforms = detailData.platforms || {};
               const isErc20Compatible = isValidErc20Token({
                 ...coin,
@@ -100,6 +113,22 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               console.log(` - Current price USD:`, detailData.market_data?.current_price?.usd);
               console.log(` - Links:`, detailData.links);
               
+              // Compose the full enriched info structure
+              const tokenInfo: TokenInfoEnriched = {
+                name: detailData.name || coin.name,
+                symbol: detailData.symbol?.toUpperCase() || coin.symbol?.toUpperCase(),
+                description: limitedDescription,
+                website_url: detailData.links?.homepage?.[0] || '',
+                twitter_handle: detailData.links?.twitter_screen_name || '',
+                github_url: detailData.links?.repos_url?.github?.[0] || '',
+                logo_url: detailData.image?.large || detailData.image?.small || coin.large || coin.thumb || '',
+                coingecko_id: coin.id,
+                current_price_usd: detailData.market_data?.current_price?.usd || 0,
+                price_change_24h: detailData.market_data?.price_change_percentage_24h || 0,
+                market_cap_usd: detailData.market_data?.market_cap?.usd || 0,
+                total_value_locked_usd: detailData.market_data?.total_value_locked?.usd?.toString() || 'N/A'
+              };
+              
               // Return enhanced coin data with all necessary fields for scanning
               enhancedResults.push({
                 ...coin,
@@ -109,21 +138,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 market_cap: detailData.market_data?.market_cap?.usd || 0,
                 isErc20: isErc20Compatible,
                 description: limitedDescription,
-                // Store complete token info for passing to scan
-                tokenInfo: {
-                  name: detailData.name || coin.name,
-                  symbol: detailData.symbol?.toUpperCase() || coin.symbol?.toUpperCase(),
-                  description: limitedDescription,
-                  website_url: detailData.links?.homepage?.[0] || '',
-                  twitter_handle: detailData.links?.twitter_screen_name || '',
-                  github_url: detailData.links?.repos_url?.github?.[0] || '',
-                  logo_url: detailData.image?.large || detailData.image?.small || coin.large || coin.thumb || '',
-                  coingecko_id: coin.id,
-                  current_price_usd: detailData.market_data?.current_price?.usd || 0,
-                  price_change_24h: detailData.market_data?.price_change_percentage_24h || 0,
-                  market_cap_usd: detailData.market_data?.market_cap?.usd || 0,
-                  total_value_locked_usd: detailData.market_data?.total_value_locked?.usd?.toString() || 'N/A'
-                }
+                tokenInfo // The magic: full tokenInfo is now on the object!
               });
             } catch (err: any) {
               // If it's a rate limit error, propagate it up
