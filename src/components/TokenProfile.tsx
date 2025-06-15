@@ -1,11 +1,15 @@
-
 import { Globe, Github, Twitter } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import * as React from "react";
 
-// Mini health score widget (orange arc, 48x48)
+// Mini health score widget with better visibility for dark and light themes
 function MiniHealthScore({ score = 0 }: { score: number }) {
   // Arc is 220deg of 360deg
   const angle = 220;
@@ -14,6 +18,10 @@ function MiniHealthScore({ score = 0 }: { score: number }) {
   const cy = 24;
   const circumference = 2 * Math.PI * radius;
   const arcLength = (angle / 360) * circumference;
+
+  // Ensure text color is always readable
+  // Use CSS variables or tailwind "text-white"/"text-black" via "dark:" 
+  // dark -> white, light -> black
   return (
     <div className="flex flex-col items-center">
       <svg width={48} height={48}>
@@ -22,7 +30,7 @@ function MiniHealthScore({ score = 0 }: { score: number }) {
           cy={cy}
           r={radius}
           fill="none"
-          stroke="#E5E7EB"
+          stroke="#232334"
           strokeWidth={4}
           style={{ transition: "stroke-dasharray 0.3s" }}
         />
@@ -42,15 +50,15 @@ function MiniHealthScore({ score = 0 }: { score: number }) {
           x="50%"
           y="56%"
           textAnchor="middle"
-          fill="#111827"
           fontSize="16"
           fontWeight="600"
           dy=".1em"
+          className="fill-black dark:fill-white"
         >
           {Math.round(score)}
         </text>
       </svg>
-      <span className="text-[12px] font-medium text-[#9CA3AF] dark:text-[#A3A3B3] mt-1">
+      <span className="text-[12px] font-medium mt-1 text-[#9CA3AF] dark:text-[#A3A3B3]">
         Health Score
       </span>
     </div>
@@ -86,7 +94,7 @@ export default function TokenProfile({
   marketCap,
   overallScore = 0,
   description,
-  network = "ETH"
+  network = "ETH",
 }: TokenProfileProps) {
   // Clamp and ellipsis for description
   const clampedDesc = description
@@ -127,11 +135,11 @@ export default function TokenProfile({
         maxWidth: 1420,
         minHeight: 170,
         padding: 0,
-        margin: "auto"
+        margin: "auto",
       }}
     >
       <div
-        className="flex justify-between items-center h-full min-h-[170px] px-6 py-6"
+        className="flex flex-row justify-between items-stretch min-h-[170px] px-6 py-6"
         style={{ minHeight: 170 }}
       >
         {/* LEFT SECTION */}
@@ -146,7 +154,7 @@ export default function TokenProfile({
               minHeight: 64,
               maxWidth: 64,
               maxHeight: 64,
-              background: "#F5F6FA"
+              background: "#F5F6FA",
             }}
           />
           <div className="flex flex-col gap-2 min-w-0">
@@ -159,12 +167,13 @@ export default function TokenProfile({
                 {name}
               </h2>
               <span
-                className="font-medium text-[14px] px-3 py-1 bg-[#F3F4F6] dark:bg-[#262634] text-gray-700 dark:text-gray-200 rounded-full"
+                className="font-medium text-[14px] px-3 py-1 bg-[#252534] dark:bg-[#252534] text-gray-200 dark:text-gray-300 rounded-full"
                 style={{
                   borderRadius: "9999px",
                   letterSpacing: ".01em",
                   fontWeight: 500,
-                  fontFamily: "Inter, sans-serif"
+                  fontFamily: "Inter, sans-serif",
+                  padding: "6px 12px",
                 }}
               >
                 ${symbol.toUpperCase()}
@@ -178,7 +187,7 @@ export default function TokenProfile({
                   display: "-webkit-box",
                   WebkitLineClamp: 2,
                   WebkitBoxOrient: "vertical",
-                  overflow: "hidden"
+                  overflow: "hidden",
                 }}
                 title={clampedDesc}
               >
@@ -192,18 +201,16 @@ export default function TokenProfile({
                   <TooltipTrigger asChild>
                     <button
                       onClick={copyAddress}
-                      className="font-mono text-[14px] px-4 py-1 rounded-full bg-[#F9FAFB] dark:bg-[#181827] text-[#6B7280] dark:text-[#A3A3B3] border-none focus:outline-none transition-all"
+                      className="font-mono text-[14px] px-4 py-1 rounded-full bg-[#232334] dark:bg-[#232334] text-[#A3A3B3] dark:text-[#A3A3B3] border-none focus:outline-none transition-all"
                     >
                       {shortenAddress(address)}
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    Click to copy address
-                  </TooltipContent>
+                  <TooltipContent>Click to copy address</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <span
-                className="px-2 py-[2px] rounded-full bg-[#E5E7EB] dark:bg-[#232334] text-[#6B7280] dark:text-[#A3A3B3] font-semibold text-[12px]"
+                className="px-2 py-[2px] rounded-full bg-[#252534] dark:bg-[#252534] text-[#A3A3B3] dark:text-[#A3A3B3] font-semibold text-[12px]"
                 style={{ fontWeight: 600, marginLeft: "2px" }}
               >
                 {network.toUpperCase()}
@@ -211,52 +218,52 @@ export default function TokenProfile({
             </div>
           </div>
         </div>
-        {/* RIGHT: Metrics - 3 columns (price, cap, score; icons underneath) */}
-        <div className="flex flex-col justify-between items-end h-full">
-          <div className="flex flex-row gap-9 mb-2">
-            {/* Price + Change */}
-            <div className="flex flex-col items-end mr-1 min-w-[110px]">
-              <span className="text-[24px] font-bold leading-[30px] text-[#111827] dark:text-white">
-                ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-              <span
-                className="text-[14px] font-medium"
-                style={{
-                  color: priceChange >= 0 ? "#059669" : "#DC2626",
-                  marginTop: 2
-                }}
-              >
-                {priceChange >= 0 ? "+" : ""}
-                {priceChange.toFixed(2)}%
-              </span>
-            </div>
-            {/* Market Cap */}
-            <div className="flex flex-col items-end min-w-[95px]">
-              <span className="text-[12px] font-medium uppercase text-[#9CA3AF] dark:text-[#A3A3B3] tracking-wide mb-1 mt-1">
-                Market Cap
-              </span>
-              <span className="text-[16px] font-bold text-[#111827] dark:text-white">
-                {formatMarketCap(marketCap)}
-              </span>
-            </div>
-            {/* Health Score */}
-            <div className="flex flex-col items-center min-w-[85px]">
-              <MiniHealthScore score={overallScore} />
-            </div>
+        {/* RIGHT: 3 Columns (Price, Market Cap, Health Score) */}
+        <div className="flex flex-row gap-12 items-start min-w-[420px]">
+          {/* Price + Change */}
+          <div className="flex flex-col items-end min-w-[120px] ml-2">
+            <span className="text-[28px] font-bold leading-[36px] text-[#fff] dark:text-[#fff]">
+              ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+            <span
+              className="text-[16px] font-medium"
+              style={{
+                color: priceChange >= 0 ? "#10B981" : "#DC2626",
+                marginTop: 2,
+              }}
+            >
+              {priceChange >= 0 ? "+" : ""}
+              {priceChange.toFixed(2)}%
+            </span>
           </div>
-          {/* Socials */}
-          {(website || twitter || github) && (
-            <div className="flex items-center gap-3 mt-6 mr-1 mb-0.5">
+          {/* Market Cap */}
+          <div className="flex flex-col items-end justify-center min-w-[110px]">
+            <span className="text-[13px] font-medium uppercase text-[#A3A3B3] dark:text-[#A3A3B3] tracking-wide mb-1">
+              Market Cap
+            </span>
+            <span className="text-[20px] font-bold text-white dark:text-white" style={{ }}>
+              {formatMarketCap(marketCap)}
+            </span>
+          </div>
+          {/* Health Score */}
+          <div className="flex flex-col items-center min-w-[90px] mr-2">
+            <MiniHealthScore score={overallScore} />
+          </div>
+        </div>
+        {/* Socials */}
+        {(website || twitter || github) && (
+          <div className="flex flex-col justify-end items-end min-h-[120px] ml-4">
+            <div className="flex items-center gap-6 mt-auto mb-0.5">
               {website && (
                 <a
                   href={website.startsWith("http") ? website : `https://${website}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-1 rounded transition-colors text-[#9CA3AF] dark:text-[#A3A3B3] hover:text-[#111827] dark:hover:text-white focus:outline-none"
+                  className="p-1 rounded transition-colors text-[#A3A3B3] dark:text-[#A3A3B3] hover:text-[#fff] dark:hover:text-white focus:outline-none"
                   aria-label="Website"
                   style={{ lineHeight: 0 }}
                 >
-                  <Globe className="w-4 h-4" />
+                  <Globe className="w-5 h-5" />
                 </a>
               )}
               {twitter && (
@@ -264,11 +271,11 @@ export default function TokenProfile({
                   href={twitter.startsWith("http") ? twitter : `https://twitter.com/${twitter.replace("@", "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-1 rounded transition-colors text-[#9CA3AF] dark:text-[#A3A3B3] hover:text-[#111827] dark:hover:text-white focus:outline-none"
+                  className="p-1 rounded transition-colors text-[#A3A3B3] dark:text-[#A3A3B3] hover:text-[#fff] dark:hover:text-white focus:outline-none"
                   aria-label="X/Twitter"
                   style={{ lineHeight: 0 }}
                 >
-                  <Twitter className="w-4 h-4" />
+                  <Twitter className="w-5 h-5" />
                 </a>
               )}
               {github && (
@@ -276,16 +283,16 @@ export default function TokenProfile({
                   href={github.startsWith("http") ? github : `https://github.com/${github.replace(/^@/, "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-1 rounded transition-colors text-[#9CA3AF] dark:text-[#A3A3B3] hover:text-[#111827] dark:hover:text-white focus:outline-none"
+                  className="p-1 rounded transition-colors text-[#A3A3B3] dark:text-[#A3A3B3] hover:text-[#fff] dark:hover:text-white focus:outline-none"
                   aria-label="GitHub"
                   style={{ lineHeight: 0 }}
                 >
-                  <Github className="w-4 h-4" />
+                  <Github className="w-5 h-5" />
                 </a>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
       {/* CSS variables for theme */}
       <style>{`
@@ -295,7 +302,7 @@ export default function TokenProfile({
         }
         .dark {
           --profile-border: #232334;
-          --profile-bg: #17171f;
+          --profile-bg: #181826;
         }
       `}</style>
     </Card>
