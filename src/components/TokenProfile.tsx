@@ -1,3 +1,4 @@
+
 import { Globe, Github, Twitter } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
@@ -220,7 +221,7 @@ export default function TokenProfile({
         </div>
 
         {/* RIGHT SECTION: Price/Market Cap on left, Health Score on right */}
-        <div className="flex items-center gap-8 min-w-[350px]">
+        <div className="flex items-center gap-12 min-w-[380px]">
           {/* Price and Market Cap Section */}
           <div className="flex flex-col items-start gap-4">
             {/* Price + Change */}
@@ -251,8 +252,8 @@ export default function TokenProfile({
             </div>
           </div>
 
-          {/* Health Score and Socials Section */}
-          <div className="flex flex-col items-center gap-4">
+          {/* Health Score and Socials Section - moved further right */}
+          <div className="flex flex-col items-center gap-4 ml-6">
             {/* Health Score */}
             <MiniHealthScore score={overallScore} />
             
