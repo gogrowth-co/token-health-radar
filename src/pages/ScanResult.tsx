@@ -239,7 +239,7 @@ export default function ScanResult() {
     <div className="flex flex-col min-h-screen">
       <Navbar />
 
-      <main className="flex-1 container px-4 py-8">
+      <main className="flex-1 container px-4 py-8 pb-24">
         <div className="max-w-6xl mx-auto space-y-8">
           <TokenProfile
             name={properName}
@@ -278,6 +278,27 @@ export default function ScanResult() {
           />
         </div>
       </main>
+
+      {/* Sticky CTA at bottom for non-pro users */}
+      {!isPro && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 z-50">
+          <div className="container mx-auto max-w-6xl">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  Want the full picture? Create a free account to unlock detailed risk insights.
+                </p>
+              </div>
+              <Button 
+                onClick={() => navigate('/auth')}
+                className="ml-4"
+              >
+                Create Free Account
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
