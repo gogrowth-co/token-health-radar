@@ -21,6 +21,8 @@ interface TokenProfileProps {
   tvl: string;
   launchDate: string;
   overallScore?: number;
+  description?: string;
+  network?: string;
 }
 
 export default function TokenProfile({
@@ -36,7 +38,9 @@ export default function TokenProfile({
   marketCap,
   tvl,
   launchDate,
-  overallScore = 0
+  overallScore = 0,
+  description,
+  network = "ETH"
 }: TokenProfileProps) {
   const shortenAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -59,26 +63,42 @@ export default function TokenProfile({
   return (
     <Card className="overflow-hidden border-none shadow-md bg-card">
       <CardContent className="p-6">
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="flex-shrink-0">
-              <img src={logo} alt={`${name} logo`} className="w-16 h-16 rounded-full" />
-            </div>
-            
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-bold">{name}</h2>
-                <Badge variant="outline" className="text-sm py-0.5">{symbol}</Badge>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Left Column: Token Info */}
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <img src={logo} alt={`${name} logo`} className="w-16 h-16 rounded-full" />
               </div>
               
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <h2 className="text-2xl font-bold">{name}</h2>
+                  <Badge variant="outline" className="text-sm py-0.5">{symbol}</Badge>
+                </div>
+                
+                {description && (
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {description.length > 150 ? `${description.substring(0, 150)}...` : description}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Middle Column: Address & Links */}
+          <div className="flex flex-col gap-4">
+            <div>
+              <div className="text-sm text-muted-foreground mb-2">Contract Address</div>
+              <div className="flex items-center gap-2">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button 
-                        variant="ghost" 
+                        variant="outline" 
                         size="sm" 
-                        className="h-7 px-2 py-0 text-xs"
+                        className="h-8 px-3 font-mono text-xs"
                         onClick={copyAddress}
                       >
                         {shortenAddress(address)}
@@ -90,56 +110,74 @@ export default function TokenProfile({
                   </Tooltip>
                 </TooltipProvider>
                 
-                <div className="flex items-center gap-1.5">
-                  <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                <Badge variant="secondary" className="text-xs px-2 py-1">
+                  {network}
+                </Badge>
+              </div>
+            </div>
+
+            <div>
+              <div className="text-sm text-muted-foreground mb-2">Official Links</div>
+              <div className="flex items-center gap-2">
+                {website && (
+                  <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                     <a href={website} target="_blank" rel="noopener noreferrer" aria-label="Website">
                       <Globe className="h-4 w-4" />
                     </a>
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                )}
+                {twitter && (
+                  <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                     <a href={twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter">
                       <Twitter className="h-4 w-4" />
                     </a>
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                )}
+                {github && (
+                  <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                     <a href={github} target="_blank" rel="noopener noreferrer" aria-label="GitHub">
                       <Github className="h-4 w-4" />
                     </a>
                   </Button>
-                </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Overall Health Score */}
-          <div className="flex-shrink-0">
-            <OverallHealthScore score={overallScore} />
-          </div>
-          
-          <div className="flex flex-col md:flex-row gap-4 md:gap-8">
-            <div>
-              <div className="text-sm text-muted-foreground">Price (USD)</div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold">${price.toLocaleString()}</span>
-                <span className={`text-sm ${priceChange >= 0 ? 'text-success' : 'text-danger'}`}>
-                  {priceChange >= 0 ? '+' : ''}{priceChange}%
+          {/* Right Column: Price & Health Score */}
+          <div className="flex flex-col gap-6">
+            {/* Health Score */}
+            <div className="flex justify-center lg:justify-end">
+              <OverallHealthScore score={overallScore} />
+            </div>
+
+            {/* Price Information */}
+            <div className="text-center lg:text-right">
+              <div className="text-sm text-muted-foreground mb-1">Current Price</div>
+              <div className="flex flex-col items-center lg:items-end gap-1">
+                <span className="text-3xl font-bold">${price.toLocaleString()}</span>
+                <span className={`text-sm font-medium ${priceChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}% (24h)
                 </span>
               </div>
             </div>
-            
-            <div>
-              <div className="text-sm text-muted-foreground">Market Cap</div>
-              <div className="text-lg font-bold">${marketCap}</div>
+
+            {/* Additional Metrics */}
+            <div className="grid grid-cols-2 gap-4 text-center lg:text-right">
+              <div>
+                <div className="text-xs text-muted-foreground">Market Cap</div>
+                <div className="text-sm font-semibold">${marketCap}</div>
+              </div>
+              
+              <div>
+                <div className="text-xs text-muted-foreground">TVL</div>
+                <div className="text-sm font-semibold">${tvl}</div>
+              </div>
             </div>
-            
-            <div>
-              <div className="text-sm text-muted-foreground">TVL</div>
-              <div className="text-lg font-bold">${tvl}</div>
-            </div>
-            
-            <div>
-              <div className="text-sm text-muted-foreground">Launch Date</div>
-              <div className="text-lg font-bold">{formatDate(launchDate)}</div>
+
+            <div className="text-center lg:text-right">
+              <div className="text-xs text-muted-foreground">Launch Date</div>
+              <div className="text-sm font-semibold">{formatDate(launchDate)}</div>
             </div>
           </div>
         </div>

@@ -262,6 +262,8 @@ export default function ScanResult() {
             tvl={tokenInfo.total_value_locked_usd || "N/A"}
             launchDate={tokenInfo.launch_date || new Date().toISOString()}
             overallScore={overallScore}
+            description={tokenInfo.description}
+            network="ETH"
           />
           
           <CategoryScoresGrid
