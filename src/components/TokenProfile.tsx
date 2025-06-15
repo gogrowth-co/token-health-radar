@@ -1,4 +1,3 @@
-
 import { Globe, Github, Twitter } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
@@ -220,12 +219,12 @@ export default function TokenProfile({
           </div>
         </div>
 
-        {/* RIGHT SECTION: Price, Market Cap, Health Score, and Socials */}
-        <div className="flex flex-col items-end justify-between min-w-[300px] h-full">
-          {/* Top: Price + Change and Market Cap */}
-          <div className="flex flex-col items-end gap-4">
+        {/* RIGHT SECTION: Price/Market Cap on left, Health Score on right */}
+        <div className="flex items-center gap-8 min-w-[350px]">
+          {/* Price and Market Cap Section */}
+          <div className="flex flex-col items-start gap-4">
             {/* Price + Change */}
-            <div className="flex flex-col items-end">
+            <div className="flex flex-col items-start">
               <span className="text-[28px] font-bold leading-[36px] text-[#000] dark:text-[#fff]">
                 ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
@@ -242,7 +241,7 @@ export default function TokenProfile({
             </div>
             
             {/* Market Cap */}
-            <div className="flex flex-col items-end">
+            <div className="flex flex-col items-start">
               <span className="text-[13px] font-medium uppercase text-[#A3A3B3] dark:text-[#A3A3B3] tracking-wide mb-1">
                 Market Cap
               </span>
@@ -252,12 +251,10 @@ export default function TokenProfile({
             </div>
           </div>
 
-          {/* Bottom: Health Score and Socials */}
-          <div className="flex flex-col items-end gap-4">
+          {/* Health Score and Socials Section */}
+          <div className="flex flex-col items-center gap-4">
             {/* Health Score */}
-            <div className="flex flex-col items-center">
-              <MiniHealthScore score={overallScore} />
-            </div>
+            <MiniHealthScore score={overallScore} />
             
             {/* Socials */}
             {(website || twitter || github) && (
