@@ -1,11 +1,10 @@
 
 import { Globe, Github, Twitter } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import OverallHealthScore from "./OverallHealthScore";
+import * as React from "react";
 
 interface TokenProfileProps {
   name: string;
@@ -23,6 +22,56 @@ interface TokenProfileProps {
   network?: string;
 }
 
+function MiniHealthScore({ score = 0 }: { score: number }) {
+  // Orange arc: 220deg ~ 61% of circumference
+  const angle = 220;
+  const radius = 22;
+  const cx = 24;
+  const cy = 24;
+  const circumference = 2 * Math.PI * radius;
+  const arcLength = (angle / 360) * circumference;
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <svg width={48} height={48}>
+        <circle
+          cx={cx}
+          cy={cy}
+          r={radius}
+          fill="none"
+          stroke="#E5E7EB"
+          strokeWidth={4}
+        />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={radius}
+          fill="none"
+          stroke="#F59E0B"
+          strokeWidth={4}
+          strokeDasharray={`${arcLength} ${circumference - arcLength}`}
+          strokeDashoffset={(circumference * 0.2)}
+          strokeLinecap="round"
+          style={{ transition: "stroke-dasharray 0.3s" }}
+        />
+        <text
+          x="50%"
+          y="56%"
+          textAnchor="middle"
+          fill="#F59E0B"
+          fontSize="16"
+          fontWeight="600"
+          dy=".1em"
+        >
+          {Math.round(score)}
+        </text>
+      </svg>
+      <span className="text-[12px] mt-[-2px] font-medium text-gray-400 dark:text-gray-500" style={{letterSpacing: "0.02em"}}>
+        Health Score
+      </span>
+    </div>
+  );
+}
+
 export default function TokenProfile({
   name,
   symbol,
@@ -38,137 +87,192 @@ export default function TokenProfile({
   description,
   network = "ETH"
 }: TokenProfileProps) {
-  const shortenAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
+  // For accessibility/truncation we clamp desc at 2 lines visually, fallback to max 256 chars.
+  const clampedDesc = description
+    ? description.length > 256
+      ? `${description.slice(0, 253)}...`
+      : description
+    : "";
 
+  const shortenAddress = (addr: string) =>
+    `${addr.slice(0, 6)}...${addr.slice(-4) || ""}`;
   const copyAddress = async () => {
     try {
       await navigator.clipboard.writeText(address);
       toast("Address copied to clipboard");
     } catch (err) {
-      console.error("Failed to copy:", err);
+      // ignore
     }
   };
 
-  const formatMarketCap = (marketCapString: string) => {
-    // Remove any existing formatting and convert to number
-    const cleanValue = marketCapString.replace(/[^0-9.]/g, '');
-    const value = parseFloat(cleanValue);
-    if (isNaN(value)) return "N/A";
-    if (value >= 1000000000) {
-      return `$${(value / 1000000000).toFixed(2)}B`;
-    } else if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`;
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(2)}K`;
-    } else {
-      return `$${value.toFixed(2)}`;
-    }
+  // Market cap: Format like $4.27B, $1.2M
+  const formatMarketCap = (cap: string) => {
+    const v = parseFloat(cap.replace(/[^0-9.]/g, ""));
+    if (isNaN(v)) return "N/A";
+    if (v >= 1e9) return `$${(v / 1e9).toFixed(2)}B`;
+    if (v >= 1e6) return `$${(v / 1e6).toFixed(2)}M`;
+    if (v >= 1e3) return `$${(v / 1e3).toFixed(2)}K`;
+    return `$${v.toFixed(2)}`;
   };
 
   return (
-    <Card className="overflow-hidden border-none shadow-md bg-card">
-      <CardContent className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Left Column: Token Info, Address, Links */}
-          <div className="flex flex-col gap-6">
-            <div className="flex items-start gap-4">
-              <img src={logo} alt={`${name} logo`} className="w-16 h-16 rounded-full border" />
-              <div className="flex flex-col gap-1 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h2 className="text-2xl md:text-3xl font-bold">{name}</h2>
-                  <Badge variant="outline" className="text-base px-2 py-0.5">{symbol}</Badge>
-                </div>
-                {description && (
-                  <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
-                    {description.length > 160 ? `${description.substring(0, 160)}...` : description}
-                  </p>
-                )}
-              </div>
+    <Card
+      style={{
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "var(--profile-border, #E6E8EC)",
+        background: "var(--profile-bg, #FFF)",
+        width: "100%",
+        maxWidth: 1420,
+        minHeight: 170,
+        padding: 0,
+        margin: "auto"
+      }}
+      className="overflow-visible transition-all"
+    >
+      {/* NOTE: px-6 is close to 24px, py-6 = 24px; we use those for padding */}
+      <div className="flex justify-between items-center h-full min-h-[170px] px-6 py-6"
+        style={{minHeight: 170}}
+      >
+        {/* LEFT: Token Identity */}
+        <div className="flex items-start gap-6 min-w-0">
+          {/* Logo */}
+          <img
+            src={logo}
+            alt={`${name} logo`}
+            className="w-16 h-16 object-cover rounded-full border border-[#e6e8ec] dark:border-[#232334]"
+            style={{minWidth: 64, minHeight: 64, maxWidth: 64, maxHeight: 64}}
+          />
+          {/* Info */}
+          <div className="flex flex-col gap-2 min-w-0">
+            {/* Name + Symbol */}
+            <div className="flex items-center gap-2">
+              <h2 className="font-semibold text-[20px] leading-[28px] text-gray-900 dark:text-gray-100 truncate">
+                {name}
+              </h2>
+              <span
+                className="font-medium bg-[#F3F4F6] dark:bg-[#262634] text-gray-700 dark:text-gray-300 text-[14px] px-3 py-1 rounded-full leading-[18px] ml-[2px]"
+                style={{letterSpacing: ".01em", fontWeight: 500}}
+              >
+                ${symbol.toUpperCase()}
+              </span>
             </div>
-
-            <div className="flex flex-col gap-2 mt-2">
-              {/* Address */}
-              <div>
-                <div className="text-xs text-muted-foreground mb-1">Contract Address</div>
-                <div className="flex items-center gap-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-7 px-2 font-mono text-[13px]"
-                          onClick={copyAddress}
-                        >
-                          {shortenAddress(address)}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Click to copy address</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <Badge variant="secondary" className="text-xs px-2 py-1">{network}</Badge>
-                </div>
-              </div>
-              {/* Links */}
-              {(website || twitter || github) && (
-                <div>
-                  <div className="text-xs text-muted-foreground mb-1">Official Links</div>
-                  <div className="flex items-center gap-2">
-                    {website && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                        <a href={website} target="_blank" rel="noopener noreferrer" aria-label="Website">
-                          <Globe className="h-4 w-4" />
-                        </a>
-                      </Button>
-                    )}
-                    {twitter && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                        <a href={twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter">
-                          <Twitter className="h-4 w-4" />
-                        </a>
-                      </Button>
-                    )}
-                    {github && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                        <a href={github} target="_blank" rel="noopener noreferrer" aria-label="GitHub">
-                          <Github className="h-4 w-4" />
-                        </a>
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column: Health Score, Price, Market Cap */}
-          <div className="flex flex-col gap-8 h-full justify-between items-stretch md:items-end">
-            {/* Health Score - prominent & top right */}
-            <div className="flex md:justify-end justify-center">
-              <OverallHealthScore score={overallScore} />
-            </div>
-            {/* Price */}
-            <div className="text-center md:text-right">
-              <div className="text-xs text-muted-foreground mb-1">Current Price</div>
-              <div className="flex flex-col items-center md:items-end gap-1">
-                <span className="text-4xl md:text-5xl font-extrabold leading-tight">${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                <span className={`text-base font-medium ${priceChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                  {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}% (24h)
-                </span>
-              </div>
-            </div>
-            {/* Market Cap */}
-            <div className="text-center md:text-right">
-              <div className="text-xs text-muted-foreground mb-1">Market Cap</div>
-              <div className="text-xl font-semibold">{formatMarketCap(marketCap)}</div>
+            {/* Description (multi-line clamp, gray-700) */}
+            {clampedDesc && (
+              <p
+                className="text-[16px] text-gray-700 dark:text-gray-300 max-w-[700px] leading-[22px] truncate whitespace-pre-line"
+                style={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden"
+                }}
+                title={clampedDesc}
+              >
+                {clampedDesc}
+              </p>
+            )}
+            {/* Address tag */}
+            <div className="mt-1 flex items-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={copyAddress}
+                      className="font-mono text-[14px] px-4 py-1 rounded-full bg-[#F9FAFB] dark:bg-[#181827] text-gray-500 dark:text-gray-400 border-none focus:outline-none transition-all"
+                    >
+                      {shortenAddress(address)}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Click to copy address
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <span
+                className="bg-[#E5E7EB] dark:bg-[#262634] text-gray-600 dark:text-gray-400 rounded-full px-2 py-0.5 text-[12px] font-semibold"
+              >
+                {network.toUpperCase()}
+              </span>
             </div>
           </div>
         </div>
-      </CardContent>
+
+        {/* RIGHT: Metrics block (Price, Market cap, Score, Socials) */}
+        <div className="flex flex-col items-end justify-between h-full gap-2">
+          {/* Price/Change/Cap */}
+          <div className="flex flex-col items-end">
+            <span className="text-[24px] font-bold leading-[30px] text-gray-900 dark:text-gray-100">
+              ${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+            </span>
+            <span className={`text-[14px] font-medium leading-[18px] mt-0.5 ${priceChange >= 0 ? "text-green-600" : "text-red-600"}`}>
+              {priceChange >= 0 ? "+" : ""}{priceChange.toFixed(2)}%
+            </span>
+            <span className="uppercase text-[12px] font-medium text-gray-400 dark:text-gray-500 tracking-wide mt-4 mb-0">
+              Market Cap
+            </span>
+            <span className="text-[16px] font-bold leading-[22px] text-slate-900 dark:text-gray-100 mb-2">
+              {formatMarketCap(marketCap)}
+            </span>
+          </div>
+          {/* Health Score Mini-widget */}
+          <MiniHealthScore score={overallScore} />
+          {/* Social icons (bottom right) */}
+          {(website || twitter || github) && (
+            <div className="flex items-center gap-3 mt-6">
+              {/* Website */}
+              {website && (
+                <a
+                  href={website.startsWith("http") ? website : `https://${website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1 rounded transition-colors text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white focus:outline-none"
+                  aria-label="Website link"
+                  style={{lineHeight: 0}}
+                >
+                  <Globe className="w-4 h-4" />
+                </a>
+              )}
+              {/* Twitter */}
+              {twitter && (
+                <a
+                  href={twitter.startsWith("http") ? twitter : `https://twitter.com/${twitter.replace("@", "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1 rounded transition-colors text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white focus:outline-none"
+                  aria-label="X/Twitter link"
+                  style={{lineHeight: 0}}
+                >
+                  <Twitter className="w-4 h-4" />
+                </a>
+              )}
+              {/* Github */}
+              {github && (
+                <a
+                  href={github.startsWith("http") ? github : `https://github.com/${github.replace(/^@/, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1 rounded transition-colors text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white focus:outline-none"
+                  aria-label="GitHub link"
+                  style={{lineHeight: 0}}
+                >
+                  <Github className="w-4 h-4" />
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+      <style>{`
+        :root {
+          --profile-border: #E6E8EC;
+          --profile-bg: #FFF;
+        }
+        .dark {
+          --profile-border: #232334;
+          --profile-bg: #17171f;
+        }
+      `}</style>
     </Card>
   );
 }
