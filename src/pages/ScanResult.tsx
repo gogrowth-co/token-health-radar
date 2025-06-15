@@ -49,124 +49,96 @@ export default function ScanResult() {
           return;
         }
 
-        // First, try to get data from localStorage (most recent scan)
-        const localStorageData = localStorage.getItem("lastScanResult");
-        if (localStorageData) {
+        // Only use maybeSingle - never .single() (lets us check for DB results cleanly)
+        const [
+          { data: tokenData, error: tokenError },
+          { data: securityData }, // error logging handled below
+          { data: tokenomicsData },
+          { data: liquidityData },
+          { data: developmentData },
+          { data: communityData }
+        ] = await Promise.all([
+          supabase.from('token_data_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
+          supabase.from('token_security_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
+          supabase.from('token_tokenomics_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
+          supabase.from('token_liquidity_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
+          supabase.from('token_development_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
+          supabase.from('token_community_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
+        ]);
+
+        // Explicit logs for debugging
+        console.log("[DB] token_data_cache result:", tokenData);
+        console.log("[DB] token_security_cache result:", securityData);
+        console.log("[DB] token_tokenomics_cache result:", tokenomicsData);
+        console.log("[DB] token_liquidity_cache result:", liquidityData);
+        console.log("[DB] token_development_cache result:", developmentData);
+        console.log("[DB] token_community_cache result:", communityData);
+
+        // If ANY critical field exists in tokenData, use DB; else fallback to localStorage
+        if (tokenData && (tokenData.name || tokenData.symbol || tokenData.current_price_usd)) {
+          setScanData({
+            success: true,
+            token_address: tokenAddress,
+            overall_score: [
+              securityData?.score || 0,
+              tokenomicsData?.score || 0,
+              liquidityData?.score || 0,
+              communityData?.score || 0,
+              developmentData?.score || 0
+            ].reduce((acc, score) => acc + score, 0) / 5,
+            token_info: tokenData,
+            security: securityData || { score: 0, token_address: tokenAddress },
+            tokenomics: tokenomicsData || { score: 0, token_address: tokenAddress },
+            liquidity: liquidityData || { score: 0, token_address: tokenAddress },
+            development: developmentData || { score: 0, token_address: tokenAddress },
+            community: communityData || { score: 0, token_address: tokenAddress },
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Fallback: Try to get token info from localStorage (only if DB really has nothing)
+        const selectedTokenData = localStorage.getItem("selectedToken");
+        if (selectedTokenData) {
           try {
-            const parsedData = JSON.parse(localStorageData);
-            if (parsedData.token_address === tokenAddress || parsedData.token_info?.coingecko_id === coinGeckoId) {
-              console.log("ScanResult: Found recent scan data in localStorage");
-              setScanData(parsedData);
+            const selectedToken = JSON.parse(selectedTokenData);
+            if (selectedToken.address === tokenAddress || selectedToken.id === coinGeckoId) {
+              setScanData({
+                success: true,
+                token_address: tokenAddress,
+                overall_score: 0,
+                token_info: {
+                  name: selectedToken.name,
+                  symbol: selectedToken.symbol,
+                  logo_url: selectedToken.logo,
+                  current_price_usd: selectedToken.price_usd || 0,
+                  price_change_24h: selectedToken.price_change_24h || 0,
+                  market_cap_usd: selectedToken.market_cap_usd || 0,
+                  coingecko_id: selectedToken.id,
+                  description: `${selectedToken.name} (${selectedToken.symbol})`,
+                  website_url: "",
+                  twitter_handle: "",
+                  github_url: ""
+                },
+                security: { score: 0, token_address: tokenAddress },
+                tokenomics: { score: 0, token_address: tokenAddress },
+                liquidity: { score: 0, token_address: tokenAddress },
+                development: { score: 0, token_address: tokenAddress },
+                community: { score: 0, token_address: tokenAddress }
+              });
               setLoading(false);
               return;
             }
           } catch (e) {
-            console.error("Error parsing localStorage data:", e);
+            console.error("Error parsing selectedToken from localStorage:", e);
           }
         }
 
-        // If no localStorage data or different token, fetch from database
-        console.log("ScanResult: Fetching data from database for token:", tokenAddress);
-        
-        // Use the actual token address, not the unsupported prefix
-        const dbTokenAddress = tokenAddress.startsWith('unsupported-') 
-          ? tokenAddress.replace('unsupported-', '') 
-          : tokenAddress;
-
-        // Fetch all data from cache tables
-        const [
-          { data: tokenData, error: tokenError },
-          { data: securityData, error: securityError },
-          { data: tokenomicsData, error: tokenomicsError },
-          { data: liquidityData, error: liquidityError },
-          { data: developmentData, error: developmentError },
-          { data: communityData, error: communityError }
-        ] = await Promise.all([
-          supabase.from('token_data_cache').select('*').eq('token_address', dbTokenAddress).single(),
-          supabase.from('token_security_cache').select('*').eq('token_address', dbTokenAddress).single(),
-          supabase.from('token_tokenomics_cache').select('*').eq('token_address', dbTokenAddress).single(),
-          supabase.from('token_liquidity_cache').select('*').eq('token_address', dbTokenAddress).single(),
-          supabase.from('token_development_cache').select('*').eq('token_address', dbTokenAddress).single(),
-          supabase.from('token_community_cache').select('*').eq('token_address', dbTokenAddress).single()
-        ]);
-
-        // Check for errors in critical data
-        if (tokenError && tokenError.code !== 'PGRST116') {
-          console.error("Error fetching token data:", tokenError);
-          throw new Error("Failed to load token data");
-        }
-
-        if (!tokenData) {
-          console.error("ScanResult: No token data found in database for:", dbTokenAddress);
-          
-          // Try to get basic info from selectedToken in localStorage
-          const selectedTokenData = localStorage.getItem("selectedToken");
-          if (selectedTokenData) {
-            try {
-              const selectedToken = JSON.parse(selectedTokenData);
-              if (selectedToken.address === tokenAddress || selectedToken.id === coinGeckoId) {
-                console.log("ScanResult: Using basic token info from localStorage");
-                const basicScanData = {
-                  success: true,
-                  token_address: tokenAddress,
-                  overall_score: 0,
-                  token_info: {
-                    name: selectedToken.name,
-                    symbol: selectedToken.symbol,
-                    logo_url: selectedToken.logo,
-                    current_price_usd: selectedToken.price_usd || 0,
-                    price_change_24h: selectedToken.price_change_24h || 0,
-                    market_cap_usd: selectedToken.market_cap_usd || 0,
-                    coingecko_id: selectedToken.id,
-                    description: `${selectedToken.name} (${selectedToken.symbol})`,
-                    website_url: "",
-                    twitter_handle: "",
-                    github_url: ""
-                  },
-                  security: { score: 0, token_address: tokenAddress },
-                  tokenomics: { score: 0, token_address: tokenAddress },
-                  liquidity: { score: 0, token_address: tokenAddress },
-                  development: { score: 0, token_address: tokenAddress },
-                  community: { score: 0, token_address: tokenAddress }
-                };
-                setScanData(basicScanData);
-                setLoading(false);
-                return;
-              }
-            } catch (e) {
-              console.error("Error parsing selectedToken:", e);
-            }
-          }
-          
-          setError("Token not found in our database. Please try scanning the token again.");
-          return;
-        }
-
-        // Build complete scan data from cache tables
-        const completeScanData = {
-          success: true,
-          token_address: tokenAddress,
-          overall_score: [
-            securityData?.score || 0,
-            tokenomicsData?.score || 0,
-            liquidityData?.score || 0,
-            developmentData?.score || 0
-          ].reduce((acc, score) => acc + score, 0) / 4,
-          token_info: tokenData,
-          security: securityData || { score: 0, token_address: tokenAddress },
-          tokenomics: tokenomicsData || { score: 0, token_address: tokenAddress },
-          liquidity: liquidityData || { score: 0, token_address: tokenAddress },
-          development: developmentData || { score: 0, token_address: tokenAddress },
-          community: communityData || { score: 0, token_address: tokenAddress }
-        };
-
-        console.log("ScanResult: Successfully loaded scan data from database");
-        setScanData(completeScanData);
-
+        setError("Token not found in our database. Please try scanning the token again.");
+        setLoading(false);
       } catch (error) {
         console.error("ScanResult: Error loading scan data:", error);
         setError(error instanceof Error ? error.message : "Failed to load scan results");
-      } finally {
         setLoading(false);
       }
     };
@@ -229,9 +201,32 @@ export default function ScanResult() {
     );
   }
 
+  if (!scanData) {
+    // Should never happen - fallback
+    return null;
+  }
+
   const tokenInfo = scanData.token_info;
-  
-  // Calculate overall score from category scores
+
+  // Display logic: use DB values, fallback to empty string/0 if not found
+  const properName = tokenInfo?.name || "";
+  const properSymbol = tokenInfo?.symbol || "";
+  const properLogo = tokenInfo?.logo_url || "/placeholder.svg";
+  const properWebsite = tokenInfo?.website_url || "";
+  const properTwitter = tokenInfo?.twitter_handle
+    ? `https://twitter.com/${tokenInfo.twitter_handle}`
+    : "";
+  const properGithub = tokenInfo?.github_url || "";
+  const properPrice = typeof tokenInfo?.current_price_usd === "number"
+    ? tokenInfo.current_price_usd : 0;
+  const properPriceChange = typeof tokenInfo?.price_change_24h === "number"
+    ? tokenInfo.price_change_24h : 0;
+  const properMarketCap = typeof tokenInfo?.market_cap_usd === "number"
+    ? tokenInfo.market_cap_usd.toString() : "0";
+  const properDescription = tokenInfo?.description || "";
+  const networkName = "ETH";
+
+  // Calculate the overall score (use all categories, weighted equally)
   const overallScore = [
     scanData.security?.score || 0,
     scanData.tokenomics?.score || 0,
@@ -243,25 +238,25 @@ export default function ScanResult() {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      
+
       <main className="flex-1 container px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-8">
-          <TokenProfile 
-            name={tokenInfo.name || "Unknown Token"}
-            symbol={tokenInfo.symbol || "???"}
-            logo={tokenInfo.logo_url || "/placeholder.svg"}
+          <TokenProfile
+            name={properName}
+            symbol={properSymbol}
+            logo={properLogo}
             address={tokenAddress}
-            website={tokenInfo.website_url || ""}
-            twitter={tokenInfo.twitter_handle ? `https://twitter.com/${tokenInfo.twitter_handle}` : ""}
-            github={tokenInfo.github_url || ""}
-            price={tokenInfo.current_price_usd || 0}
-            priceChange={tokenInfo.price_change_24h || 0}
-            marketCap={tokenInfo.market_cap_usd ? tokenInfo.market_cap_usd.toString() : "0"}
+            website={properWebsite}
+            twitter={properTwitter}
+            github={properGithub}
+            price={properPrice}
+            priceChange={properPriceChange}
+            marketCap={properMarketCap}
             overallScore={overallScore}
-            description={tokenInfo.description}
-            network="ETH"
+            description={properDescription}
+            network={networkName}
           />
-          
+
           <CategoryScoresGrid
             securityScore={scanData.security?.score || 0}
             tokenomicsScore={scanData.tokenomics?.score || 0}
@@ -270,8 +265,8 @@ export default function ScanResult() {
             developmentScore={scanData.development?.score || 0}
             onCategoryClick={handleCategoryClick}
           />
-          
-          <CategoryTabs 
+
+          <CategoryTabs
             activeTab={activeTab}
             securityData={scanData.security}
             liquidityData={scanData.liquidity}
@@ -283,7 +278,7 @@ export default function ScanResult() {
           />
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );
