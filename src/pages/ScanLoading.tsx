@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { cryptoTrivia } from "@/lib/mock-data";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function ScanLoading() {
@@ -16,8 +16,6 @@ export default function ScanLoading() {
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
   const [trivia, setTrivia] = useState("");
-  const [tokenInfo, setTokenInfo] = useState<any>(null);
-  const [isScanning, setIsScanning] = useState(true);
   const [scanFailed, setScanFailed] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const { user, isAuthenticated } = useAuth();
@@ -84,14 +82,8 @@ export default function ScanLoading() {
           return;
         }
 
-        // Get comprehensive token info from localStorage
-        const savedTokenInfo = localStorage.getItem("selectedToken");
-        const selectedToken = savedTokenInfo ? JSON.parse(savedTokenInfo) : null;
-        
-        console.log("ScanLoading: Selected token from localStorage:", selectedToken);
-        
         // Validate we have minimum required data for scanning
-        const effectiveCoinGeckoId = coinGeckoId || selectedToken?.id;
+        const effectiveCoinGeckoId = coinGeckoId;
         if (!effectiveCoinGeckoId) {
           console.error("ScanLoading: No CoinGecko ID available for scanning");
           setScanFailed(true);
@@ -137,7 +129,6 @@ export default function ScanLoading() {
         }
 
         console.log("ScanLoading: Scan completed successfully, token info:", data.token_info);
-        setTokenInfo(data.token_info);
         
         // Wait for the progress bar to reach 100%
         setTimeout(() => {
@@ -151,8 +142,6 @@ export default function ScanLoading() {
         console.error("ScanLoading: Error during token scan:", error instanceof Error ? error.message : String(error));
         setScanFailed(true);
         setErrorMessage(error instanceof Error ? error.message : "Unknown error occurred. Please try again.");
-      } finally {
-        setIsScanning(false);
       }
     };
 
@@ -189,7 +178,6 @@ export default function ScanLoading() {
   })();
 
   const handleRetry = () => {
-    setIsScanning(true);
     setScanFailed(false);
     setProgress(0);
     window.location.reload();

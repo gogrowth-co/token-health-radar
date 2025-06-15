@@ -191,21 +191,25 @@ serve(async (req) => {
       team_visibility: 'Unknown'
     }
 
-    // Save all data to cache tables
-    const savePromises = [
-      supabase.from('token_data_cache').upsert(tokenData),
-      supabase.from('token_security_cache').upsert(securityData),
-      supabase.from('token_tokenomics_cache').upsert(tokenomicsData),
-      supabase.from('token_liquidity_cache').upsert(liquidityData),
-      supabase.from('token_development_cache').upsert(developmentData),
-      supabase.from('token_community_cache').upsert(communityData)
-    ]
+    // CRITICAL: Save all data to cache tables with proper error handling
+    console.log(`[SCAN] Saving data to database for token: ${token_address}`)
+    
+    const saveResults = await Promise.allSettled([
+      supabase.from('token_data_cache').upsert(tokenData, { onConflict: 'token_address' }),
+      supabase.from('token_security_cache').upsert(securityData, { onConflict: 'token_address' }),
+      supabase.from('token_tokenomics_cache').upsert(tokenomicsData, { onConflict: 'token_address' }),
+      supabase.from('token_liquidity_cache').upsert(liquidityData, { onConflict: 'token_address' }),
+      supabase.from('token_development_cache').upsert(developmentData, { onConflict: 'token_address' }),
+      supabase.from('token_community_cache').upsert(communityData, { onConflict: 'token_address' })
+    ])
 
-    // Execute all save operations
-    const results = await Promise.allSettled(savePromises)
-    results.forEach((result, index) => {
+    // Log any save errors but don't fail the entire operation
+    saveResults.forEach((result, index) => {
+      const tables = ['token_data_cache', 'token_security_cache', 'token_tokenomics_cache', 'token_liquidity_cache', 'token_development_cache', 'token_community_cache']
       if (result.status === 'rejected') {
-        console.error(`[SCAN] Error saving data ${index}:`, result.reason)
+        console.error(`[SCAN] Error saving to ${tables[index]}:`, result.reason)
+      } else {
+        console.log(`[SCAN] Successfully saved to ${tables[index]}`)
       }
     })
 
@@ -223,15 +227,24 @@ serve(async (req) => {
 
     // Record the scan in token_scans table
     try {
-      await supabase.from('token_scans').insert({
+      const scanRecord = {
         user_id: user_id || null,
         token_address,
         score_total: overallScore,
         pro_scan: !!user_id,
         is_anonymous: !user_id
-      })
+      }
+      
+      console.log(`[SCAN] Recording scan:`, scanRecord)
+      const { error: scanError } = await supabase.from('token_scans').insert(scanRecord)
+      
+      if (scanError) {
+        console.error(`[SCAN] Error recording scan:`, scanError)
+      } else {
+        console.log(`[SCAN] Successfully recorded scan`)
+      }
     } catch (error) {
-      console.error(`[SCAN] Error recording scan:`, error)
+      console.error(`[SCAN] Exception recording scan:`, error)
     }
 
     console.log(`[SCAN] Scan completed successfully for ${token_address}, overall score: ${overallScore}`)
