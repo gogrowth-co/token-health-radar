@@ -14,8 +14,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 // Mini health score widget with better visibility for dark and light themes
 function MiniHealthScore({ score = 0 }: { score: number }) {
   const isMobile = useIsMobile();
-  const size = isMobile ? 36 : 48;
-  const radius = isMobile ? 16 : 22;
+  const size = isMobile ? 43 : 58; // 20% bigger: 36*1.2=43, 48*1.2=58
+  const radius = isMobile ? 19 : 26; // 20% bigger: 16*1.2=19, 22*1.2=26
   const cx = size / 2;
   const cy = size / 2;
   const angle = 220;
@@ -31,7 +31,7 @@ function MiniHealthScore({ score = 0 }: { score: number }) {
           r={radius}
           fill="none"
           stroke="#232334"
-          strokeWidth={isMobile ? 3 : 4}
+          strokeWidth={isMobile ? 3.6 : 4.8} // 20% bigger: 3*1.2=3.6, 4*1.2=4.8
           style={{ transition: "stroke-dasharray 0.3s" }}
         />
         <circle
@@ -40,7 +40,7 @@ function MiniHealthScore({ score = 0 }: { score: number }) {
           r={radius}
           fill="none"
           stroke="#F59E0B"
-          strokeWidth={isMobile ? 3 : 4}
+          strokeWidth={isMobile ? 3.6 : 4.8} // 20% bigger: 3*1.2=3.6, 4*1.2=4.8
           strokeDasharray={`${arcLength} ${circumference - arcLength}`}
           strokeDashoffset={circumference * 0.2}
           strokeLinecap="round"
@@ -50,7 +50,7 @@ function MiniHealthScore({ score = 0 }: { score: number }) {
           x="50%"
           y="56%"
           textAnchor="middle"
-          fontSize={isMobile ? "12" : "16"}
+          fontSize={isMobile ? "14.4" : "19.2"} // 20% bigger: 12*1.2=14.4, 16*1.2=19.2
           fontWeight="600"
           dy=".1em"
           className="fill-black dark:fill-white"
@@ -58,7 +58,7 @@ function MiniHealthScore({ score = 0 }: { score: number }) {
           {Math.round(score)}
         </text>
       </svg>
-      <span className={`${isMobile ? 'text-[10px]' : 'text-[12px]'} font-medium mt-1 text-[#9CA3AF] dark:text-[#A3A3B3]`}>
+      <span className={`${isMobile ? 'text-[12px]' : 'text-[14.4px]'} font-medium mt-1 text-[#9CA3AF] dark:text-[#A3A3B3]`}>
         Health Score
       </span>
     </div>
