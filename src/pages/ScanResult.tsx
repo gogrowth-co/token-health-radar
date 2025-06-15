@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -122,8 +121,7 @@ export default function ScanResult() {
                     description: `${selectedToken.name} (${selectedToken.symbol})`,
                     website_url: "",
                     twitter_handle: "",
-                    github_url: "",
-                    total_value_locked_usd: "N/A"
+                    github_url: ""
                   },
                   security: { score: 0, token_address: tokenAddress },
                   tokenomics: { score: 0, token_address: tokenAddress },
@@ -258,9 +256,7 @@ export default function ScanResult() {
             github={tokenInfo.github_url || ""}
             price={tokenInfo.current_price_usd || 0}
             priceChange={tokenInfo.price_change_24h || 0}
-            marketCap={tokenInfo.market_cap_usd ? `${(tokenInfo.market_cap_usd / 1000000).toFixed(2)}M` : "N/A"}
-            tvl={tokenInfo.total_value_locked_usd || "N/A"}
-            launchDate={tokenInfo.launch_date || new Date().toISOString()}
+            marketCap={tokenInfo.market_cap_usd ? tokenInfo.market_cap_usd.toString() : "0"}
             overallScore={overallScore}
             description={tokenInfo.description}
             network="ETH"

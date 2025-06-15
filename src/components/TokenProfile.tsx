@@ -18,8 +18,6 @@ interface TokenProfileProps {
   price: number;
   priceChange: number;
   marketCap: string;
-  tvl: string;
-  launchDate: string;
   overallScore?: number;
   description?: string;
   network?: string;
@@ -36,8 +34,6 @@ export default function TokenProfile({
   price,
   priceChange,
   marketCap,
-  tvl,
-  launchDate,
   overallScore = 0,
   description,
   network = "ETH"
@@ -55,9 +51,22 @@ export default function TokenProfile({
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  const formatMarketCap = (marketCapString: string) => {
+    // Remove any existing formatting and convert to number
+    const cleanValue = marketCapString.replace(/[^0-9.]/g, '');
+    const value = parseFloat(cleanValue);
+    
+    if (isNaN(value)) return "N/A";
+    
+    if (value >= 1000000000) {
+      return `$${(value / 1000000000).toFixed(2)}B`;
+    } else if (value >= 1000000) {
+      return `$${(value / 1000000).toFixed(2)}M`;
+    } else if (value >= 1000) {
+      return `$${(value / 1000).toFixed(2)}K`;
+    } else {
+      return `$${value.toFixed(2)}`;
+    }
   };
 
   return (
@@ -155,29 +164,17 @@ export default function TokenProfile({
             <div className="text-center lg:text-right">
               <div className="text-sm text-muted-foreground mb-1">Current Price</div>
               <div className="flex flex-col items-center lg:items-end gap-1">
-                <span className="text-3xl font-bold">${price.toLocaleString()}</span>
+                <span className="text-3xl font-bold">${price.toFixed(2)}</span>
                 <span className={`text-sm font-medium ${priceChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                   {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}% (24h)
                 </span>
               </div>
             </div>
 
-            {/* Additional Metrics */}
-            <div className="grid grid-cols-2 gap-4 text-center lg:text-right">
-              <div>
-                <div className="text-xs text-muted-foreground">Market Cap</div>
-                <div className="text-sm font-semibold">${marketCap}</div>
-              </div>
-              
-              <div>
-                <div className="text-xs text-muted-foreground">TVL</div>
-                <div className="text-sm font-semibold">${tvl}</div>
-              </div>
-            </div>
-
+            {/* Market Cap */}
             <div className="text-center lg:text-right">
-              <div className="text-xs text-muted-foreground">Launch Date</div>
-              <div className="text-sm font-semibold">{formatDate(launchDate)}</div>
+              <div className="text-sm text-muted-foreground mb-1">Market Cap</div>
+              <div className="text-lg font-semibold">{formatMarketCap(marketCap)}</div>
             </div>
           </div>
         </div>
