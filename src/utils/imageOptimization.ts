@@ -6,7 +6,7 @@ export const getOptimizedImageProps = (src: string, alt: string) => {
     alt,
     loading: 'lazy' as const,
     decoding: 'async' as const,
-    style: { contentVisibility: 'auto' }
+    style: { contentVisibility: 'auto' as const }
   };
 };
 

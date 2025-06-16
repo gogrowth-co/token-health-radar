@@ -10,10 +10,12 @@ export const trackPageLoad = (pageName: string) => {
         console.log(`LCP for ${pageName}:`, entry.startTime);
       }
       if (entry.entryType === 'first-input') {
-        console.log(`FID for ${pageName}:`, entry.processingStart - entry.startTime);
+        const firstInputEntry = entry as PerformanceEventTiming;
+        console.log(`FID for ${pageName}:`, firstInputEntry.processingStart - firstInputEntry.startTime);
       }
       if (entry.entryType === 'layout-shift') {
-        console.log(`CLS for ${pageName}:`, entry.value);
+        const layoutShiftEntry = entry as any; // CLS entries have non-standard properties
+        console.log(`CLS for ${pageName}:`, layoutShiftEntry.value);
       }
     }
   });
