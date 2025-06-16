@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -28,7 +29,7 @@ export default defineConfig(({ mode }) => ({
           // Separate vendor chunks for better caching
           'react-vendor': ['react', 'react-dom'],
           'router-vendor': ['react-router-dom'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-tabs', '@radix-ui/react-button'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-tabs', '@radix-ui/react-slot'],
           'query-vendor': ['@tanstack/react-query'],
           'auth-vendor': ['@supabase/supabase-js'],
           // Keep chart libraries separate as they're heavy
