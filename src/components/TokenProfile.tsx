@@ -1,4 +1,3 @@
-
 import { Globe, Github, Twitter } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
@@ -10,6 +9,7 @@ import {
 import { toast } from "sonner";
 import * as React from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import OptimizedTokenLogo from "@/components/OptimizedTokenLogo";
 
 // Mini health score widget with better visibility for dark and light themes
 function MiniHealthScore({ score = 0 }: { score: number }) {
@@ -142,13 +142,11 @@ export default function TokenProfile({
         <div className="p-4 space-y-4">
           {/* Mobile Top Section: Logo + Name/Symbol */}
           <div className="flex items-start gap-3">
-            <img
-              src={logo}
-              alt={`${name} logo`}
-              className="w-12 h-12 object-cover rounded-full flex-shrink-0"
-              style={{
-                background: "#F5F6FA",
-              }}
+            <OptimizedTokenLogo
+              logo={logo}
+              name={name}
+              className="w-12 h-12 rounded-full flex-shrink-0"
+              size={48}
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
@@ -301,17 +299,11 @@ export default function TokenProfile({
         {/* LEFT SECTION */}
         <div className="flex items-start gap-6 min-w-0 flex-1">
           {/* Token Logo */}
-          <img
-            src={logo}
-            alt={`${name} logo`}
-            className="w-16 h-16 object-cover rounded-full"
-            style={{
-              minWidth: 64,
-              minHeight: 64,
-              maxWidth: 64,
-              maxHeight: 64,
-              background: "#F5F6FA",
-            }}
+          <OptimizedTokenLogo
+            logo={logo}
+            name={name}
+            className="w-16 h-16 rounded-full"
+            size={64}
           />
           <div className="flex flex-col gap-2 min-w-0">
             {/* Name + Symbol */}

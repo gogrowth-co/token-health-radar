@@ -4,11 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import TokenProfile from "@/components/TokenProfile";
-import CategoryTabs from "@/components/CategoryTabs";
+import LazyTokenProfile from "@/components/LazyTokenProfile";
+import LazyCategoryTabs from "@/components/LazyCategoryTabs";
 import CategoryScoresGrid from "@/components/CategoryScoresGrid";
 import ScanLimitIndicator from "@/components/ScanLimitIndicator";
-import UpgradeModal from "@/components/UpgradeModal";
+import LazyUpgradeModal from "@/components/LazyUpgradeModal";
 import { toast } from "sonner";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -269,7 +269,7 @@ export default function ScanResult() {
             />
           )}
 
-          <TokenProfile
+          <LazyTokenProfile
             name={properName}
             symbol={properSymbol}
             logo={properLogo}
@@ -294,7 +294,7 @@ export default function ScanResult() {
             onCategoryClick={handleCategoryClick}
           />
 
-          <CategoryTabs
+          <LazyCategoryTabs
             activeTab={activeTab}
             securityData={scanData.security}
             liquidityData={scanData.liquidity}
@@ -339,7 +339,7 @@ export default function ScanResult() {
       )}
 
       {/* Upgrade Modal */}
-      <UpgradeModal
+      <LazyUpgradeModal
         open={showUpgradeModal}
         onOpenChange={setShowUpgradeModal}
         scansUsed={scanLimitData?.scansUsed || 0}
