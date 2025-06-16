@@ -1,6 +1,5 @@
 
 import { useState, useCallback } from 'react';
-import { getOptimizedImageProps } from '@/utils/imageOptimization';
 
 interface OptimizedTokenLogoProps {
   logo: string;
@@ -29,7 +28,8 @@ export default function OptimizedTokenLogo({
   return (
     <div className={`${className} bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden`}>
       <img
-        {...getOptimizedImageProps(imageSrc, `${name} logo`)}
+        src={imageSrc}
+        alt={`${name} logo`}
         className={`w-full h-full object-cover transition-opacity duration-200 ${
           isLoaded ? 'opacity-100' : 'opacity-0'
         }`}

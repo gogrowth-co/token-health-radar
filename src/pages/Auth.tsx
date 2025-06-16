@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
-import { logError, safePerformanceTrack } from "@/utils/errorTracking";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -26,7 +26,7 @@ export default function Auth() {
     // Skip if not authenticated or still loading
     if (!isAuthenticated || loading) return;
 
-    safePerformanceTrack('auth_redirect_check', { 
+    console.log('Auth redirect check:', { 
       hasAuth: isAuthenticated,
       isLoading: loading 
     });
@@ -75,7 +75,6 @@ export default function Auth() {
       await signIn(email, password);
     } catch (error: any) {
       console.error("Sign in error:", error);
-      logError(error, { context: 'signin_form_submission', email });
     } finally {
       setIsSubmitting(false);
     }
@@ -103,7 +102,6 @@ export default function Auth() {
       });
     } catch (error: any) {
       console.error("Sign up error:", error);
-      logError(error, { context: 'signup_form_submission', email });
     } finally {
       setIsSubmitting(false);
     }
@@ -114,7 +112,7 @@ export default function Auth() {
     setGoogleAuthAttempted(true);
     
     try {
-      safePerformanceTrack('google_auth_attempt_start');
+      console.log('Google auth attempt started');
       
       // Add timeout for Google auth
       const authPromise = supabase.auth.signInWithOAuth({
@@ -136,11 +134,7 @@ export default function Auth() {
       const { error } = await Promise.race([authPromise, timeoutPromise]) as any;
       
       if (error) {
-        logError(error, { 
-          context: 'google_oauth_error',
-          userAgent: navigator.userAgent,
-          url: window.location.href 
-        });
+        console.error('Google OAuth error:', error);
         
         toast({
           title: "Google authentication failed",
@@ -148,7 +142,7 @@ export default function Auth() {
           variant: "destructive",
         });
       } else {
-        safePerformanceTrack('google_auth_attempt_success');
+        console.log('Google auth attempt successful');
       }
     } catch (error: any) {
       console.error("Google auth error:", error);
@@ -173,12 +167,6 @@ export default function Auth() {
           variant: "destructive",
         });
       }
-      
-      logError(error, { 
-        context: 'google_auth_failure',
-        errorType: error.name || 'unknown',
-        userAgent: navigator.userAgent 
-      });
     } finally {
       setIsSubmitting(false);
     }
