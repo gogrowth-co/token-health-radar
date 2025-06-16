@@ -21,19 +21,6 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: ['@radix-ui/react-dialog', '@radix-ui/react-tooltip', '@radix-ui/react-tabs'],
-          routing: ['react-router-dom'],
-          supabase: ['@supabase/supabase-js'],
-          charts: ['recharts'],
-          icons: ['lucide-react'],
-        },
-      },
-    },
-    chunkSizeWarningLimit: 1000,
     minify: 'esbuild',
     target: 'es2020',
   },

@@ -1,5 +1,4 @@
 
-import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,9 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { initializeErrorTracking, safePerformanceTrack } from "@/utils/errorTracking";
-// Import the sync execution to trigger it
-import { executeManualSync } from "@/utils/executeSync";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Confirm from "./pages/Confirm";
@@ -39,32 +35,6 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  useEffect(() => {
-    // Initialize error tracking
-    initializeErrorTracking();
-    
-    // Track app initialization
-    safePerformanceTrack('app_initialization', {
-      timestamp: Date.now(),
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    });
-    
-    // Trigger HubSpot sync on app load
-    executeManualSync().catch(error => {
-      console.error('HubSpot sync failed on app load:', error);
-    });
-    
-    // Wait for DOM to be fully loaded before tracking performance
-    if (document.readyState === 'complete') {
-      safePerformanceTrack('app_loaded_complete');
-    } else {
-      window.addEventListener('load', () => {
-        safePerformanceTrack('app_loaded_complete');
-      });
-    }
-  }, []);
-
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
