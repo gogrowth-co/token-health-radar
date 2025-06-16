@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
-import { safePerformanceTrack } from "@/utils/errorTracking";
 
 interface TokenSearchInputProps {
   large?: boolean;
@@ -34,7 +33,7 @@ export default function TokenSearchInput({
       return;
     }
     
-    safePerformanceTrack('token_search_attempt', { 
+    console.log('Token search attempt:', { 
       hasInput: !!tokenInput.trim() 
     });
     
@@ -44,7 +43,7 @@ export default function TokenSearchInput({
     
     // CRITICAL: Use consistent 'token' parameter name for the search flow
     console.log("Navigating with token parameter:", tokenInput);
-    safePerformanceTrack('token_search_navigation', { 
+    console.log('Token search navigation:', { 
       isAddress, 
       destination: 'confirm' 
     });
