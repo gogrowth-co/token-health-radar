@@ -43,23 +43,24 @@ export default function TokenCard({
   onClick,
   showActions = true
 }: TokenCardProps) {
-  // Helper function to format market cap for display
+  // Enhanced market cap formatting with better fallbacks
   const formatMarketCapDisplay = (marketCap?: string) => {
     if (!marketCap || marketCap === "N/A" || marketCap === "0") {
       return null;
     }
     
-    // If it's already formatted (contains $), use as is
     if (marketCap.includes('$')) {
       return marketCap;
     }
     
-    // If it's a rank format, use as is
     if (marketCap.includes('Rank #')) {
       return marketCap;
     }
     
-    // Try to parse as number and format
+    if (marketCap.includes('not available')) {
+      return null; // Don't show "not available" in the card
+    }
+    
     const numValue = parseFloat(marketCap);
     if (!isNaN(numValue) && numValue > 0) {
       return formatCurrencyValue(numValue);
@@ -70,6 +71,9 @@ export default function TokenCard({
 
   const formattedMarketCap = formatMarketCapDisplay(marketCap);
 
+  // Ensure we always have a valid logo URL
+  const logoUrl = logo || '/placeholder.svg';
+
   return (
     <Card className="overflow-hidden bg-card border border-border shadow-sm">
       <CardContent className="p-8">
@@ -77,7 +81,7 @@ export default function TokenCard({
           {/* LEFT SIDE - Token Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start gap-4 mb-4">
-              <TokenLogo logo={logo} name={name} />
+              <TokenLogo logo={logoUrl} name={name} />
               <div className="flex-1 min-w-0">
                 <TokenInfo 
                   name={name} 
@@ -86,7 +90,7 @@ export default function TokenCard({
               </div>
             </div>
             
-            {/* Description - positioned under name/symbol */}
+            {/* Description - always show if available */}
             {description && (
               <div className="mb-4">
                 <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
@@ -95,7 +99,7 @@ export default function TokenCard({
               </div>
             )}
             
-            {/* Address and Chain - clean positioning */}
+            {/* Address and Chain */}
             {address && (
               <div className="flex items-center gap-3">
                 <TokenPrice 
@@ -111,11 +115,13 @@ export default function TokenCard({
           {/* CENTER - Price & Market Data */}
           <div className="flex-shrink-0 lg:mx-8">
             <div className="space-y-4 text-center lg:text-left">
-              {/* Price and change */}
-              {price !== undefined && price > 0 && (
+              {/* Price and change - show even if zero with proper formatting */}
+              {price !== undefined && (
                 <div>
-                  <div className="text-3xl font-bold">${price.toLocaleString()}</div>
-                  {priceChange !== undefined && (
+                  <div className="text-3xl font-bold">
+                    {price > 0 ? `$${price.toLocaleString()}` : 'Price N/A'}
+                  </div>
+                  {priceChange !== undefined && price > 0 && (
                     <div className={`text-lg font-medium ${priceChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                       {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}%
                     </div>
@@ -123,7 +129,7 @@ export default function TokenCard({
                 </div>
               )}
               
-              {/* Market Cap */}
+              {/* Market Cap - show if we have meaningful data */}
               {formattedMarketCap && (
                 <div>
                   <div className="text-sm text-muted-foreground mb-1">Market Cap</div>
