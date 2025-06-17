@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -73,7 +72,7 @@ serve(async (req) => {
 
     console.log(`[SCAN] Pro scan permitted: ${canPerformProScan}`)
 
-    // Get API keys for better rate limits
+    // Get API keys for better rate limits - Demo Plan authentication
     const coinGeckoApiKey = Deno.env.get('COINGECKO_API_KEY')
     const goPlusApiKey = Deno.env.get('GOPLUS_API_KEY')
     
@@ -94,15 +93,26 @@ serve(async (req) => {
       total_value_locked_usd: 'N/A'
     }
 
-    // Fetch token data from CoinGecko if ID is provided
+    // Fetch token data from CoinGecko if ID is provided - using Demo Plan authentication
     if (coingecko_id) {
       try {
-        const cgUrl = coinGeckoApiKey 
-          ? `https://api.coingecko.com/api/v3/coins/${coingecko_id}?x_cg_pro_api_key=${coinGeckoApiKey}`
-          : `https://api.coingecko.com/api/v3/coins/${coingecko_id}`
+        // Demo Plan uses Authorization header, not query parameter
+        const cgUrl = `https://api.coingecko.com/api/v3/coins/${coingecko_id}`
+        const cgHeaders: Record<string, string> = {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+        
+        // Add Demo Plan authentication header if available
+        if (coinGeckoApiKey) {
+          cgHeaders['x-cg-demo-api-key'] = coinGeckoApiKey
+          console.log(`[SCAN] Using CoinGecko Demo Plan authentication`)
+        } else {
+          console.log(`[SCAN] Using CoinGecko free tier`)
+        }
         
         console.log(`[SCAN] Fetching token data from CoinGecko: ${coingecko_id}`)
-        const response = await fetch(cgUrl)
+        const response = await fetch(cgUrl, { headers: cgHeaders })
         
         if (response.ok) {
           const data = await response.json()

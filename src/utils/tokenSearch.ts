@@ -3,14 +3,14 @@ import { toast } from "sonner";
 import { TokenResult } from "@/components/token/types";
 
 // Cache for token detail responses to reduce API calls - versioned
-export const CACHE_VERSION = "v4"; // Increment for better rate limiting
+export const CACHE_VERSION = "v5"; // Increment for Demo Plan authentication changes
 export const tokenDetailCache: Record<string, any> = {};
 
-// Increased intervals for better rate limiting on free tier
+// Demo Plan rate limits: 30 calls/min (2 seconds between calls)
 let lastApiCallTime = 0;
 let lastDetailApiCallTime = 0;
-export const MIN_API_CALL_INTERVAL = 2000; // 2 seconds for search calls
-export const MIN_DETAIL_API_CALL_INTERVAL = 3000; // 3 seconds for detail calls
+export const MIN_API_CALL_INTERVAL = 2000; // 2 seconds for Demo Plan
+export const MIN_DETAIL_API_CALL_INTERVAL = 2000; // 2 seconds for Demo Plan
 
 // Known ERC-20 tokens that might not be correctly identified by platform data
 export const KNOWN_ERC20_TOKENS = [
@@ -42,16 +42,16 @@ export const isValidErc20Token = (token: any): boolean => {
   return false;
 }
 
-// Enhanced API call function with proper rate limiting and exponential backoff
+// Enhanced API call function with Demo Plan authentication and proper rate limiting
 export const callCoinGeckoAPI = async (url: string, isDetailRequest = false, retryCount = 0) => {
   const now = Date.now();
-  const minInterval = isDetailRequest ? MIN_DETAIL_API_CALL_INTERVAL : MIN_API_CALL_INTERVAL;
+  const minInterval = MIN_API_CALL_INTERVAL; // Same interval for Demo Plan
   const lastTime = isDetailRequest ? lastDetailApiCallTime : lastApiCallTime;
   
   // Wait for the minimum interval if needed
   if (now - lastTime < minInterval) {
     const waitTime = minInterval - (now - lastTime);
-    console.log(`Waiting ${waitTime}ms for rate limiting...`);
+    console.log(`[COINGECKO-API] Waiting ${waitTime}ms for Demo Plan rate limiting...`);
     await new Promise(resolve => setTimeout(resolve, waitTime));
   }
   
@@ -62,52 +62,55 @@ export const callCoinGeckoAPI = async (url: string, isDetailRequest = false, ret
     lastApiCallTime = Date.now();
   }
 
+  // Demo Plan requires Authorization header, not query parameter
   const headers: Record<string, string> = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
   };
 
-  // Always use free API with API key as query parameter
-  let urlWithKey = url;
+  // Add Authorization header if API key is available (Demo Plan)
   if (
     typeof window !== "undefined" &&
     "SUPABASE_CG_API_KEY" in window &&
     (window as any).SUPABASE_CG_API_KEY
   ) {
-    const key = (window as any).SUPABASE_CG_API_KEY;
-    urlWithKey = url + (url.includes('?') ? '&' : '?') + "x_cg_pro_api_key=" + encodeURIComponent(key);
+    const apiKey = (window as any).SUPABASE_CG_API_KEY;
+    headers['x-cg-demo-api-key'] = apiKey;
+    console.log(`[COINGECKO-API] Using Demo Plan authentication`);
+  } else {
+    console.log(`[COINGECKO-API] No API key found, using free tier`);
   }
 
   try {
-    console.log(`Making CoinGecko API call to: ${url.split('?')[0]}`);
-    const response = await fetch(urlWithKey, { headers });
+    console.log(`[COINGECKO-API] Making request to: ${url.split('?')[0]}`);
+    const response = await fetch(url, { headers });
 
     if (response.status === 429) {
       const retryAfter = response.headers.get('retry-after');
-      const baseWaitTime = retryAfter ? parseInt(retryAfter) * 1000 : 60000;
+      const baseWaitTime = retryAfter ? parseInt(retryAfter) * 1000 : 2000; // Demo Plan: shorter wait
       
-      // Exponential backoff: 60s, 120s, 240s
+      // Exponential backoff for Demo Plan: 2s, 4s, 8s
       const waitTime = baseWaitTime * Math.pow(2, retryCount);
-      console.warn(`Rate limit hit, waiting ${waitTime}ms before retry (attempt ${retryCount + 1})`);
+      console.warn(`[COINGECKO-API] Rate limit hit, waiting ${waitTime}ms before retry (attempt ${retryCount + 1})`);
       
       if (retryCount < 2) { // Max 2 retries
         await new Promise(resolve => setTimeout(resolve, waitTime));
         return callCoinGeckoAPI(url, isDetailRequest, retryCount + 1);
       } else {
-        throw new Error("API rate limit reached. Please try again in a few minutes.");
+        throw new Error("API rate limit reached. Please try again in a moment.");
       }
     }
     
     if (!response.ok) {
-      console.error(`CoinGecko API error: ${response.status} ${response.statusText}`);
+      console.error(`[COINGECKO-API] Error: ${response.status} ${response.statusText}`);
       throw new Error(`API Error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log(`CoinGecko API response received successfully`);
+    console.log(`[COINGECKO-API] Response received successfully`);
     return data;
   } catch (error) {
-    console.error(`CoinGecko API call failed:`, error);
+    console.error(`[COINGECKO-API] Request failed:`, error);
     throw error;
   }
 };

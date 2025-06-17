@@ -4,7 +4,7 @@
  */
 
 /**
- * Extracts the first valid EVM address from token platforms
+ * Enhanced function to extract the first valid EVM address from token platforms
  * @param platforms - Object containing blockchain platforms and their addresses
  * @returns First valid EVM address or empty string
  */
@@ -19,14 +19,17 @@ export const getFirstValidEvmAddress = (platforms: Record<string, string> | unde
   // Look through all platform values for a valid Ethereum-style address
   const evmAddressPattern = /^0x[a-fA-F0-9]{40}$/;
   
-  // Prioritize main EVM networks
-  const priorityNetworks = ['ethereum', 'polygon-pos', 'binance-smart-chain', 'arbitrum-one', 'avalanche'];
+  // Enhanced priority networks list for better EVM support
+  const priorityNetworks = [
+    'ethereum', 'polygon-pos', 'binance-smart-chain', 'arbitrum-one', 
+    'avalanche', 'optimistic-ethereum', 'base', 'fantom'
+  ];
   
   // First check priority networks
   for (const network of priorityNetworks) {
     if (platforms[network]) {
       const address = platforms[network];
-      console.log(`[ADDRESS-UTILS] Checking ${network}: ${address}`);
+      console.log(`[ADDRESS-UTILS] Checking priority network ${network}: ${address}`);
       if (typeof address === 'string' && evmAddressPattern.test(address.toLowerCase())) {
         console.log(`[ADDRESS-UTILS] Found valid EVM address on ${network}: ${address}`);
         return address;
@@ -34,10 +37,10 @@ export const getFirstValidEvmAddress = (platforms: Record<string, string> | unde
     }
   }
   
-  // Then check all other platforms
+  // Then check all other platforms for any valid EVM address
   for (const [network, address] of Object.entries(platforms)) {
     if (!priorityNetworks.includes(network)) {
-      console.log(`[ADDRESS-UTILS] Checking ${network}: ${address}`);
+      console.log(`[ADDRESS-UTILS] Checking other network ${network}: ${address}`);
       if (typeof address === 'string' && evmAddressPattern.test(address.toLowerCase())) {
         console.log(`[ADDRESS-UTILS] Found valid EVM address on ${network}: ${address}`);
         return address;

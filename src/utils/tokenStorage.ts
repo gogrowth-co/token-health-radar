@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { TokenResult } from "@/components/token/types";
 import { getFirstValidEvmAddress } from "./addressUtils";
@@ -32,18 +33,19 @@ const getWellKnownAddress = (tokenId: string): string | null => {
 };
 
 /**
- * Check if a token's blockchain is supported for full scanning
+ * Enhanced function to check if a token's blockchain is supported for full scanning
  */
 export const isChainSupported = (token: TokenResult): boolean => {
   console.log(`[CHAIN-SUPPORT] Checking support for ${token.name} (${token.id})`);
   console.log(`[CHAIN-SUPPORT] Platforms:`, token.platforms);
   
-  // Native L1 tokens that we can't scan
+  // Native L1 tokens that we can't scan (non-EVM chains)
   const unsupportedNativeTokens = [
     'hyperliquid', 'solana', 'sui', 'ton-crystal', 'sei-network',
     'aptos', 'cardano', 'polkadot', 'cosmos', 'near', 'algorand',
     'hedera-hashgraph', 'internet-computer', 'stellar', 'monero',
-    'kaspa', 'cronos', 'fantom', 'klay-token'
+    'kaspa', 'cronos', 'fantom', 'klay-token', 'bitcoin', 'bitcoin-cash',
+    'litecoin', 'dogecoin', 'ripple', 'tron'
   ];
   
   if (unsupportedNativeTokens.includes(token.id)) {
@@ -51,30 +53,57 @@ export const isChainSupported = (token: TokenResult): boolean => {
     return false;
   }
   
+  // Enhanced EVM platform detection - more comprehensive list
+  const evmPlatforms = [
+    'ethereum', 'polygon-pos', 'binance-smart-chain', 'arbitrum-one', 
+    'avalanche', 'optimistic-ethereum', 'base', 'xdai', 'fantom',
+    'polygon-zkevm', 'arbitrum-nova', 'celo', 'moonbeam', 'moonriver',
+    'harmony-shard-0', 'kava', 'metis-andromeda', 'boba', 'aurora',
+    'cronos', 'evmos', 'milkomeda-cardano', 'syscoin-nevm', 'okex-chain'
+  ];
+  
   // Check if token has EVM-compatible platforms
   if (token.platforms && Object.keys(token.platforms).length > 0) {
-    const evmPlatforms = ['ethereum', 'polygon-pos', 'binance-smart-chain', 'arbitrum-one', 'avalanche'];
+    console.log(`[CHAIN-SUPPORT] Available platforms:`, Object.keys(token.platforms));
+    
+    // Check for any EVM platform
     const hasEvmPlatform = Object.keys(token.platforms).some(platform => 
       evmPlatforms.includes(platform)
     );
     
     console.log(`[CHAIN-SUPPORT] Has EVM platform:`, hasEvmPlatform);
-    console.log(`[CHAIN-SUPPORT] Available platforms:`, Object.keys(token.platforms));
     
     if (hasEvmPlatform) {
       // Also check if we can get a valid address
       const evmAddress = getFirstValidEvmAddress(token.platforms);
       console.log(`[CHAIN-SUPPORT] EVM address found:`, evmAddress);
-      return !!evmAddress;
+      
+      if (evmAddress) {
+        console.log(`[CHAIN-SUPPORT] ${token.name} is FULLY SUPPORTED with address: ${evmAddress}`);
+        return true;
+      }
+    }
+    
+    // Fallback: check for any platform with 0x address pattern
+    const hasAnyEvmAddress = Object.values(token.platforms).some(addr => 
+      typeof addr === 'string' && /^0x[a-fA-F0-9]{40}$/.test(addr)
+    );
+    
+    if (hasAnyEvmAddress) {
+      console.log(`[CHAIN-SUPPORT] ${token.name} has valid EVM address pattern - SUPPORTED`);
+      return true;
     }
   }
   
   // Check if it's a well-known native token we support
   const wellKnownAddress = getWellKnownAddress(token.id);
   console.log(`[CHAIN-SUPPORT] Well-known address:`, wellKnownAddress);
-  if (wellKnownAddress) return true;
+  if (wellKnownAddress) {
+    console.log(`[CHAIN-SUPPORT] ${token.name} is SUPPORTED via well-known address`);
+    return true;
+  }
   
-  console.log(`[CHAIN-SUPPORT] ${token.name} is not supported`);
+  console.log(`[CHAIN-SUPPORT] ${token.name} is NOT SUPPORTED - no valid EVM platform or address found`);
   return false;
 };
 
