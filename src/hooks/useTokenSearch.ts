@@ -31,6 +31,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
     const searchTokens = async () => {
       if (!searchTerm || searchTerm.trim() === '') {
         setResults([]);
+        setError(null);
         return;
       }
       
@@ -46,6 +47,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
         if (!cmcSearchResults || cmcSearchResults.length === 0) {
           console.log("[TOKEN-SEARCH] No tokens found");
           setResults([]);
+          setError(`No tokens found matching "${searchTerm}". Please try a different search term.`);
           return;
         }
 
@@ -203,13 +205,20 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
       } catch (err: any) {
         console.error("Token search failed:", err);
         
-        const errorMessage = err.message?.includes("rate limit") 
-          ? "CoinMarketCap API rate limit reached. Please wait a moment and try again."
-          : err.message?.includes("API key")
-          ? "There was an issue with the CoinMarketCap API. Please try again later."
-          : err.message?.includes("Search term is required")
-          ? "Please enter a valid token name or symbol."
-          : "Could not fetch token information. Please try again later.";
+        // Provide more specific error messages
+        let errorMessage = "Could not fetch token information. Please try again later.";
+        
+        if (err.message?.includes("rate limit")) {
+          errorMessage = "Too many requests. Please wait a moment and try again.";
+        } else if (err.message?.includes("API key") || err.message?.includes("configuration")) {
+          errorMessage = "Search service temporarily unavailable. Please try again later.";
+        } else if (err.message?.includes("connect") || err.message?.includes("network")) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else if (err.message?.includes("enter a token")) {
+          errorMessage = "Please enter a valid token name or symbol.";
+        } else if (err.message?.includes("No tokens found")) {
+          errorMessage = err.message;
+        }
           
         setError(errorMessage);
         console.error("Search error details:", {

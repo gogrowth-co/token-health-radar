@@ -42,7 +42,7 @@ export const callCoinMarketCapAPI = async (endpoint: string, params: Record<stri
       // Search action - properly pass the search term
       requestBody = {
         action,
-        searchTerm: params.symbol || params.searchTerm || '',
+        searchTerm: params.searchTerm || params.symbol || '',
         limit: params.limit || 10
       };
     }
@@ -75,6 +75,12 @@ export const callCoinMarketCapAPI = async (endpoint: string, params: Record<stri
     return data;
   } catch (error: any) {
     console.error(`[CMC-API] Request failed:`, error);
+    
+    // Provide more user-friendly error messages
+    if (error.message?.includes('Failed to invoke function')) {
+      throw new Error('Unable to connect to the search service. Please try again later.');
+    }
+    
     throw error;
   }
 };
@@ -82,10 +88,14 @@ export const callCoinMarketCapAPI = async (endpoint: string, params: Record<stri
 // Search tokens using CMC's edge function
 export const searchTokensByCMC = async (searchTerm: string) => {
   try {
-    console.log(`[CMC-API] Searching for tokens: ${searchTerm}`);
+    console.log(`[CMC-API] Searching for tokens: "${searchTerm}"`);
+    
+    if (!searchTerm || searchTerm.trim() === '') {
+      throw new Error('Please enter a token name or symbol');
+    }
     
     const data = await callCoinMarketCapAPI('/cryptocurrency/map', {
-      searchTerm: searchTerm,
+      searchTerm: searchTerm.trim(),
       limit: 10
     });
     
