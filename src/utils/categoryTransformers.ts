@@ -1,336 +1,327 @@
-import { Shield, Lock, AlertCircle, Activity, Users, Twitter, BadgeCheck, TrendingUp, MessageSquare, MessageCircle, Code, ListChecks, Building2, BarChart2, Hash } from "lucide-react";
-import { CategoryFeature } from "@/components/CategoryFeatureGrid";
-import { formatCurrencyValue, formatNumberValue, formatDateToHuman } from "@/utils/tokenFormatters";
+import { formatCurrency, formatNumber } from "./formattingUtils";
 
-// Types for each category data
+export interface CategoryFeature {
+  label: string;
+  value: string | boolean | number | null | undefined;
+  type: "text" | "boolean";
+  positive?: boolean;
+}
+
 export interface SecurityData {
   token_address: string;
-  score: number | null;
   ownership_renounced: boolean | null;
-  audit_status: string | null;
-  multisig_status: string | null;
+  can_mint: boolean | null;
   honeypot_detected: boolean | null;
   freeze_authority: boolean | null;
-  can_mint: boolean | null;
+  audit_status: string | null;
+  multisig_status: string | null;
+  score: number | null;
 }
 
 export interface TokenomicsData {
   token_address: string;
-  score: number | null;
   circulating_supply: number | null;
   supply_cap: number | null;
   tvl_usd: number | null;
-  vesting_schedule: string | null;
-  distribution_score: string | null;
   treasury_usd: number | null;
   burn_mechanism: boolean | null;
+  distribution_score: string | null;
+  vesting_schedule: string | null;
+  score: number | null;
 }
 
 export interface LiquidityData {
   token_address: string;
-  score: number | null;
-  liquidity_locked_days: number | null;
-  cex_listings: number | null;
   trading_volume_24h_usd: number | null;
-  holder_distribution: string | null;
+  cex_listings: number | null;
+  liquidity_locked_days: number | null;
   dex_depth_status: string | null;
+  holder_distribution: string | null;
+  score: number | null;
 }
 
 export interface CommunityData {
   token_address: string;
-  score: number | null;
   twitter_followers: number | null;
   twitter_verified: boolean | null;
   twitter_growth_7d: number | null;
-  telegram_members: number | null;
   discord_members: number | null;
-  active_channels: string[] | null;
+  telegram_members: number | null;
   team_visibility: string | null;
+  active_channels: string[] | null;
+  score: number | null;
 }
 
 export interface DevelopmentData {
   token_address: string;
-  score: number | null;
   github_repo: string | null;
   is_open_source: boolean | null;
   contributors_count: number | null;
   commits_30d: number | null;
   last_commit: string | null;
   roadmap_progress: string | null;
+  score: number | null;
 }
 
-// Helper function to determine badge variant based on value
-export const getBadgeVariant = (
-  value: number,
-  lowThreshold: number,
-  highThreshold: number
-): CategoryFeature["badgeVariant"] => {
-  if (value >= highThreshold) {
-    return "green";
-  } else if (value >= lowThreshold) {
-    return "orange";
-  } else {
-    return "red";
-  }
+// Helper function for safe property access
+const safeAccess = <T>(data: any, key: string, fallback: T): T => {
+  return data && data[key] != null ? data[key] : fallback;
 };
 
-// Helper function to format badge label for boolean values
-export const getBadgeLabelForBoolean = (
-  value: boolean | null | undefined
-): string => {
-  if (value === null || value === undefined) {
-    return "Unknown";
-  }
-  return value ? "Yes" : "No";
+// Helper function for safe boolean access
+const safeBooleanAccess = (data: any, key: string, fallback: boolean = false): boolean => {
+  return data && data[key] != null ? Boolean(data[key]) : fallback;
 };
 
-// Transform security data
+// Helper function for safe number access
+const safeNumberAccess = (data: any, key: string, fallback: number = 0): number => {
+  return data && data[key] != null ? Number(data[key]) : fallback;
+};
+
+// Transform security data into feature format
 export const transformSecurityData = (data: SecurityData | null): CategoryFeature[] => {
-  if (!data) return [];
+  if (!data) {
+    return [
+      { label: "Ownership Renounced", value: "Unknown", type: "boolean" },
+      { label: "Can Mint", value: "Unknown", type: "boolean" },
+      { label: "Honeypot Detection", value: "Unknown", type: "boolean" },
+      { label: "Freeze Authority", value: "Unknown", type: "boolean" },
+      { label: "Audit Status", value: "Unknown", type: "text" },
+      { label: "Multisig Status", value: "Unknown", type: "text" }
+    ];
+  }
 
   return [
-    {
-      icon: Shield,
-      title: "Ownership Renounced",
-      description: "Contract ownership status (renounced = more secure)",
-      badgeLabel: getBadgeLabelForBoolean(data.ownership_renounced),
-      badgeVariant: data.ownership_renounced ? "green" : "red"
+    { 
+      label: "Ownership Renounced", 
+      value: safeBooleanAccess(data, 'ownership_renounced'), 
+      type: "boolean",
+      positive: true
     },
-    {
-      icon: Lock,
-      title: "Audit Status",
-      description: "Security audit verification by third-party firm",
-      // TEMPORARY: Displaying placeholder until audit/multisig data integration is complete
-      badgeLabel: "Coming Soon",
-      badgeVariant: "blue"
+    { 
+      label: "Can Mint", 
+      value: safeBooleanAccess(data, 'can_mint'), 
+      type: "boolean",
+      positive: false
     },
-    {
-      icon: AlertCircle,
-      title: "Honeypot Detection",
-      description: "Checks if token can be sold after purchase",
-      badgeLabel: getBadgeLabelForBoolean(data.honeypot_detected),
-      badgeVariant: data.honeypot_detected ? "red" : "green"
+    { 
+      label: "Honeypot Detection", 
+      value: safeBooleanAccess(data, 'honeypot_detected'), 
+      type: "boolean",
+      positive: false
     },
-    {
-      icon: Activity,
-      title: "Multisig Status",
-      description: "Multiple signatures required for critical actions",
-      // TEMPORARY: Displaying placeholder until audit/multisig data integration is complete
-      badgeLabel: "Coming Soon",
-      badgeVariant: "blue"
+    { 
+      label: "Freeze Authority", 
+      value: safeBooleanAccess(data, 'freeze_authority'), 
+      type: "boolean",
+      positive: false
     },
-    {
-      icon: Code,
-      title: "Mintable",
-      description: "Checks if the token contract allows minting new tokens",
-      badgeLabel: getBadgeLabelForBoolean(data.can_mint),
-      badgeVariant: data.can_mint ? "red" : "green"
+    { 
+      label: "Audit Status", 
+      value: safeAccess(data, 'audit_status', 'Unknown'), 
+      type: "text" 
     },
-    {
-      icon: ListChecks,
-      title: "Freeze Authority",
-      description: "Checks if the token contract has freeze authority",
-      badgeLabel: getBadgeLabelForBoolean(data.freeze_authority),
-      badgeVariant: data.freeze_authority ? "red" : "green"
+    { 
+      label: "Multisig Status", 
+      value: safeAccess(data, 'multisig_status', 'Unknown'), 
+      type: "text" 
     }
   ];
 };
 
-// Transform tokenomics data with improved number formatting
+// Transform tokenomics data into feature format
 export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFeature[] => {
-  if (!data) return [];
+  if (!data) {
+    return [
+      { label: "Circulating Supply", value: "Unknown", type: "text" },
+      { label: "Supply Cap", value: "Unknown", type: "text" },
+      { label: "TVL (USD)", value: "Unknown", type: "text" },
+      { label: "Treasury (USD)", value: "Unknown", type: "text" },
+      { label: "Burn Mechanism", value: "Unknown", type: "boolean" },
+      { label: "Distribution Score", value: "Unknown", type: "text" },
+      { label: "Vesting Schedule", value: "Unknown", type: "text" }
+    ];
+  }
 
   return [
-    {
-      icon: Users,
-      title: "Circulating Supply",
-      description: "Amount of tokens currently in circulation",
-      badgeLabel: data.circulating_supply ? formatNumberValue(data.circulating_supply) : "Unknown",
-      badgeVariant: getBadgeVariant(data.circulating_supply || 0, 100000, 1000000)
+    { 
+      label: "Circulating Supply", 
+      value: formatNumber(safeNumberAccess(data, 'circulating_supply')), 
+      type: "text" 
     },
-    {
-      icon: Lock,
-      title: "Supply Cap",
-      description: "Maximum total supply of tokens",
-      badgeLabel: data.supply_cap ? formatNumberValue(data.supply_cap) : "Unlimited",
-      badgeVariant: data.supply_cap ? "green" : "red"
+    { 
+      label: "Supply Cap", 
+      value: formatNumber(safeNumberAccess(data, 'supply_cap')), 
+      type: "text" 
     },
-    {
-      icon: Activity,
-      title: "TVL",
-      description: "Total Value Locked in USD",
-      badgeLabel: data.tvl_usd ? formatCurrencyValue(data.tvl_usd) : "Unknown",
-      badgeVariant: getBadgeVariant(data.tvl_usd || 0, 10000, 100000)
+    { 
+      label: "TVL (USD)", 
+      value: formatCurrency(safeNumberAccess(data, 'tvl_usd')), 
+      type: "text" 
     },
-    {
-      icon: MessageCircle,
-      title: "Burn Mechanism",
-      description: "Token burning to reduce supply",
-      badgeLabel: getBadgeLabelForBoolean(data.burn_mechanism),
-      badgeVariant: data.burn_mechanism ? "green" : "red"
+    { 
+      label: "Treasury (USD)", 
+      value: formatCurrency(safeNumberAccess(data, 'treasury_usd')), 
+      type: "text" 
+    },
+    { 
+      label: "Burn Mechanism", 
+      value: safeBooleanAccess(data, 'burn_mechanism'), 
+      type: "boolean",
+      positive: true
+    },
+    { 
+      label: "Distribution Score", 
+      value: safeAccess(data, 'distribution_score', 'Unknown'), 
+      type: "text" 
+    },
+    { 
+      label: "Vesting Schedule", 
+      value: safeAccess(data, 'vesting_schedule', 'Unknown'), 
+      type: "text" 
     }
   ];
 };
 
-// Helper function to extract and format top 10 holders data from JSON
-export const extractTop10HoldersData = (distributionJson: string | null | undefined): CategoryFeature | null => {
-  if (!distributionJson) {
-    return null;
-  }
-
-  try {
-    const distribution = JSON.parse(distributionJson);
-    
-    // Format top 10 holders if available
-    if (distribution.top10 !== undefined) {
-      return {
-        icon: Users,
-        title: "Top 10 Holders",
-        description: "Percentage held by largest 10 wallets",
-        badgeLabel: `${(distribution.top10 * 100).toFixed(1)}%`,
-        badgeVariant: getBadgeVariant(100 - distribution.top10 * 100, 50, 80)
-      };
-    }
-    
-    return null;
-  } catch (error) {
-    console.error("Error parsing holder distribution:", error);
-    return null;
-  }
-};
-
-// Transform liquidity data - show only Top 10 Holders
+// Transform liquidity data into feature format
 export const transformLiquidityData = (data: LiquidityData | null): CategoryFeature[] => {
-  if (!data) return [];
-
-  const features: CategoryFeature[] = [
-    {
-      icon: Lock,
-      title: "Liquidity Locked",
-      description: "Number of days liquidity is locked",
-      badgeLabel: data.liquidity_locked_days ? `${data.liquidity_locked_days} days` : "Unknown",
-      badgeVariant: getBadgeVariant(data.liquidity_locked_days || 0, 30, 90)
-    },
-    {
-      icon: Building2,
-      title: "CEX Listings",
-      description: "Number of centralized exchanges listing the token",
-      badgeLabel: data.cex_listings !== null ? data.cex_listings.toString() : "Unknown",
-      badgeVariant: getBadgeVariant(data.cex_listings || 0, 1, 3)
-    },
-    {
-      icon: BarChart2,
-      title: "24h Trading Volume",
-      description: "Total traded value in the last 24 hours",
-      badgeLabel: data.trading_volume_24h_usd ? formatCurrencyValue(data.trading_volume_24h_usd) : "Unknown",
-      badgeVariant: getBadgeVariant(data.trading_volume_24h_usd || 0, 10000, 100000)
-    },
-    {
-      icon: Hash,
-      title: "DEX Depth",
-      description: "Liquidity depth assessment on decentralized exchanges",
-      badgeLabel: data.dex_depth_status || "Unknown",
-      badgeVariant: data.dex_depth_status === "High" ? "green" : data.dex_depth_status === "Medium" ? "orange" : "red"
-    },
-  ];
-  
-  // Add only top 10 holders if available (not top50 or others)
-  const top10Feature = extractTop10HoldersData(data.holder_distribution);
-  if (top10Feature) {
-    features.push(top10Feature);
+  if (!data) {
+    return [
+      { label: "Trading Volume (24h)", value: "Unknown", type: "text" },
+      { label: "CEX Listings", value: "Unknown", type: "text" },
+      { label: "Liquidity Lock (Days)", value: "Unknown", type: "text" },
+      { label: "DEX Depth Status", value: "Unknown", type: "text" },
+      { label: "Holder Distribution", value: "Unknown", type: "text" }
+    ];
   }
 
-  return features;
-};
-
-// Transform community data - showing "Coming Soon" placeholders
-export const transformCommunityData = (data: CommunityData | null): CategoryFeature[] => {
-  // We'll create the same structure but with "Coming Soon" badges
   return [
-    {
-      icon: Twitter,
-      title: "Twitter Followers",
-      description: "Number of followers on Twitter/X",
-      badgeLabel: "Coming Soon",
-      badgeVariant: "gray"
+    { 
+      label: "Trading Volume (24h)", 
+      value: formatCurrency(safeNumberAccess(data, 'trading_volume_24h_usd')), 
+      type: "text" 
     },
-    {
-      icon: BadgeCheck,
-      title: "Twitter Verified",
-      description: "Verification status on Twitter/X",
-      badgeLabel: "Coming Soon",
-      badgeVariant: "gray"
+    { 
+      label: "CEX Listings", 
+      value: safeNumberAccess(data, 'cex_listings').toString(), 
+      type: "text" 
     },
-    {
-      icon: TrendingUp,
-      title: "7-Day Growth",
-      description: "Follower growth percentage over 7 days",
-      badgeLabel: "Coming Soon",
-      badgeVariant: "gray"
+    { 
+      label: "Liquidity Lock (Days)", 
+      value: safeNumberAccess(data, 'liquidity_locked_days').toString(), 
+      type: "text" 
     },
-    {
-      icon: MessageSquare,
-      title: "Telegram Members",
-      description: "Number of members in Telegram group",
-      badgeLabel: "Coming Soon",
-      badgeVariant: "gray"
+    { 
+      label: "DEX Depth Status", 
+      value: safeAccess(data, 'dex_depth_status', 'Unknown'), 
+      type: "text" 
     },
-    {
-      icon: MessageCircle,
-      title: "Discord Members",
-      description: "Number of members in Discord server",
-      badgeLabel: "Coming Soon",
-      badgeVariant: "gray"
-    },
-    {
-      icon: Users,
-      title: "Team Visibility",
-      description: "Public visibility of project team members",
-      badgeLabel: "Coming Soon",
-      badgeVariant: "gray"
+    { 
+      label: "Holder Distribution", 
+      value: safeAccess(data, 'holder_distribution', 'Unknown'), 
+      type: "text" 
     }
   ];
 };
 
-// Transform development data with improved date formatting
-export const transformDevelopmentData = (data: DevelopmentData | null): CategoryFeature[] => {
-  if (!data) return [];
+// Transform community data into feature format
+export const transformCommunityData = (data: CommunityData | null): CategoryFeature[] => {
+  if (!data) {
+    return [
+      { label: "Twitter Followers", value: "Unknown", type: "text" },
+      { label: "Twitter Verified", value: "Unknown", type: "boolean" },
+      { label: "Twitter Growth (7d)", value: "Unknown", type: "text" },
+      { label: "Discord Members", value: "Unknown", type: "text" },
+      { label: "Telegram Members", value: "Unknown", type: "text" },
+      { label: "Team Visibility", value: "Unknown", type: "text" },
+      { label: "Active Channels", value: "Unknown", type: "text" }
+    ];
+  }
 
   return [
-    {
-      icon: Code,
-      title: "Open Source",
-      description: "Whether the project's code is open source",
-      badgeLabel: getBadgeLabelForBoolean(data.is_open_source),
-      badgeVariant: data.is_open_source ? "green" : "red"
+    { 
+      label: "Twitter Followers", 
+      value: formatNumber(safeNumberAccess(data, 'twitter_followers')), 
+      type: "text" 
     },
-    {
-      icon: Users,
-      title: "Contributors",
-      description: "Number of developers contributing to the project",
-      badgeLabel: data.contributors_count ? data.contributors_count.toString() : "Unknown",
-      badgeVariant: getBadgeVariant(data.contributors_count || 0, 5, 10)
+    { 
+      label: "Twitter Verified", 
+      value: safeBooleanAccess(data, 'twitter_verified'), 
+      type: "boolean",
+      positive: true
     },
-    {
-      icon: Activity,
-      title: "Commits (30D)",
-      description: "Number of code commits in the last 30 days",
-      badgeLabel: data.commits_30d ? data.commits_30d.toString() : "Unknown",
-      badgeVariant: getBadgeVariant(data.commits_30d || 0, 10, 30)
+    { 
+      label: "Twitter Growth (7d)", 
+      value: `${safeNumberAccess(data, 'twitter_growth_7d')}%`, 
+      type: "text" 
     },
-    {
-      icon: Lock,
-      title: "Last Commit",
-      description: "Date of the most recent code commit",
-      badgeLabel: data.last_commit ? formatDateToHuman(data.last_commit) : "Unknown",
-      badgeVariant: data.last_commit ? "green" : "red"
+    { 
+      label: "Discord Members", 
+      value: formatNumber(safeNumberAccess(data, 'discord_members')), 
+      type: "text" 
     },
-    {
-      icon: ListChecks,
-      title: "Roadmap Progress",
-      description: "Milestones achieved vs. planned",
-      badgeLabel: data.roadmap_progress || "Unknown",
-      badgeVariant: data.roadmap_progress === "Completed" ? "green" : "orange"
+    { 
+      label: "Telegram Members", 
+      value: formatNumber(safeNumberAccess(data, 'telegram_members')), 
+      type: "text" 
+    },
+    { 
+      label: "Team Visibility", 
+      value: safeAccess(data, 'team_visibility', 'Unknown'), 
+      type: "text" 
+    },
+    { 
+      label: "Active Channels", 
+      value: safeAccess(data, 'active_channels', []).length.toString(), 
+      type: "text" 
+    }
+  ];
+};
+
+// Transform development data into feature format
+export const transformDevelopmentData = (data: DevelopmentData | null): CategoryFeature[] => {
+  if (!data) {
+    return [
+      { label: "GitHub Repository", value: "Unknown", type: "text" },
+      { label: "Open Source", value: "Unknown", type: "boolean" },
+      { label: "Contributors", value: "Unknown", type: "text" },
+      { label: "Commits (30d)", value: "Unknown", type: "text" },
+      { label: "Last Commit", value: "Unknown", type: "text" },
+      { label: "Roadmap Progress", value: "Unknown", type: "text" }
+    ];
+  }
+
+  return [
+    { 
+      label: "GitHub Repository", 
+      value: safeAccess(data, 'github_repo', 'Unknown'), 
+      type: "text" 
+    },
+    { 
+      label: "Open Source", 
+      value: safeBooleanAccess(data, 'is_open_source'), 
+      type: "boolean",
+      positive: true
+    },
+    { 
+      label: "Contributors", 
+      value: safeNumberAccess(data, 'contributors_count').toString(), 
+      type: "text" 
+    },
+    { 
+      label: "Commits (30d)", 
+      value: safeNumberAccess(data, 'commits_30d').toString(), 
+      type: "text" 
+    },
+    { 
+      label: "Last Commit", 
+      value: data?.last_commit ? new Date(data.last_commit).toLocaleDateString() : 'Unknown', 
+      type: "text" 
+    },
+    { 
+      label: "Roadmap Progress", 
+      value: safeAccess(data, 'roadmap_progress', 'Unknown'), 
+      type: "text" 
     }
   ];
 };

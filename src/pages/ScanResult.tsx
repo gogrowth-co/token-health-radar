@@ -69,14 +69,17 @@ export default function ScanResult() {
           return;
         }
 
-        // Load scan data from database
+        // Debug: Check user authentication status
+        console.log("ScanResult: User authenticated:", isAuthenticated, "User ID:", user?.id);
+
+        // Load scan data from database with debug logging
         const [
           { data: tokenData, error: tokenError },
-          { data: securityData },
-          { data: tokenomicsData },
-          { data: liquidityData },
-          { data: developmentData },
-          { data: communityData }
+          { data: securityData, error: securityError },
+          { data: tokenomicsData, error: tokenomicsError },
+          { data: liquidityData, error: liquidityError },
+          { data: developmentData, error: developmentError },
+          { data: communityData, error: communityError }
         ] = await Promise.all([
           supabase.from('token_data_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
           supabase.from('token_security_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
@@ -86,8 +89,21 @@ export default function ScanResult() {
           supabase.from('token_community_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
         ]);
 
-        console.log("[DB] token_data_cache result:", tokenData);
-        console.log("[DB] token_security_cache result:", securityData);
+        // Debug logging for each query
+        console.log("[DB] token_data_cache result:", tokenData, "error:", tokenError);
+        console.log("[DB] token_security_cache result:", securityData, "error:", securityError);
+        console.log("[DB] token_tokenomics_cache result:", tokenomicsData, "error:", tokenomicsError);
+        console.log("[DB] token_liquidity_cache result:", liquidityData, "error:", liquidityError);
+        console.log("[DB] token_development_cache result:", developmentData, "error:", developmentError);
+        console.log("[DB] token_community_cache result:", communityData, "error:", communityError);
+
+        // Log any database errors
+        if (tokenError) console.error("[DB] Token data error:", tokenError);
+        if (securityError) console.error("[DB] Security data error:", securityError);
+        if (tokenomicsError) console.error("[DB] Tokenomics data error:", tokenomicsError);
+        if (liquidityError) console.error("[DB] Liquidity data error:", liquidityError);
+        if (developmentError) console.error("[DB] Development data error:", developmentError);
+        if (communityError) console.error("[DB] Community data error:", communityError);
 
         // If ANY critical field exists in tokenData, use DB; else fallback to localStorage
         if (tokenData && (tokenData.name || tokenData.symbol || tokenData.current_price_usd)) {
@@ -159,7 +175,7 @@ export default function ScanResult() {
     };
 
     loadScanData();
-  }, [tokenAddress, coinGeckoId]);
+  }, [tokenAddress, coinGeckoId, user, isAuthenticated]);
 
   const handleCategoryChange = (category: ScanCategory) => {
     setActiveTab(category);
