@@ -260,6 +260,7 @@ export type Database = {
       }
       token_scans: {
         Row: {
+          cmc_id: number | null
           id: string
           is_anonymous: boolean | null
           pro_scan: boolean | null
@@ -269,6 +270,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          cmc_id?: number | null
           id?: string
           is_anonymous?: boolean | null
           pro_scan?: boolean | null
@@ -278,6 +280,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          cmc_id?: number | null
           id?: string
           is_anonymous?: boolean | null
           pro_scan?: boolean | null

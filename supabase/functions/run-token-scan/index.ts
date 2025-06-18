@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -20,10 +21,10 @@ serve(async (req) => {
 
     console.log(`[SCAN] Starting scan for token: ${token_address}, user: ${user_id || 'anonymous'}, coingecko_id: ${coingecko_id}, cmc_id: ${cmc_id}`)
 
-    // Initialize Supabase client
+    // Initialize Supabase client with service role key for database operations
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Check scan access for authenticated users
     let canPerformProScan = false
@@ -163,70 +164,46 @@ serve(async (req) => {
     // Fallback to CoinGecko if CMC data not available and CoinGecko ID provided
     else if (coingecko_id && coinGeckoApiKey) {
       try {
-        // Initialize default token data
-        let tokenData = {
-          token_address,
-          name: `Token ${token_address.substring(0, 8)}...`,
-          symbol: 'UNKNOWN',
-          description: '',
-          website_url: '',
-          twitter_handle: '',
-          github_url: '',
-          logo_url: '',
-          coingecko_id: coingecko_id || '',
-          current_price_usd: 0,
-          price_change_24h: 0,
-          market_cap_usd: 0,
-          total_value_locked_usd: 'N/A'
+        // Demo Plan uses Authorization header, not query parameter
+        const cgUrl = `https://api.coingecko.com/api/v3/coins/${coingecko_id}`
+        const cgHeaders: Record<string, string> = {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         }
-
-        // Fetch token data from CoinGecko if ID is provided - using Demo Plan authentication
-        if (coingecko_id) {
-          try {
-            // Demo Plan uses Authorization header, not query parameter
-            const cgUrl = `https://api.coingecko.com/api/v3/coins/${coingecko_id}`
-            const cgHeaders: Record<string, string> = {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            }
-            
-            // Add Demo Plan authentication header if available
-            if (coinGeckoApiKey) {
-              cgHeaders['x-cg-demo-api-key'] = coinGeckoApiKey
-              console.log(`[SCAN] Using CoinGecko Demo Plan authentication`)
-            } else {
-              console.log(`[SCAN] Using CoinGecko free tier`)
-            }
-            
-            console.log(`[SCAN] Fetching token data from CoinGecko: ${coingecko_id}`)
-            const response = await fetch(cgUrl, { headers: cgHeaders })
-            
-            if (response.ok) {
-              const data = await response.json()
-              
-              tokenData = {
-                ...tokenData,
-                name: data.name || tokenData.name,
-                symbol: data.symbol?.toUpperCase() || tokenData.symbol,
-                description: data.description?.en ? data.description.en.replace(/<[^>]*>/g, '').substring(0, 200) : '',
-                website_url: data.links?.homepage?.[0] || '',
-                twitter_handle: data.links?.twitter_screen_name || '',
-                github_url: data.links?.repos_url?.github?.[0] || '',
-                logo_url: data.image?.large || data.image?.small || '',
-                coingecko_id,
-                current_price_usd: data.market_data?.current_price?.usd || 0,
-                price_change_24h: data.market_data?.price_change_percentage_24h || 0,
-                market_cap_usd: data.market_data?.market_cap?.usd || 0,
-                total_value_locked_usd: data.market_data?.total_value_locked?.usd?.toString() || 'N/A'
-              }
-              
-              console.log(`[SCAN] Token data successfully collected from CoinGecko`)
-            } else {
-              console.warn(`[SCAN] CoinGecko API returned status ${response.status}`)
-            }
-          } catch (error) {
-            console.error(`[SCAN] Error fetching token data from CoinGecko:`, error)
+        
+        // Add Demo Plan authentication header if available
+        if (coinGeckoApiKey) {
+          cgHeaders['x-cg-demo-api-key'] = coinGeckoApiKey
+          console.log(`[SCAN] Using CoinGecko Demo Plan authentication`)
+        } else {
+          console.log(`[SCAN] Using CoinGecko free tier`)
+        }
+        
+        console.log(`[SCAN] Fetching token data from CoinGecko: ${coingecko_id}`)
+        const response = await fetch(cgUrl, { headers: cgHeaders })
+        
+        if (response.ok) {
+          const data = await response.json()
+          
+          tokenData = {
+            ...tokenData,
+            name: data.name || tokenData.name,
+            symbol: data.symbol?.toUpperCase() || tokenData.symbol,
+            description: data.description?.en ? data.description.en.replace(/<[^>]*>/g, '').substring(0, 200) : '',
+            website_url: data.links?.homepage?.[0] || '',
+            twitter_handle: data.links?.twitter_screen_name || '',
+            github_url: data.links?.repos_url?.github?.[0] || '',
+            logo_url: data.image?.large || data.image?.small || '',
+            coingecko_id,
+            current_price_usd: data.market_data?.current_price?.usd || 0,
+            price_change_24h: data.market_data?.price_change_percentage_24h || 0,
+            market_cap_usd: data.market_data?.market_cap?.usd || 0,
+            total_value_locked_usd: data.market_data?.total_value_locked?.usd?.toString() || 'N/A'
           }
+          
+          console.log(`[SCAN] Token data successfully collected from CoinGecko`)
+        } else {
+          console.warn(`[SCAN] CoinGecko API returned status ${response.status}`)
         }
       } catch (error) {
         console.error(`[SCAN] Error fetching token data from CoinGecko:`, error)
@@ -340,25 +317,29 @@ serve(async (req) => {
       team_visibility: 'Unknown'
     }
 
-    // Save all data to cache tables
+    // Save all data to cache tables with improved error handling
     console.log(`[SCAN] Saving data to database for token: ${token_address}`)
     
-    const saveResults = await Promise.allSettled([
-      supabase.from('token_data_cache').upsert(tokenData, { onConflict: 'token_address' }),
-      supabase.from('token_security_cache').upsert(securityData, { onConflict: 'token_address' }),
-      supabase.from('token_tokenomics_cache').upsert(tokenomicsData, { onConflict: 'token_address' }),
-      supabase.from('token_liquidity_cache').upsert(liquidityData, { onConflict: 'token_address' }),
-      supabase.from('token_development_cache').upsert(developmentData, { onConflict: 'token_address' }),
-      supabase.from('token_community_cache').upsert(communityData, { onConflict: 'token_address' })
-    ])
+    const saveOperations = [
+      { name: 'token_data_cache', operation: supabase.from('token_data_cache').upsert(tokenData, { onConflict: 'token_address' }) },
+      { name: 'token_security_cache', operation: supabase.from('token_security_cache').upsert(securityData, { onConflict: 'token_address' }) },
+      { name: 'token_tokenomics_cache', operation: supabase.from('token_tokenomics_cache').upsert(tokenomicsData, { onConflict: 'token_address' }) },
+      { name: 'token_liquidity_cache', operation: supabase.from('token_liquidity_cache').upsert(liquidityData, { onConflict: 'token_address' }) },
+      { name: 'token_development_cache', operation: supabase.from('token_development_cache').upsert(developmentData, { onConflict: 'token_address' }) },
+      { name: 'token_community_cache', operation: supabase.from('token_community_cache').upsert(communityData, { onConflict: 'token_address' }) }
+    ]
 
-    // Log any save errors but don't fail the entire operation
+    const saveResults = await Promise.allSettled(saveOperations.map(op => op.operation))
+
+    // Log detailed results for each save operation
     saveResults.forEach((result, index) => {
-      const tables = ['token_data_cache', 'token_security_cache', 'token_tokenomics_cache', 'token_liquidity_cache', 'token_development_cache', 'token_community_cache']
+      const tableName = saveOperations[index].name
       if (result.status === 'rejected') {
-        console.error(`[SCAN] Error saving to ${tables[index]}:`, result.reason)
+        console.error(`[SCAN] Error saving to ${tableName}:`, result.reason)
+      } else if (result.value.error) {
+        console.error(`[SCAN] Database error saving to ${tableName}:`, result.value.error)
       } else {
-        console.log(`[SCAN] Successfully saved to ${tables[index]}`)
+        console.log(`[SCAN] Successfully saved to ${tableName}`)
       }
     })
 

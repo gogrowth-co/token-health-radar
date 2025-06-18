@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,54 +70,70 @@ export default function ScanResult() {
           return;
         }
 
-        // Debug: Check user authentication status
         console.log("ScanResult: User authenticated:", isAuthenticated, "User ID:", user?.id);
 
-        // Load scan data from database with debug logging
+        // Load scan data from database with detailed logging
+        const queries = [
+          { name: 'token_data_cache', query: supabase.from('token_data_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
+          { name: 'token_security_cache', query: supabase.from('token_security_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
+          { name: 'token_tokenomics_cache', query: supabase.from('token_tokenomics_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
+          { name: 'token_liquidity_cache', query: supabase.from('token_liquidity_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
+          { name: 'token_development_cache', query: supabase.from('token_development_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
+          { name: 'token_community_cache', query: supabase.from('token_community_cache').select('*').eq('token_address', tokenAddress).maybeSingle() }
+        ];
+
+        const results = await Promise.allSettled(queries.map(q => q.query));
+        
+        // Extract data and errors from results
         const [
-          { data: tokenData, error: tokenError },
-          { data: securityData, error: securityError },
-          { data: tokenomicsData, error: tokenomicsError },
-          { data: liquidityData, error: liquidityError },
-          { data: developmentData, error: developmentError },
-          { data: communityData, error: communityError }
-        ] = await Promise.all([
-          supabase.from('token_data_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
-          supabase.from('token_security_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
-          supabase.from('token_tokenomics_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
-          supabase.from('token_liquidity_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
-          supabase.from('token_development_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
-          supabase.from('token_community_cache').select('*').eq('token_address', tokenAddress).maybeSingle(),
-        ]);
+          tokenResult,
+          securityResult,
+          tokenomicsResult,
+          liquidityResult,
+          developmentResult,
+          communityResult
+        ] = results;
 
-        // Debug logging for each query
-        console.log("[DB] token_data_cache result:", tokenData, "error:", tokenError);
-        console.log("[DB] token_security_cache result:", securityData, "error:", securityError);
-        console.log("[DB] token_tokenomics_cache result:", tokenomicsData, "error:", tokenomicsError);
-        console.log("[DB] token_liquidity_cache result:", liquidityData, "error:", liquidityError);
-        console.log("[DB] token_development_cache result:", developmentData, "error:", developmentError);
-        console.log("[DB] token_community_cache result:", communityData, "error:", communityError);
+        // Process results and log any errors
+        const processResult = (result: any, name: string) => {
+          if (result.status === 'rejected') {
+            console.error(`[DB] ${name} query failed:`, result.reason);
+            return { data: null, error: result.reason };
+          }
+          const { data, error } = result.value;
+          console.log(`[DB] ${name} result:`, data, "error:", error);
+          if (error) console.error(`[DB] ${name} error:`, error);
+          return { data, error };
+        };
 
-        // Log any database errors
-        if (tokenError) console.error("[DB] Token data error:", tokenError);
-        if (securityError) console.error("[DB] Security data error:", securityError);
-        if (tokenomicsError) console.error("[DB] Tokenomics data error:", tokenomicsError);
-        if (liquidityError) console.error("[DB] Liquidity data error:", liquidityError);
-        if (developmentError) console.error("[DB] Development data error:", developmentError);
-        if (communityError) console.error("[DB] Community data error:", communityError);
+        const tokenData = processResult(tokenResult, 'token_data_cache').data;
+        const securityData = processResult(securityResult, 'token_security_cache').data;
+        const tokenomicsData = processResult(tokenomicsResult, 'token_tokenomics_cache').data;
+        const liquidityData = processResult(liquidityResult, 'token_liquidity_cache').data;
+        const developmentData = processResult(developmentResult, 'token_development_cache').data;
+        const communityData = processResult(communityResult, 'token_community_cache').data;
 
-        // If ANY critical field exists in tokenData, use DB; else fallback to localStorage
+        // Check if we have valid token data
         if (tokenData && (tokenData.name || tokenData.symbol || tokenData.current_price_usd)) {
+          // Calculate overall score from available scores
+          const scores = [
+            securityData?.score || 0,
+            tokenomicsData?.score || 0,
+            liquidityData?.score || 0,
+            communityData?.score || 0,
+            developmentData?.score || 0
+          ].filter(score => score > 0);
+          
+          const overallScore = scores.length > 0 
+            ? Math.round(scores.reduce((acc, curr) => acc + curr, 0) / scores.length)
+            : 0;
+
+          console.log("ScanResult: Calculated overall score:", overallScore, "from scores:", scores);
+          
           setScanData({
             success: true,
             token_address: tokenAddress,
-            overall_score: [
-              securityData?.score || 0,
-              tokenomicsData?.score || 0,
-              liquidityData?.score || 0,
-              communityData?.score || 0,
-              developmentData?.score || 0
-            ].reduce((acc, score) => acc + score, 0) / 5,
+            overall_score: overallScore,
             token_info: tokenData,
             security: securityData || { score: 0, token_address: tokenAddress },
             tokenomics: tokenomicsData || { score: 0, token_address: tokenAddress },
@@ -134,6 +151,7 @@ export default function ScanResult() {
           try {
             const selectedToken = JSON.parse(selectedTokenData);
             if (selectedToken.address === tokenAddress || selectedToken.id === coinGeckoId) {
+              console.log("ScanResult: Using fallback data from localStorage");
               setScanData({
                 success: true,
                 token_address: tokenAddress,
@@ -260,14 +278,17 @@ export default function ScanResult() {
   const properDescription = tokenInfo?.description || "";
   const networkName = "ETH";
 
-  // Calculate the overall score
-  const overallScore = [
-    scanData.security?.score || 0,
-    scanData.tokenomics?.score || 0,
-    scanData.liquidity?.score || 0,
-    scanData.community?.score || 0,
-    scanData.development?.score || 0
-  ].reduce((acc, score) => acc + score, 0) / 5;
+  // Use the calculated overall score from the scan data
+  const overallScore = scanData.overall_score || 0;
+
+  console.log("ScanResult: Displaying scores:", {
+    overall: overallScore,
+    security: scanData.security?.score,
+    tokenomics: scanData.tokenomics?.score,
+    liquidity: scanData.liquidity?.score,
+    community: scanData.community?.score,
+    development: scanData.development?.score
+  });
 
   return (
     <div className="flex flex-col min-h-screen">
