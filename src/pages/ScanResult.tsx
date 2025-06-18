@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +36,7 @@ export default function ScanResult() {
   const [scanLimitData, setScanLimitData] = useState<any>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [coinGeckoDescription, setCoinGeckoDescription] = useState<string>('');
+  const [descriptionLoading, setDescriptionLoading] = useState(false);
   
   // Get parameters from URL
   const tokenAddress = searchParams.get("token") || "";
@@ -62,33 +62,55 @@ export default function ScanResult() {
   // Fetch CoinGecko description for TokenProfile override
   useEffect(() => {
     const fetchCoinGeckoDescription = async () => {
-      if (!tokenAddress && !coinGeckoId) return;
+      if (!tokenAddress && !coinGeckoId) {
+        console.log('[SCAN-RESULT] No token address or CoinGecko ID provided');
+        return;
+      }
       
       try {
-        console.log('[SCAN-RESULT] Fetching CoinGecko description for TokenProfile override');
+        console.log('[SCAN-RESULT] Starting CoinGecko description fetch');
+        console.log('[SCAN-RESULT] Token address:', tokenAddress);
+        console.log('[SCAN-RESULT] CoinGecko ID:', coinGeckoId);
+        
+        setDescriptionLoading(true);
         
         let coinGeckoData = null;
         
-        // Try by CoinGecko ID first, then by token address
+        // Try by CoinGecko ID first (more reliable), then by token address
         if (coinGeckoId) {
+          console.log('[SCAN-RESULT] Attempting fetch by CoinGecko ID');
           coinGeckoData = await fetchCoinGeckoTokenById(coinGeckoId);
         }
         
         if (!coinGeckoData && tokenAddress) {
+          console.log('[SCAN-RESULT] Attempting fetch by token address');
           coinGeckoData = await fetchCoinGeckoTokenByAddress(tokenAddress);
         }
         
+        console.log('[SCAN-RESULT] CoinGecko data fetched:', !!coinGeckoData);
+        console.log('[SCAN-RESULT] CoinGecko description exists:', !!coinGeckoData?.description?.en);
+        
         if (coinGeckoData && coinGeckoData.description?.en) {
+          console.log('[SCAN-RESULT] Raw CoinGecko description length:', coinGeckoData.description.en.length);
+          
           const formattedDesc = formatCoinGeckoDescription(coinGeckoData.description.en);
-          if (formattedDesc) {
-            console.log('[SCAN-RESULT] Successfully fetched CoinGecko description:', formattedDesc.substring(0, 100) + '...');
+          console.log('[SCAN-RESULT] Formatted description length:', formattedDesc.length);
+          console.log('[SCAN-RESULT] Formatted description preview:', formattedDesc.substring(0, 100) + '...');
+          
+          if (formattedDesc && formattedDesc.length > 0) {
+            console.log('[SCAN-RESULT] Setting CoinGecko description state');
             setCoinGeckoDescription(formattedDesc);
+          } else {
+            console.log('[SCAN-RESULT] Formatted description is empty, not setting state');
           }
+        } else {
+          console.log('[SCAN-RESULT] No valid CoinGecko description found');
         }
         
       } catch (error) {
         console.error('[SCAN-RESULT] Error fetching CoinGecko description:', error);
-        // Silently fail - will use database description as fallback
+      } finally {
+        setDescriptionLoading(false);
       }
     };
 
@@ -331,12 +353,26 @@ export default function ScanResult() {
   const properMarketCap = typeof tokenInfo?.market_cap_usd === "number"
     ? tokenInfo.market_cap_usd.toString() : "0";
   
-  // Use CoinGecko description if available, otherwise fallback to database description
-  const properDescription = coinGeckoDescription || tokenInfo?.description || "";
+  // Use CoinGecko description if available and not loading, otherwise fallback to database description
+  const properDescription = !descriptionLoading && coinGeckoDescription 
+    ? coinGeckoDescription 
+    : tokenInfo?.description || "";
+  
   const networkName = "ETH";
 
   // Use the calculated overall score from the scan data
   const overallScore = scanData.overall_score || 0;
+
+  console.log("ScanResult: Current description state:", {
+    coinGeckoDescription: coinGeckoDescription.substring(0, 50) + '...',
+    coinGeckoDescLength: coinGeckoDescription.length,
+    dbDescription: (tokenInfo?.description || '').substring(0, 50) + '...',
+    dbDescLength: (tokenInfo?.description || '').length,
+    descriptionLoading,
+    finalDescription: properDescription.substring(0, 50) + '...',
+    finalDescLength: properDescription.length,
+    usingCoinGecko: !descriptionLoading && coinGeckoDescription && coinGeckoDescription.length > 0
+  });
 
   console.log("ScanResult: Displaying scores:", {
     overall: overallScore,

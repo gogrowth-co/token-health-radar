@@ -38,6 +38,8 @@ export const fetchCoinGeckoTokenByAddress = async (tokenAddress: string): Promis
     
     const tokenData = await platformResponse.json();
     console.log(`[COINGECKO] Successfully fetched token data for ${tokenData.name}`);
+    console.log(`[COINGECKO] Raw description length: ${tokenData.description?.en?.length || 0}`);
+    console.log(`[COINGECKO] Raw description preview: ${tokenData.description?.en?.substring(0, 200) || 'No description'}`);
     
     return {
       id: tokenData.id,
@@ -70,6 +72,8 @@ export const fetchCoinGeckoTokenById = async (coinGeckoId: string): Promise<Coin
     
     const tokenData = await response.json();
     console.log(`[COINGECKO] Successfully fetched token data for ${tokenData.name}`);
+    console.log(`[COINGECKO] Raw description length: ${tokenData.description?.en?.length || 0}`);
+    console.log(`[COINGECKO] Raw description preview: ${tokenData.description?.en?.substring(0, 200) || 'No description'}`);
     
     return {
       id: tokenData.id,
@@ -86,13 +90,17 @@ export const fetchCoinGeckoTokenById = async (coinGeckoId: string): Promise<Coin
   }
 };
 
-// Helper function to clean and format CoinGecko description
+// Helper function to clean and format CoinGecko description - Made less restrictive
 export const formatCoinGeckoDescription = (description: string): string => {
   if (!description || description.trim() === '') {
+    console.log('[COINGECKO] No description provided to format');
     return '';
   }
   
-  // Remove HTML tags
+  console.log(`[COINGECKO] Formatting description of length: ${description.length}`);
+  console.log(`[COINGECKO] Raw description preview: ${description.substring(0, 100)}...`);
+  
+  // Remove HTML tags and clean up
   const cleanDesc = description
     .replace(/<[^>]*>/g, '')
     .replace(/&nbsp;/g, ' ')
@@ -104,12 +112,24 @@ export const formatCoinGeckoDescription = (description: string): string => {
     .replace(/\s+/g, ' ')
     .trim();
   
+  console.log(`[COINGECKO] Cleaned description length: ${cleanDesc.length}`);
+  console.log(`[COINGECKO] Cleaned description preview: ${cleanDesc.substring(0, 100)}...`);
+  
+  // Much less restrictive - accept any description with at least 10 characters
+  if (cleanDesc.length < 10) {
+    console.log('[COINGECKO] Description too short after cleaning, rejecting');
+    return '';
+  }
+  
   // Truncate if too long
   if (cleanDesc.length > 300) {
     const truncated = cleanDesc.substring(0, 300);
     const lastSpace = truncated.lastIndexOf(' ');
-    return lastSpace > 250 ? truncated.substring(0, lastSpace) + '...' : truncated + '...';
+    const finalDesc = lastSpace > 250 ? truncated.substring(0, lastSpace) + '...' : truncated + '...';
+    console.log(`[COINGECKO] Truncated description to: ${finalDesc.length} characters`);
+    return finalDesc;
   }
   
+  console.log(`[COINGECKO] Final formatted description: ${cleanDesc.length} characters`);
   return cleanDesc;
 };
