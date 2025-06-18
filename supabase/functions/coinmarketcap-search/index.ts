@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
@@ -113,21 +112,36 @@ serve(async (req) => {
           
           const allData = await callCoinMarketCapAPI('/cryptocurrency/map', {
             listing_status: 'active',
-            limit: 500 // Get more results to filter
+            limit: 2000 // Increase limit to catch more tokens
           });
           
           if (allData.data) {
-            // Filter by name (case-insensitive)
+            // Enhanced filtering - check name, slug, AND symbol
             const searchLower = cleanSearchTerm.toLowerCase();
-            result.data = allData.data.filter((token: any) => 
-              token.name?.toLowerCase().includes(searchLower) ||
-              token.slug?.toLowerCase().includes(searchLower)
-            ).slice(0, limit || 10);
+            const filteredTokens = allData.data.filter((token: any) => {
+              const name = token.name?.toLowerCase() || '';
+              const slug = token.slug?.toLowerCase() || '';
+              const symbol = token.symbol?.toLowerCase() || '';
+              
+              const matchesName = name.includes(searchLower);
+              const matchesSlug = slug.includes(searchLower);
+              const matchesSymbol = symbol.includes(searchLower);
+              
+              return matchesName || matchesSlug || matchesSymbol;
+            });
             
-            console.log(`[CMC-EDGE] Name search filtered to ${result.data.length} results`);
-            if (result.data && result.data.length > 0) {
+            result.data = filteredTokens.slice(0, limit || 10);
+            
+            console.log(`[CMC-EDGE] Name search found ${filteredTokens.length} total matches, returning ${result.data.length} results`);
+            
+            // Log some examples of what we found for debugging
+            if (result.data.length > 0) {
+              console.log(`[CMC-EDGE] Sample results:`, result.data.slice(0, 3).map((token: any) => ({
+                name: token.name,
+                symbol: token.symbol,
+                slug: token.slug
+              })));
               nameSearchSucceeded = true;
-              console.log(`[CMC-EDGE] Name search succeeded with ${result.data.length} results`);
             }
           }
         } catch (nameError) {
