@@ -22,20 +22,6 @@ export const getTokenFromCache = async (identifier: string): Promise<TokenDataCa
       return geckoData;
     }
 
-    // If not found and identifier is numeric, try by CMC ID
-    if (!isNaN(Number(identifier))) {
-      const { data: cmcData, error: cmcError } = await supabase
-        .from("token_data_cache")
-        .select("*")
-        .eq("cmc_id", parseInt(identifier))
-        .maybeSingle();
-      
-      if (cmcData && !cmcError) {
-        console.log(`[CACHE] Found cached data for ${identifier}:`, cmcData);
-        return cmcData;
-      }
-    }
-
     // If still not found and looks like a slug, try by symbol/name
     if (typeof identifier === 'string') {
       const { data: searchData, error: searchError } = await supabase
