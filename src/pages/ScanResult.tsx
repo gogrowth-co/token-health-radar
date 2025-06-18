@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,13 +6,26 @@ import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TokenProfile from "@/components/TokenProfile";
+import OverallHealthScore from "@/components/OverallHealthScore";
+import CategoryScoresGrid from "@/components/CategoryScoresGrid";
+import CategoryTabs from "@/components/CategoryTabs";
+import CategoryTabsErrorBoundary from "@/components/CategoryTabsErrorBoundary";
 import { toast } from "sonner";
+
+enum ScanCategory {
+  Security = "security",
+  Tokenomics = "tokenomics",
+  Liquidity = "liquidity",
+  Community = "community",
+  Development = "development"
+}
 
 export default function ScanResult() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [scanResult, setScanResult] = useState<any>(null);
   const [tokenInfo, setTokenInfo] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<ScanCategory>(ScanCategory.Security);
   const { isAuthenticated } = useAuth();
 
   const tokenAddress = searchParams.get("token");
@@ -99,25 +113,96 @@ export default function ScanResult() {
     loadScanResult();
   }, [tokenAddress, coinGeckoId, navigate]);
 
+  const handleCategoryClick = (category: string) => {
+    setActiveTab(category as ScanCategory);
+  };
+
+  // Extract scores from scan result
+  const getScores = () => {
+    if (!scanResult) {
+      return {
+        overall: 0,
+        security: 0,
+        tokenomics: 0,
+        liquidity: 0,
+        community: 0,
+        development: 0
+      };
+    }
+
+    return {
+      overall: scanResult.score_total || 0,
+      security: scanResult.security_data?.score || 0,
+      tokenomics: scanResult.tokenomics_data?.score || 0,
+      liquidity: scanResult.liquidity_data?.score || 0,
+      community: scanResult.community_data?.score || 0,
+      development: scanResult.development_data?.score || 0
+    };
+  };
+
+  const scores = getScores();
+
+  // Check if user has pro access (simplified for now)
+  const isPro = false; // This should be determined by user's subscription status
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-1 container px-4 py-8">
         {tokenInfo ? (
-          <TokenProfile
-            name={tokenInfo.name}
-            symbol={tokenInfo.symbol}
-            logo={tokenInfo.logo}
-            address={tokenInfo.address}
-            website={tokenInfo.website}
-            twitter={tokenInfo.twitter}
-            github={tokenInfo.github}
-            price={tokenInfo.price}
-            priceChange={tokenInfo.priceChange}
-            marketCap={tokenInfo.marketCap}
-            description={tokenInfo.description}
-            network={tokenInfo.network}
-          />
+          <div className="space-y-8">
+            {/* Token Profile Card */}
+            <TokenProfile
+              name={tokenInfo.name}
+              symbol={tokenInfo.symbol}
+              logo={tokenInfo.logo}
+              address={tokenInfo.address}
+              website={tokenInfo.website}
+              twitter={tokenInfo.twitter}
+              github={tokenInfo.github}
+              price={tokenInfo.price}
+              priceChange={tokenInfo.priceChange}
+              marketCap={tokenInfo.marketCap}
+              description={tokenInfo.description}
+              network={tokenInfo.network}
+              overallScore={scores.overall}
+            />
+
+            {/* Overall Health Score */}
+            {scanResult && (
+              <div className="flex justify-center">
+                <OverallHealthScore score={scores.overall} />
+              </div>
+            )}
+
+            {/* Category Scores Grid */}
+            {scanResult && (
+              <CategoryScoresGrid
+                securityScore={scores.security}
+                tokenomicsScore={scores.tokenomics}
+                liquidityScore={scores.liquidity}
+                communityScore={scores.community}
+                developmentScore={scores.development}
+                onCategoryClick={handleCategoryClick}
+              />
+            )}
+
+            {/* Category Tabs with Error Boundary */}
+            {scanResult && (
+              <CategoryTabsErrorBoundary>
+                <CategoryTabs
+                  activeTab={activeTab}
+                  securityData={scanResult.security_data}
+                  tokenomicsData={scanResult.tokenomics_data}
+                  liquidityData={scanResult.liquidity_data}
+                  communityData={scanResult.community_data}
+                  developmentData={scanResult.development_data}
+                  isPro={isPro}
+                  onCategoryChange={setActiveTab}
+                />
+              </CategoryTabsErrorBoundary>
+            )}
+          </div>
         ) : (
           <div className="text-center">Loading scan results...</div>
         )}
