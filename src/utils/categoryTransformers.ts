@@ -159,14 +159,14 @@ export const transformSecurityData = (data: SecurityData | null): CategoryFeatur
       title: "Audit Status", 
       description: "Security audit verification by third-party firm",
       badgeLabel: auditStatus,
-      badgeVariant: auditStatus === "Verified" ? "green" : auditStatus === "Failed" ? "red" : "gray"
+      badgeVariant: auditStatus === "Unknown" ? "gray" : auditStatus === "Verified" ? "green" : auditStatus === "Failed" ? "red" : "gray"
     },
     { 
       icon: Lock, 
       title: "Multisig Status", 
       description: "Multiple signatures required for critical actions",
       badgeLabel: multisigStatus,
-      badgeVariant: multisigStatus === "Active" ? "green" : multisigStatus === "Inactive" ? "red" : "gray"
+      badgeVariant: multisigStatus === "Unknown" ? "gray" : multisigStatus === "Active" ? "green" : multisigStatus === "Inactive" ? "red" : "gray"
     }
   ];
 };
@@ -232,7 +232,7 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
       title: "Distribution Score", 
       description: "How well distributed the token supply is",
       badgeLabel: distributionScore,
-      badgeVariant: distributionScore === "Good" ? "green" : distributionScore === "Fair" ? "blue" : distributionScore === "Poor" ? "red" : "gray"
+      badgeVariant: distributionScore === "Unknown" ? "gray" : distributionScore === "Good" ? "green" : distributionScore === "Fair" ? "blue" : distributionScore === "Poor" ? "red" : "gray"
     }
   ];
 };
@@ -282,14 +282,14 @@ export const transformLiquidityData = (data: LiquidityData | null): CategoryFeat
       title: "DEX Depth", 
       description: "Liquidity depth on decentralized exchanges",
       badgeLabel: dexDepth,
-      badgeVariant: dexDepth === "High" ? "green" : dexDepth === "Medium" ? "blue" : dexDepth === "Low" ? "orange" : "gray"
+      badgeVariant: dexDepth === "Unknown" ? "gray" : dexDepth === "High" ? "green" : dexDepth === "Medium" ? "blue" : dexDepth === "Low" ? "orange" : "gray"
     },
     { 
       icon: Users, 
       title: "Holder Distribution", 
       description: "How tokens are distributed among holders",
       badgeLabel: holderDistribution,
-      badgeVariant: holderDistribution === "Good" ? "green" : holderDistribution === "Fair" ? "blue" : holderDistribution === "Poor" ? "red" : "gray"
+      badgeVariant: holderDistribution === "Unknown" ? "gray" : holderDistribution === "Good" ? "green" : holderDistribution === "Fair" ? "blue" : holderDistribution === "Poor" ? "red" : "gray"
     }
   ];
 };
@@ -346,7 +346,7 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
       title: "Team Visibility", 
       description: "How visible and accessible the team is",
       badgeLabel: teamVisibility,
-      badgeVariant: teamVisibility === "High" ? "green" : teamVisibility === "Medium" ? "blue" : teamVisibility === "Low" ? "red" : "gray"
+      badgeVariant: teamVisibility === "Unknown" ? "gray" : teamVisibility === "High" ? "green" : teamVisibility === "Medium" ? "blue" : teamVisibility === "Low" ? "red" : "gray"
     }
   ];
 };
@@ -407,7 +407,7 @@ export const transformDevelopmentData = (data: DevelopmentData | null): Category
       title: "Roadmap Progress", 
       description: "Progress on the development roadmap",
       badgeLabel: roadmapProgress,
-      badgeVariant: roadmapProgress === "On Track" ? "green" : roadmapProgress === "Delayed" ? "orange" : roadmapProgress === "Stalled" ? "red" : "gray"
+      badgeVariant: roadmapProgress === "Unknown" ? "gray" : roadmapProgress === "On Track" ? "green" : roadmapProgress === "Delayed" ? "orange" : roadmapProgress === "Stalled" ? "red" : "gray"
     }
   ];
 };
