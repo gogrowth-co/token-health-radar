@@ -12,13 +12,13 @@ serve(async (req) => {
   }
 
   try {
-    const { token_address, user_id, coingecko_id } = await req.json()
+    const { token_address, user_id, coingecko_id, cmc_id } = await req.json()
     
     if (!token_address) {
       throw new Error('Token address is required')
     }
 
-    console.log(`[SCAN] Starting scan for token: ${token_address}, user: ${user_id || 'anonymous'}, coingecko_id: ${coingecko_id}`)
+    console.log(`[SCAN] Starting scan for token: ${token_address}, user: ${user_id || 'anonymous'}, coingecko_id: ${coingecko_id}, cmc_id: ${cmc_id}`)
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -72,8 +72,9 @@ serve(async (req) => {
 
     console.log(`[SCAN] Pro scan permitted: ${canPerformProScan}`)
 
-    // Get API keys for better rate limits - Demo Plan authentication
+    // Get API keys for better rate limits
     const coinGeckoApiKey = Deno.env.get('COINGECKO_API_KEY')
+    const cmcApiKey = Deno.env.get('COINMARKETCAP_API_KEY')
     const goPlusApiKey = Deno.env.get('GOPLUS_API_KEY')
     
     // Initialize default token data
@@ -87,55 +88,145 @@ serve(async (req) => {
       github_url: '',
       logo_url: '',
       coingecko_id: coingecko_id || '',
+      cmc_id: cmc_id || null,
       current_price_usd: 0,
       price_change_24h: 0,
       market_cap_usd: 0,
       total_value_locked_usd: 'N/A'
     }
 
-    // Fetch token data from CoinGecko if ID is provided - using Demo Plan authentication
-    if (coingecko_id) {
+    // Fetch token data from CoinMarketCap if CMC ID is provided
+    if (cmc_id && cmcApiKey) {
       try {
-        // Demo Plan uses Authorization header, not query parameter
-        const cgUrl = `https://api.coingecko.com/api/v3/coins/${coingecko_id}`
-        const cgHeaders: Record<string, string> = {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
+        console.log(`[SCAN] Fetching token data from CoinMarketCap: ${cmc_id}`)
+        
+        // Fetch token info and quotes from CMC
+        const [infoResponse, quotesResponse] = await Promise.allSettled([
+          fetch(`https://pro-api.coinmarketcap.com/v1/cryptocurrency/info?id=${cmc_id}`, {
+            headers: {
+              'X-CMC_PRO_API_KEY': cmcApiKey,
+              'Accept': 'application/json'
+            }
+          }),
+          fetch(`https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?id=${cmc_id}&convert=USD`, {
+            headers: {
+              'X-CMC_PRO_API_KEY': cmcApiKey,
+              'Accept': 'application/json'
+            }
+          })
+        ])
+        
+        let cmcInfo = null
+        let cmcQuotes = null
+        
+        if (infoResponse.status === 'fulfilled' && infoResponse.value.ok) {
+          const infoData = await infoResponse.value.json()
+          cmcInfo = infoData.data?.[cmc_id]
         }
         
-        // Add Demo Plan authentication header if available
-        if (coinGeckoApiKey) {
-          cgHeaders['x-cg-demo-api-key'] = coinGeckoApiKey
-          console.log(`[SCAN] Using CoinGecko Demo Plan authentication`)
-        } else {
-          console.log(`[SCAN] Using CoinGecko free tier`)
+        if (quotesResponse.status === 'fulfilled' && quotesResponse.value.ok) {
+          const quotesData = await quotesResponse.value.json()
+          cmcQuotes = quotesData.data?.[cmc_id]
         }
         
-        console.log(`[SCAN] Fetching token data from CoinGecko: ${coingecko_id}`)
-        const response = await fetch(cgUrl, { headers: cgHeaders })
-        
-        if (response.ok) {
-          const data = await response.json()
+        if (cmcInfo || cmcQuotes) {
+          const urls = cmcInfo?.urls || {}
+          const website = urls.website?.[0] || ''
+          const twitter = urls.twitter?.[0] || ''
+          const github = urls.source_code?.[0] || ''
+          const twitterHandle = twitter ? twitter.split('/').pop()?.replace('@', '') || '' : ''
+          
+          const usdQuote = cmcQuotes?.quote?.USD || {}
           
           tokenData = {
             ...tokenData,
-            name: data.name || tokenData.name,
-            symbol: data.symbol?.toUpperCase() || tokenData.symbol,
-            description: data.description?.en ? data.description.en.replace(/<[^>]*>/g, '').substring(0, 200) : '',
-            website_url: data.links?.homepage?.[0] || '',
-            twitter_handle: data.links?.twitter_screen_name || '',
-            github_url: data.links?.repos_url?.github?.[0] || '',
-            logo_url: data.image?.large || data.image?.small || '',
-            coingecko_id,
-            current_price_usd: data.market_data?.current_price?.usd || 0,
-            price_change_24h: data.market_data?.price_change_percentage_24h || 0,
-            market_cap_usd: data.market_data?.market_cap?.usd || 0,
-            total_value_locked_usd: data.market_data?.total_value_locked?.usd?.toString() || 'N/A'
+            name: cmcInfo?.name || tokenData.name,
+            symbol: cmcInfo?.symbol?.toUpperCase() || tokenData.symbol,
+            description: cmcInfo?.description ? cmcInfo.description.replace(/<[^>]*>/g, '').substring(0, 200) : '',
+            website_url: website,
+            twitter_handle: twitterHandle,
+            github_url: github,
+            logo_url: cmcInfo?.logo || '',
+            cmc_id,
+            current_price_usd: usdQuote.price || 0,
+            price_change_24h: usdQuote.percent_change_24h || 0,
+            market_cap_usd: usdQuote.market_cap || 0
           }
           
-          console.log(`[SCAN] Token data successfully collected from CoinGecko`)
-        } else {
-          console.warn(`[SCAN] CoinGecko API returned status ${response.status}`)
+          console.log(`[SCAN] Token data successfully collected from CoinMarketCap`)
+        }
+      } catch (error) {
+        console.error(`[SCAN] Error fetching token data from CoinMarketCap:`, error)
+      }
+    }
+    
+    // Fallback to CoinGecko if CMC data not available and CoinGecko ID provided
+    else if (coingecko_id && coinGeckoApiKey) {
+      try {
+        // Initialize default token data
+        let tokenData = {
+          token_address,
+          name: `Token ${token_address.substring(0, 8)}...`,
+          symbol: 'UNKNOWN',
+          description: '',
+          website_url: '',
+          twitter_handle: '',
+          github_url: '',
+          logo_url: '',
+          coingecko_id: coingecko_id || '',
+          current_price_usd: 0,
+          price_change_24h: 0,
+          market_cap_usd: 0,
+          total_value_locked_usd: 'N/A'
+        }
+
+        // Fetch token data from CoinGecko if ID is provided - using Demo Plan authentication
+        if (coingecko_id) {
+          try {
+            // Demo Plan uses Authorization header, not query parameter
+            const cgUrl = `https://api.coingecko.com/api/v3/coins/${coingecko_id}`
+            const cgHeaders: Record<string, string> = {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            }
+            
+            // Add Demo Plan authentication header if available
+            if (coinGeckoApiKey) {
+              cgHeaders['x-cg-demo-api-key'] = coinGeckoApiKey
+              console.log(`[SCAN] Using CoinGecko Demo Plan authentication`)
+            } else {
+              console.log(`[SCAN] Using CoinGecko free tier`)
+            }
+            
+            console.log(`[SCAN] Fetching token data from CoinGecko: ${coingecko_id}`)
+            const response = await fetch(cgUrl, { headers: cgHeaders })
+            
+            if (response.ok) {
+              const data = await response.json()
+              
+              tokenData = {
+                ...tokenData,
+                name: data.name || tokenData.name,
+                symbol: data.symbol?.toUpperCase() || tokenData.symbol,
+                description: data.description?.en ? data.description.en.replace(/<[^>]*>/g, '').substring(0, 200) : '',
+                website_url: data.links?.homepage?.[0] || '',
+                twitter_handle: data.links?.twitter_screen_name || '',
+                github_url: data.links?.repos_url?.github?.[0] || '',
+                logo_url: data.image?.large || data.image?.small || '',
+                coingecko_id,
+                current_price_usd: data.market_data?.current_price?.usd || 0,
+                price_change_24h: data.market_data?.price_change_percentage_24h || 0,
+                market_cap_usd: data.market_data?.market_cap?.usd || 0,
+                total_value_locked_usd: data.market_data?.total_value_locked?.usd?.toString() || 'N/A'
+              }
+              
+              console.log(`[SCAN] Token data successfully collected from CoinGecko`)
+            } else {
+              console.warn(`[SCAN] CoinGecko API returned status ${response.status}`)
+            }
+          } catch (error) {
+            console.error(`[SCAN] Error fetching token data from CoinGecko:`, error)
+          }
         }
       } catch (error) {
         console.error(`[SCAN] Error fetching token data from CoinGecko:`, error)
@@ -283,11 +374,12 @@ serve(async (req) => {
       ? Math.round(scores.reduce((acc, curr) => acc + curr, 0) / scores.length)
       : 0
 
-    // Record the scan in token_scans table
+    // Record the scan in token_scans table with CMC ID
     try {
       const scanRecord = {
         user_id: user_id || null,
         token_address,
+        cmc_id: cmc_id || null,
         score_total: overallScore,
         pro_scan: canPerformProScan,
         is_anonymous: !user_id

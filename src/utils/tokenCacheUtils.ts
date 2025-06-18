@@ -3,30 +3,56 @@ import { supabase } from "@/integrations/supabase/client";
 import { TokenResult } from "@/components/token/types";
 
 /**
- * Fetch token data from database cache by CoinGecko ID
+ * Fetch token data from database cache by CoinGecko ID or CMC ID
  */
-export const getTokenFromCache = async (coingeckoId: string): Promise<any | null> => {
+export const getTokenFromCache = async (identifier: string): Promise<any | null> => {
   try {
-    const { data, error } = await supabase
+    // Try by CoinGecko ID first
+    let { data, error } = await supabase
       .from("token_data_cache")
       .select("*")
-      .eq("coingecko_id", coingeckoId)
+      .eq("coingecko_id", identifier)
       .maybeSingle();
 
+    // If not found and identifier is numeric, try by CMC ID
+    if (!data && !isNaN(Number(identifier))) {
+      const result = await supabase
+        .from("token_data_cache")
+        .select("*")
+        .eq("cmc_id", parseInt(identifier))
+        .maybeSingle();
+      
+      data = result.data;
+      error = result.error;
+    }
+
+    // If still not found and looks like a slug, try by symbol/name
+    if (!data && typeof identifier === 'string') {
+      const result = await supabase
+        .from("token_data_cache")
+        .select("*")
+        .or(`symbol.ilike.%${identifier}%,name.ilike.%${identifier}%`)
+        .limit(1)
+        .maybeSingle();
+      
+      data = result.data;
+      error = result.error;
+    }
+
     if (error) {
-      console.log(`[CACHE] Error querying cache for ${coingeckoId}:`, error);
+      console.log(`[CACHE] Error querying cache for ${identifier}:`, error);
       return null;
     }
 
     if (!data) {
-      console.log(`[CACHE] No cached data found for ${coingeckoId}`);
+      console.log(`[CACHE] No cached data found for ${identifier}`);
       return null;
     }
 
-    console.log(`[CACHE] Found cached data for ${coingeckoId}:`, data);
+    console.log(`[CACHE] Found cached data for ${identifier}:`, data);
     return data;
   } catch (err) {
-    console.warn(`[CACHE] Exception fetching cached data for ${coingeckoId}:`, err);
+    console.warn(`[CACHE] Exception fetching cached data for ${identifier}:`, err);
     return null;
   }
 };
@@ -43,7 +69,8 @@ export const createTokenInfoFromCache = (cacheData: any): any => {
     twitter_handle: cacheData.twitter_handle || '',
     github_url: cacheData.github_url || '',
     logo_url: cacheData.logo_url || '',
-    coingecko_id: cacheData.coingecko_id,
+    coingecko_id: cacheData.coingecko_id || '',
+    cmc_id: cacheData.cmc_id || null,
     current_price_usd: cacheData.current_price_usd || 0,
     price_change_24h: cacheData.price_change_24h || 0,
     market_cap_usd: cacheData.market_cap_usd || 0,
@@ -75,8 +102,8 @@ export const createEnhancedMarketData = (token: any, apiData?: any) => {
 
   // Priority 3: Estimate based on market cap rank
   let estimatedMarketCap = 0;
-  if (token.market_cap_rank) {
-    const rank = token.market_cap_rank;
+  if (token.market_cap_rank || token.rank) {
+    const rank = token.market_cap_rank || token.rank;
     if (rank <= 10) estimatedMarketCap = 10000000000; // 10B+
     else if (rank <= 50) estimatedMarketCap = 1000000000; // 1B+
     else if (rank <= 100) estimatedMarketCap = 100000000; // 100M+
@@ -104,8 +131,9 @@ export const createMeaningfulDescription = (token: any, apiDescription?: string)
   // Create description from token data
   let desc = `${token.name} (${(token.symbol || '').toUpperCase()})`;
   
-  if (token.market_cap_rank && token.market_cap_rank > 0) {
-    desc += ` is ranked #${token.market_cap_rank} by market capitalization`;
+  const rank = token.market_cap_rank || token.rank;
+  if (rank && rank > 0) {
+    desc += ` is ranked #${rank} by market capitalization`;
   } else {
     desc += ` is a cryptocurrency token`;
   }

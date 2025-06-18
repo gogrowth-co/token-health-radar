@@ -8,6 +8,7 @@ export interface TokenInfoEnriched {
   github_url?: string;
   logo_url?: string;
   coingecko_id?: string;
+  cmc_id?: number; // Added CMC ID support
   current_price_usd?: number;
   price_change_24h?: number;
   market_cap_usd?: number;
@@ -19,6 +20,7 @@ export interface TokenResult {
   name: string;
   symbol: string;
   market_cap_rank?: number;
+  rank?: number; // Added CMC rank support
   thumb: string;
   large?: string;
   platforms?: Record<string, string>;
@@ -27,6 +29,7 @@ export interface TokenResult {
   price_change_24h?: number;
   isErc20?: boolean;
   description?: string;
+  cmc_id?: number; // Added CMC ID support
 
   // Enriched token info (for complete scan)
   tokenInfo?: TokenInfoEnriched;
