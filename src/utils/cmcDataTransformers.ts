@@ -124,26 +124,59 @@ export const extractCMCPlatformData = (cmcInfo: any) => {
   return tokenAddress ? { [normalizedPlatform]: tokenAddress } : {};
 };
 
-// Create meaningful description from CMC data
+// Create meaningful description from CMC data - Enhanced version
 export const createCMCDescription = (cmcInfo: any, cmcToken: any): string => {
-  // Use CMC description if available and meaningful
+  // First priority: Use CMC description if available and meaningful
   if (cmcInfo.description && cmcInfo.description.trim()) {
-    const cleanDesc = cmcInfo.description.replace(/<[^>]*>/g, '').split('.')[0] + '.';
-    return cleanDesc.length > 200 ? cleanDesc.substring(0, 200) + '...' : cleanDesc;
+    // Clean HTML tags and extract meaningful content
+    const cleanDesc = cmcInfo.description
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace HTML entities
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, ' ') // Replace multiple whitespace
+      .trim();
+    
+    // If we have a substantial description (not just the name), use it
+    if (cleanDesc.length > 50 && !cleanDesc.toLowerCase().includes('is a cryptocurrency')) {
+      // Truncate if too long
+      if (cleanDesc.length > 300) {
+        const truncated = cleanDesc.substring(0, 300);
+        const lastSpace = truncated.lastIndexOf(' ');
+        return lastSpace > 250 ? truncated.substring(0, lastSpace) + '...' : truncated + '...';
+      }
+      return cleanDesc;
+    }
   }
   
-  // Create description from token data
+  // Second priority: Create informative description from available CMC data
   let desc = `${cmcToken.name} (${cmcToken.symbol})`;
   
+  // Add ranking information if available
   if (cmcToken.rank && cmcToken.rank > 0) {
-    desc += ` is ranked #${cmcToken.rank} by market capitalization`;
+    if (cmcToken.rank <= 10) {
+      desc += ` is a top 10 cryptocurrency ranked #${cmcToken.rank} by market capitalization`;
+    } else if (cmcToken.rank <= 100) {
+      desc += ` is ranked #${cmcToken.rank} by market capitalization`;
+    } else {
+      desc += ` is ranked #${cmcToken.rank} by market cap`;
+    }
   } else {
-    desc += ` is a cryptocurrency token`;
+    desc += ` is a digital asset`;
   }
   
   // Add platform information if available
   if (cmcInfo.platform?.name) {
-    desc += `. Built on ${cmcInfo.platform.name}`;
+    desc += `. Built on the ${cmcInfo.platform.name} network`;
+  }
+  
+  // Add category information if available
+  if (cmcInfo.category && Array.isArray(cmcInfo.category) && cmcInfo.category.length > 0) {
+    const categories = cmcInfo.category.slice(0, 2).join(' and ');
+    desc += `. Categorized as ${categories}`;
   }
   
   return desc;

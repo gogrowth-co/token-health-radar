@@ -99,35 +99,51 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
 
               // Try database cache first for non-generic descriptions only
               let tokenInfo: TokenInfoEnriched | null = null;
+              let meaningfulDescription = '';
+              
               try {
                 const cachedData = await getTokenFromCache(cmcToken.slug);
                 if (cachedData && cachedData.description && !isGenericDescription(cachedData.description)) {
                   console.log(`[TOKEN-SEARCH] Found quality cached description for ${cmcToken.slug}`);
                   tokenInfo = createTokenInfoFromCache(cachedData);
+                  meaningfulDescription = cachedData.description;
                 } else if (cachedData) {
-                  console.log(`[TOKEN-SEARCH] Found cached data for ${cmcToken.slug} but description is generic, will refresh`);
+                  console.log(`[TOKEN-SEARCH] Found cached data for ${cmcToken.slug} but description is generic, will use CMC data`);
                   tokenInfo = createTokenInfoFromCache(cachedData);
-                  // Clear the generic description so it can be refreshed during scan
-                  tokenInfo.description = '';
                 }
               } catch (cacheError) {
                 console.log(`[TOKEN-SEARCH] Cache lookup failed for ${cmcToken.slug}:`, cacheError);
               }
 
-              // If no cache with quality description, create from CMC data
-              if (!tokenInfo) {
-                console.log(`[TOKEN-SEARCH] Creating tokenInfo from CMC data for ${cmcToken.name}`);
-                tokenInfo = transformCMCTokenInfo(tokenDetail, cmcToken);
-                const cmcDescription = createCMCDescription(tokenDetail, cmcToken);
+              // If no meaningful cached description, try to create from CMC data
+              if (!meaningfulDescription) {
+                console.log(`[TOKEN-SEARCH] Creating description from CMC data for ${cmcToken.name}`);
                 
-                // Only use CMC description if it's not generic
+                // Try CMC description first
+                const cmcDescription = createCMCDescription(tokenDetail, cmcToken);
+                console.log(`[TOKEN-SEARCH] CMC generated description: "${cmcDescription}"`);
+                
                 if (!isGenericDescription(cmcDescription)) {
-                  tokenInfo.description = cmcDescription;
+                  meaningfulDescription = cmcDescription;
+                  console.log(`[TOKEN-SEARCH] Using meaningful CMC description`);
                 } else {
-                  // Don't save generic descriptions - leave empty for scan to fill
-                  tokenInfo.description = '';
+                  console.log(`[TOKEN-SEARCH] CMC description is generic, will use basic info`);
+                  // Create basic informative description without "cryptocurrency token" suffix
+                  if (cmcToken.rank && cmcToken.rank > 0) {
+                    meaningfulDescription = `${cmcToken.name} (${cmcToken.symbol}) is ranked #${cmcToken.rank} by market capitalization`;
+                  } else {
+                    meaningfulDescription = `${cmcToken.name} (${cmcToken.symbol}) digital asset`;
+                  }
                 }
               }
+
+              // Create or update tokenInfo
+              if (!tokenInfo) {
+                tokenInfo = transformCMCTokenInfo(tokenDetail, cmcToken);
+              }
+              
+              // Set the meaningful description
+              tokenInfo.description = meaningfulDescription;
 
               // Get market data from quotes
               const marketData = transformCMCQuoteData(tokenQuote);
@@ -143,10 +159,6 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               // Determine ERC-20 compatibility
               const isErc20Compatible = determineCMCErc20Compatibility(tokenDetail);
 
-              // For display purposes, create a meaningful description if we don't have one
-              const displayDescription = tokenInfo.description || 
-                `${cmcToken.name} (${cmcToken.symbol}) cryptocurrency token`;
-
               // Update token result with all collected data
               tokenResult = {
                 ...tokenResult,
@@ -157,7 +169,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 price_change_24h: marketData.price_change_24h,
                 market_cap: marketData.market_cap,
                 isErc20: isErc20Compatible,
-                description: displayDescription, // For search results display
+                description: meaningfulDescription, // Use the meaningful description directly
                 tokenInfo
               };
 
@@ -165,8 +177,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 name: tokenInfo.name,
                 price: marketData.price_usd,
                 market_cap: marketData.market_cap,
-                description: tokenInfo.description,
-                displayDescription: displayDescription,
+                description: meaningfulDescription,
                 isErc20: isErc20Compatible
               });
 
@@ -184,7 +195,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               const fallbackTokenInfo: TokenInfoEnriched = {
                 name: cmcToken.name,
                 symbol: cmcToken.symbol,
-                description: '', // Don't save generic descriptions
+                description: `${cmcToken.name} (${cmcToken.symbol}) digital asset`, // Avoid "cryptocurrency token"
                 website_url: '',
                 twitter_handle: '',
                 github_url: '',
@@ -198,7 +209,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               
               enhancedResults.push({
                 ...transformCMCSearchResult(cmcToken),
-                description: `${cmcToken.name} (${cmcToken.symbol}) cryptocurrency token`, // Display only
+                description: `${cmcToken.name} (${cmcToken.symbol}) digital asset`, // Display fallback
                 tokenInfo: fallbackTokenInfo
               });
             }
@@ -209,10 +220,14 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
           
           // Fallback: create basic results from search data only
           for (const cmcToken of topTokens) {
+            const fallbackDescription = cmcToken.rank && cmcToken.rank > 0 
+              ? `${cmcToken.name} (${cmcToken.symbol}) is ranked #${cmcToken.rank} by market capitalization`
+              : `${cmcToken.name} (${cmcToken.symbol}) digital asset`;
+              
             const fallbackTokenInfo: TokenInfoEnriched = {
               name: cmcToken.name,
               symbol: cmcToken.symbol,
-              description: '', // Don't save generic descriptions
+              description: fallbackDescription,
               website_url: '',
               twitter_handle: '',
               github_url: '',
@@ -226,7 +241,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
             
             enhancedResults.push({
               ...transformCMCSearchResult(cmcToken),
-              description: `${cmcToken.name} (${cmcToken.symbol}) cryptocurrency token`, // Display only
+              description: fallbackDescription,
               tokenInfo: fallbackTokenInfo
             });
           }
