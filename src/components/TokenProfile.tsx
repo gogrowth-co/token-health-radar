@@ -143,7 +143,7 @@ export default function TokenProfile({
               size={48}
             />
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-2">
                 <h2 className="font-semibold text-lg leading-tight text-gray-900 dark:text-gray-100 truncate">
                   {name}
                 </h2>
@@ -153,7 +153,7 @@ export default function TokenProfile({
               </div>
               
               {/* Address and Network */}
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -272,7 +272,7 @@ export default function TokenProfile({
     );
   }
 
-  // Desktop layout - updated to include description prominently
+  // Desktop layout - matching the image with horizontal layout
   return (
     <Card
       className="overflow-visible transition-all"
@@ -283,78 +283,88 @@ export default function TokenProfile({
         background: "var(--profile-bg, #FFF)",
         width: "100%",
         maxWidth: 1420,
-        minHeight: 170,
         padding: 0,
         margin: "auto",
       }}
     >
-      <div
-        className="flex flex-col min-h-[170px] px-6 py-6"
-        style={{ minHeight: 170 }}
-      >
-        {/* TOP ROW: Token info, price, and health score */}
-        <div className="flex items-start justify-between mb-4">
-          {/* LEFT SECTION */}
-          <div className="flex items-start gap-6 min-w-0 flex-1">
-            {/* Token Logo */}
-            <OptimizedTokenLogo
-              logo={logo}
-              name={name}
-              className="w-16 h-16 rounded-full"
-              size={64}
-            />
-            <div className="flex flex-col gap-2 min-w-0">
-              {/* Name + Symbol */}
-              <div className="flex items-center gap-3">
-                <h2
-                  className="font-semibold text-[20px] leading-[28px] text-gray-900 dark:text-gray-100 truncate"
-                  style={{ fontFamily: "Inter, sans-serif" }}
-                >
-                  {name}
-                </h2>
-                <span
-                  className="font-medium text-[14px] px-3 py-1 bg-[#252534] dark:bg-[#252534] text-gray-200 dark:text-gray-300 rounded-full"
-                  style={{
-                    borderRadius: "9999px",
-                    letterSpacing: ".01em",
-                    fontWeight: 500,
-                    fontFamily: "Inter, sans-serif",
-                    padding: "6px 12px",
-                  }}
-                >
-                  ${symbol.toUpperCase()}
-                </span>
-              </div>
-              
-              {/* Address */}
-              <div className="flex items-center gap-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={copyAddress}
-                        className="font-mono text-[14px] px-4 py-1 rounded-full bg-[#232334] dark:bg-[#232334] text-[#A3A3B3] dark:text-[#A3A3B3] border-none focus:outline-none transition-all"
-                      >
-                        {shortenAddress(address)}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Click to copy address</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <span
-                  className="px-2 py-[2px] rounded-full bg-[#252534] dark:bg-[#252534] text-[#A3A3B3] dark:text-[#A3A3B3] font-semibold text-[12px]"
-                  style={{ fontWeight: 600, marginLeft: "2px" }}
-                >
-                  {network.toUpperCase()}
-                </span>
-              </div>
+      <div className="flex items-center justify-between px-6 py-6">
+        {/* LEFT SECTION: Logo, Name, Description, Address */}
+        <div className="flex items-start gap-6 min-w-0 flex-1">
+          {/* Token Logo */}
+          <OptimizedTokenLogo
+            logo={logo}
+            name={name}
+            className="w-16 h-16 rounded-full"
+            size={64}
+          />
+          
+          <div className="flex flex-col gap-3 min-w-0 flex-1">
+            {/* Name + Symbol */}
+            <div className="flex items-center gap-3">
+              <h2
+                className="font-semibold text-[20px] leading-[28px] text-gray-900 dark:text-gray-100 truncate"
+                style={{ fontFamily: "Inter, sans-serif" }}
+              >
+                {name}
+              </h2>
+              <span
+                className="font-medium text-[14px] px-3 py-1 bg-[#252534] dark:bg-[#252534] text-gray-200 dark:text-gray-300 rounded-full"
+                style={{
+                  borderRadius: "9999px",
+                  letterSpacing: ".01em",
+                  fontWeight: 500,
+                  fontFamily: "Inter, sans-serif",
+                  padding: "6px 12px",
+                }}
+              >
+                ${symbol.toUpperCase()}
+              </span>
+            </div>
+
+            {/* Description - prominently displayed */}
+            {description && (
+              <p
+                className="text-[16px] font-normal leading-[24px] text-[#4B5563] dark:text-[#A3A3B3] pr-8"
+                style={{
+                  fontFamily: "Inter, sans-serif",
+                  lineHeight: "1.5",
+                }}
+              >
+                {description}
+              </p>
+            )}
+            
+            {/* Address and Network */}
+            <div className="flex items-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={copyAddress}
+                      className="font-mono text-[14px] px-4 py-1 rounded-full bg-[#232334] dark:bg-[#232334] text-[#A3A3B3] dark:text-[#A3A3B3] border-none focus:outline-none transition-all"
+                    >
+                      {shortenAddress(address)}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Click to copy address</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <span
+                className="px-2 py-[2px] rounded-full bg-[#252534] dark:bg-[#252534] text-[#A3A3B3] dark:text-[#A3A3B3] font-semibold text-[12px]"
+                style={{ fontWeight: 600, marginLeft: "2px" }}
+              >
+                {network.toUpperCase()}
+              </span>
             </div>
           </div>
+        </div>
 
-          {/* CENTER: Price and Market Cap Section */}
-          <div className="flex flex-col items-start gap-4 mx-16">
+        {/* RIGHT SECTION: Price, Market Cap, Health Score, Socials */}
+        <div className="flex items-center gap-8">
+          {/* Price + Change and Market Cap */}
+          <div className="flex flex-col items-end gap-4">
             {/* Price + Change */}
-            <div className="flex flex-col items-start">
+            <div className="flex flex-col items-end">
               <span className="text-[28px] font-bold leading-[36px] text-[#000] dark:text-[#fff]">
                 ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
@@ -371,7 +381,7 @@ export default function TokenProfile({
             </div>
             
             {/* Market Cap */}
-            <div className="flex flex-col items-start">
+            <div className="flex flex-col items-end">
               <span className="text-[13px] font-medium uppercase text-[#A3A3B3] dark:text-[#A3A3B3] tracking-wide mb-1">
                 Market Cap
               </span>
@@ -381,7 +391,7 @@ export default function TokenProfile({
             </div>
           </div>
 
-          {/* RIGHT: Health Score and Socials */}
+          {/* Health Score and Socials */}
           <div className="flex flex-col items-center gap-4">
             {/* Health Score */}
             <MiniHealthScore score={overallScore} />
@@ -429,21 +439,6 @@ export default function TokenProfile({
             )}
           </div>
         </div>
-
-        {/* BOTTOM ROW: Description prominently displayed */}
-        {description && (
-          <div className="mt-2">
-            <p
-              className="text-[16px] font-normal leading-[24px] text-[#4B5563] dark:text-[#A3A3B3]"
-              style={{
-                fontFamily: "Inter, sans-serif",
-                lineHeight: "1.5",
-              }}
-            >
-              {description}
-            </p>
-          </div>
-        )}
       </div>
       
       {/* CSS variables for theme */}
