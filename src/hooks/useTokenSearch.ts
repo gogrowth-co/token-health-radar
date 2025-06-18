@@ -17,8 +17,7 @@ import {
 } from "@/utils/cmcDataTransformers";
 import { 
   getTokenFromCache, 
-  createTokenInfoFromCache, 
-  createEnhancedMarketData,
+  createTokenInfoFromCache,
   callWithRetry
 } from "@/utils/tokenCacheUtils";
 import { toast } from "sonner";
@@ -30,7 +29,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
 
   useEffect(() => {
     const searchTokens = async () => {
-      if (!searchTerm || !isAuthenticated) return;
+      if (!searchTerm) return;
       
       setIsLoading(true);
       setError(null);
@@ -38,7 +37,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
       try {
         console.log("Searching for token with CoinMarketCap:", searchTerm);
 
-        // Phase 1: Search tokens using CoinMarketCap
+        // Phase 1: Search tokens using CoinMarketCap edge function
         const cmcSearchResults = await callWithRetry(() => searchTokensByCMC(searchTerm));
         
         if (!cmcSearchResults || cmcSearchResults.length === 0) {
@@ -78,12 +77,16 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               // Create base token result
               let tokenResult = transformCMCSearchResult(cmcToken);
 
-              // Try database cache first
+              // Try database cache first (for both authenticated and anonymous users)
               let tokenInfo: TokenInfoEnriched | null = null;
-              const cachedData = await getTokenFromCache(cmcToken.slug);
-              if (cachedData) {
-                console.log(`[CMC-SEARCH] Found database cache for ${cmcToken.slug}`);
-                tokenInfo = createTokenInfoFromCache(cachedData);
+              try {
+                const cachedData = await getTokenFromCache(cmcToken.slug);
+                if (cachedData) {
+                  console.log(`[CMC-SEARCH] Found database cache for ${cmcToken.slug}`);
+                  tokenInfo = createTokenInfoFromCache(cachedData);
+                }
+              } catch (cacheError) {
+                console.log(`[CMC-SEARCH] Cache lookup failed for ${cmcToken.slug}:`, cacheError);
               }
 
               // If no cache, create from CMC data
@@ -200,8 +203,8 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
         const errorMessage = err.message?.includes("rate limit") 
           ? "CoinMarketCap API rate limit reached. Please wait a moment and try again."
           : err.message?.includes("API key")
-          ? "CoinMarketCap API key not configured properly. Please check your settings."
-          : "Could not fetch token information from CoinMarketCap. Please try again later.";
+          ? "There was an issue with the CoinMarketCap API. Please try again later."
+          : "Could not fetch token information. Please try again later.";
           
         setError(errorMessage);
         toast.error("Search Error", {
@@ -214,7 +217,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
 
     const timeoutId = setTimeout(searchTokens, 300);
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, isAuthenticated]);
+  }, [searchTerm]); // Removed isAuthenticated dependency since we support both authenticated and anonymous users
 
   return { results, isLoading, error };
 }
