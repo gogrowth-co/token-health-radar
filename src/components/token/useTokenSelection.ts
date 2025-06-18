@@ -97,7 +97,7 @@ export default function useTokenSelection() {
    */
   const handleSelectToken = useCallback(async (token: TokenResult) => {
     try {
-      console.log(`[TOKEN-SELECTION] Selected token: ${token.name} (${token.symbol}), CoinGecko ID: ${token.id}`);
+      console.log(`[TOKEN-SELECTION] Selected token: ${token.name} (${token.symbol}), CoinGecko ID: ${token.id}, CMC ID: ${token.cmc_id}`);
       console.log(`[TOKEN-SELECTION] Token platforms:`, token.platforms);
       console.log(`[TOKEN-SELECTION] Token info:`, token.tokenInfo);
       
@@ -180,14 +180,30 @@ export default function useTokenSelection() {
         price_change_24h: token.tokenInfo?.price_change_24h ?? token.price_change_24h ?? 0,
         market_cap_usd: token.tokenInfo?.market_cap_usd ?? token.market_cap ?? 0,
         // Save COMPLETE and consistently-structured token info directly for /scan-loading and /scan-result
-        completeTokenInfo: token.tokenInfo || getComprehensiveTokenInfo(token)
+        completeTokenInfo: token.tokenInfo || getComprehensiveTokenInfo(token),
+        // Include CMC ID for scan function
+        cmc_id: token.cmc_id
       };
 
       console.log(`[TOKEN-SELECTION] Saving comprehensive token info to localStorage:`, tokenInfoToSave);
       localStorage.setItem("selectedToken", JSON.stringify(tokenInfoToSave));
 
+      // Build URL with CMC ID if available
+      const urlParams = new URLSearchParams({
+        token: tokenInfoToSave.address,
+        id: tokenInfoToSave.id
+      });
+      
+      // Add CMC ID if available
+      if (token.cmc_id) {
+        urlParams.set('cmc_id', token.cmc_id.toString());
+        console.log(`[TOKEN-SELECTION] Adding CMC ID to URL: ${token.cmc_id}`);
+      }
+
       // Navigate to scan loading - the actual limit enforcement happens in the backend
-      navigate(`/scan-loading?token=${encodeURIComponent(tokenInfoToSave.address)}&id=${tokenInfoToSave.id}`);
+      const scanUrl = `/scan-loading?${urlParams.toString()}`;
+      console.log(`[TOKEN-SELECTION] Navigating to: ${scanUrl}`);
+      navigate(scanUrl);
 
     } catch (error) {
       console.error("Error in handleSelectToken:", error);

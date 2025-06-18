@@ -23,12 +23,14 @@ export default function ScanLoading() {
   // Get token from URL params
   const tokenAddress = searchParams.get("token") || "";
   const coinGeckoId = searchParams.get("id") || "";
+  const cmcId = searchParams.get("cmc_id") || "";
   
   // Validate token parameters
   useEffect(() => {
     console.log("ScanLoading: URL parameters received:", Object.fromEntries(searchParams.entries()));
     console.log("ScanLoading: tokenAddress =", tokenAddress);
     console.log("ScanLoading: coinGeckoId =", coinGeckoId);
+    console.log("ScanLoading: cmcId =", cmcId);
     
     if (!tokenAddress) {
       console.error("ScanLoading: No token address provided in URL parameters");
@@ -57,7 +59,7 @@ export default function ScanLoading() {
       navigate("/");
       return;
     }
-  }, [tokenAddress, navigate, searchParams, coinGeckoId]);
+  }, [tokenAddress, navigate, searchParams, coinGeckoId, cmcId]);
 
   useEffect(() => {
     // Select random trivia
@@ -74,7 +76,7 @@ export default function ScanLoading() {
 
     const scanToken = async () => {
       try {
-        console.log("ScanLoading: Starting token scan with address:", tokenAddress, "and CoinGecko ID:", coinGeckoId);
+        console.log("ScanLoading: Starting token scan with address:", tokenAddress, "CoinGecko ID:", coinGeckoId, "CMC ID:", cmcId);
         console.log("ScanLoading: User authenticated:", isAuthenticated);
 
         if (!tokenAddress || tokenAddress.startsWith('unsupported-')) {
@@ -84,8 +86,8 @@ export default function ScanLoading() {
 
         // Validate we have minimum required data for scanning
         const effectiveCoinGeckoId = coinGeckoId;
-        if (!effectiveCoinGeckoId) {
-          console.error("ScanLoading: No CoinGecko ID available for scanning");
+        if (!effectiveCoinGeckoId && !cmcId) {
+          console.error("ScanLoading: No CoinGecko ID or CMC ID available for scanning");
           setScanFailed(true);
           setErrorMessage("Unable to scan token: Missing token identifier. Please try selecting the token again.");
           return;
@@ -95,6 +97,7 @@ export default function ScanLoading() {
         const scanRequest = {
           token_address: tokenAddress,
           coingecko_id: effectiveCoinGeckoId,
+          cmc_id: cmcId ? parseInt(cmcId) : undefined,
           user_id: user?.id || null
         };
         
@@ -136,7 +139,8 @@ export default function ScanLoading() {
           localStorage.setItem("lastScanResult", JSON.stringify(data));
           
           console.log("ScanLoading: Redirecting to scan result page");
-          navigate(`/scan-result?token=${tokenAddress}&id=${effectiveCoinGeckoId}`);
+          const resultUrl = `/scan-result?token=${tokenAddress}&id=${effectiveCoinGeckoId}${cmcId ? `&cmc_id=${cmcId}` : ''}`;
+          navigate(resultUrl);
         }, 1000);
       } catch (error) {
         console.error("ScanLoading: Error during token scan:", error instanceof Error ? error.message : String(error));
@@ -151,7 +155,7 @@ export default function ScanLoading() {
     return () => {
       clearInterval(interval);
     };
-  }, [navigate, tokenAddress, coinGeckoId, user, isAuthenticated]);
+  }, [navigate, tokenAddress, coinGeckoId, cmcId, user, isAuthenticated]);
 
   // Get token display information
   const displayToken = (() => {

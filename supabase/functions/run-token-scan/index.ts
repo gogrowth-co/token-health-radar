@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -40,217 +39,71 @@ const cleanDescription = (htmlDescription: string): string => {
 
 // Helper function to extract GitHub repo info from URL
 const extractGitHubRepoInfo = (githubUrl: string) => {
-  if (!githubUrl) return null;
-  
-  const match = githubUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
-  if (match) {
-    return {
-      owner: match[1],
-      repo: match[2].replace(/\.git$/, '') // Remove .git suffix if present
-    };
-  }
-  return null;
-};
-
-// Helper function to fetch GitHub repository data
-const fetchGitHubRepoData = async (githubUrl: string, githubApiKey?: string) => {
-  const repoInfo = extractGitHubRepoInfo(githubUrl);
-  if (!repoInfo) {
-    console.log('[SCAN] Invalid GitHub URL format:', githubUrl);
-    return null;
-  }
-
-  const headers: Record<string, string> = {
-    'Accept': 'application/vnd.github.v3+json',
-    'User-Agent': 'Token-Health-Scan/1.0'
-  };
-
-  if (githubApiKey) {
-    headers['Authorization'] = `token ${githubApiKey}`;
-    console.log('[SCAN] Using GitHub API key for better rate limits');
-  }
+  if (!githubUrl) return null
 
   try {
-    console.log(`[SCAN] Fetching GitHub data for ${repoInfo.owner}/${repoInfo.repo}`);
-    
-    // Fetch repository basic info
-    const repoResponse = await fetch(`https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}`, {
-      headers
-    });
-
-    if (!repoResponse.ok) {
-      console.warn(`[SCAN] GitHub repo API returned status ${repoResponse.status} for ${repoInfo.owner}/${repoInfo.repo}`);
-      return null;
+    const url = new URL(githubUrl)
+    const pathParts = url.pathname.split('/').filter(Boolean)
+    if (url.hostname === 'github.com' && pathParts.length === 2) {
+      const [owner, repo] = pathParts
+      return { owner, repo }
     }
-
-    const repoData = await repoResponse.json();
-    
-    // Fetch contributors count
-    const contributorsResponse = await fetch(`https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/contributors?per_page=100`, {
-      headers
-    });
-    
-    let contributorsCount = 0;
-    if (contributorsResponse.ok) {
-      const contributorsData = await contributorsResponse.json();
-      contributorsCount = Array.isArray(contributorsData) ? contributorsData.length : 0;
-    } else {
-      console.warn(`[SCAN] GitHub contributors API returned status ${contributorsResponse.status}`);
-    }
-
-    // Fetch recent commits (last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const since = thirtyDaysAgo.toISOString();
-
-    const commitsResponse = await fetch(`https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/commits?since=${since}&per_page=100`, {
-      headers
-    });
-
-    let commits30d = 0;
-    if (commitsResponse.ok) {
-      const commitsData = await commitsResponse.json();
-      commits30d = Array.isArray(commitsData) ? commitsData.length : 0;
-    } else {
-      console.warn(`[SCAN] GitHub commits API returned status ${commitsResponse.status}`);
-    }
-
-    const lastCommitDate = repoData.pushed_at ? new Date(repoData.pushed_at).toISOString() : null;
-
-    console.log(`[SCAN] GitHub data collected - Contributors: ${contributorsCount}, Commits (30d): ${commits30d}, Last commit: ${lastCommitDate}`);
-
-    return {
-      contributorsCount,
-      commits30d,
-      lastCommit: lastCommitDate,
-      isOpenSource: !repoData.private,
-      stargazersCount: repoData.stargazers_count || 0,
-      forksCount: repoData.forks_count || 0
-    };
-
   } catch (error) {
-    console.error(`[SCAN] Error fetching GitHub data:`, error);
-    return null;
+    console.error(`[SCAN] Invalid GitHub URL: ${githubUrl}`, error)
   }
-};
+  return null
+}
 
-// Helper function to calculate development score
-const calculateDevelopmentScore = (data: any) => {
-  let score = 0;
-  
-  // Base score for being open source
-  if (data.isOpenSource) {
-    score += 20;
+// Rate limiting for API calls
+let lastCoinGeckoCall = 0
+let lastCMCCall = 0
+const MIN_API_INTERVAL = 2000 // 2 seconds
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+// Helper function to enforce rate limiting
+const enforceRateLimit = async (lastCallTime: number, minInterval: number) => {
+  const now = Date.now()
+  const timeSinceLastCall = now - lastCallTime
+  if (timeSinceLastCall < minInterval) {
+    const waitTime = minInterval - timeSinceLastCall
+    console.log(`[SCAN] Rate limiting: waiting ${waitTime}ms`)
+    await delay(waitTime)
   }
-  
-  // Contributors score (max 25 points)
-  const contributors = data.contributorsCount || 0;
-  if (contributors >= 20) score += 25;
-  else if (contributors >= 10) score += 20;
-  else if (contributors >= 5) score += 15;
-  else if (contributors >= 2) score += 10;
-  else if (contributors >= 1) score += 5;
-  
-  // Recent activity score (max 25 points)
-  const commits30d = data.commits30d || 0;
-  if (commits30d >= 50) score += 25;
-  else if (commits30d >= 20) score += 20;
-  else if (commits30d >= 10) score += 15;
-  else if (commits30d >= 5) score += 10;
-  else if (commits30d >= 1) score += 5;
-  
-  // Last commit recency score (max 20 points)
-  if (data.lastCommit) {
-    const daysSinceCommit = Math.floor((Date.now() - new Date(data.lastCommit).getTime()) / (1000 * 60 * 60 * 24));
-    if (daysSinceCommit <= 7) score += 20;
-    else if (daysSinceCommit <= 30) score += 15;
-    else if (daysSinceCommit <= 90) score += 10;
-    else if (daysSinceCommit <= 180) score += 5;
-  }
-  
-  // Community engagement score (max 10 points)
-  const stars = data.stargazersCount || 0;
-  if (stars >= 1000) score += 10;
-  else if (stars >= 500) score += 8;
-  else if (stars >= 100) score += 5;
-  else if (stars >= 10) score += 2;
-  
-  return Math.min(score, 100); // Cap at 100
-};
+  return Date.now()
+}
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { token_address, user_id, coingecko_id, cmc_id } = await req.json()
+    const { token_address, coingecko_id, cmc_id, user_id } = await req.json()
     
-    if (!token_address) {
-      throw new Error('Token address is required')
-    }
+    console.log(`[SCAN] Starting scan for token: ${token_address}, user: ${user_id}, coingecko_id: ${coingecko_id}, cmc_id: ${cmc_id}`)
 
-    console.log(`[SCAN] Starting scan for token: ${token_address}, user: ${user_id || 'anonymous'}, coingecko_id: ${coingecko_id}, cmc_id: ${cmc_id}`)
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
-    // Initialize Supabase client with service role key for database operations
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
-    // Check scan access for authenticated users
-    let canPerformProScan = false
-    let userPlan = 'anonymous'
-    let scansUsed = 0
-    let scanLimit = 0
-
+    // Check user's scan access and permissions
+    let proScanPermitted = false;
     if (user_id) {
-      try {
-        console.log(`[SCAN] Checking scan access for user: ${user_id}`)
-        
-        // Get user's current subscription data
-        const { data: subscriberData, error: subscriberError } = await supabase
-          .from('subscribers')
-          .select('plan, scans_used, pro_scan_limit')
-          .eq('id', user_id)
-          .single()
-
-        if (!subscriberError && subscriberData) {
-          userPlan = subscriberData.plan || 'free'
-          scansUsed = subscriberData.scans_used || 0
-          scanLimit = subscriberData.pro_scan_limit || 3
-
-          console.log(`[SCAN] User ${user_id} - Plan: ${userPlan}, Scans used: ${scansUsed}, Limit: ${scanLimit}`)
-
-          // Determine if user can perform a Pro scan
-          if (userPlan === 'pro') {
-            canPerformProScan = true // Pro users always get Pro scans
-          } else if (userPlan === 'free' && scansUsed < scanLimit) {
-            canPerformProScan = true // Free users get limited Pro scans
-          }
-        } else {
-          console.warn(`[SCAN] Could not retrieve subscriber data for user ${user_id}:`, subscriberError)
-          canPerformProScan = false
-        }
-      } catch (error) {
-        console.error(`[SCAN] Error checking user access:`, error)
-        canPerformProScan = false
-      }
-    } else {
-      console.log(`[SCAN] Anonymous user - providing basic scan only`)
-      canPerformProScan = false
+      const { data: accessData } = await supabase.functions.invoke('check-scan-access', {
+        body: { user_id }
+      });
+      
+      console.log(`[SCAN] User ${user_id} - Plan: ${accessData?.plan}, Scans used: ${accessData?.scansUsed}, Limit: ${accessData?.scanLimit}`)
+      proScanPermitted = accessData?.proScanAvailable || false;
     }
-
-    console.log(`[SCAN] Pro scan permitted: ${canPerformProScan}`)
-
-    // Get API keys for better rate limits
-    const coinGeckoApiKey = Deno.env.get('COINGECKO_API_KEY')
-    const cmcApiKey = Deno.env.get('COINMARKETCAP_API_KEY')
-    const goPlusApiKey = Deno.env.get('GOPLUS_API_KEY')
-    const githubApiKey = Deno.env.get('GITHUB_API_KEY')
     
-    // Initialize default token data
+    console.log(`[SCAN] Pro scan permitted: ${proScanPermitted}`)
+
+    // Initialize token data with defaults
     let tokenData = {
-      token_address,
       name: `Token ${token_address.substring(0, 8)}...`,
       symbol: 'UNKNOWN',
       description: '',
@@ -259,53 +112,44 @@ serve(async (req) => {
       github_url: '',
       logo_url: '',
       coingecko_id: coingecko_id || '',
-      cmc_id: cmc_id || null,
       current_price_usd: 0,
       price_change_24h: 0,
       market_cap_usd: 0,
       total_value_locked_usd: 'N/A'
     }
 
-    // Fetch token data from CoinMarketCap if CMC ID is provided
-    if (cmc_id && cmcApiKey) {
+    // Fetch token data - prioritize CMC if cmc_id is provided
+    if (cmc_id) {
+      console.log(`[SCAN] Fetching token data from CMC API: ${cmc_id}`)
+      
       try {
-        console.log(`[SCAN] Fetching token data from CoinMarketCap: ${cmc_id}`)
+        lastCMCCall = await enforceRateLimit(lastCMCCall, MIN_API_INTERVAL)
         
-        // Fetch token info and quotes from CMC
-        const [infoResponse, quotesResponse] = await Promise.allSettled([
-          fetch(`https://pro-api.coinmarketcap.com/v1/cryptocurrency/info?id=${cmc_id}`, {
-            headers: {
-              'X-CMC_PRO_API_KEY': cmcApiKey,
-              'Accept': 'application/json'
+        const { data: cmcData, error: cmcError } = await supabase.functions.invoke('coinmarketcap-search', {
+          body: {
+            action: 'details',
+            cmcIds: [parseInt(cmc_id)]
+          }
+        });
+
+        if (!cmcError && cmcData?.data && Object.keys(cmcData.data).length > 0) {
+          const cmcInfo = cmcData.data[cmc_id]
+          
+          // Get quotes for pricing data
+          const { data: quotesData } = await supabase.functions.invoke('coinmarketcap-search', {
+            body: {
+              action: 'quotes',
+              cmcIds: [parseInt(cmc_id)],
+              convert: 'USD'
             }
-          }),
-          fetch(`https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?id=${cmc_id}&convert=USD`, {
-            headers: {
-              'X-CMC_PRO_API_KEY': cmcApiKey,
-              'Accept': 'application/json'
-            }
-          })
-        ])
-        
-        let cmcInfo = null
-        let cmcQuotes = null
-        
-        if (infoResponse.status === 'fulfilled' && infoResponse.value.ok) {
-          const infoData = await infoResponse.value.json()
-          cmcInfo = infoData.data?.[cmc_id]
-        }
-        
-        if (quotesResponse.status === 'fulfilled' && quotesResponse.value.ok) {
-          const quotesData = await quotesResponse.value.json()
-          cmcQuotes = quotesData.data?.[cmc_id]
-        }
-        
-        if (cmcInfo || cmcQuotes) {
-          const urls = cmcInfo?.urls || {}
-          const website = urls.website?.[0] || ''
-          const twitter = urls.twitter?.[0] || ''
-          const github = urls.source_code?.[0] || ''
-          const twitterHandle = twitter ? twitter.split('/').pop()?.replace('@', '') || '' : ''
+          });
+          
+          const cmcQuotes = quotesData?.data?.[cmc_id]
+          
+          // Extract social links
+          const website = cmcInfo?.urls?.website?.[0] || ''
+          const twitterHandle = cmcInfo?.urls?.twitter?.[0]?.replace('https://twitter.com/', '') || ''
+          const github = cmcInfo?.urls?.source_code?.[0] || ''
           
           const usdQuote = cmcQuotes?.quote?.USD || {}
           
@@ -325,37 +169,45 @@ serve(async (req) => {
             twitter_handle: twitterHandle,
             github_url: github,
             logo_url: cmcInfo?.logo || '',
-            cmc_id,
-            current_price_usd: usdQuote.price || 0,
-            price_change_24h: usdQuote.percent_change_24h || 0,
-            market_cap_usd: usdQuote.market_cap || 0
+            current_price_usd: usdQuote?.price || 0,
+            price_change_24h: usdQuote?.percent_change_24h || 0,
+            market_cap_usd: usdQuote?.market_cap || 0,
+            total_value_locked_usd: 'N/A'
           }
           
-          console.log(`[SCAN] Token data successfully collected from CoinMarketCap`)
+          console.log(`[SCAN] Token data successfully collected from CMC API`)
+        } else {
+          console.log(`[SCAN] No data found in CMC API response or error occurred`)
         }
       } catch (error) {
-        console.error(`[SCAN] Error fetching token data from CoinMarketCap:`, error)
+        console.error(`[SCAN] Error fetching token data from CMC:`, error)
       }
     }
     
-    // Fallback to CoinGecko if CMC data not available and CoinGecko ID provided
-    else if (coingecko_id && coinGeckoApiKey) {
+    // Fallback to CoinGecko if we have coingecko_id and no description yet
+    if (coingecko_id && !tokenData.description) {
+      console.log(`[SCAN] Fetching token data from CoinGecko: ${coingecko_id}`)
+      
+      // Use CoinGecko Demo Plan authentication
+      const cgApiKey = Deno.env.get('COINGECKO_API_KEY')
+      console.log(`[SCAN] Using CoinGecko Demo Plan authentication`)
+      
+      const headers: Record<string, string> = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      }
+      
+      if (cgApiKey) {
+        headers['x-cg-demo-api-key'] = cgApiKey
+      }
+      
       try {
-        const cgUrl = `https://api.coingecko.com/api/v3/coins/${coingecko_id}`
-        const cgHeaders: Record<string, string> = {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
+        lastCoinGeckoCall = await enforceRateLimit(lastCoinGeckoCall, MIN_API_INTERVAL)
         
-        if (coinGeckoApiKey) {
-          cgHeaders['x-cg-demo-api-key'] = coinGeckoApiKey
-          console.log(`[SCAN] Using CoinGecko Demo Plan authentication`)
-        } else {
-          console.log(`[SCAN] Using CoinGecko free tier`)
-        }
-        
-        console.log(`[SCAN] Fetching token data from CoinGecko: ${coingecko_id}`)
-        const response = await fetch(cgUrl, { headers: cgHeaders })
+        const response = await fetch(
+          `https://api.coingecko.com/api/v3/coins/${coingecko_id}`,
+          { headers }
+        )
         
         if (response.ok) {
           const data = await response.json()
@@ -375,8 +227,7 @@ serve(async (req) => {
             website_url: data.links?.homepage?.[0] || '',
             twitter_handle: data.links?.twitter_screen_name || '',
             github_url: data.links?.repos_url?.github?.[0] || '',
-            logo_url: data.image?.large || data.image?.small || '',
-            coingecko_id,
+            logo_url: data.image?.large || '',
             current_price_usd: data.market_data?.current_price?.usd || 0,
             price_change_24h: data.market_data?.price_change_percentage_24h || 0,
             market_cap_usd: data.market_data?.market_cap?.usd || 0,
@@ -385,7 +236,7 @@ serve(async (req) => {
           
           console.log(`[SCAN] Token data successfully collected from CoinGecko`)
         } else {
-          console.warn(`[SCAN] CoinGecko API returned status ${response.status}`)
+          console.error(`[SCAN] CoinGecko API error: ${response.status} ${response.statusText}`)
         }
       } catch (error) {
         console.error(`[SCAN] Error fetching token data from CoinGecko:`, error)
@@ -400,300 +251,306 @@ serve(async (req) => {
 
     // Initialize default security data
     let securityData = {
-      token_address,
-      score: 50, // Default neutral score
       ownership_renounced: false,
+      can_mint: true,
       honeypot_detected: false,
-      can_mint: false,
       freeze_authority: false,
-      audit_status: 'Not Audited',
-      multisig_status: 'Unknown'
+      multisig_status: 'Unknown',
+      audit_status: 'Not audited'
     }
 
-    // Only fetch detailed security data for Pro scans
-    if (canPerformProScan) {
+    // For basic scans, use default security data
+    if (!proScanPermitted) {
+      console.log(`[SCAN] Basic scan - using default security data`)
+    } else {
+      console.log(`[SCAN] Pro scan - fetching security data`)
+      
       try {
-        const goPlusUrl = goPlusApiKey
-          ? `https://api.gopluslabs.io/api/v1/token_security/1?contract_addresses=${token_address}&api_key=${goPlusApiKey}`
-          : `https://api.gopluslabs.io/api/v1/token_security/1?contract_addresses=${token_address}`
+        // Fetch security data from external API
+        const apiUrl = `https://api.gopluslabs.io/api/v1/token_security/56/${token_address}`
+        console.log(`[SCAN] Calling GoPlus API: ${apiUrl}`)
         
-        console.log(`[SCAN] Fetching security data from GoPlus`)
-        const response = await fetch(goPlusUrl)
-        
+        const response = await fetch(apiUrl)
         if (response.ok) {
           const data = await response.json()
-          const result = data.result?.[token_address.toLowerCase()]
-          
-          if (result) {
-            const ownership_renounced = result.owner_address === '0x0000000000000000000000000000000000000000'
-            const honeypot_detected = result.is_honeypot === '1'
-            const can_mint = result.can_take_back_ownership === '1'
-            const freeze_authority = result.cannot_sell_all === '1'
-            
-            // Calculate security score
-            let score = 100
-            if (!ownership_renounced) score -= 30
-            if (honeypot_detected) score -= 40
-            if (can_mint) score -= 20
-            if (freeze_authority) score -= 10
-            
+          if (data.result) {
             securityData = {
-              ...securityData,
-              score: Math.max(0, score),
-              ownership_renounced,
-              honeypot_detected,
-              can_mint,
-              freeze_authority
+              ownership_renounced: data.result.is_proxy === '1' ? data.result.proxy_is_renounced === '1' : data.result.owner_is_renounced === '1',
+              can_mint: data.result.is_mintable === '1',
+              honeypot_detected: data.result.honeypot_related === '1',
+              freeze_authority: data.result.can_take_back_ownership === '1',
+              multisig_status: data.result.is_proxy === '1' ? (data.result.proxy_is_multi_sig === '1' ? 'MultiSig' : 'Not MultiSig') : 'Not Proxy',
+              audit_status: data.result.audit_status || 'Not audited'
             }
-            
-            console.log(`[SCAN] Security data successfully collected from GoPlus`)
+            console.log(`[SCAN] Security data successfully collected from GoPlus API`)
+          } else {
+            console.warn(`[SCAN] No security data found in GoPlus API response`)
           }
         } else {
-          console.warn(`[SCAN] GoPlus API returned status ${response.status}`)
+          console.error(`[SCAN] GoPlus API error: ${response.status} ${response.statusText}`)
         }
       } catch (error) {
-        console.error(`[SCAN] Error fetching security data from GoPlus:`, error)
+        console.error(`[SCAN] Error fetching security data:`, error)
       }
-    } else {
-      console.log(`[SCAN] Basic scan - using default security data`)
     }
+    
+    // Calculate security score
+    let securityScore = 50 // Base score
+    if (securityData.ownership_renounced) securityScore += 20
+    if (!securityData.can_mint) securityScore += 15
+    if (!securityData.honeypot_detected) securityScore += 15
+    securityScore = Math.min(securityScore, 100)
 
-    const tokenomicsData = {
-      token_address,
-      score: canPerformProScan ? Math.floor(Math.random() * 40) + 40 : Math.floor(Math.random() * 20) + 30,
-      circulating_supply: null,
-      supply_cap: null,
-      tvl_usd: tokenData.total_value_locked_usd !== 'N/A' ? parseFloat(tokenData.total_value_locked_usd) : null,
-      vesting_schedule: canPerformProScan ? 'Unknown' : 'Limited Info',
-      distribution_score: canPerformProScan ? 'Medium' : 'Basic',
-      treasury_usd: null,
-      burn_mechanism: false
-    }
-
-    const liquidityData = {
-      token_address,
-      score: canPerformProScan ? Math.floor(Math.random() * 50) + 30 : Math.floor(Math.random() * 20) + 20,
-      liquidity_locked_days: null,
-      cex_listings: 0,
-      trading_volume_24h_usd: null,
-      holder_distribution: canPerformProScan ? 'Unknown' : 'Limited Info',
-      dex_depth_status: canPerformProScan ? 'Medium' : 'Basic'
-    }
-
-    // Enhanced development data with GitHub integration
+    // Initialize default development data
     let developmentData = {
-      token_address,
-      score: 0,
       github_repo: tokenData.github_url,
       is_open_source: !!tokenData.github_url,
-      contributors_count: null,
-      commits_30d: null,
+      contributors_count: 0,
+      commits_30d: 0,
       last_commit: null,
       roadmap_progress: 'Unknown'
     }
+    
+    // Fetch GitHub data for development analysis
+    console.log(`[SCAN] Fetching GitHub data for development analysis`)
 
-    // Fetch GitHub data for Pro scans or if GitHub URL is available
-    if ((canPerformProScan || tokenData.github_url) && tokenData.github_url) {
-      console.log(`[SCAN] Fetching GitHub data for development analysis`)
-      
-      const githubData = await fetchGitHubRepoData(tokenData.github_url, githubApiKey);
-      
-      if (githubData) {
-        const score = calculateDevelopmentScore(githubData);
+    if (tokenData.github_url) {
+      const repoInfo = extractGitHubRepoInfo(tokenData.github_url)
+      if (repoInfo) {
+        const { owner, repo } = repoInfo
+        console.log(`[SCAN] Fetching GitHub data for ${owner}/${repo}`)
         
-        developmentData = {
-          ...developmentData,
-          score,
-          is_open_source: githubData.isOpenSource,
-          contributors_count: githubData.contributorsCount,
-          commits_30d: githubData.commits30d,
-          last_commit: githubData.lastCommit,
-          roadmap_progress: githubData.commits30d > 0 ? 'Active' : 'Inactive'
+        const githubApiKey = Deno.env.get('GITHUB_API_KEY')
+        const githubHeaders: Record<string, string> = {
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'TokenHealthScan/1.0'
         }
         
-        console.log(`[SCAN] Development data successfully collected - Score: ${score}, Contributors: ${githubData.contributorsCount}, Commits (30d): ${githubData.commits30d}`)
-      } else {
-        // Fallback scoring for open source projects without detailed data
-        if (tokenData.github_url) {
-          developmentData.score = 20; // Base score for having a GitHub repository
-          developmentData.roadmap_progress = 'Unknown';
-          console.log(`[SCAN] GitHub data not available, using fallback score: ${developmentData.score}`)
+        if (githubApiKey) {
+          githubHeaders['Authorization'] = `token ${githubApiKey}`
+          console.log(`[SCAN] Using GitHub API key for better rate limits`)
+        }
+
+        try {
+          // Fetch contributors
+          const contributorsUrl = `https://api.github.com/repos/${owner}/${repo}/contributors`
+          console.log(`[SCAN] Calling GitHub API: ${contributorsUrl}`)
+          
+          const contributorsResponse = await fetch(contributorsUrl, { headers: githubHeaders })
+          if (contributorsResponse.ok) {
+            const contributorsData = await contributorsResponse.json()
+            developmentData.contributors_count = contributorsData.length
+          } else {
+            console.error(`[SCAN] GitHub API error (contributors): ${contributorsResponse.status} ${contributorsResponse.statusText}`)
+          }
+
+          // Fetch commits in the last 30 days
+          const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+          const commitsUrl = `https://api.github.com/repos/${owner}/${repo}/commits?since=${thirtyDaysAgo}`
+          console.log(`[SCAN] Calling GitHub API: ${commitsUrl}`)
+          
+          const commitsResponse = await fetch(commitsUrl, { headers: githubHeaders })
+          if (commitsResponse.ok) {
+            const commitsData = await commitsResponse.json()
+            developmentData.commits_30d = commitsData.length
+            
+            if (commitsData.length > 0) {
+              developmentData.last_commit = commitsData[0].commit.author.date
+            }
+          } else {
+            console.error(`[SCAN] GitHub API error (commits): ${commitsResponse.status} ${commitsResponse.statusText}`)
+          }
+          
+          console.log(`[SCAN] GitHub data collected - Contributors: ${developmentData.contributors_count}, Commits (30d): ${developmentData.commits_30d}, Last commit: ${developmentData.last_commit}`)
+        } catch (error) {
+          console.error(`[SCAN] Error fetching GitHub data:`, error)
         }
       }
-    } else {
-      console.log(`[SCAN] No GitHub URL available or basic scan - using minimal development data`)
     }
 
-    // Community data always 0 as per requirements
-    const communityData = {
-      token_address,
-      score: 0,
-      twitter_followers: null,
-      twitter_verified: false,
-      twitter_growth_7d: null,
-      telegram_members: null,
-      discord_members: null,
-      active_channels: [],
-      team_visibility: 'Unknown'
+    // Calculate development score
+    let developmentScore = 50 // Base score
+    if (developmentData.is_open_source) developmentScore += 20
+    if (developmentData.contributors_count > 5) developmentScore += 15
+    if (developmentData.commits_30d > 10) developmentScore += 15
+    developmentScore = Math.min(developmentScore, 100)
+    
+    console.log(`[SCAN] Development data successfully collected - Score: ${developmentScore}, Contributors: ${developmentData.contributors_count}, Commits (30d): ${developmentData.commits_30d}`)
+
+    // Initialize default community data
+    let communityData = {
+      telegram_members: 0,
+      discord_members: 0,
+      twitter_followers: 0
     }
+
+    // Calculate community score
+    let communityScore = 50 // Base score
+    if (communityData.telegram_members > 1000) communityScore += 15
+    if (communityData.discord_members > 1000) communityScore += 15
+    if (communityData.twitter_followers > 10000) communityScore += 20
+    communityScore = Math.min(communityScore, 100)
+
+    // Initialize default liquidity data
+    let liquidityData = {
+      dex_pairs: 0,
+      total_liquidity_usd: 0
+    }
+
+    // Calculate liquidity score
+    let liquidityScore = 50 // Base score
+    if (liquidityData.dex_pairs > 1) liquidityScore += 20
+    if (liquidityData.total_liquidity_usd > 100000) liquidityScore += 30
+    liquidityScore = Math.min(liquidityScore, 100)
+
+    // Initialize default tokenomics data
+    let tokenomicsData = {
+      total_supply: 0,
+      circulating_supply: 0,
+      holder_count: 0
+    }
+
+    // Calculate tokenomics score
+    let tokenomicsScore = 50 // Base score
+    if (tokenomicsData.holder_count > 100) tokenomicsScore += 20
+    if (tokenomicsData.circulating_supply > 0 && tokenomicsData.total_supply > 0) {
+      const circulatingSupplyRatio = tokenomicsData.circulating_supply / tokenomicsData.total_supply
+      if (circulatingSupplyRatio > 0.5) tokenomicsScore += 30
+    }
+    tokenomicsScore = Math.min(tokenomicsScore, 100)
+
+    // Calculate overall score
+    const scores = {
+      security: securityScore,
+      liquidity: liquidityScore,
+      tokenomics: tokenomicsScore,
+      community: communityScore,
+      development: developmentScore
+    }
+    
+    const overallScore = Math.round((scores.security + scores.liquidity + scores.tokenomics + scores.community + scores.development) / 5)
 
     console.log(`[SCAN] Saving token data to database: ${token_address}`)
     console.log(`[SCAN] Token description to save: "${tokenData.description}"`)
     
     try {
       // Save token data first
-      const { data: tokenSaveData, error: tokenSaveError } = await supabase
+      const { error: tokenError } = await supabase
         .from('token_data_cache')
-        .upsert(tokenData, { onConflict: 'token_address' })
+        .upsert({
+          token_address,
+          name: tokenData.name,
+          symbol: tokenData.symbol,
+          description: tokenData.description,
+          website_url: tokenData.website_url,
+          twitter_handle: tokenData.twitter_handle,
+          github_url: tokenData.github_url,
+          logo_url: tokenData.logo_url,
+          coingecko_id: tokenData.coingecko_id,
+          cmc_id: cmc_id ? parseInt(cmc_id) : null,
+          current_price_usd: tokenData.current_price_usd,
+          price_change_24h: tokenData.price_change_24h,
+          market_cap_usd: tokenData.market_cap_usd,
+          total_value_locked_usd: tokenData.total_value_locked_usd
+        }, { onConflict: 'token_address' })
 
-      if (tokenSaveError) {
-        console.error(`[SCAN] CRITICAL: Failed to save token data:`, tokenSaveError)
-        throw new Error(`Failed to save token data: ${tokenSaveError.message}`)
-      }
-      
+      if (tokenError) throw tokenError
       console.log(`[SCAN] Successfully saved token data for: ${token_address}`)
 
-      // Now save all other cache data - these should succeed now that token_data_cache exists
+      // Save category data
       const savePromises = [
-        supabase.from('token_security_cache').upsert(securityData, { onConflict: 'token_address' }),
-        supabase.from('token_tokenomics_cache').upsert(tokenomicsData, { onConflict: 'token_address' }),
-        supabase.from('token_liquidity_cache').upsert(liquidityData, { onConflict: 'token_address' }),
-        supabase.from('token_development_cache').upsert(developmentData, { onConflict: 'token_address' }),
-        supabase.from('token_community_cache').upsert(communityData, { onConflict: 'token_address' })
+        supabase.from('token_security_cache').upsert({
+          token_address,
+          ...securityData,
+          score: scores.security
+        }, { onConflict: 'token_address' }),
+        
+        supabase.from('token_tokenomics_cache').upsert({
+          token_address,
+          score: scores.tokenomics
+        }, { onConflict: 'token_address' }),
+        
+        supabase.from('token_liquidity_cache').upsert({
+          token_address,
+          score: scores.liquidity
+        }, { onConflict: 'token_address' }),
+        
+        supabase.from('token_development_cache').upsert({
+          token_address,
+          ...developmentData,
+          score: scores.development
+        }, { onConflict: 'token_address' }),
+        
+        supabase.from('token_community_cache').upsert({
+          token_address,
+          score: scores.community
+        }, { onConflict: 'token_address' })
       ]
 
       const results = await Promise.allSettled(savePromises)
-      
-      const tableNames = ['security', 'tokenomics', 'liquidity', 'development', 'community']
-      
-      // Check for any failures
-      let hasFailures = false
       results.forEach((result, index) => {
-        const tableName = tableNames[index]
-        if (result.status === 'rejected') {
-          console.error(`[SCAN] ERROR: Failed to save ${tableName} data:`, result.reason)
-          hasFailures = true
-        } else if (result.value.error) {
-          console.error(`[SCAN] ERROR: Database error saving ${tableName}:`, result.value.error)
-          hasFailures = true
+        const categories = ['security', 'tokenomics', 'liquidity', 'development', 'community']
+        if (result.status === 'fulfilled') {
+          console.log(`[SCAN] Successfully saved ${categories[index]} data`)
         } else {
-          console.log(`[SCAN] Successfully saved ${tableName} data`)
+          console.error(`[SCAN] Error saving ${categories[index]} data:`, result.reason)
         }
       })
 
-      if (hasFailures) {
-        throw new Error('Failed to save some cache data to database')
-      }
-
-    } catch (error) {
-      console.error(`[SCAN] Database save failed:`, error)
-      // Return error response instead of fake success
-      return new Response(
-        JSON.stringify({ 
-          error: `Database save failed: ${error.message}`,
-          success: false 
-        }),
-        { 
-          status: 500,
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json' 
-          } 
-        }
-      )
-    }
-
-    // Calculate overall score
-    const scores = [
-      securityData.score,
-      tokenomicsData.score,
-      liquidityData.score,
-      developmentData.score
-    ].filter(score => score !== null && score !== undefined)
-    
-    const overallScore = scores.length > 0 
-      ? Math.round(scores.reduce((acc, curr) => acc + curr, 0) / scores.length)
-      : 0
-
-    try {
-      const scanRecord = {
-        user_id: user_id || null,
-        token_address,
-        cmc_id: cmc_id || null,
-        score_total: overallScore,
-        pro_scan: canPerformProScan,
-        is_anonymous: !user_id
-      }
+      // Record the scan
+      console.log(`[SCAN] Recording scan: {
+  user_id: "${user_id}",
+  token_address: "${token_address}",
+  cmc_id: ${cmc_id ? parseInt(cmc_id) : null},
+  score_total: ${overallScore},
+  pro_scan: ${proScanPermitted},
+  is_anonymous: ${!user_id}
+}`)
       
-      console.log(`[SCAN] Recording scan:`, scanRecord)
-      const { error: scanError } = await supabase.from('token_scans').insert(scanRecord)
-      
+      const { error: scanError } = await supabase
+        .from('token_scans')
+        .insert({
+          user_id: user_id || null,
+          token_address,
+          cmc_id: cmc_id ? parseInt(cmc_id) : null,
+          score_total: overallScore,
+          pro_scan: proScanPermitted,
+          is_anonymous: !user_id
+        })
+
       if (scanError) {
         console.error(`[SCAN] Error recording scan:`, scanError)
       } else {
         console.log(`[SCAN] Successfully recorded scan`)
       }
+
     } catch (error) {
-      console.error(`[SCAN] Exception recording scan:`, error)
+      console.error(`[SCAN] Error saving data to database:`, error)
     }
 
-    // Increment scan usage for authenticated users who performed a Pro scan
-    if (user_id && canPerformProScan) {
-      try {
-        console.log(`[SCAN] Incrementing scan usage for user: ${user_id}`)
-        const { error: updateError } = await supabase
-          .from('subscribers')
-          .update({ scans_used: scansUsed + 1 })
-          .eq('id', user_id)
+    console.log(`[SCAN] Scan completed successfully for ${token_address}, overall score: ${overallScore}, pro_scan: ${proScanPermitted}, development_score: ${developmentScore}`)
 
-        if (updateError) {
-          console.error(`[SCAN] Error updating scan usage:`, updateError)
-        } else {
-          console.log(`[SCAN] Successfully incremented scan usage to ${scansUsed + 1}`)
-        }
-      } catch (error) {
-        console.error(`[SCAN] Exception updating scan usage:`, error)
-      }
-    }
-
-    console.log(`[SCAN] Scan completed successfully for ${token_address}, overall score: ${overallScore}, pro_scan: ${canPerformProScan}, development_score: ${developmentData.score}`)
-
-    // Return consistent response structure
-    return new Response(
-      JSON.stringify({
-        success: true,
-        token_address,
-        overall_score: overallScore,
-        pro_scan: canPerformProScan,
-        token_info: tokenData,
-        security: securityData,
-        tokenomics: tokenomicsData,
-        liquidity: liquidityData,
-        development: developmentData,
-        community: communityData
-      }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    )
+    // Return the scan results
+    return new Response(JSON.stringify({
+      success: true,
+      token_info: tokenData,
+      scores,
+      overall_score: overallScore,
+      pro_scan: proScanPermitted,
+      security_data: securityData,
+      development_data: developmentData
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (error) {
-    console.error('[SCAN] Error in run-token-scan:', error)
-    return new Response(
-      JSON.stringify({ 
-        error: error.message || 'Scan failed',
-        success: false 
-      }),
-      { 
-        status: 500,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    )
+    console.error('[SCAN] Error:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message || 'Internal server error'
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
-})
+});
