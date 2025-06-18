@@ -105,6 +105,7 @@ serve(async (req) => {
         
         // Initialize result with empty data
         result = { data: [] };
+        let symbolSearchSucceeded = false;
         
         try {
           // Try symbol search first
@@ -115,20 +116,26 @@ serve(async (req) => {
           });
           
           console.log(`[CMC-EDGE] Symbol search returned ${result.data?.length || 0} results`);
+          if (result.data && result.data.length > 0) {
+            symbolSearchSucceeded = true;
+          }
         } catch (symbolError: any) {
           console.log(`[CMC-EDGE] Symbol search failed:`, symbolError.message);
           
-          // Check if it's an "Invalid symbol" error - if so, proceed to name search
+          // Check if it's an "Invalid symbol" error - if so, we'll proceed to name search
           if (symbolError.message && symbolError.message.includes('Invalid value for "symbol"')) {
-            console.log(`[CMC-EDGE] Invalid symbol error detected, proceeding to name search`);
+            console.log(`[CMC-EDGE] Invalid symbol error detected, will try name search`);
+            // Reset result to empty for name search
+            result = { data: [] };
           } else {
             // For other errors (auth, network, etc), rethrow
+            console.error('[CMC-EDGE] Non-symbol error, rethrowing:', symbolError);
             throw symbolError;
           }
         }
         
-        // If no results from symbol search, try name search
-        if (!result.data || result.data.length === 0) {
+        // If symbol search didn't succeed, try name search
+        if (!symbolSearchSucceeded && (!result.data || result.data.length === 0)) {
           try {
             console.log(`[CMC-EDGE] Attempting name search for: "${cleanSearchTerm}"`);
             
