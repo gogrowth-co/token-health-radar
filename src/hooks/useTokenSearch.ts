@@ -22,6 +22,21 @@ import {
 } from "@/utils/tokenCacheUtils";
 import { toast } from "sonner";
 
+// Helper function to detect generic/low-quality descriptions
+const isGenericDescription = (description: string): boolean => {
+  if (!description || description.trim().length === 0) return true;
+  
+  const genericPatterns = [
+    /is a cryptocurrency token\.?$/i,
+    /is a digital currency\.?$/i,
+    /is a crypto token\.?$/i,
+    /cryptocurrency token$/i,
+    /digital asset$/i
+  ];
+  
+  return genericPatterns.some(pattern => pattern.test(description.trim()));
+};
+
 export default function useTokenSearch(searchTerm: string, isAuthenticated: boolean) {
   const [results, setResults] = useState<TokenResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,23 +97,36 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               // Create base token result
               let tokenResult = transformCMCSearchResult(cmcToken);
 
-              // Try database cache first
+              // Try database cache first for non-generic descriptions only
               let tokenInfo: TokenInfoEnriched | null = null;
               try {
                 const cachedData = await getTokenFromCache(cmcToken.slug);
-                if (cachedData) {
-                  console.log(`[TOKEN-SEARCH] Found database cache for ${cmcToken.slug}`);
+                if (cachedData && cachedData.description && !isGenericDescription(cachedData.description)) {
+                  console.log(`[TOKEN-SEARCH] Found quality cached description for ${cmcToken.slug}`);
                   tokenInfo = createTokenInfoFromCache(cachedData);
+                } else if (cachedData) {
+                  console.log(`[TOKEN-SEARCH] Found cached data for ${cmcToken.slug} but description is generic, will refresh`);
+                  tokenInfo = createTokenInfoFromCache(cachedData);
+                  // Clear the generic description so it can be refreshed during scan
+                  tokenInfo.description = '';
                 }
               } catch (cacheError) {
                 console.log(`[TOKEN-SEARCH] Cache lookup failed for ${cmcToken.slug}:`, cacheError);
               }
 
-              // If no cache, create from CMC data
+              // If no cache with quality description, create from CMC data
               if (!tokenInfo) {
                 console.log(`[TOKEN-SEARCH] Creating tokenInfo from CMC data for ${cmcToken.name}`);
                 tokenInfo = transformCMCTokenInfo(tokenDetail, cmcToken);
-                tokenInfo.description = createCMCDescription(tokenDetail, cmcToken);
+                const cmcDescription = createCMCDescription(tokenDetail, cmcToken);
+                
+                // Only use CMC description if it's not generic
+                if (!isGenericDescription(cmcDescription)) {
+                  tokenInfo.description = cmcDescription;
+                } else {
+                  // Don't save generic descriptions - leave empty for scan to fill
+                  tokenInfo.description = '';
+                }
               }
 
               // Get market data from quotes
@@ -115,6 +143,10 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               // Determine ERC-20 compatibility
               const isErc20Compatible = determineCMCErc20Compatibility(tokenDetail);
 
+              // For display purposes, create a meaningful description if we don't have one
+              const displayDescription = tokenInfo.description || 
+                `${cmcToken.name} (${cmcToken.symbol}) cryptocurrency token`;
+
               // Update token result with all collected data
               tokenResult = {
                 ...tokenResult,
@@ -125,7 +157,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 price_change_24h: marketData.price_change_24h,
                 market_cap: marketData.market_cap,
                 isErc20: isErc20Compatible,
-                description: tokenInfo.description,
+                description: displayDescription, // For search results display
                 tokenInfo
               };
 
@@ -134,6 +166,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 price: marketData.price_usd,
                 market_cap: marketData.market_cap,
                 description: tokenInfo.description,
+                displayDescription: displayDescription,
                 isErc20: isErc20Compatible
               });
 
@@ -151,7 +184,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               const fallbackTokenInfo: TokenInfoEnriched = {
                 name: cmcToken.name,
                 symbol: cmcToken.symbol,
-                description: `${cmcToken.name} (${cmcToken.symbol}) cryptocurrency token`,
+                description: '', // Don't save generic descriptions
                 website_url: '',
                 twitter_handle: '',
                 github_url: '',
@@ -165,7 +198,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               
               enhancedResults.push({
                 ...transformCMCSearchResult(cmcToken),
-                description: fallbackTokenInfo.description,
+                description: `${cmcToken.name} (${cmcToken.symbol}) cryptocurrency token`, // Display only
                 tokenInfo: fallbackTokenInfo
               });
             }
@@ -179,7 +212,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
             const fallbackTokenInfo: TokenInfoEnriched = {
               name: cmcToken.name,
               symbol: cmcToken.symbol,
-              description: `${cmcToken.name} (${cmcToken.symbol}) cryptocurrency token`,
+              description: '', // Don't save generic descriptions
               website_url: '',
               twitter_handle: '',
               github_url: '',
@@ -193,7 +226,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
             
             enhancedResults.push({
               ...transformCMCSearchResult(cmcToken),
-              description: fallbackTokenInfo.description,
+              description: `${cmcToken.name} (${cmcToken.symbol}) cryptocurrency token`, // Display only
               tokenInfo: fallbackTokenInfo
             });
           }

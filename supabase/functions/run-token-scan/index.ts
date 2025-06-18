@@ -6,6 +6,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Helper function to detect generic/low-quality descriptions
+const isGenericDescription = (description: string): boolean => {
+  if (!description || description.trim().length === 0) return true;
+  
+  const genericPatterns = [
+    /is a cryptocurrency token\.?$/i,
+    /is a digital currency\.?$/i,
+    /is a crypto token\.?$/i,
+    /cryptocurrency token$/i,
+    /digital asset$/i
+  ];
+  
+  return genericPatterns.some(pattern => pattern.test(description.trim()));
+};
+
 // Helper function to clean HTML and extract plain text description
 const cleanDescription = (htmlDescription: string): string => {
   if (!htmlDescription) return '';
@@ -119,10 +134,63 @@ serve(async (req) => {
     }
 
     let descriptionSource = 'none';
+    let foundMeaningfulDescription = false;
 
-    // Fetch token data - prioritize CMC if cmc_id is provided
-    if (cmc_id) {
-      console.log(`[SCAN] Fetching token data from CMC API: ${cmc_id}`)
+    // Check if we have cached description and if it's meaningful
+    try {
+      const { data: existingToken } = await supabase
+        .from('token_data_cache')
+        .select('*')
+        .eq('token_address', token_address)
+        .single()
+
+      if (existingToken) {
+        console.log(`[SCAN] Found cached token data, checking description quality`)
+        console.log(`[SCAN] Cached description: "${existingToken.description}"`)
+        
+        if (existingToken.description && !isGenericDescription(existingToken.description)) {
+          console.log(`[SCAN] Using quality cached description`)
+          tokenData = {
+            ...tokenData,
+            name: existingToken.name || tokenData.name,
+            symbol: existingToken.symbol || tokenData.symbol,
+            description: existingToken.description,
+            website_url: existingToken.website_url || '',
+            twitter_handle: existingToken.twitter_handle || '',
+            github_url: existingToken.github_url || '',
+            logo_url: existingToken.logo_url || '',
+            current_price_usd: Number(existingToken.current_price_usd) || 0,
+            price_change_24h: Number(existingToken.price_change_24h) || 0,
+            market_cap_usd: Number(existingToken.market_cap_usd) || 0,
+            total_value_locked_usd: existingToken.total_value_locked_usd || 'N/A'
+          }
+          foundMeaningfulDescription = true;
+          descriptionSource = 'cached';
+        } else {
+          console.log(`[SCAN] Cached description is generic, will try to fetch fresh description`)
+          // Use other cached data but fetch fresh description
+          tokenData = {
+            ...tokenData,
+            name: existingToken.name || tokenData.name,
+            symbol: existingToken.symbol || tokenData.symbol,
+            website_url: existingToken.website_url || '',
+            twitter_handle: existingToken.twitter_handle || '',
+            github_url: existingToken.github_url || '',
+            logo_url: existingToken.logo_url || '',
+            current_price_usd: Number(existingToken.current_price_usd) || 0,
+            price_change_24h: Number(existingToken.price_change_24h) || 0,
+            market_cap_usd: Number(existingToken.market_cap_usd) || 0,
+            total_value_locked_usd: existingToken.total_value_locked_usd || 'N/A'
+          }
+        }
+      }
+    } catch (error) {
+      console.log(`[SCAN] No cached data found or error fetching: ${error}`)
+    }
+
+    // Fetch token data - prioritize CMC if cmc_id is provided and we need description
+    if (cmc_id && !foundMeaningfulDescription) {
+      console.log(`[SCAN] Fetching fresh token data from CMC API: ${cmc_id}`)
       
       try {
         lastCMCCall = await enforceRateLimit(lastCMCCall, MIN_API_INTERVAL)
@@ -135,25 +203,27 @@ serve(async (req) => {
         });
 
         console.log(`[SCAN] CMC Data Response:`, JSON.stringify(cmcData, null, 2))
-        console.log(`[SCAN] CMC Error:`, cmcError)
 
         if (!cmcError && cmcData?.data && Object.keys(cmcData.data).length > 0) {
           const cmcInfo = cmcData.data[cmc_id]
           console.log(`[SCAN] CMC Info for token ${cmc_id}:`, JSON.stringify(cmcInfo, null, 2))
           
-          // Check if description exists and log it
+          // Check if description exists and is meaningful
           if (cmcInfo?.description) {
             console.log(`[SCAN] CMC Raw Description Found: "${cmcInfo.description.substring(0, 200)}..."`)
             const cleanedCMCDescription = cleanDescription(cmcInfo.description);
             console.log(`[SCAN] CMC Cleaned Description: "${cleanedCMCDescription}"`)
-            if (cleanedCMCDescription) {
+            
+            if (cleanedCMCDescription && !isGenericDescription(cleanedCMCDescription)) {
               tokenData.description = cleanedCMCDescription;
               descriptionSource = 'CMC';
-              console.log(`[SCAN] Using CMC description as primary source`)
+              foundMeaningfulDescription = true;
+              console.log(`[SCAN] Using meaningful CMC description`)
+            } else {
+              console.log(`[SCAN] CMC description is generic, will try other sources`)
             }
           } else {
             console.log(`[SCAN] CMC description field is missing or empty`)
-            console.log(`[SCAN] Available CMC fields:`, Object.keys(cmcInfo || {}))
           }
           
           // Get quotes for pricing data
@@ -168,9 +238,9 @@ serve(async (req) => {
           const cmcQuotes = quotesData?.data?.[cmc_id]
           
           // Extract social links
-          const website = cmcInfo?.urls?.website?.[0] || ''
-          const twitterHandle = cmcInfo?.urls?.twitter?.[0]?.replace('https://twitter.com/', '') || ''
-          const github = cmcInfo?.urls?.source_code?.[0] || ''
+          const website = cmcInfo?.urls?.website?.[0] || tokenData.website_url
+          const twitterHandle = cmcInfo?.urls?.twitter?.[0]?.replace('https://twitter.com/', '') || tokenData.twitter_handle
+          const github = cmcInfo?.urls?.source_code?.[0] || tokenData.github_url
           
           const usdQuote = cmcQuotes?.quote?.USD || {}
           
@@ -178,15 +248,14 @@ serve(async (req) => {
             ...tokenData,
             name: cmcInfo?.name || tokenData.name,
             symbol: cmcInfo?.symbol?.toUpperCase() || tokenData.symbol,
-            description: tokenData.description, // Keep the description we set above
             website_url: website,
             twitter_handle: twitterHandle,
             github_url: github,
-            logo_url: cmcInfo?.logo || '',
-            current_price_usd: usdQuote?.price || 0,
-            price_change_24h: usdQuote?.percent_change_24h || 0,
-            market_cap_usd: usdQuote?.market_cap || 0,
-            total_value_locked_usd: 'N/A'
+            logo_url: cmcInfo?.logo || tokenData.logo_url,
+            current_price_usd: usdQuote?.price || tokenData.current_price_usd,
+            price_change_24h: usdQuote?.percent_change_24h || tokenData.price_change_24h,
+            market_cap_usd: usdQuote?.market_cap || tokenData.market_cap_usd,
+            total_value_locked_usd: tokenData.total_value_locked_usd
           }
           
           console.log(`[SCAN] Token data successfully collected from CMC API`)
@@ -198,11 +267,10 @@ serve(async (req) => {
       }
     }
     
-    // Fallback to CoinGecko for description if not found in CMC
-    if (!tokenData.description && token_address) {
-      console.log(`[SCAN] No description from CMC, trying CoinGecko using contract address: ${token_address}`)
+    // Fallback to CoinGecko for description if not found yet
+    if (!foundMeaningfulDescription && token_address) {
+      console.log(`[SCAN] Trying CoinGecko for description using contract address: ${token_address}`)
       
-      // Use CoinGecko Demo Plan authentication
       const cgApiKey = Deno.env.get('COINGECKO_API_KEY')
       console.log(`[SCAN] Using CoinGecko Demo Plan authentication`)
       
@@ -218,32 +286,63 @@ serve(async (req) => {
       try {
         lastCoinGeckoCall = await enforceRateLimit(lastCoinGeckoCall, MIN_API_INTERVAL)
         
-        // Use contract address endpoint for Ethereum tokens
+        // Try contract address endpoint first
         const contractUrl = `https://api.coingecko.com/api/v3/coins/ethereum/contract/${token_address.toLowerCase()}`
         console.log(`[SCAN] Calling CoinGecko contract endpoint: ${contractUrl}`)
         
-        const response = await fetch(contractUrl, { headers })
+        let response = await fetch(contractUrl, { headers })
+        let data = null;
         
         if (response.ok) {
-          const data = await response.json()
-          console.log(`[SCAN] CoinGecko Response Keys:`, Object.keys(data))
+          data = await response.json()
+          console.log(`[SCAN] CoinGecko contract response success`)
           
-          // Check if description exists and log it
           if (data.description?.en) {
-            console.log(`[SCAN] CoinGecko Raw Description Found: "${data.description.en.substring(0, 200)}..."`)
+            console.log(`[SCAN] CoinGecko Contract Raw Description: "${data.description.en.substring(0, 200)}..."`)
             const cleanedCGDescription = cleanDescription(data.description.en);
-            console.log(`[SCAN] CoinGecko Cleaned Description: "${cleanedCGDescription}"`)
-            if (cleanedCGDescription && !tokenData.description) {
+            console.log(`[SCAN] CoinGecko Contract Cleaned Description: "${cleanedCGDescription}"`)
+            
+            if (cleanedCGDescription && !isGenericDescription(cleanedCGDescription)) {
               tokenData.description = cleanedCGDescription;
-              descriptionSource = 'CoinGecko';
-              console.log(`[SCAN] Using CoinGecko description as fallback source`)
+              descriptionSource = 'CoinGecko-Contract';
+              foundMeaningfulDescription = true;
+              console.log(`[SCAN] Using meaningful CoinGecko contract description`)
             }
-          } else {
-            console.log(`[SCAN] CoinGecko description field is missing or empty`)
-            console.log(`[SCAN] Available CoinGecko description object:`, data.description)
           }
+        } else {
+          console.log(`[SCAN] CoinGecko contract endpoint failed: ${response.status}`)
+        }
+        
+        // If contract endpoint failed or gave generic description, try coins/{id} endpoint
+        if (!foundMeaningfulDescription && coingecko_id) {
+          console.log(`[SCAN] Trying CoinGecko coins endpoint with ID: ${coingecko_id}`)
           
-          // Only update fields that are still default/empty
+          await delay(1000); // Additional delay between requests
+          const idResponse = await fetch(
+            `https://api.coingecko.com/api/v3/coins/${coingecko_id}`,
+            { headers }
+          )
+          
+          if (idResponse.ok) {
+            const idData = await idResponse.json()
+            
+            if (idData.description?.en) {
+              console.log(`[SCAN] CoinGecko ID Raw Description: "${idData.description.en.substring(0, 200)}..."`)
+              const cleanedDescription = cleanDescription(idData.description.en);
+              console.log(`[SCAN] CoinGecko ID Cleaned Description: "${cleanedDescription}"`)
+              
+              if (cleanedDescription && !isGenericDescription(cleanedDescription)) {
+                tokenData.description = cleanedDescription;
+                descriptionSource = 'CoinGecko-ID';
+                foundMeaningfulDescription = true;
+                console.log(`[SCAN] Using meaningful CoinGecko ID description`)
+              }
+            }
+          }
+        }
+        
+        // Update other fields if we got data from any CoinGecko endpoint
+        if (data) {
           tokenData = {
             name: tokenData.name !== `Token ${token_address.substring(0, 8)}...` ? tokenData.name : (data.name || tokenData.name),
             symbol: tokenData.symbol !== 'UNKNOWN' ? tokenData.symbol : (data.symbol?.toUpperCase() || tokenData.symbol),
@@ -259,59 +358,15 @@ serve(async (req) => {
             total_value_locked_usd: tokenData.total_value_locked_usd !== 'N/A' ? tokenData.total_value_locked_usd : (data.market_data?.total_value_locked?.usd?.toString() || 'N/A')
           }
           
-          console.log(`[SCAN] Token data successfully collected from CoinGecko contract endpoint`)
-        } else {
-          console.error(`[SCAN] CoinGecko contract API error: ${response.status} ${response.statusText}`)
-          
-          // Fallback to coingecko_id method if contract address fails and we have an ID
-          if (coingecko_id) {
-            console.log(`[SCAN] Falling back to CoinGecko ID method: ${coingecko_id}`)
-            
-            const idResponse = await fetch(
-              `https://api.coingecko.com/api/v3/coins/${coingecko_id}`,
-              { headers }
-            )
-            
-            if (idResponse.ok) {
-              const idData = await idResponse.json()
-              
-              if (idData.description?.en && !tokenData.description) {
-                console.log(`[SCAN] CoinGecko ID Raw Description Found: "${idData.description.en.substring(0, 200)}..."`)
-                const cleanedDescription = cleanDescription(idData.description.en);
-                console.log(`[SCAN] CoinGecko ID Cleaned Description: "${cleanedDescription}"`)
-                if (cleanedDescription) {
-                  tokenData.description = cleanedDescription;
-                  descriptionSource = 'CoinGecko-ID';
-                  console.log(`[SCAN] Using CoinGecko ID description as final fallback`)
-                }
-              }
-              
-              tokenData = {
-                name: tokenData.name !== `Token ${token_address.substring(0, 8)}...` ? tokenData.name : (idData.name || tokenData.name),
-                symbol: tokenData.symbol !== 'UNKNOWN' ? tokenData.symbol : (idData.symbol?.toUpperCase() || tokenData.symbol),
-                description: tokenData.description, // Keep the description we set above
-                website_url: tokenData.website_url || idData.links?.homepage?.[0] || '',
-                twitter_handle: tokenData.twitter_handle || idData.links?.twitter_screen_name || '',
-                github_url: tokenData.github_url || idData.links?.repos_url?.github?.[0] || '',
-                logo_url: tokenData.logo_url || idData.image?.large || '',
-                coingecko_id: tokenData.coingecko_id,
-                current_price_usd: tokenData.current_price_usd || idData.market_data?.current_price?.usd || 0,
-                price_change_24h: tokenData.price_change_24h || idData.market_data?.price_change_percentage_24h || 0,
-                market_cap_usd: tokenData.market_cap_usd || idData.market_data?.market_cap?.usd || 0,
-                total_value_locked_usd: tokenData.total_value_locked_usd !== 'N/A' ? tokenData.total_value_locked_usd : (idData.market_data?.total_value_locked?.usd?.toString() || 'N/A')
-              }
-              
-              console.log(`[SCAN] Token data successfully collected from CoinGecko ID fallback`)
-            }
-          }
+          console.log(`[SCAN] Token data successfully collected from CoinGecko`)
         }
       } catch (error) {
         console.error(`[SCAN] Error fetching token data from CoinGecko:`, error)
       }
     }
 
-    // Only add fallback description if no real description was found
-    if (!tokenData.description && tokenData.name !== `Token ${token_address.substring(0, 8)}...`) {
+    // Only add fallback description if no meaningful description was found
+    if (!foundMeaningfulDescription && tokenData.name !== `Token ${token_address.substring(0, 8)}...`) {
       tokenData.description = `${tokenData.name} (${tokenData.symbol}) is a cryptocurrency token.`;
       descriptionSource = 'fallback';
       console.log(`[SCAN] Added fallback description: "${tokenData.description}"`);
@@ -319,6 +374,7 @@ serve(async (req) => {
 
     console.log(`[SCAN] Final description source: ${descriptionSource}`)
     console.log(`[SCAN] Final description: "${tokenData.description}"`)
+    console.log(`[SCAN] Found meaningful description: ${foundMeaningfulDescription}`)
 
     // Initialize default security data
     let securityData = {
@@ -506,7 +562,7 @@ serve(async (req) => {
     console.log(`[SCAN] Description source: ${descriptionSource}`)
     
     try {
-      // First check if token exists to force proper update
+      // Force update to database with the new/improved description
       const { data: existingToken } = await supabase
         .from('token_data_cache')
         .select('token_address')
@@ -514,8 +570,8 @@ serve(async (req) => {
         .single()
 
       if (existingToken) {
-        // Token exists - force update all fields including description
-        console.log(`[SCAN] Token exists, forcing update of all fields including description`)
+        // Token exists - update with new description
+        console.log(`[SCAN] Updating existing token with fresh description`)
         const { error: updateError } = await supabase
           .from('token_data_cache')
           .update({
