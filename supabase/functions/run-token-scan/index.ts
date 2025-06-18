@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -5,6 +6,37 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// Helper function to clean HTML and extract plain text description
+const cleanDescription = (htmlDescription: string): string => {
+  if (!htmlDescription) return '';
+  
+  // Remove HTML tags and decode HTML entities
+  let cleaned = htmlDescription
+    .replace(/<[^>]*>/g, '') // Remove all HTML tags
+    .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+    .replace(/&amp;/g, '&') // Replace HTML entities
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
+    .trim();
+  
+  // Truncate to reasonable length for display
+  if (cleaned.length > 300) {
+    cleaned = cleaned.substring(0, 300).trim();
+    // Try to end at a word boundary
+    const lastSpace = cleaned.lastIndexOf(' ');
+    if (lastSpace > 250) {
+      cleaned = cleaned.substring(0, lastSpace) + '...';
+    } else {
+      cleaned = cleaned + '...';
+    }
+  }
+  
+  return cleaned;
+};
 
 // Helper function to extract GitHub repo info from URL
 const extractGitHubRepoInfo = (githubUrl: string) => {
@@ -277,11 +309,18 @@ serve(async (req) => {
           
           const usdQuote = cmcQuotes?.quote?.USD || {}
           
+          // Process description with better cleaning
+          let cleanedDescription = '';
+          if (cmcInfo?.description) {
+            cleanedDescription = cleanDescription(cmcInfo.description);
+            console.log(`[SCAN] CMC description processed: "${cleanedDescription.substring(0, 100)}..."`);
+          }
+          
           tokenData = {
             ...tokenData,
             name: cmcInfo?.name || tokenData.name,
             symbol: cmcInfo?.symbol?.toUpperCase() || tokenData.symbol,
-            description: cmcInfo?.description ? cmcInfo.description.replace(/<[^>]*>/g, '').substring(0, 200) : '',
+            description: cleanedDescription,
             website_url: website,
             twitter_handle: twitterHandle,
             github_url: github,
@@ -321,11 +360,18 @@ serve(async (req) => {
         if (response.ok) {
           const data = await response.json()
           
+          // Process description with better cleaning
+          let cleanedDescription = '';
+          if (data.description?.en) {
+            cleanedDescription = cleanDescription(data.description.en);
+            console.log(`[SCAN] CoinGecko description processed: "${cleanedDescription.substring(0, 100)}..."`);
+          }
+          
           tokenData = {
             ...tokenData,
             name: data.name || tokenData.name,
             symbol: data.symbol?.toUpperCase() || tokenData.symbol,
-            description: data.description?.en ? data.description.en.replace(/<[^>]*>/g, '').substring(0, 200) : '',
+            description: cleanedDescription,
             website_url: data.links?.homepage?.[0] || '',
             twitter_handle: data.links?.twitter_screen_name || '',
             github_url: data.links?.repos_url?.github?.[0] || '',
@@ -344,6 +390,12 @@ serve(async (req) => {
       } catch (error) {
         console.error(`[SCAN] Error fetching token data from CoinGecko:`, error)
       }
+    }
+
+    // Add fallback description if none found from APIs
+    if (!tokenData.description && tokenData.name !== `Token ${token_address.substring(0, 8)}...`) {
+      tokenData.description = `${tokenData.name} (${tokenData.symbol}) is a cryptocurrency token.`;
+      console.log(`[SCAN] Added fallback description: "${tokenData.description}"`);
     }
 
     // Initialize default security data
@@ -486,6 +538,7 @@ serve(async (req) => {
     }
 
     console.log(`[SCAN] Saving token data to database: ${token_address}`)
+    console.log(`[SCAN] Token description to save: "${tokenData.description}"`)
     
     try {
       // Save token data first
