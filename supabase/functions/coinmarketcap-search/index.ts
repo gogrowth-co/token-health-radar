@@ -101,20 +101,36 @@ serve(async (req) => {
         }
         
         const cleanSearchTerm = searchTerm.trim();
-        console.log(`[CMC-EDGE] Searching by symbol: "${cleanSearchTerm.toUpperCase()}"`);
+        console.log(`[CMC-EDGE] Searching for: "${cleanSearchTerm}"`);
+        
+        // Initialize result with empty data
+        result = { data: [] };
         
         try {
-          // Search by symbol first
+          // Try symbol search first
+          console.log(`[CMC-EDGE] Attempting symbol search for: "${cleanSearchTerm.toUpperCase()}"`);
           result = await callCoinMarketCapAPI('/cryptocurrency/map', {
             symbol: cleanSearchTerm.toUpperCase(),
             limit: limit || 10
           });
           
           console.log(`[CMC-EDGE] Symbol search returned ${result.data?.length || 0} results`);
+        } catch (symbolError: any) {
+          console.log(`[CMC-EDGE] Symbol search failed:`, symbolError.message);
           
-          // If no results by symbol, try by name using listing_status=active and filter
-          if (!result.data || result.data.length === 0) {
-            console.log(`[CMC-EDGE] No results by symbol, searching by name: "${cleanSearchTerm}"`);
+          // Check if it's an "Invalid symbol" error - if so, proceed to name search
+          if (symbolError.message && symbolError.message.includes('Invalid value for "symbol"')) {
+            console.log(`[CMC-EDGE] Invalid symbol error detected, proceeding to name search`);
+          } else {
+            // For other errors (auth, network, etc), rethrow
+            throw symbolError;
+          }
+        }
+        
+        // If no results from symbol search, try name search
+        if (!result.data || result.data.length === 0) {
+          try {
+            console.log(`[CMC-EDGE] Attempting name search for: "${cleanSearchTerm}"`);
             
             const allData = await callCoinMarketCapAPI('/cryptocurrency/map', {
               listing_status: 'active',
@@ -131,10 +147,10 @@ serve(async (req) => {
               
               console.log(`[CMC-EDGE] Name search filtered to ${result.data.length} results`);
             }
+          } catch (nameError) {
+            console.error('[CMC-EDGE] Name search also failed:', nameError);
+            throw nameError;
           }
-        } catch (searchError) {
-          console.error('[CMC-EDGE] Search failed:', searchError);
-          throw searchError;
         }
         break;
 
@@ -197,7 +213,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        details: Deno.env.get('DENO_DEPLOYMENT_ID') ? undefined : error.message
       }),
       {
         status: statusCode,
