@@ -98,28 +98,13 @@ export default function TokenProfile({
 }: TokenProfileProps) {
   const isMobile = useIsMobile();
   
-  // Debug logging for description
-  console.log("[TOKEN-PROFILE] Received props:", {
-    name,
-    symbol,
-    description,
-    hasDescription: !!description,
-    descriptionLength: description?.length || 0
-  });
-  
-  // Enhanced description with better fallback
-  const displayDescription = React.useMemo(() => {
-    if (description && description.trim() !== '') {
-      console.log("[TOKEN-PROFILE] Using provided description:", description);
-      return description;
-    }
-    
-    // Create a meaningful fallback description
-    const fallback = `${name} (${symbol.toUpperCase()}) is a cryptocurrency token. Market data and token metrics are available for analysis.`;
-    console.log("[TOKEN-PROFILE] Using fallback description:", fallback);
-    return fallback;
-  }, [description, name, symbol]);
-  
+  // Clamp and ellipsis for description
+  const clampedDesc = description
+    ? description.length > (isMobile ? 120 : 256)
+      ? `${description.slice(0, isMobile ? 117 : 253)}...`
+      : description
+    : "";
+
   const shortenAddress = (addr: string) =>
     `${addr.slice(0, 6)}...${addr.slice(-4) || ""}`;
   const copyAddress = async () => {
@@ -164,7 +149,7 @@ export default function TokenProfile({
               size={48}
             />
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-1">
                 <h2 className="font-semibold text-lg leading-tight text-gray-900 dark:text-gray-100 truncate">
                   {name}
                 </h2>
@@ -174,7 +159,7 @@ export default function TokenProfile({
               </div>
               
               {/* Address and Network */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mb-2">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -195,12 +180,12 @@ export default function TokenProfile({
             </div>
           </div>
 
-          {/* Description - prominently displayed with debugging */}
-          <div className="mb-4">
+          {/* Description */}
+          {clampedDesc && (
             <p className="text-sm leading-relaxed text-[#4B5563] dark:text-[#A3A3B3]">
-              {displayDescription}
+              {clampedDesc}
             </p>
-          </div>
+          )}
 
           {/* Mobile Bottom Section: Price/Market Cap + Health Score */}
           <div className="flex items-center justify-between">
@@ -291,7 +276,7 @@ export default function TokenProfile({
     );
   }
 
-  // Desktop layout - horizontal three-section layout as shown in the image
+  // Desktop layout (existing code)
   return (
     <Card
       className="overflow-visible transition-all"
@@ -302,47 +287,69 @@ export default function TokenProfile({
         background: "var(--profile-bg, #FFF)",
         width: "100%",
         maxWidth: 1420,
+        minHeight: 170,
         padding: 0,
         margin: "auto",
       }}
     >
-      <div className="flex items-stretch px-6 py-6 gap-8">
-        {/* LEFT SECTION: Logo, Name, Description, Address */}
-        <div className="flex-1 flex items-start gap-4 min-w-0">
+      <div
+        className="flex flex-row justify-between items-stretch min-h-[170px] px-6 py-6"
+        style={{ minHeight: 170 }}
+      >
+        {/* LEFT SECTION */}
+        <div className="flex items-start gap-6 min-w-0 flex-1">
           {/* Token Logo */}
           <OptimizedTokenLogo
             logo={logo}
             name={name}
-            className="w-16 h-16 rounded-full flex-shrink-0"
+            className="w-16 h-16 rounded-full"
             size={64}
           />
-          
-          <div className="flex flex-col gap-3 min-w-0 flex-1">
+          <div className="flex flex-col gap-2 min-w-0">
             {/* Name + Symbol */}
             <div className="flex items-center gap-3">
-              <h2 className="font-semibold text-[24px] leading-[32px] text-gray-900 dark:text-gray-100 truncate">
+              <h2
+                className="font-semibold text-[20px] leading-[28px] text-gray-900 dark:text-gray-100 truncate"
+                style={{ fontFamily: "Inter, sans-serif" }}
+              >
                 {name}
               </h2>
-              <span className="font-medium text-[14px] px-3 py-1 bg-[#252534] text-gray-200 rounded-full flex-shrink-0">
+              <span
+                className="font-medium text-[14px] px-3 py-1 bg-[#252534] dark:bg-[#252534] text-gray-200 dark:text-gray-300 rounded-full"
+                style={{
+                  borderRadius: "9999px",
+                  letterSpacing: ".01em",
+                  fontWeight: 500,
+                  fontFamily: "Inter, sans-serif",
+                  padding: "6px 12px",
+                }}
+              >
                 ${symbol.toUpperCase()}
               </span>
             </div>
-
-            {/* Description - prominently displayed with debugging */}
-            <div className="mb-2">
-              <p className="text-[16px] font-normal leading-[24px] text-[#6B7280] dark:text-[#9CA3AF]">
-                {displayDescription}
+            {/* Description */}
+            {clampedDesc && (
+              <p
+                className="text-[16px] font-normal leading-[22px] text-[#4B5563] dark:text-[#A3A3B3] max-w-[700px] truncate whitespace-pre-line"
+                style={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+                title={clampedDesc}
+              >
+                {clampedDesc}
               </p>
-            </div>
-            
-            {/* Address and Network */}
-            <div className="flex items-center gap-2">
+            )}
+            {/* Address */}
+            <div className="mt-2 flex items-center gap-2">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
                       onClick={copyAddress}
-                      className="font-mono text-[14px] px-4 py-1 rounded-full bg-[#232334] text-[#A3A3B3] border-none focus:outline-none transition-all"
+                      className="font-mono text-[14px] px-4 py-1 rounded-full bg-[#232334] dark:bg-[#232334] text-[#A3A3B3] dark:text-[#A3A3B3] border-none focus:outline-none transition-all"
                     >
                       {shortenAddress(address)}
                     </button>
@@ -350,88 +357,97 @@ export default function TokenProfile({
                   <TooltipContent>Click to copy address</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <span className="px-2 py-[2px] rounded-full bg-[#252534] text-[#A3A3B3] font-semibold text-[12px]">
+              <span
+                className="px-2 py-[2px] rounded-full bg-[#252534] dark:bg-[#252534] text-[#A3A3B3] dark:text-[#A3A3B3] font-semibold text-[12px]"
+                style={{ fontWeight: 600, marginLeft: "2px" }}
+              >
                 {network.toUpperCase()}
               </span>
             </div>
           </div>
         </div>
 
-        {/* CENTER SECTION: Price and Market Cap */}
-        <div className="flex flex-col justify-center items-center gap-6 min-w-[200px]">
-          {/* Price + Change */}
-          <div className="flex flex-col items-center text-center">
-            <span className="text-[32px] font-bold leading-[40px] text-[#000] dark:text-[#fff]">
-              ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-            <span
-              className="text-[16px] font-medium mt-1"
-              style={{
-                color: priceChange >= 0 ? "#10B981" : "#DC2626",
-              }}
-            >
-              {priceChange >= 0 ? "+" : ""}
-              {priceChange.toFixed(2)}%
-            </span>
-          </div>
-          
-          {/* Market Cap */}
-          <div className="flex flex-col items-center text-center">
-            <span className="text-[13px] font-medium uppercase text-[#A3A3B3] tracking-wide mb-2">
-              Market Cap
-            </span>
-            <span className="text-[24px] font-bold text-[#000] dark:text-white">
-              {formatMarketCap(marketCap)}
-            </span>
-          </div>
-        </div>
-
-        {/* RIGHT SECTION: Health Score and Socials */}
-        <div className="flex flex-col justify-center items-center gap-6 min-w-[120px]">
-          {/* Health Score */}
-          <MiniHealthScore score={overallScore} />
-          
-          {/* Socials */}
-          {(website || twitter || github) && (
-            <div className="flex items-center gap-4">
-              {website && (
-                <a
-                  href={website.startsWith("http") ? website : `https://${website}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded transition-colors text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none"
-                  aria-label="Website"
-                >
-                  <Globe className="w-5 h-5" />
-                </a>
-              )}
-              {twitter && (
-                <a
-                  href={twitter.startsWith("http") ? twitter : `https://twitter.com/${twitter.replace("@", "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded transition-colors text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none"
-                  aria-label="X/Twitter"
-                >
-                  <Twitter className="w-5 h-5" />
-                </a>
-              )}
-              {github && (
-                <a
-                  href={github.startsWith("http") ? github : `https://github.com/${github.replace(/^@/, "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded transition-colors text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none"
-                  aria-label="GitHub"
-                >
-                  <Github className="w-5 h-5" />
-                </a>
-              )}
+        {/* RIGHT SECTION: Price/Market Cap on left, Health Score on right */}
+        <div className="flex items-center gap-20 min-w-[480px] ml-24">
+          {/* Price and Market Cap Section */}
+          <div className="flex flex-col items-start gap-4">
+            {/* Price + Change */}
+            <div className="flex flex-col items-start">
+              <span className="text-[28px] font-bold leading-[36px] text-[#000] dark:text-[#fff]">
+                ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+              <span
+                className="text-[16px] font-medium"
+                style={{
+                  color: priceChange >= 0 ? "#10B981" : "#DC2626",
+                  marginTop: 2,
+                }}
+              >
+                {priceChange >= 0 ? "+" : ""}
+                {priceChange.toFixed(2)}%
+              </span>
             </div>
-          )}
+            
+            {/* Market Cap */}
+            <div className="flex flex-col items-start">
+              <span className="text-[13px] font-medium uppercase text-[#A3A3B3] dark:text-[#A3A3B3] tracking-wide mb-1">
+                Market Cap
+              </span>
+              <span className="text-[20px] font-bold text-[#000] dark:text-white">
+                {formatMarketCap(marketCap)}
+              </span>
+            </div>
+          </div>
+
+          {/* Health Score and Socials Section - moved to far right */}
+          <div className="flex flex-col items-center gap-4 ml-16">
+            {/* Health Score */}
+            <MiniHealthScore score={overallScore} />
+            
+            {/* Socials */}
+            {(website || twitter || github) && (
+              <div className="flex items-center gap-4">
+                {website && (
+                  <a
+                    href={website.startsWith("http") ? website : `https://${website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1 rounded transition-colors text-[#A3A3B3] dark:text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none"
+                    aria-label="Website"
+                    style={{ lineHeight: 0 }}
+                  >
+                    <Globe className="w-5 h-5" />
+                  </a>
+                )}
+                {twitter && (
+                  <a
+                    href={twitter.startsWith("http") ? twitter : `https://twitter.com/${twitter.replace("@", "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1 rounded transition-colors text-[#A3A3B3] dark:text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none"
+                    aria-label="X/Twitter"
+                    style={{ lineHeight: 0 }}
+                  >
+                    <Twitter className="w-5 h-5" />
+                  </a>
+                )}
+                {github && (
+                  <a
+                    href={github.startsWith("http") ? github : `https://github.com/${github.replace(/^@/, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1 rounded transition-colors text-[#A3A3B3] dark:text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none"
+                    aria-label="GitHub"
+                    style={{ lineHeight: 0 }}
+                  >
+                    <Github className="w-5 h-5" />
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-      
       {/* CSS variables for theme */}
       <style>{`
         :root {
