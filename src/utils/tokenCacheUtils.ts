@@ -24,49 +24,48 @@ interface CacheData {
 export const getTokenFromCache = async (identifier: string): Promise<CacheData | null> => {
   try {
     // Try by CoinGecko ID first
-    let { data, error } = await supabase
+    const { data: geckoData, error: geckoError } = await supabase
       .from("token_data_cache")
       .select("*")
       .eq("coingecko_id", identifier)
       .maybeSingle();
 
+    if (geckoData && !geckoError) {
+      console.log(`[CACHE] Found cached data for ${identifier}:`, geckoData);
+      return geckoData as CacheData;
+    }
+
     // If not found and identifier is numeric, try by CMC ID
-    if (!data && !isNaN(Number(identifier))) {
-      const result = await supabase
+    if (!isNaN(Number(identifier))) {
+      const { data: cmcData, error: cmcError } = await supabase
         .from("token_data_cache")
         .select("*")
         .eq("cmc_id", parseInt(identifier))
         .maybeSingle();
       
-      data = result.data;
-      error = result.error;
+      if (cmcData && !cmcError) {
+        console.log(`[CACHE] Found cached data for ${identifier}:`, cmcData);
+        return cmcData as CacheData;
+      }
     }
 
     // If still not found and looks like a slug, try by symbol/name
-    if (!data && typeof identifier === 'string') {
-      const result = await supabase
+    if (typeof identifier === 'string') {
+      const { data: searchData, error: searchError } = await supabase
         .from("token_data_cache")
         .select("*")
         .or(`symbol.ilike.%${identifier}%,name.ilike.%${identifier}%`)
         .limit(1)
         .maybeSingle();
       
-      data = result.data;
-      error = result.error;
+      if (searchData && !searchError) {
+        console.log(`[CACHE] Found cached data for ${identifier}:`, searchData);
+        return searchData as CacheData;
+      }
     }
 
-    if (error) {
-      console.log(`[CACHE] Error querying cache for ${identifier}:`, error);
-      return null;
-    }
-
-    if (!data) {
-      console.log(`[CACHE] No cached data found for ${identifier}`);
-      return null;
-    }
-
-    console.log(`[CACHE] Found cached data for ${identifier}:`, data);
-    return data as CacheData;
+    console.log(`[CACHE] No cached data found for ${identifier}`);
+    return null;
   } catch (err) {
     console.warn(`[CACHE] Exception fetching cached data for ${identifier}:`, err);
     return null;
