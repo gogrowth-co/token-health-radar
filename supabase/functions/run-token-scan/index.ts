@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -434,28 +435,62 @@ serve(async (req) => {
     console.log(`[SCAN] Token description to save: "${tokenData.description}"`)
     
     try {
-      // Save token data first
-      const { error: tokenError } = await supabase
+      // First check if token exists to force proper update
+      const { data: existingToken } = await supabase
         .from('token_data_cache')
-        .upsert({
-          token_address,
-          name: tokenData.name,
-          symbol: tokenData.symbol,
-          description: tokenData.description,
-          website_url: tokenData.website_url,
-          twitter_handle: tokenData.twitter_handle,
-          github_url: tokenData.github_url,
-          logo_url: tokenData.logo_url,
-          coingecko_id: tokenData.coingecko_id,
-          cmc_id: cmc_id ? parseInt(cmc_id) : null,
-          current_price_usd: tokenData.current_price_usd,
-          price_change_24h: tokenData.price_change_24h,
-          market_cap_usd: tokenData.market_cap_usd,
-          total_value_locked_usd: tokenData.total_value_locked_usd
-        }, { onConflict: 'token_address' })
+        .select('token_address')
+        .eq('token_address', token_address)
+        .single()
 
-      if (tokenError) throw tokenError
-      console.log(`[SCAN] Successfully saved token data for: ${token_address}`)
+      if (existingToken) {
+        // Token exists - force update all fields including description
+        console.log(`[SCAN] Token exists, forcing update of all fields including description`)
+        const { error: updateError } = await supabase
+          .from('token_data_cache')
+          .update({
+            name: tokenData.name,
+            symbol: tokenData.symbol,
+            description: tokenData.description,
+            website_url: tokenData.website_url,
+            twitter_handle: tokenData.twitter_handle,
+            github_url: tokenData.github_url,
+            logo_url: tokenData.logo_url,
+            coingecko_id: tokenData.coingecko_id,
+            cmc_id: cmc_id ? parseInt(cmc_id) : null,
+            current_price_usd: tokenData.current_price_usd,
+            price_change_24h: tokenData.price_change_24h,
+            market_cap_usd: tokenData.market_cap_usd,
+            total_value_locked_usd: tokenData.total_value_locked_usd
+          })
+          .eq('token_address', token_address)
+
+        if (updateError) throw updateError
+        console.log(`[SCAN] Successfully updated existing token data for: ${token_address}`)
+      } else {
+        // Token doesn't exist - insert new record
+        console.log(`[SCAN] Token doesn't exist, inserting new record`)
+        const { error: insertError } = await supabase
+          .from('token_data_cache')
+          .insert({
+            token_address,
+            name: tokenData.name,
+            symbol: tokenData.symbol,
+            description: tokenData.description,
+            website_url: tokenData.website_url,
+            twitter_handle: tokenData.twitter_handle,
+            github_url: tokenData.github_url,
+            logo_url: tokenData.logo_url,
+            coingecko_id: tokenData.coingecko_id,
+            cmc_id: cmc_id ? parseInt(cmc_id) : null,
+            current_price_usd: tokenData.current_price_usd,
+            price_change_24h: tokenData.price_change_24h,
+            market_cap_usd: tokenData.market_cap_usd,
+            total_value_locked_usd: tokenData.total_value_locked_usd
+          })
+
+        if (insertError) throw insertError
+        console.log(`[SCAN] Successfully inserted new token data for: ${token_address}`)
+      }
 
       // Save category data
       const savePromises = [
