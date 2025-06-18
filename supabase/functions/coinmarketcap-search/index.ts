@@ -39,6 +39,8 @@ async function callCoinMarketCapAPI(endpoint: string, params: Record<string, any
     }
   });
 
+  console.log(`[CMC-EDGE] Calling CMC API: ${url.toString()}`);
+
   const response = await fetch(url.toString(), {
     headers: {
       'Accept': 'application/json',
@@ -47,12 +49,15 @@ async function callCoinMarketCapAPI(endpoint: string, params: Record<string, any
   });
 
   if (!response.ok) {
-    throw new Error(`CoinMarketCap API Error: ${response.status}`);
+    const errorText = await response.text();
+    console.error(`[CMC-EDGE] CMC API Error ${response.status}:`, errorText);
+    throw new Error(`CoinMarketCap API Error: ${response.status} - ${errorText}`);
   }
 
   const data = await response.json();
   
   if (data.status?.error_code !== 0) {
+    console.error(`[CMC-EDGE] CMC API Status Error:`, data.status);
     throw new Error(`CoinMarketCap API Error: ${data.status?.error_message || 'Unknown error'}`);
   }
 
@@ -66,43 +71,59 @@ serve(async (req) => {
   }
 
   try {
-    const { action, searchTerm, cmcIds } = await req.json();
-    console.log(`[CMC-EDGE] Action: ${action}, SearchTerm: ${searchTerm}, CMC IDs: ${cmcIds}`);
+    const { action, searchTerm, cmcIds, convert, limit } = await req.json();
+    console.log(`[CMC-EDGE] Action: ${action}, SearchTerm: ${searchTerm}, CMC IDs: ${cmcIds}, Convert: ${convert}, Limit: ${limit}`);
 
     let result;
 
     switch (action) {
       case 'search':
+        if (!searchTerm || searchTerm.trim() === '') {
+          throw new Error('Search term is required');
+        }
+        
         // Search by symbol first
+        console.log(`[CMC-EDGE] Searching by symbol: ${searchTerm.toUpperCase()}`);
         result = await callCoinMarketCapAPI('/cryptocurrency/map', {
           symbol: searchTerm.toUpperCase(),
-          limit: 10
+          limit: limit || 10
         });
         
+        // If no results by symbol, try by name using listing_status=active and filter
         if (!result.data || result.data.length === 0) {
-          // If no results by symbol, try by name
+          console.log(`[CMC-EDGE] No results by symbol, searching by name: ${searchTerm}`);
           const allData = await callCoinMarketCapAPI('/cryptocurrency/map', {
             listing_status: 'active',
-            limit: 100
+            limit: 500 // Get more results to filter
           });
           
-          result.data = allData.data?.filter((token: any) => 
-            token.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            token.slug?.toLowerCase().includes(searchTerm.toLowerCase())
-          ).slice(0, 10) || [];
+          if (allData.data) {
+            // Filter by name (case-insensitive)
+            const searchLower = searchTerm.toLowerCase();
+            result.data = allData.data.filter((token: any) => 
+              token.name?.toLowerCase().includes(searchLower) ||
+              token.slug?.toLowerCase().includes(searchLower)
+            ).slice(0, limit || 10);
+          }
         }
         break;
 
       case 'details':
+        if (!cmcIds || cmcIds.length === 0) {
+          throw new Error('CMC IDs are required for details');
+        }
         result = await callCoinMarketCapAPI('/cryptocurrency/info', {
           id: cmcIds.join(',')
         });
         break;
 
       case 'quotes':
+        if (!cmcIds || cmcIds.length === 0) {
+          throw new Error('CMC IDs are required for quotes');
+        }
         result = await callCoinMarketCapAPI('/cryptocurrency/quotes/latest', {
           id: cmcIds.join(','),
-          convert: 'USD'
+          convert: convert || 'USD'
         });
         break;
 
@@ -110,6 +131,8 @@ serve(async (req) => {
         throw new Error(`Unknown action: ${action}`);
     }
 
+    console.log(`[CMC-EDGE] Success: ${action} completed, returning ${result.data?.length || 0} results`);
+    
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

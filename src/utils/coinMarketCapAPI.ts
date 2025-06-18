@@ -19,22 +19,38 @@ export const callCoinMarketCapAPI = async (endpoint: string, params: Record<stri
   lastEdgeFunctionCallTime = Date.now();
 
   try {
-    console.log(`[CMC-API] Making edge function request for: ${endpoint}`);
+    console.log(`[CMC-API] Making edge function request for: ${endpoint}`, params);
     
     // Determine action based on endpoint
     let action = 'search';
+    let requestBody: any = {};
+    
     if (endpoint.includes('/cryptocurrency/info')) {
       action = 'details';
+      requestBody = {
+        action,
+        cmcIds: params.id ? params.id.split(',').map(Number) : []
+      };
     } else if (endpoint.includes('/cryptocurrency/quotes')) {
       action = 'quotes';
+      requestBody = {
+        action,
+        cmcIds: params.id ? params.id.split(',').map(Number) : [],
+        convert: params.convert || 'USD'
+      };
+    } else {
+      // Search action - properly pass the search term
+      requestBody = {
+        action,
+        searchTerm: params.symbol || params.searchTerm || '',
+        limit: params.limit || 10
+      };
     }
 
+    console.log(`[CMC-API] Request body:`, requestBody);
+
     const { data, error } = await supabase.functions.invoke('coinmarketcap-search', {
-      body: {
-        action,
-        searchTerm: params.symbol || params.listing_status ? 'active' : '',
-        cmcIds: params.id ? params.id.split(',').map(Number) : []
-      }
+      body: requestBody
     });
 
     if (error) {
@@ -69,7 +85,7 @@ export const searchTokensByCMC = async (searchTerm: string) => {
     console.log(`[CMC-API] Searching for tokens: ${searchTerm}`);
     
     const data = await callCoinMarketCapAPI('/cryptocurrency/map', {
-      symbol: searchTerm.toUpperCase(),
+      searchTerm: searchTerm,
       limit: 10
     });
     

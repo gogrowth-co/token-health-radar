@@ -29,19 +29,22 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
 
   useEffect(() => {
     const searchTokens = async () => {
-      if (!searchTerm) return;
+      if (!searchTerm || searchTerm.trim() === '') {
+        setResults([]);
+        return;
+      }
       
       setIsLoading(true);
       setError(null);
       
       try {
-        console.log("Searching for token with CoinMarketCap:", searchTerm);
+        console.log(`[TOKEN-SEARCH] Starting search for: "${searchTerm}"`);
 
         // Phase 1: Search tokens using CoinMarketCap edge function
-        const cmcSearchResults = await callWithRetry(() => searchTokensByCMC(searchTerm));
+        const cmcSearchResults = await callWithRetry(() => searchTokensByCMC(searchTerm.trim()));
         
         if (!cmcSearchResults || cmcSearchResults.length === 0) {
-          console.log("[CMC-SEARCH] No tokens found");
+          console.log("[TOKEN-SEARCH] No tokens found");
           setResults([]);
           return;
         }
@@ -53,7 +56,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
         // Extract CMC IDs for batch requests
         const cmcIds = topTokens.map((token: any) => token.id);
         
-        console.log(`[CMC-SEARCH] Processing ${topTokens.length} tokens:`, cmcIds);
+        console.log(`[TOKEN-SEARCH] Processing ${topTokens.length} tokens:`, cmcIds);
 
         try {
           // Phase 2: Batch fetch token details and quotes
@@ -72,26 +75,26 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               const tokenDetail = tokenDetails[cmcId] || {};
               const tokenQuote = tokenQuotes[cmcId] || {};
 
-              console.log(`[CMC-SEARCH] Processing token ${cmcToken.name} (${cmcId})`);
+              console.log(`[TOKEN-SEARCH] Processing token ${cmcToken.name} (${cmcId})`);
 
               // Create base token result
               let tokenResult = transformCMCSearchResult(cmcToken);
 
-              // Try database cache first (for both authenticated and anonymous users)
+              // Try database cache first
               let tokenInfo: TokenInfoEnriched | null = null;
               try {
                 const cachedData = await getTokenFromCache(cmcToken.slug);
                 if (cachedData) {
-                  console.log(`[CMC-SEARCH] Found database cache for ${cmcToken.slug}`);
+                  console.log(`[TOKEN-SEARCH] Found database cache for ${cmcToken.slug}`);
                   tokenInfo = createTokenInfoFromCache(cachedData);
                 }
               } catch (cacheError) {
-                console.log(`[CMC-SEARCH] Cache lookup failed for ${cmcToken.slug}:`, cacheError);
+                console.log(`[TOKEN-SEARCH] Cache lookup failed for ${cmcToken.slug}:`, cacheError);
               }
 
               // If no cache, create from CMC data
               if (!tokenInfo) {
-                console.log(`[CMC-SEARCH] Creating tokenInfo from CMC data for ${cmcToken.name}`);
+                console.log(`[TOKEN-SEARCH] Creating tokenInfo from CMC data for ${cmcToken.name}`);
                 tokenInfo = transformCMCTokenInfo(tokenDetail, cmcToken);
                 tokenInfo.description = createCMCDescription(tokenDetail, cmcToken);
               }
@@ -124,7 +127,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 tokenInfo
               };
 
-              console.log(`[CMC-SEARCH] Final data for ${cmcToken.name}:`, {
+              console.log(`[TOKEN-SEARCH] Final data for ${cmcToken.name}:`, {
                 name: tokenInfo.name,
                 price: marketData.price_usd,
                 market_cap: marketData.market_cap,
@@ -140,7 +143,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               }
               
             } catch (err: any) {
-              console.error(`[CMC-SEARCH] Error processing ${cmcToken.name}:`, err);
+              console.error(`[TOKEN-SEARCH] Error processing ${cmcToken.name}:`, err);
               
               // Add token with fallback data even if processing failed
               const fallbackTokenInfo: TokenInfoEnriched = {
@@ -167,7 +170,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
           }
           
         } catch (batchError: any) {
-          console.error("[CMC-SEARCH] Batch API calls failed:", batchError);
+          console.error("[TOKEN-SEARCH] Batch API calls failed:", batchError);
           
           // Fallback: create basic results from search data only
           for (const cmcToken of topTokens) {
@@ -194,21 +197,25 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
           }
         }
         
-        console.log("[CMC-SEARCH] Final enhanced results:", enhancedResults);
+        console.log("[TOKEN-SEARCH] Final enhanced results:", enhancedResults);
         setResults(enhancedResults);
         
       } catch (err: any) {
-        console.error("Error fetching token data from CoinMarketCap:", err);
+        console.error("Token search failed:", err);
         
         const errorMessage = err.message?.includes("rate limit") 
           ? "CoinMarketCap API rate limit reached. Please wait a moment and try again."
           : err.message?.includes("API key")
           ? "There was an issue with the CoinMarketCap API. Please try again later."
+          : err.message?.includes("Search term is required")
+          ? "Please enter a valid token name or symbol."
           : "Could not fetch token information. Please try again later.";
           
         setError(errorMessage);
-        toast.error("Search Error", {
-          description: errorMessage
+        console.error("Search error details:", {
+          originalError: err.message,
+          userMessage: errorMessage,
+          searchTerm
         });
       } finally {
         setIsLoading(false);
@@ -217,7 +224,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
 
     const timeoutId = setTimeout(searchTokens, 300);
     return () => clearTimeout(timeoutId);
-  }, [searchTerm]); // Removed isAuthenticated dependency since we support both authenticated and anonymous users
+  }, [searchTerm]);
 
   return { results, isLoading, error };
 }
