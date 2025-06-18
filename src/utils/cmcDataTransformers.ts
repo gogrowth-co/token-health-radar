@@ -1,4 +1,3 @@
-
 import { TokenResult, TokenInfoEnriched } from "@/components/token/types";
 
 // Transform CMC search result to our TokenResult format
@@ -127,9 +126,9 @@ export const extractCMCPlatformData = (cmcInfo: any) => {
   return tokenAddress ? { [normalizedPlatform]: tokenAddress } : {};
 };
 
-// Create meaningful description from CMC data - Enhanced version with better extraction
+// Create meaningful description from CMC data - Enhanced version for v2 API
 export const createCMCDescription = (cmcInfo: any, cmcToken: any): string => {
-  // First priority: Use CMC description if available and meaningful
+  // First priority: Use CMC v2 description if available and meaningful
   if (cmcInfo.description && cmcInfo.description.trim()) {
     // Clean HTML tags and extract meaningful content
     const cleanDesc = cmcInfo.description
@@ -143,8 +142,8 @@ export const createCMCDescription = (cmcInfo: any, cmcToken: any): string => {
       .replace(/\s+/g, ' ') // Replace multiple whitespace
       .trim();
     
-    // If we have a substantial description, use it
-    if (cleanDesc.length > 30) {
+    // If we have a substantial description, use it (v2 descriptions are typically better)
+    if (cleanDesc.length > 20) { // Lower threshold for v2 API descriptions
       // Truncate if too long
       if (cleanDesc.length > 300) {
         const truncated = cleanDesc.substring(0, 300);

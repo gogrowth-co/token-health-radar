@@ -264,6 +264,7 @@ serve(async (req) => {
         console.log(`[SCAN] CMC Data Response:`, JSON.stringify(cmcData, null, 2))
 
         if (!cmcError && cmcData?.data && Object.keys(cmcData.data).length > 0) {
+          // For v2 API, data is nested under the CMC ID
           const cmcInfo = cmcData.data[finalCmcId]
           console.log(`[SCAN] CMC Info for token ${finalCmcId}:`, JSON.stringify(cmcInfo, null, 2))
           
@@ -275,9 +276,9 @@ serve(async (req) => {
             
             if (cleanedCMCDescription && !isGenericDescription(cleanedCMCDescription)) {
               tokenData.description = cleanedCMCDescription;
-              descriptionSource = 'CMC';
+              descriptionSource = 'CMC v2';
               foundMeaningfulDescription = true;
-              console.log(`[SCAN] Using meaningful CMC description`)
+              console.log(`[SCAN] Using meaningful CMC v2 description`)
             } else {
               console.log(`[SCAN] CMC description is generic, will try other sources`)
             }
@@ -296,7 +297,7 @@ serve(async (req) => {
           
           const cmcQuotes = quotesData?.data?.[finalCmcId]
           
-          // Extract social links
+          // Extract social links - handle v2 API structure
           const website = cmcInfo?.urls?.website?.[0] || tokenData.website_url
           const twitterHandle = cmcInfo?.urls?.twitter?.[0]?.replace('https://twitter.com/', '') || tokenData.twitter_handle
           const github = cmcInfo?.urls?.source_code?.[0] || tokenData.github_url
@@ -317,7 +318,7 @@ serve(async (req) => {
             total_value_locked_usd: tokenData.total_value_locked_usd
           }
           
-          console.log(`[SCAN] Token data successfully collected from CMC API`)
+          console.log(`[SCAN] Token data successfully collected from CMC v2 API`)
         } else {
           console.log(`[SCAN] No data found in CMC API response or error occurred`)
         }
