@@ -1,5 +1,3 @@
-
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -186,9 +184,9 @@ serve(async (req) => {
       }
     }
     
-    // Fallback to CoinGecko if we have coingecko_id and no description yet
-    if (coingecko_id && !tokenData.description) {
-      console.log(`[SCAN] Fetching token data from CoinGecko: ${coingecko_id}`)
+    // Fallback to CoinGecko using contract address if we don't have a good description yet
+    if (!tokenData.description && token_address) {
+      console.log(`[SCAN] Fetching token data from CoinGecko using contract address: ${token_address}`)
       
       // Use CoinGecko Demo Plan authentication
       const cgApiKey = Deno.env.get('COINGECKO_API_KEY')
@@ -206,10 +204,11 @@ serve(async (req) => {
       try {
         lastCoinGeckoCall = await enforceRateLimit(lastCoinGeckoCall, MIN_API_INTERVAL)
         
-        const response = await fetch(
-          `https://api.coingecko.com/api/v3/coins/${coingecko_id}`,
-          { headers }
-        )
+        // Use contract address endpoint for Ethereum tokens
+        const contractUrl = `https://api.coingecko.com/api/v3/coins/ethereum/contract/${token_address.toLowerCase()}`
+        console.log(`[SCAN] Calling CoinGecko contract endpoint: ${contractUrl}`)
+        
+        const response = await fetch(contractUrl, { headers })
         
         if (response.ok) {
           const data = await response.json()
@@ -221,24 +220,62 @@ serve(async (req) => {
             console.log(`[SCAN] CoinGecko description processed: "${cleanedDescription.substring(0, 100)}..."`);
           }
           
+          // Only update fields that are still default/empty
           tokenData = {
-            ...tokenData,
-            name: data.name || tokenData.name,
-            symbol: data.symbol?.toUpperCase() || tokenData.symbol,
-            description: cleanedDescription,
-            website_url: data.links?.homepage?.[0] || '',
-            twitter_handle: data.links?.twitter_screen_name || '',
-            github_url: data.links?.repos_url?.github?.[0] || '',
-            logo_url: data.image?.large || '',
-            current_price_usd: data.market_data?.current_price?.usd || 0,
-            price_change_24h: data.market_data?.price_change_percentage_24h || 0,
-            market_cap_usd: data.market_data?.market_cap?.usd || 0,
-            total_value_locked_usd: data.market_data?.total_value_locked?.usd?.toString() || 'N/A'
+            name: tokenData.name !== `Token ${token_address.substring(0, 8)}...` ? tokenData.name : (data.name || tokenData.name),
+            symbol: tokenData.symbol !== 'UNKNOWN' ? tokenData.symbol : (data.symbol?.toUpperCase() || tokenData.symbol),
+            description: tokenData.description || cleanedDescription,
+            website_url: tokenData.website_url || data.links?.homepage?.[0] || '',
+            twitter_handle: tokenData.twitter_handle || data.links?.twitter_screen_name || '',
+            github_url: tokenData.github_url || data.links?.repos_url?.github?.[0] || '',
+            logo_url: tokenData.logo_url || data.image?.large || '',
+            coingecko_id: tokenData.coingecko_id || data.id || '',
+            current_price_usd: tokenData.current_price_usd || data.market_data?.current_price?.usd || 0,
+            price_change_24h: tokenData.price_change_24h || data.market_data?.price_change_percentage_24h || 0,
+            market_cap_usd: tokenData.market_cap_usd || data.market_data?.market_cap?.usd || 0,
+            total_value_locked_usd: tokenData.total_value_locked_usd !== 'N/A' ? tokenData.total_value_locked_usd : (data.market_data?.total_value_locked?.usd?.toString() || 'N/A')
           }
           
-          console.log(`[SCAN] Token data successfully collected from CoinGecko`)
+          console.log(`[SCAN] Token data successfully collected from CoinGecko contract endpoint`)
         } else {
-          console.error(`[SCAN] CoinGecko API error: ${response.status} ${response.statusText}`)
+          console.error(`[SCAN] CoinGecko contract API error: ${response.status} ${response.statusText}`)
+          
+          // Fallback to coingecko_id method if contract address fails and we have an ID
+          if (coingecko_id) {
+            console.log(`[SCAN] Falling back to CoinGecko ID method: ${coingecko_id}`)
+            
+            const idResponse = await fetch(
+              `https://api.coingecko.com/api/v3/coins/${coingecko_id}`,
+              { headers }
+            )
+            
+            if (idResponse.ok) {
+              const idData = await idResponse.json()
+              
+              let cleanedDescription = '';
+              if (idData.description?.en) {
+                cleanedDescription = cleanDescription(idData.description.en);
+                console.log(`[SCAN] CoinGecko ID fallback description processed: "${cleanedDescription.substring(0, 100)}..."`);
+              }
+              
+              tokenData = {
+                name: tokenData.name !== `Token ${token_address.substring(0, 8)}...` ? tokenData.name : (idData.name || tokenData.name),
+                symbol: tokenData.symbol !== 'UNKNOWN' ? tokenData.symbol : (idData.symbol?.toUpperCase() || tokenData.symbol),
+                description: tokenData.description || cleanedDescription,
+                website_url: tokenData.website_url || idData.links?.homepage?.[0] || '',
+                twitter_handle: tokenData.twitter_handle || idData.links?.twitter_screen_name || '',
+                github_url: tokenData.github_url || idData.links?.repos_url?.github?.[0] || '',
+                logo_url: tokenData.logo_url || idData.image?.large || '',
+                coingecko_id: tokenData.coingecko_id,
+                current_price_usd: tokenData.current_price_usd || idData.market_data?.current_price?.usd || 0,
+                price_change_24h: tokenData.price_change_24h || idData.market_data?.price_change_percentage_24h || 0,
+                market_cap_usd: tokenData.market_cap_usd || idData.market_data?.market_cap?.usd || 0,
+                total_value_locked_usd: tokenData.total_value_locked_usd !== 'N/A' ? tokenData.total_value_locked_usd : (idData.market_data?.total_value_locked?.usd?.toString() || 'N/A')
+              }
+              
+              console.log(`[SCAN] Token data successfully collected from CoinGecko ID fallback`)
+            }
+          }
         }
       } catch (error) {
         console.error(`[SCAN] Error fetching token data from CoinGecko:`, error)
@@ -590,4 +627,3 @@ serve(async (req) => {
     });
   }
 });
-
