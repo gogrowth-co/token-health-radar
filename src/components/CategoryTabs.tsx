@@ -2,10 +2,9 @@
 import { ReactNode } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Check, X, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import CategoryFeatureGrid from "./CategoryFeatureGrid";
+import CategoryDataGrid from "./CategoryDataGrid";
 import BlurredCategoryOverlay from "./BlurredCategoryOverlay";
 import { 
   transformSecurityData, 
@@ -38,51 +37,6 @@ interface CategoryTabsProps {
   isPro: boolean;
   onCategoryChange: (value: ScanCategory) => void;
 }
-
-// Format numbers in a user-friendly way
-const formatNumber = (value: number | null | undefined): string => {
-  if (value === null || value === undefined) return "N/A";
-  
-  // For very large numbers
-  if (value >= 1000000000) {
-    return `${(value / 1000000000).toFixed(2)}B`;
-  } 
-  // For millions
-  else if (value >= 1000000) {
-    return `${(value / 1000000).toFixed(2)}M`;
-  }
-  // For thousands
-  else if (value >= 1000) {
-    return `${(value / 1000).toFixed(2)}K`;
-  } 
-  // For regular numbers
-  else {
-    return value.toFixed(2);
-  }
-};
-
-// Format currency values
-const formatCurrency = (value: number | null | undefined): string => {
-  if (value === null || value === undefined) return "N/A";
-  return `$${formatNumber(value)}`;
-};
-
-// Helper function to render boolean values
-const BooleanIndicator = ({ value, positive }: { value: boolean | null | undefined, positive: boolean }) => {
-  if (value === null || value === undefined) return <Badge variant="outline">Unknown</Badge>;
-  
-  const isGood = positive ? value : !value;
-  
-  return isGood ? (
-    <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500">
-      <Check className="w-3 h-3 mr-1" /> Yes
-    </Badge>
-  ) : (
-    <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500">
-      <X className="w-3 h-3 mr-1" /> No
-    </Badge>
-  );
-};
 
 export default function CategoryTabs({
   activeTab,
@@ -213,7 +167,7 @@ export default function CategoryTabs({
       
       {/* Security Tab Content */}
       {renderTabContent(securityData, (
-        <CategoryFeatureGrid 
+        <CategoryDataGrid 
           features={transformSecurityData(securityData)}
           description="Key security indicators for this token's smart contract"
         />
@@ -221,7 +175,7 @@ export default function CategoryTabs({
       
       {/* Tokenomics Tab Content */}
       {renderTabContent(tokenomicsData, (
-        <CategoryFeatureGrid
+        <CategoryDataGrid
           features={transformTokenomicsData(tokenomicsData)}
           description="Economic metrics and token supply analysis"
         />
@@ -229,7 +183,7 @@ export default function CategoryTabs({
       
       {/* Liquidity Tab Content */}
       {renderTabContent(liquidityData, (
-        <CategoryFeatureGrid
+        <CategoryDataGrid
           features={transformLiquidityData(liquidityData)}
           description="Measures of token trading activity and accessibility"
         />
@@ -237,7 +191,7 @@ export default function CategoryTabs({
       
       {/* Community Tab Content */}
       {renderTabContent(communityData, (
-        <CategoryFeatureGrid
+        <CategoryDataGrid
           features={transformCommunityData(communityData)}
           description="Social media presence and community engagement metrics"
         />
@@ -245,7 +199,7 @@ export default function CategoryTabs({
       
       {/* Development Tab Content */}
       {renderTabContent(developmentData, (
-        <CategoryFeatureGrid
+        <CategoryDataGrid
           features={transformDevelopmentData(developmentData)}
           description="GitHub activity and development progress metrics"
         />
