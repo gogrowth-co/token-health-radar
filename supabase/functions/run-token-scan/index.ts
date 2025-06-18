@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -6,6 +5,146 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// Helper function to extract GitHub repo info from URL
+const extractGitHubRepoInfo = (githubUrl: string) => {
+  if (!githubUrl) return null;
+  
+  const match = githubUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+  if (match) {
+    return {
+      owner: match[1],
+      repo: match[2].replace(/\.git$/, '') // Remove .git suffix if present
+    };
+  }
+  return null;
+};
+
+// Helper function to fetch GitHub repository data
+const fetchGitHubRepoData = async (githubUrl: string, githubApiKey?: string) => {
+  const repoInfo = extractGitHubRepoInfo(githubUrl);
+  if (!repoInfo) {
+    console.log('[SCAN] Invalid GitHub URL format:', githubUrl);
+    return null;
+  }
+
+  const headers: Record<string, string> = {
+    'Accept': 'application/vnd.github.v3+json',
+    'User-Agent': 'Token-Health-Scan/1.0'
+  };
+
+  if (githubApiKey) {
+    headers['Authorization'] = `token ${githubApiKey}`;
+    console.log('[SCAN] Using GitHub API key for better rate limits');
+  }
+
+  try {
+    console.log(`[SCAN] Fetching GitHub data for ${repoInfo.owner}/${repoInfo.repo}`);
+    
+    // Fetch repository basic info
+    const repoResponse = await fetch(`https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}`, {
+      headers
+    });
+
+    if (!repoResponse.ok) {
+      console.warn(`[SCAN] GitHub repo API returned status ${repoResponse.status} for ${repoInfo.owner}/${repoInfo.repo}`);
+      return null;
+    }
+
+    const repoData = await repoResponse.json();
+    
+    // Fetch contributors count
+    const contributorsResponse = await fetch(`https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/contributors?per_page=100`, {
+      headers
+    });
+    
+    let contributorsCount = 0;
+    if (contributorsResponse.ok) {
+      const contributorsData = await contributorsResponse.json();
+      contributorsCount = Array.isArray(contributorsData) ? contributorsData.length : 0;
+    } else {
+      console.warn(`[SCAN] GitHub contributors API returned status ${contributorsResponse.status}`);
+    }
+
+    // Fetch recent commits (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const since = thirtyDaysAgo.toISOString();
+
+    const commitsResponse = await fetch(`https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/commits?since=${since}&per_page=100`, {
+      headers
+    });
+
+    let commits30d = 0;
+    if (commitsResponse.ok) {
+      const commitsData = await commitsResponse.json();
+      commits30d = Array.isArray(commitsData) ? commitsData.length : 0;
+    } else {
+      console.warn(`[SCAN] GitHub commits API returned status ${commitsResponse.status}`);
+    }
+
+    const lastCommitDate = repoData.pushed_at ? new Date(repoData.pushed_at).toISOString() : null;
+
+    console.log(`[SCAN] GitHub data collected - Contributors: ${contributorsCount}, Commits (30d): ${commits30d}, Last commit: ${lastCommitDate}`);
+
+    return {
+      contributorsCount,
+      commits30d,
+      lastCommit: lastCommitDate,
+      isOpenSource: !repoData.private,
+      stargazersCount: repoData.stargazers_count || 0,
+      forksCount: repoData.forks_count || 0
+    };
+
+  } catch (error) {
+    console.error(`[SCAN] Error fetching GitHub data:`, error);
+    return null;
+  }
+};
+
+// Helper function to calculate development score
+const calculateDevelopmentScore = (data: any) => {
+  let score = 0;
+  
+  // Base score for being open source
+  if (data.isOpenSource) {
+    score += 20;
+  }
+  
+  // Contributors score (max 25 points)
+  const contributors = data.contributorsCount || 0;
+  if (contributors >= 20) score += 25;
+  else if (contributors >= 10) score += 20;
+  else if (contributors >= 5) score += 15;
+  else if (contributors >= 2) score += 10;
+  else if (contributors >= 1) score += 5;
+  
+  // Recent activity score (max 25 points)
+  const commits30d = data.commits30d || 0;
+  if (commits30d >= 50) score += 25;
+  else if (commits30d >= 20) score += 20;
+  else if (commits30d >= 10) score += 15;
+  else if (commits30d >= 5) score += 10;
+  else if (commits30d >= 1) score += 5;
+  
+  // Last commit recency score (max 20 points)
+  if (data.lastCommit) {
+    const daysSinceCommit = Math.floor((Date.now() - new Date(data.lastCommit).getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSinceCommit <= 7) score += 20;
+    else if (daysSinceCommit <= 30) score += 15;
+    else if (daysSinceCommit <= 90) score += 10;
+    else if (daysSinceCommit <= 180) score += 5;
+  }
+  
+  // Community engagement score (max 10 points)
+  const stars = data.stargazersCount || 0;
+  if (stars >= 1000) score += 10;
+  else if (stars >= 500) score += 8;
+  else if (stars >= 100) score += 5;
+  else if (stars >= 10) score += 2;
+  
+  return Math.min(score, 100); // Cap at 100
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -75,6 +214,7 @@ serve(async (req) => {
     const coinGeckoApiKey = Deno.env.get('COINGECKO_API_KEY')
     const cmcApiKey = Deno.env.get('COINMARKETCAP_API_KEY')
     const goPlusApiKey = Deno.env.get('GOPLUS_API_KEY')
+    const githubApiKey = Deno.env.get('GITHUB_API_KEY')
     
     // Initialize default token data
     let tokenData = {
@@ -266,7 +406,6 @@ serve(async (req) => {
       console.log(`[SCAN] Basic scan - using default security data`)
     }
 
-    // Generate enhanced data for Pro scans, basic data for others
     const tokenomicsData = {
       token_address,
       score: canPerformProScan ? Math.floor(Math.random() * 40) + 40 : Math.floor(Math.random() * 20) + 30,
@@ -289,15 +428,48 @@ serve(async (req) => {
       dex_depth_status: canPerformProScan ? 'Medium' : 'Basic'
     }
 
-    const developmentData = {
+    // Enhanced development data with GitHub integration
+    let developmentData = {
       token_address,
-      score: canPerformProScan && tokenData.github_url ? Math.floor(Math.random() * 60) + 20 : 0,
+      score: 0,
       github_repo: tokenData.github_url,
       is_open_source: !!tokenData.github_url,
       contributors_count: null,
       commits_30d: null,
       last_commit: null,
-      roadmap_progress: canPerformProScan && tokenData.github_url ? 'Active' : 'Unknown'
+      roadmap_progress: 'Unknown'
+    }
+
+    // Fetch GitHub data for Pro scans or if GitHub URL is available
+    if ((canPerformProScan || tokenData.github_url) && tokenData.github_url) {
+      console.log(`[SCAN] Fetching GitHub data for development analysis`)
+      
+      const githubData = await fetchGitHubRepoData(tokenData.github_url, githubApiKey);
+      
+      if (githubData) {
+        const score = calculateDevelopmentScore(githubData);
+        
+        developmentData = {
+          ...developmentData,
+          score,
+          is_open_source: githubData.isOpenSource,
+          contributors_count: githubData.contributorsCount,
+          commits_30d: githubData.commits30d,
+          last_commit: githubData.lastCommit,
+          roadmap_progress: githubData.commits30d > 0 ? 'Active' : 'Inactive'
+        }
+        
+        console.log(`[SCAN] Development data successfully collected - Score: ${score}, Contributors: ${githubData.contributorsCount}, Commits (30d): ${githubData.commits30d}`)
+      } else {
+        // Fallback scoring for open source projects without detailed data
+        if (tokenData.github_url) {
+          developmentData.score = 20; // Base score for having a GitHub repository
+          developmentData.roadmap_progress = 'Unknown';
+          console.log(`[SCAN] GitHub data not available, using fallback score: ${developmentData.score}`)
+        }
+      }
+    } else {
+      console.log(`[SCAN] No GitHub URL available or basic scan - using minimal development data`)
     }
 
     // Community data always 0 as per requirements
@@ -313,7 +485,6 @@ serve(async (req) => {
       team_visibility: 'Unknown'
     }
 
-    // CRITICAL: Save token_data_cache FIRST since other tables reference it
     console.log(`[SCAN] Saving token data to database: ${token_address}`)
     
     try {
@@ -391,7 +562,6 @@ serve(async (req) => {
       ? Math.round(scores.reduce((acc, curr) => acc + curr, 0) / scores.length)
       : 0
 
-    // Record the scan in token_scans table
     try {
       const scanRecord = {
         user_id: user_id || null,
@@ -433,7 +603,7 @@ serve(async (req) => {
       }
     }
 
-    console.log(`[SCAN] Scan completed successfully for ${token_address}, overall score: ${overallScore}, pro_scan: ${canPerformProScan}`)
+    console.log(`[SCAN] Scan completed successfully for ${token_address}, overall score: ${overallScore}, pro_scan: ${canPerformProScan}, development_score: ${developmentData.score}`)
 
     // Return consistent response structure
     return new Response(
