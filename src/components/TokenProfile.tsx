@@ -1,4 +1,3 @@
-
 import { Globe, Github, Twitter } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
@@ -99,6 +98,28 @@ export default function TokenProfile({
 }: TokenProfileProps) {
   const isMobile = useIsMobile();
   
+  // Debug logging for description
+  console.log("[TOKEN-PROFILE] Received props:", {
+    name,
+    symbol,
+    description,
+    hasDescription: !!description,
+    descriptionLength: description?.length || 0
+  });
+  
+  // Enhanced description with better fallback
+  const displayDescription = React.useMemo(() => {
+    if (description && description.trim() !== '') {
+      console.log("[TOKEN-PROFILE] Using provided description:", description);
+      return description;
+    }
+    
+    // Create a meaningful fallback description
+    const fallback = `${name} (${symbol.toUpperCase()}) is a cryptocurrency token. Market data and token metrics are available for analysis.`;
+    console.log("[TOKEN-PROFILE] Using fallback description:", fallback);
+    return fallback;
+  }, [description, name, symbol]);
+  
   const shortenAddress = (addr: string) =>
     `${addr.slice(0, 6)}...${addr.slice(-4) || ""}`;
   const copyAddress = async () => {
@@ -174,14 +195,12 @@ export default function TokenProfile({
             </div>
           </div>
 
-          {/* Description - prominently displayed */}
-          {description && (
-            <div className="mb-4">
-              <p className="text-sm leading-relaxed text-[#4B5563] dark:text-[#A3A3B3]">
-                {description}
-              </p>
-            </div>
-          )}
+          {/* Description - prominently displayed with debugging */}
+          <div className="mb-4">
+            <p className="text-sm leading-relaxed text-[#4B5563] dark:text-[#A3A3B3]">
+              {displayDescription}
+            </p>
+          </div>
 
           {/* Mobile Bottom Section: Price/Market Cap + Health Score */}
           <div className="flex items-center justify-between">
@@ -309,12 +328,12 @@ export default function TokenProfile({
               </span>
             </div>
 
-            {/* Description - prominently displayed */}
-            {description && (
-              <p className="text-[16px] font-normal leading-[24px] text-[#6B7280] dark:text-[#9CA3AF] mb-2">
-                {description}
+            {/* Description - prominently displayed with debugging */}
+            <div className="mb-2">
+              <p className="text-[16px] font-normal leading-[24px] text-[#6B7280] dark:text-[#9CA3AF]">
+                {displayDescription}
               </p>
-            )}
+            </div>
             
             {/* Address and Network */}
             <div className="flex items-center gap-2">
