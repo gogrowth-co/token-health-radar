@@ -121,6 +121,7 @@ export type Database = {
       }
       token_data_cache: {
         Row: {
+          cmc_id: number | null
           coingecko_id: string | null
           created_at: string | null
           current_price_usd: number | null
@@ -138,6 +139,7 @@ export type Database = {
           website_url: string | null
         }
         Insert: {
+          cmc_id?: number | null
           coingecko_id?: string | null
           created_at?: string | null
           current_price_usd?: number | null
@@ -155,6 +157,7 @@ export type Database = {
           website_url?: string | null
         }
         Update: {
+          cmc_id?: number | null
           coingecko_id?: string | null
           created_at?: string | null
           current_price_usd?: number | null

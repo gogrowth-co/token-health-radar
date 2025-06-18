@@ -58,7 +58,6 @@ serve(async (req) => {
           }
         } else {
           console.warn(`[SCAN] Could not retrieve subscriber data for user ${user_id}:`, subscriberError)
-          // Default to free tier limits for safety
           canPerformProScan = false
         }
       } catch (error) {
@@ -66,7 +65,6 @@ serve(async (req) => {
         canPerformProScan = false
       }
     } else {
-      // Anonymous users always get basic scans only
       console.log(`[SCAN] Anonymous user - providing basic scan only`)
       canPerformProScan = false
     }
@@ -164,14 +162,12 @@ serve(async (req) => {
     // Fallback to CoinGecko if CMC data not available and CoinGecko ID provided
     else if (coingecko_id && coinGeckoApiKey) {
       try {
-        // Demo Plan uses Authorization header, not query parameter
         const cgUrl = `https://api.coingecko.com/api/v3/coins/${coingecko_id}`
         const cgHeaders: Record<string, string> = {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         }
         
-        // Add Demo Plan authentication header if available
         if (coinGeckoApiKey) {
           cgHeaders['x-cg-demo-api-key'] = coinGeckoApiKey
           console.log(`[SCAN] Using CoinGecko Demo Plan authentication`)
@@ -317,31 +313,71 @@ serve(async (req) => {
       team_visibility: 'Unknown'
     }
 
-    // Save all data to cache tables with improved error handling
-    console.log(`[SCAN] Saving data to database for token: ${token_address}`)
+    // CRITICAL: Save token_data_cache FIRST since other tables reference it
+    console.log(`[SCAN] Saving token data to database: ${token_address}`)
     
-    const saveOperations = [
-      { name: 'token_data_cache', operation: supabase.from('token_data_cache').upsert(tokenData, { onConflict: 'token_address' }) },
-      { name: 'token_security_cache', operation: supabase.from('token_security_cache').upsert(securityData, { onConflict: 'token_address' }) },
-      { name: 'token_tokenomics_cache', operation: supabase.from('token_tokenomics_cache').upsert(tokenomicsData, { onConflict: 'token_address' }) },
-      { name: 'token_liquidity_cache', operation: supabase.from('token_liquidity_cache').upsert(liquidityData, { onConflict: 'token_address' }) },
-      { name: 'token_development_cache', operation: supabase.from('token_development_cache').upsert(developmentData, { onConflict: 'token_address' }) },
-      { name: 'token_community_cache', operation: supabase.from('token_community_cache').upsert(communityData, { onConflict: 'token_address' }) }
-    ]
+    try {
+      // Save token data first
+      const { data: tokenSaveData, error: tokenSaveError } = await supabase
+        .from('token_data_cache')
+        .upsert(tokenData, { onConflict: 'token_address' })
 
-    const saveResults = await Promise.allSettled(saveOperations.map(op => op.operation))
-
-    // Log detailed results for each save operation
-    saveResults.forEach((result, index) => {
-      const tableName = saveOperations[index].name
-      if (result.status === 'rejected') {
-        console.error(`[SCAN] Error saving to ${tableName}:`, result.reason)
-      } else if (result.value.error) {
-        console.error(`[SCAN] Database error saving to ${tableName}:`, result.value.error)
-      } else {
-        console.log(`[SCAN] Successfully saved to ${tableName}`)
+      if (tokenSaveError) {
+        console.error(`[SCAN] CRITICAL: Failed to save token data:`, tokenSaveError)
+        throw new Error(`Failed to save token data: ${tokenSaveError.message}`)
       }
-    })
+      
+      console.log(`[SCAN] Successfully saved token data for: ${token_address}`)
+
+      // Now save all other cache data - these should succeed now that token_data_cache exists
+      const savePromises = [
+        supabase.from('token_security_cache').upsert(securityData, { onConflict: 'token_address' }),
+        supabase.from('token_tokenomics_cache').upsert(tokenomicsData, { onConflict: 'token_address' }),
+        supabase.from('token_liquidity_cache').upsert(liquidityData, { onConflict: 'token_address' }),
+        supabase.from('token_development_cache').upsert(developmentData, { onConflict: 'token_address' }),
+        supabase.from('token_community_cache').upsert(communityData, { onConflict: 'token_address' })
+      ]
+
+      const results = await Promise.allSettled(savePromises)
+      
+      const tableNames = ['security', 'tokenomics', 'liquidity', 'development', 'community']
+      
+      // Check for any failures
+      let hasFailures = false
+      results.forEach((result, index) => {
+        const tableName = tableNames[index]
+        if (result.status === 'rejected') {
+          console.error(`[SCAN] ERROR: Failed to save ${tableName} data:`, result.reason)
+          hasFailures = true
+        } else if (result.value.error) {
+          console.error(`[SCAN] ERROR: Database error saving ${tableName}:`, result.value.error)
+          hasFailures = true
+        } else {
+          console.log(`[SCAN] Successfully saved ${tableName} data`)
+        }
+      })
+
+      if (hasFailures) {
+        throw new Error('Failed to save some cache data to database')
+      }
+
+    } catch (error) {
+      console.error(`[SCAN] Database save failed:`, error)
+      // Return error response instead of fake success
+      return new Response(
+        JSON.stringify({ 
+          error: `Database save failed: ${error.message}`,
+          success: false 
+        }),
+        { 
+          status: 500,
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      )
+    }
 
     // Calculate overall score
     const scores = [
@@ -355,7 +391,7 @@ serve(async (req) => {
       ? Math.round(scores.reduce((acc, curr) => acc + curr, 0) / scores.length)
       : 0
 
-    // Record the scan in token_scans table with CMC ID
+    // Record the scan in token_scans table
     try {
       const scanRecord = {
         user_id: user_id || null,

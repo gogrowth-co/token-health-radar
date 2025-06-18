@@ -72,56 +72,110 @@ export default function ScanResult() {
 
         console.log("ScanResult: User authenticated:", isAuthenticated, "User ID:", user?.id);
 
-        // Load scan data from database with detailed logging
-        const queries = [
-          { name: 'token_data_cache', query: supabase.from('token_data_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
-          { name: 'token_security_cache', query: supabase.from('token_security_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
-          { name: 'token_tokenomics_cache', query: supabase.from('token_tokenomics_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
-          { name: 'token_liquidity_cache', query: supabase.from('token_liquidity_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
-          { name: 'token_development_cache', query: supabase.from('token_development_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
-          { name: 'token_community_cache', query: supabase.from('token_community_cache').select('*').eq('token_address', tokenAddress).maybeSingle() }
-        ];
+        // Load scan data from database with better error handling
+        try {
+          // First try to get token data - this is the primary table
+          const { data: tokenData, error: tokenError } = await supabase
+            .from('token_data_cache')
+            .select('*')
+            .eq('token_address', tokenAddress)
+            .maybeSingle();
 
-        const results = await Promise.allSettled(queries.map(q => q.query));
-        
-        // Extract data and errors from results
-        const [
-          tokenResult,
-          securityResult,
-          tokenomicsResult,
-          liquidityResult,
-          developmentResult,
-          communityResult
-        ] = results;
-
-        // Process results and log any errors
-        const processResult = (result: any, name: string) => {
-          if (result.status === 'rejected') {
-            console.error(`[DB] ${name} query failed:`, result.reason);
-            return { data: null, error: result.reason };
+          if (tokenError) {
+            console.error("[DB] token_data_cache query failed:", tokenError);
+            throw new Error(`Failed to load token data: ${tokenError.message}`);
           }
-          const { data, error } = result.value;
-          console.log(`[DB] ${name} result:`, data, "error:", error);
-          if (error) console.error(`[DB] ${name} error:`, error);
-          return { data, error };
-        };
 
-        const tokenData = processResult(tokenResult, 'token_data_cache').data;
-        const securityData = processResult(securityResult, 'token_security_cache').data;
-        const tokenomicsData = processResult(tokenomicsResult, 'token_tokenomics_cache').data;
-        const liquidityData = processResult(liquidityResult, 'token_liquidity_cache').data;
-        const developmentData = processResult(developmentResult, 'token_development_cache').data;
-        const communityData = processResult(communityResult, 'token_community_cache').data;
+          if (!tokenData) {
+            console.warn("[DB] No token data found for address:", tokenAddress);
+            
+            // Try fallback to localStorage
+            const selectedTokenData = localStorage.getItem("selectedToken");
+            if (selectedTokenData) {
+              try {
+                const selectedToken = JSON.parse(selectedTokenData);
+                if (selectedToken.address === tokenAddress || selectedToken.id === coinGeckoId) {
+                  console.log("ScanResult: Using fallback data from localStorage");
+                  setScanData({
+                    success: true,
+                    token_address: tokenAddress,
+                    overall_score: 0,
+                    token_info: {
+                      name: selectedToken.name,
+                      symbol: selectedToken.symbol,
+                      logo_url: selectedToken.logo,
+                      current_price_usd: selectedToken.price_usd || 0,
+                      price_change_24h: selectedToken.price_change_24h || 0,
+                      market_cap_usd: selectedToken.market_cap_usd || 0,
+                      coingecko_id: selectedToken.id,
+                      description: `${selectedToken.name} (${selectedToken.symbol})`,
+                      website_url: "",
+                      twitter_handle: "",
+                      github_url: ""
+                    },
+                    security: { score: 0, token_address: tokenAddress },
+                    tokenomics: { score: 0, token_address: tokenAddress },
+                    liquidity: { score: 0, token_address: tokenAddress },
+                    development: { score: 0, token_address: tokenAddress },
+                    community: { score: 0, token_address: tokenAddress }
+                  });
+                  setLoading(false);
+                  return;
+                }
+              } catch (e) {
+                console.error("Error parsing selectedToken from localStorage:", e);
+              }
+            }
+            
+            setError("Token not found. Please try scanning the token again.");
+            setLoading(false);
+            return;
+          }
 
-        // Check if we have valid token data
-        if (tokenData && (tokenData.name || tokenData.symbol || tokenData.current_price_usd)) {
-          // Calculate overall score from available scores
+          console.log("[DB] Token data found:", tokenData);
+
+          // Now load all cache data
+          const cacheQueries = [
+            { name: 'security', query: supabase.from('token_security_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
+            { name: 'tokenomics', query: supabase.from('token_tokenomics_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
+            { name: 'liquidity', query: supabase.from('token_liquidity_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
+            { name: 'development', query: supabase.from('token_development_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
+            { name: 'community', query: supabase.from('token_community_cache').select('*').eq('token_address', tokenAddress).maybeSingle() }
+          ];
+
+          const cacheResults = await Promise.allSettled(cacheQueries.map(q => q.query));
+          
+          // Process cache results with proper error handling
+          const cacheData: any = {};
+          let hasValidScores = false;
+          
+          cacheResults.forEach((result, index) => {
+            const cacheName = cacheQueries[index].name;
+            
+            if (result.status === 'rejected') {
+              console.error(`[DB] ${cacheName} cache query failed:`, result.reason);
+              cacheData[cacheName] = { score: 0, token_address: tokenAddress };
+            } else {
+              const { data, error } = result.value;
+              if (error) {
+                console.error(`[DB] ${cacheName} cache error:`, error);
+                cacheData[cacheName] = { score: 0, token_address: tokenAddress };
+              } else {
+                cacheData[cacheName] = data || { score: 0, token_address: tokenAddress };
+                if (data && data.score && data.score > 0) {
+                  hasValidScores = true;
+                }
+              }
+            }
+          });
+
+          // Calculate overall score from valid scores only
           const scores = [
-            securityData?.score || 0,
-            tokenomicsData?.score || 0,
-            liquidityData?.score || 0,
-            communityData?.score || 0,
-            developmentData?.score || 0
+            cacheData.security?.score || 0,
+            cacheData.tokenomics?.score || 0,
+            cacheData.liquidity?.score || 0,
+            cacheData.development?.score || 0,
+            cacheData.community?.score || 0
           ].filter(score => score > 0);
           
           const overallScore = scores.length > 0 
@@ -130,60 +184,30 @@ export default function ScanResult() {
 
           console.log("ScanResult: Calculated overall score:", overallScore, "from scores:", scores);
           
+          if (!hasValidScores && overallScore === 0) {
+            console.warn("ScanResult: No valid scores found, scan may have failed");
+            setError("Scan data incomplete. Please try scanning the token again.");
+            setLoading(false);
+            return;
+          }
+          
           setScanData({
             success: true,
             token_address: tokenAddress,
             overall_score: overallScore,
             token_info: tokenData,
-            security: securityData || { score: 0, token_address: tokenAddress },
-            tokenomics: tokenomicsData || { score: 0, token_address: tokenAddress },
-            liquidity: liquidityData || { score: 0, token_address: tokenAddress },
-            development: developmentData || { score: 0, token_address: tokenAddress },
-            community: communityData || { score: 0, token_address: tokenAddress },
+            security: cacheData.security,
+            tokenomics: cacheData.tokenomics,
+            liquidity: cacheData.liquidity,
+            development: cacheData.development,
+            community: cacheData.community,
           });
-          setLoading(false);
-          return;
+          
+        } catch (dbError) {
+          console.error("ScanResult: Database query error:", dbError);
+          setError(dbError instanceof Error ? dbError.message : "Failed to load scan data from database");
         }
 
-        // Fallback: Try to get token info from localStorage
-        const selectedTokenData = localStorage.getItem("selectedToken");
-        if (selectedTokenData) {
-          try {
-            const selectedToken = JSON.parse(selectedTokenData);
-            if (selectedToken.address === tokenAddress || selectedToken.id === coinGeckoId) {
-              console.log("ScanResult: Using fallback data from localStorage");
-              setScanData({
-                success: true,
-                token_address: tokenAddress,
-                overall_score: 0,
-                token_info: {
-                  name: selectedToken.name,
-                  symbol: selectedToken.symbol,
-                  logo_url: selectedToken.logo,
-                  current_price_usd: selectedToken.price_usd || 0,
-                  price_change_24h: selectedToken.price_change_24h || 0,
-                  market_cap_usd: selectedToken.market_cap_usd || 0,
-                  coingecko_id: selectedToken.id,
-                  description: `${selectedToken.name} (${selectedToken.symbol})`,
-                  website_url: "",
-                  twitter_handle: "",
-                  github_url: ""
-                },
-                security: { score: 0, token_address: tokenAddress },
-                tokenomics: { score: 0, token_address: tokenAddress },
-                liquidity: { score: 0, token_address: tokenAddress },
-                development: { score: 0, token_address: tokenAddress },
-                community: { score: 0, token_address: tokenAddress }
-              });
-              setLoading(false);
-              return;
-            }
-          } catch (e) {
-            console.error("Error parsing selectedToken from localStorage:", e);
-          }
-        }
-
-        setError("Token not found in our database. Please try scanning the token again.");
         setLoading(false);
       } catch (error) {
         console.error("ScanResult: Error loading scan data:", error);
@@ -239,7 +263,7 @@ export default function ScanResult() {
               </div>
               <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>Failed to load scan results</h1>
               <p className={`text-muted-foreground mt-2 ${isMobile ? 'text-sm' : 'text-base'}`}>
-                {error || "Token not found in our database."}
+                {error || "Token scan data not available."}
               </p>
               
               <div className={`flex ${isMobile ? 'flex-col w-full' : 'flex-row'} gap-4 mt-6`}>
