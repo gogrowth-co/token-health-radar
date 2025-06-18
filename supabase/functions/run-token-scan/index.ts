@@ -118,6 +118,8 @@ serve(async (req) => {
       total_value_locked_usd: 'N/A'
     }
 
+    let descriptionSource = 'none';
+
     // Fetch token data - prioritize CMC if cmc_id is provided
     if (cmc_id) {
       console.log(`[SCAN] Fetching token data from CMC API: ${cmc_id}`)
@@ -132,8 +134,27 @@ serve(async (req) => {
           }
         });
 
+        console.log(`[SCAN] CMC Data Response:`, JSON.stringify(cmcData, null, 2))
+        console.log(`[SCAN] CMC Error:`, cmcError)
+
         if (!cmcError && cmcData?.data && Object.keys(cmcData.data).length > 0) {
           const cmcInfo = cmcData.data[cmc_id]
+          console.log(`[SCAN] CMC Info for token ${cmc_id}:`, JSON.stringify(cmcInfo, null, 2))
+          
+          // Check if description exists and log it
+          if (cmcInfo?.description) {
+            console.log(`[SCAN] CMC Raw Description Found: "${cmcInfo.description.substring(0, 200)}..."`)
+            const cleanedCMCDescription = cleanDescription(cmcInfo.description);
+            console.log(`[SCAN] CMC Cleaned Description: "${cleanedCMCDescription}"`)
+            if (cleanedCMCDescription) {
+              tokenData.description = cleanedCMCDescription;
+              descriptionSource = 'CMC';
+              console.log(`[SCAN] Using CMC description as primary source`)
+            }
+          } else {
+            console.log(`[SCAN] CMC description field is missing or empty`)
+            console.log(`[SCAN] Available CMC fields:`, Object.keys(cmcInfo || {}))
+          }
           
           // Get quotes for pricing data
           const { data: quotesData } = await supabase.functions.invoke('coinmarketcap-search', {
@@ -153,18 +174,11 @@ serve(async (req) => {
           
           const usdQuote = cmcQuotes?.quote?.USD || {}
           
-          // Process description with better cleaning
-          let cleanedDescription = '';
-          if (cmcInfo?.description) {
-            cleanedDescription = cleanDescription(cmcInfo.description);
-            console.log(`[SCAN] CMC description processed: "${cleanedDescription.substring(0, 100)}..."`);
-          }
-          
           tokenData = {
             ...tokenData,
             name: cmcInfo?.name || tokenData.name,
             symbol: cmcInfo?.symbol?.toUpperCase() || tokenData.symbol,
-            description: cleanedDescription,
+            description: tokenData.description, // Keep the description we set above
             website_url: website,
             twitter_handle: twitterHandle,
             github_url: github,
@@ -175,7 +189,7 @@ serve(async (req) => {
             total_value_locked_usd: 'N/A'
           }
           
-          console.log(`[SCAN] Token data successfully collected from CMC API with description: "${cleanedDescription}"`)
+          console.log(`[SCAN] Token data successfully collected from CMC API`)
         } else {
           console.log(`[SCAN] No data found in CMC API response or error occurred`)
         }
@@ -184,9 +198,9 @@ serve(async (req) => {
       }
     }
     
-    // Fallback to CoinGecko using contract address if we don't have a good description yet
+    // Fallback to CoinGecko for description if not found in CMC
     if (!tokenData.description && token_address) {
-      console.log(`[SCAN] Fetching token data from CoinGecko using contract address: ${token_address}`)
+      console.log(`[SCAN] No description from CMC, trying CoinGecko using contract address: ${token_address}`)
       
       // Use CoinGecko Demo Plan authentication
       const cgApiKey = Deno.env.get('COINGECKO_API_KEY')
@@ -212,19 +226,28 @@ serve(async (req) => {
         
         if (response.ok) {
           const data = await response.json()
+          console.log(`[SCAN] CoinGecko Response Keys:`, Object.keys(data))
           
-          // Process description with better cleaning
-          let cleanedDescription = '';
+          // Check if description exists and log it
           if (data.description?.en) {
-            cleanedDescription = cleanDescription(data.description.en);
-            console.log(`[SCAN] CoinGecko description processed: "${cleanedDescription.substring(0, 100)}..."`);
+            console.log(`[SCAN] CoinGecko Raw Description Found: "${data.description.en.substring(0, 200)}..."`)
+            const cleanedCGDescription = cleanDescription(data.description.en);
+            console.log(`[SCAN] CoinGecko Cleaned Description: "${cleanedCGDescription}"`)
+            if (cleanedCGDescription && !tokenData.description) {
+              tokenData.description = cleanedCGDescription;
+              descriptionSource = 'CoinGecko';
+              console.log(`[SCAN] Using CoinGecko description as fallback source`)
+            }
+          } else {
+            console.log(`[SCAN] CoinGecko description field is missing or empty`)
+            console.log(`[SCAN] Available CoinGecko description object:`, data.description)
           }
           
           // Only update fields that are still default/empty
           tokenData = {
             name: tokenData.name !== `Token ${token_address.substring(0, 8)}...` ? tokenData.name : (data.name || tokenData.name),
             symbol: tokenData.symbol !== 'UNKNOWN' ? tokenData.symbol : (data.symbol?.toUpperCase() || tokenData.symbol),
-            description: tokenData.description || cleanedDescription,
+            description: tokenData.description, // Keep the description we set above
             website_url: tokenData.website_url || data.links?.homepage?.[0] || '',
             twitter_handle: tokenData.twitter_handle || data.links?.twitter_screen_name || '',
             github_url: tokenData.github_url || data.links?.repos_url?.github?.[0] || '',
@@ -252,16 +275,21 @@ serve(async (req) => {
             if (idResponse.ok) {
               const idData = await idResponse.json()
               
-              let cleanedDescription = '';
-              if (idData.description?.en) {
-                cleanedDescription = cleanDescription(idData.description.en);
-                console.log(`[SCAN] CoinGecko ID fallback description processed: "${cleanedDescription.substring(0, 100)}..."`);
+              if (idData.description?.en && !tokenData.description) {
+                console.log(`[SCAN] CoinGecko ID Raw Description Found: "${idData.description.en.substring(0, 200)}..."`)
+                const cleanedDescription = cleanDescription(idData.description.en);
+                console.log(`[SCAN] CoinGecko ID Cleaned Description: "${cleanedDescription}"`)
+                if (cleanedDescription) {
+                  tokenData.description = cleanedDescription;
+                  descriptionSource = 'CoinGecko-ID';
+                  console.log(`[SCAN] Using CoinGecko ID description as final fallback`)
+                }
               }
               
               tokenData = {
                 name: tokenData.name !== `Token ${token_address.substring(0, 8)}...` ? tokenData.name : (idData.name || tokenData.name),
                 symbol: tokenData.symbol !== 'UNKNOWN' ? tokenData.symbol : (idData.symbol?.toUpperCase() || tokenData.symbol),
-                description: tokenData.description || cleanedDescription,
+                description: tokenData.description, // Keep the description we set above
                 website_url: tokenData.website_url || idData.links?.homepage?.[0] || '',
                 twitter_handle: tokenData.twitter_handle || idData.links?.twitter_screen_name || '',
                 github_url: tokenData.github_url || idData.links?.repos_url?.github?.[0] || '',
@@ -282,11 +310,15 @@ serve(async (req) => {
       }
     }
 
-    // Add fallback description if none found from APIs
+    // Only add fallback description if no real description was found
     if (!tokenData.description && tokenData.name !== `Token ${token_address.substring(0, 8)}...`) {
       tokenData.description = `${tokenData.name} (${tokenData.symbol}) is a cryptocurrency token.`;
+      descriptionSource = 'fallback';
       console.log(`[SCAN] Added fallback description: "${tokenData.description}"`);
     }
+
+    console.log(`[SCAN] Final description source: ${descriptionSource}`)
+    console.log(`[SCAN] Final description: "${tokenData.description}"`)
 
     // Initialize default security data
     let securityData = {
@@ -471,6 +503,7 @@ serve(async (req) => {
 
     console.log(`[SCAN] Saving token data to database: ${token_address}`)
     console.log(`[SCAN] Token description to save: "${tokenData.description}"`)
+    console.log(`[SCAN] Description source: ${descriptionSource}`)
     
     try {
       // First check if token exists to force proper update
