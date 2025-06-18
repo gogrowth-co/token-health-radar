@@ -105,58 +105,50 @@ serve(async (req) => {
         
         // Initialize result with empty data
         result = { data: [] };
-        let symbolSearchSucceeded = false;
+        let nameSearchSucceeded = false;
         
         try {
-          // Try symbol search first
-          console.log(`[CMC-EDGE] Attempting symbol search for: "${cleanSearchTerm.toUpperCase()}"`);
-          result = await callCoinMarketCapAPI('/cryptocurrency/map', {
-            symbol: cleanSearchTerm.toUpperCase(),
-            limit: limit || 10
+          // Try name search first (more reliable for partial matches)
+          console.log(`[CMC-EDGE] Attempting name search for: "${cleanSearchTerm}"`);
+          
+          const allData = await callCoinMarketCapAPI('/cryptocurrency/map', {
+            listing_status: 'active',
+            limit: 500 // Get more results to filter
           });
           
-          console.log(`[CMC-EDGE] Symbol search returned ${result.data?.length || 0} results`);
-          if (result.data && result.data.length > 0) {
-            symbolSearchSucceeded = true;
+          if (allData.data) {
+            // Filter by name (case-insensitive)
+            const searchLower = cleanSearchTerm.toLowerCase();
+            result.data = allData.data.filter((token: any) => 
+              token.name?.toLowerCase().includes(searchLower) ||
+              token.slug?.toLowerCase().includes(searchLower)
+            ).slice(0, limit || 10);
+            
+            console.log(`[CMC-EDGE] Name search filtered to ${result.data.length} results`);
+            if (result.data && result.data.length > 0) {
+              nameSearchSucceeded = true;
+              console.log(`[CMC-EDGE] Name search succeeded with ${result.data.length} results`);
+            }
           }
-        } catch (symbolError: any) {
-          console.log(`[CMC-EDGE] Symbol search failed:`, symbolError.message);
-          
-          // Check if it's an "Invalid symbol" error - if so, we'll proceed to name search
-          if (symbolError.message && symbolError.message.includes('Invalid value for "symbol"')) {
-            console.log(`[CMC-EDGE] Invalid symbol error detected, will try name search`);
-            // Reset result to empty for name search
-            result = { data: [] };
-          } else {
-            // For other errors (auth, network, etc), rethrow
-            console.error('[CMC-EDGE] Non-symbol error, rethrowing:', symbolError);
-            throw symbolError;
-          }
+        } catch (nameError) {
+          console.log(`[CMC-EDGE] Name search failed:`, nameError.message);
+          // Continue to symbol search fallback
         }
         
-        // If symbol search didn't succeed, try name search
-        if (!symbolSearchSucceeded && (!result.data || result.data.length === 0)) {
+        // If name search didn't succeed, try symbol search as fallback
+        if (!nameSearchSucceeded && (!result.data || result.data.length === 0)) {
           try {
-            console.log(`[CMC-EDGE] Attempting name search for: "${cleanSearchTerm}"`);
-            
-            const allData = await callCoinMarketCapAPI('/cryptocurrency/map', {
-              listing_status: 'active',
-              limit: 500 // Get more results to filter
+            console.log(`[CMC-EDGE] Name search had no results, trying symbol search for: "${cleanSearchTerm.toUpperCase()}"`);
+            result = await callCoinMarketCapAPI('/cryptocurrency/map', {
+              symbol: cleanSearchTerm.toUpperCase(),
+              limit: limit || 10
             });
             
-            if (allData.data) {
-              // Filter by name (case-insensitive)
-              const searchLower = cleanSearchTerm.toLowerCase();
-              result.data = allData.data.filter((token: any) => 
-                token.name?.toLowerCase().includes(searchLower) ||
-                token.slug?.toLowerCase().includes(searchLower)
-              ).slice(0, limit || 10);
-              
-              console.log(`[CMC-EDGE] Name search filtered to ${result.data.length} results`);
-            }
-          } catch (nameError) {
-            console.error('[CMC-EDGE] Name search also failed:', nameError);
-            throw nameError;
+            console.log(`[CMC-EDGE] Symbol search returned ${result.data?.length || 0} results`);
+          } catch (symbolError: any) {
+            console.log(`[CMC-EDGE] Symbol search also failed:`, symbolError.message);
+            // If both searches failed, we'll return empty results
+            result = { data: [] };
           }
         }
         break;
