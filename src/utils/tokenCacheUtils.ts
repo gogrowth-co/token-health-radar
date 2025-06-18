@@ -1,11 +1,27 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { TokenResult } from "@/components/token/types";
+import { TokenResult, TokenInfoEnriched } from "@/components/token/types";
+
+interface CacheData {
+  name: string;
+  symbol: string;
+  description?: string;
+  website_url?: string;
+  twitter_handle?: string;
+  github_url?: string;
+  logo_url?: string;
+  coingecko_id?: string;
+  cmc_id?: number;
+  current_price_usd?: number;
+  price_change_24h?: number;
+  market_cap_usd?: number;
+  total_value_locked_usd?: string;
+}
 
 /**
  * Fetch token data from database cache by CoinGecko ID or CMC ID
  */
-export const getTokenFromCache = async (identifier: string): Promise<any | null> => {
+export const getTokenFromCache = async (identifier: string): Promise<CacheData | null> => {
   try {
     // Try by CoinGecko ID first
     let { data, error } = await supabase
@@ -50,7 +66,7 @@ export const getTokenFromCache = async (identifier: string): Promise<any | null>
     }
 
     console.log(`[CACHE] Found cached data for ${identifier}:`, data);
-    return data;
+    return data as CacheData;
   } catch (err) {
     console.warn(`[CACHE] Exception fetching cached data for ${identifier}:`, err);
     return null;
@@ -60,7 +76,7 @@ export const getTokenFromCache = async (identifier: string): Promise<any | null>
 /**
  * Create enriched token info from cache data
  */
-export const createTokenInfoFromCache = (cacheData: any): any => {
+export const createTokenInfoFromCache = (cacheData: CacheData): TokenInfoEnriched => {
   return {
     name: cacheData.name || '',
     symbol: (cacheData.symbol || '').toUpperCase(),
@@ -78,10 +94,32 @@ export const createTokenInfoFromCache = (cacheData: any): any => {
   };
 };
 
+interface MarketData {
+  price_usd: number;
+  price_change_24h: number;
+  market_cap: number;
+}
+
+interface ApiData {
+  market_data?: {
+    current_price?: { usd?: number };
+    price_change_percentage_24h?: number;
+    market_cap?: { usd?: number };
+  };
+}
+
+interface TokenWithMarketData {
+  current_price_usd?: number;
+  market_cap?: number;
+  price_change_percentage_24h?: number;
+  market_cap_rank?: number;
+  rank?: number;
+}
+
 /**
  * Create enhanced market data with better fallbacks
  */
-export const createEnhancedMarketData = (token: any, apiData?: any) => {
+export const createEnhancedMarketData = (token: TokenWithMarketData, apiData?: ApiData): MarketData => {
   // Priority 1: Use API data if available
   if (apiData && apiData.market_data) {
     return {
@@ -118,10 +156,18 @@ export const createEnhancedMarketData = (token: any, apiData?: any) => {
   };
 };
 
+interface TokenWithBasicInfo {
+  name: string;
+  symbol?: string;
+  market_cap_rank?: number;
+  rank?: number;
+  platforms?: Record<string, string>;
+}
+
 /**
  * Create meaningful description with available data
  */
-export const createMeaningfulDescription = (token: any, apiDescription?: string) => {
+export const createMeaningfulDescription = (token: TokenWithBasicInfo, apiDescription?: string): string => {
   // Use API description if available and meaningful
   if (apiDescription && apiDescription.trim() && !apiDescription.includes('is a cryptocurrency')) {
     const cleanDesc = apiDescription.replace(/<[^>]*>/g, '').split('.')[0] + '.';
@@ -150,7 +196,7 @@ export const createMeaningfulDescription = (token: any, apiDescription?: string)
 /**
  * Enhanced API call with retry logic for network failures
  */
-export const callWithRetry = async (apiCall: () => Promise<any>, maxRetries = 2): Promise<any> => {
+export const callWithRetry = async <T>(apiCall: () => Promise<T>, maxRetries = 2): Promise<T> => {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await apiCall();
@@ -168,4 +214,7 @@ export const callWithRetry = async (apiCall: () => Promise<any>, maxRetries = 2)
       throw error;
     }
   }
+  
+  // This should never be reached due to the throw above, but TypeScript needs it
+  throw new Error('Maximum retry attempts exceeded');
 };
