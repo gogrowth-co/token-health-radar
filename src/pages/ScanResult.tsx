@@ -15,6 +15,7 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { checkUserHasProAccess } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { fetchCoinGeckoTokenByAddress, fetchCoinGeckoTokenById, formatCoinGeckoDescription } from "@/utils/coinGeckoAPI";
 
 enum ScanCategory {
   Security = "security",
@@ -35,6 +36,7 @@ export default function ScanResult() {
   const [activeTab, setActiveTab] = useState<ScanCategory>(ScanCategory.Security);
   const [scanLimitData, setScanLimitData] = useState<any>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [coinGeckoDescription, setCoinGeckoDescription] = useState<string>('');
   
   // Get parameters from URL
   const tokenAddress = searchParams.get("token") || "";
@@ -56,6 +58,42 @@ export default function ScanResult() {
 
     checkScanAccess();
   }, [isAuthenticated]);
+
+  // Fetch CoinGecko description for TokenProfile override
+  useEffect(() => {
+    const fetchCoinGeckoDescription = async () => {
+      if (!tokenAddress && !coinGeckoId) return;
+      
+      try {
+        console.log('[SCAN-RESULT] Fetching CoinGecko description for TokenProfile override');
+        
+        let coinGeckoData = null;
+        
+        // Try by CoinGecko ID first, then by token address
+        if (coinGeckoId) {
+          coinGeckoData = await fetchCoinGeckoTokenById(coinGeckoId);
+        }
+        
+        if (!coinGeckoData && tokenAddress) {
+          coinGeckoData = await fetchCoinGeckoTokenByAddress(tokenAddress);
+        }
+        
+        if (coinGeckoData && coinGeckoData.description?.en) {
+          const formattedDesc = formatCoinGeckoDescription(coinGeckoData.description.en);
+          if (formattedDesc) {
+            console.log('[SCAN-RESULT] Successfully fetched CoinGecko description:', formattedDesc.substring(0, 100) + '...');
+            setCoinGeckoDescription(formattedDesc);
+          }
+        }
+        
+      } catch (error) {
+        console.error('[SCAN-RESULT] Error fetching CoinGecko description:', error);
+        // Silently fail - will use database description as fallback
+      }
+    };
+
+    fetchCoinGeckoDescription();
+  }, [tokenAddress, coinGeckoId]);
 
   useEffect(() => {
     const loadScanData = async () => {
@@ -292,7 +330,9 @@ export default function ScanResult() {
     ? tokenInfo.price_change_24h : 0;
   const properMarketCap = typeof tokenInfo?.market_cap_usd === "number"
     ? tokenInfo.market_cap_usd.toString() : "0";
-  const properDescription = tokenInfo?.description || "";
+  
+  // Use CoinGecko description if available, otherwise fallback to database description
+  const properDescription = coinGeckoDescription || tokenInfo?.description || "";
   const networkName = "ETH";
 
   // Use the calculated overall score from the scan data
@@ -306,6 +346,8 @@ export default function ScanResult() {
     community: scanData.community?.score,
     development: scanData.development?.score
   });
+
+  console.log("ScanResult: Using description source:", coinGeckoDescription ? 'CoinGecko' : 'Database');
 
   return (
     <div className="flex flex-col min-h-screen">
