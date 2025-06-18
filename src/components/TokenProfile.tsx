@@ -272,7 +272,7 @@ export default function TokenProfile({
     );
   }
 
-  // Desktop layout - matching the image with horizontal layout
+  // Desktop layout - horizontal three-section layout as shown in the image
   return (
     <Card
       className="overflow-visible transition-all"
@@ -287,49 +287,31 @@ export default function TokenProfile({
         margin: "auto",
       }}
     >
-      <div className="flex items-center justify-between px-6 py-6">
+      <div className="flex items-stretch px-6 py-6 gap-8">
         {/* LEFT SECTION: Logo, Name, Description, Address */}
-        <div className="flex items-start gap-6 min-w-0 flex-1">
+        <div className="flex-1 flex items-start gap-4 min-w-0">
           {/* Token Logo */}
           <OptimizedTokenLogo
             logo={logo}
             name={name}
-            className="w-16 h-16 rounded-full"
+            className="w-16 h-16 rounded-full flex-shrink-0"
             size={64}
           />
           
           <div className="flex flex-col gap-3 min-w-0 flex-1">
             {/* Name + Symbol */}
             <div className="flex items-center gap-3">
-              <h2
-                className="font-semibold text-[20px] leading-[28px] text-gray-900 dark:text-gray-100 truncate"
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
+              <h2 className="font-semibold text-[24px] leading-[32px] text-gray-900 dark:text-gray-100 truncate">
                 {name}
               </h2>
-              <span
-                className="font-medium text-[14px] px-3 py-1 bg-[#252534] dark:bg-[#252534] text-gray-200 dark:text-gray-300 rounded-full"
-                style={{
-                  borderRadius: "9999px",
-                  letterSpacing: ".01em",
-                  fontWeight: 500,
-                  fontFamily: "Inter, sans-serif",
-                  padding: "6px 12px",
-                }}
-              >
+              <span className="font-medium text-[14px] px-3 py-1 bg-[#252534] text-gray-200 rounded-full flex-shrink-0">
                 ${symbol.toUpperCase()}
               </span>
             </div>
 
             {/* Description - prominently displayed */}
             {description && (
-              <p
-                className="text-[16px] font-normal leading-[24px] text-[#4B5563] dark:text-[#A3A3B3] pr-8"
-                style={{
-                  fontFamily: "Inter, sans-serif",
-                  lineHeight: "1.5",
-                }}
-              >
+              <p className="text-[16px] font-normal leading-[24px] text-[#6B7280] dark:text-[#9CA3AF] mb-2">
                 {description}
               </p>
             )}
@@ -341,7 +323,7 @@ export default function TokenProfile({
                   <TooltipTrigger asChild>
                     <button
                       onClick={copyAddress}
-                      className="font-mono text-[14px] px-4 py-1 rounded-full bg-[#232334] dark:bg-[#232334] text-[#A3A3B3] dark:text-[#A3A3B3] border-none focus:outline-none transition-all"
+                      className="font-mono text-[14px] px-4 py-1 rounded-full bg-[#232334] text-[#A3A3B3] border-none focus:outline-none transition-all"
                     >
                       {shortenAddress(address)}
                     </button>
@@ -349,95 +331,85 @@ export default function TokenProfile({
                   <TooltipContent>Click to copy address</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <span
-                className="px-2 py-[2px] rounded-full bg-[#252534] dark:bg-[#252534] text-[#A3A3B3] dark:text-[#A3A3B3] font-semibold text-[12px]"
-                style={{ fontWeight: 600, marginLeft: "2px" }}
-              >
+              <span className="px-2 py-[2px] rounded-full bg-[#252534] text-[#A3A3B3] font-semibold text-[12px]">
                 {network.toUpperCase()}
               </span>
             </div>
           </div>
         </div>
 
-        {/* RIGHT SECTION: Price, Market Cap, Health Score, Socials */}
-        <div className="flex items-center gap-8">
-          {/* Price + Change and Market Cap */}
-          <div className="flex flex-col items-end gap-4">
-            {/* Price + Change */}
-            <div className="flex flex-col items-end">
-              <span className="text-[28px] font-bold leading-[36px] text-[#000] dark:text-[#fff]">
-                ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-              <span
-                className="text-[16px] font-medium"
-                style={{
-                  color: priceChange >= 0 ? "#10B981" : "#DC2626",
-                  marginTop: 2,
-                }}
-              >
-                {priceChange >= 0 ? "+" : ""}
-                {priceChange.toFixed(2)}%
-              </span>
-            </div>
-            
-            {/* Market Cap */}
-            <div className="flex flex-col items-end">
-              <span className="text-[13px] font-medium uppercase text-[#A3A3B3] dark:text-[#A3A3B3] tracking-wide mb-1">
-                Market Cap
-              </span>
-              <span className="text-[20px] font-bold text-[#000] dark:text-white">
-                {formatMarketCap(marketCap)}
-              </span>
-            </div>
+        {/* CENTER SECTION: Price and Market Cap */}
+        <div className="flex flex-col justify-center items-center gap-6 min-w-[200px]">
+          {/* Price + Change */}
+          <div className="flex flex-col items-center text-center">
+            <span className="text-[32px] font-bold leading-[40px] text-[#000] dark:text-[#fff]">
+              ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+            <span
+              className="text-[16px] font-medium mt-1"
+              style={{
+                color: priceChange >= 0 ? "#10B981" : "#DC2626",
+              }}
+            >
+              {priceChange >= 0 ? "+" : ""}
+              {priceChange.toFixed(2)}%
+            </span>
           </div>
+          
+          {/* Market Cap */}
+          <div className="flex flex-col items-center text-center">
+            <span className="text-[13px] font-medium uppercase text-[#A3A3B3] tracking-wide mb-2">
+              Market Cap
+            </span>
+            <span className="text-[24px] font-bold text-[#000] dark:text-white">
+              {formatMarketCap(marketCap)}
+            </span>
+          </div>
+        </div>
 
-          {/* Health Score and Socials */}
-          <div className="flex flex-col items-center gap-4">
-            {/* Health Score */}
-            <MiniHealthScore score={overallScore} />
-            
-            {/* Socials */}
-            {(website || twitter || github) && (
-              <div className="flex items-center gap-4">
-                {website && (
-                  <a
-                    href={website.startsWith("http") ? website : `https://${website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1 rounded transition-colors text-[#A3A3B3] dark:text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none"
-                    aria-label="Website"
-                    style={{ lineHeight: 0 }}
-                  >
-                    <Globe className="w-5 h-5" />
-                  </a>
-                )}
-                {twitter && (
-                  <a
-                    href={twitter.startsWith("http") ? twitter : `https://twitter.com/${twitter.replace("@", "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1 rounded transition-colors text-[#A3A3B3] dark:text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none"
-                    aria-label="X/Twitter"
-                    style={{ lineHeight: 0 }}
-                  >
-                    <Twitter className="w-5 h-5" />
-                  </a>
-                )}
-                {github && (
-                  <a
-                    href={github.startsWith("http") ? github : `https://github.com/${github.replace(/^@/, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1 rounded transition-colors text-[#A3A3B3] dark:text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none"
-                    aria-label="GitHub"
-                    style={{ lineHeight: 0 }}
-                  >
-                    <Github className="w-5 h-5" />
-                  </a>
-                )}
-              </div>
-            )}
-          </div>
+        {/* RIGHT SECTION: Health Score and Socials */}
+        <div className="flex flex-col justify-center items-center gap-6 min-w-[120px]">
+          {/* Health Score */}
+          <MiniHealthScore score={overallScore} />
+          
+          {/* Socials */}
+          {(website || twitter || github) && (
+            <div className="flex items-center gap-4">
+              {website && (
+                <a
+                  href={website.startsWith("http") ? website : `https://${website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded transition-colors text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none"
+                  aria-label="Website"
+                >
+                  <Globe className="w-5 h-5" />
+                </a>
+              )}
+              {twitter && (
+                <a
+                  href={twitter.startsWith("http") ? twitter : `https://twitter.com/${twitter.replace("@", "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded transition-colors text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none"
+                  aria-label="X/Twitter"
+                >
+                  <Twitter className="w-5 h-5" />
+                </a>
+              )}
+              {github && (
+                <a
+                  href={github.startsWith("http") ? github : `https://github.com/${github.replace(/^@/, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded transition-colors text-[#A3A3B3] hover:text-[#000] dark:hover:text-white focus:outline-none"
+                  aria-label="GitHub"
+                >
+                  <Github className="w-5 h-5" />
+                </a>
+              )}
+            </div>
+          )}
         </div>
       </div>
       
