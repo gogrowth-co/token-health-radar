@@ -1,4 +1,5 @@
 
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -176,7 +177,7 @@ serve(async (req) => {
             total_value_locked_usd: 'N/A'
           }
           
-          console.log(`[SCAN] Token data successfully collected from CMC API`)
+          console.log(`[SCAN] Token data successfully collected from CMC API with description: "${cleanedDescription}"`)
         } else {
           console.log(`[SCAN] No data found in CMC API response or error occurred`)
         }
@@ -589,3 +590,4 @@ serve(async (req) => {
     });
   }
 });
+

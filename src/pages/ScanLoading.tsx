@@ -84,9 +84,26 @@ export default function ScanLoading() {
           return;
         }
 
+        // Get saved token data to extract CMC ID if not in URL
+        let effectiveCmcId = cmcId;
+        if (!effectiveCmcId) {
+          try {
+            const savedToken = localStorage.getItem("selectedToken");
+            if (savedToken) {
+              const parsedToken = JSON.parse(savedToken);
+              if (parsedToken.cmc_id) {
+                effectiveCmcId = parsedToken.cmc_id.toString();
+                console.log("ScanLoading: Found CMC ID in localStorage:", effectiveCmcId);
+              }
+            }
+          } catch (e) {
+            console.log("ScanLoading: Error parsing localStorage token:", e);
+          }
+        }
+
         // Validate we have minimum required data for scanning
         const effectiveCoinGeckoId = coinGeckoId;
-        if (!effectiveCoinGeckoId && !cmcId) {
+        if (!effectiveCoinGeckoId && !effectiveCmcId) {
           console.error("ScanLoading: No CoinGecko ID or CMC ID available for scanning");
           setScanFailed(true);
           setErrorMessage("Unable to scan token: Missing token identifier. Please try selecting the token again.");
@@ -97,7 +114,7 @@ export default function ScanLoading() {
         const scanRequest = {
           token_address: tokenAddress,
           coingecko_id: effectiveCoinGeckoId,
-          cmc_id: cmcId ? parseInt(cmcId) : undefined,
+          cmc_id: effectiveCmcId ? parseInt(effectiveCmcId) : undefined,
           user_id: user?.id || null
         };
         
@@ -139,7 +156,7 @@ export default function ScanLoading() {
           localStorage.setItem("lastScanResult", JSON.stringify(data));
           
           console.log("ScanLoading: Redirecting to scan result page");
-          const resultUrl = `/scan-result?token=${tokenAddress}&id=${effectiveCoinGeckoId}${cmcId ? `&cmc_id=${cmcId}` : ''}`;
+          const resultUrl = `/scan-result?token=${tokenAddress}&id=${effectiveCoinGeckoId}${effectiveCmcId ? `&cmc_id=${effectiveCmcId}` : ''}`;
           navigate(resultUrl);
         }, 1000);
       } catch (error) {
