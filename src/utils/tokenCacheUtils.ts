@@ -1,27 +1,14 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { TokenResult, TokenInfoEnriched } from "@/components/token/types";
+import type { Database } from "@/integrations/supabase/types";
 
-interface CacheData {
-  name: string;
-  symbol: string;
-  description?: string;
-  website_url?: string;
-  twitter_handle?: string;
-  github_url?: string;
-  logo_url?: string;
-  coingecko_id?: string;
-  cmc_id?: number;
-  current_price_usd?: number;
-  price_change_24h?: number;
-  market_cap_usd?: number;
-  total_value_locked_usd?: string;
-}
+// Use the actual database type instead of custom interface
+type TokenDataCacheRow = Database['public']['Tables']['token_data_cache']['Row'];
 
 /**
  * Fetch token data from database cache by CoinGecko ID or CMC ID
  */
-export const getTokenFromCache = async (identifier: string): Promise<CacheData | null> => {
+export const getTokenFromCache = async (identifier: string): Promise<TokenDataCacheRow | null> => {
   try {
     // Try by CoinGecko ID first
     const { data: geckoData, error: geckoError } = await supabase
@@ -32,7 +19,7 @@ export const getTokenFromCache = async (identifier: string): Promise<CacheData |
 
     if (geckoData && !geckoError) {
       console.log(`[CACHE] Found cached data for ${identifier}:`, geckoData);
-      return geckoData as CacheData;
+      return geckoData;
     }
 
     // If not found and identifier is numeric, try by CMC ID
@@ -45,7 +32,7 @@ export const getTokenFromCache = async (identifier: string): Promise<CacheData |
       
       if (cmcData && !cmcError) {
         console.log(`[CACHE] Found cached data for ${identifier}:`, cmcData);
-        return cmcData as CacheData;
+        return cmcData;
       }
     }
 
@@ -60,7 +47,7 @@ export const getTokenFromCache = async (identifier: string): Promise<CacheData |
       
       if (searchData && !searchError) {
         console.log(`[CACHE] Found cached data for ${identifier}:`, searchData);
-        return searchData as CacheData;
+        return searchData;
       }
     }
 
@@ -75,7 +62,7 @@ export const getTokenFromCache = async (identifier: string): Promise<CacheData |
 /**
  * Create enriched token info from cache data
  */
-export const createTokenInfoFromCache = (cacheData: CacheData): TokenInfoEnriched => {
+export const createTokenInfoFromCache = (cacheData: TokenDataCacheRow): TokenInfoEnriched => {
   return {
     name: cacheData.name || '',
     symbol: (cacheData.symbol || '').toUpperCase(),
@@ -85,10 +72,10 @@ export const createTokenInfoFromCache = (cacheData: CacheData): TokenInfoEnriche
     github_url: cacheData.github_url || '',
     logo_url: cacheData.logo_url || '',
     coingecko_id: cacheData.coingecko_id || '',
-    cmc_id: cacheData.cmc_id || null,
-    current_price_usd: cacheData.current_price_usd || 0,
-    price_change_24h: cacheData.price_change_24h || 0,
-    market_cap_usd: cacheData.market_cap_usd || 0,
+    cmc_id: null, // CMC ID not in database schema yet
+    current_price_usd: Number(cacheData.current_price_usd) || 0,
+    price_change_24h: Number(cacheData.price_change_24h) || 0,
+    market_cap_usd: Number(cacheData.market_cap_usd) || 0,
     total_value_locked_usd: cacheData.total_value_locked_usd || 'N/A'
   };
 };
