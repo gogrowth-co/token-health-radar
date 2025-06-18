@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -69,6 +70,45 @@ const extractGitHubRepoInfo = (githubUrl: string) => {
   return null
 }
 
+// Helper function to find CMC ID by token name/symbol
+const findCMCIdByName = async (tokenName: string, tokenSymbol: string, supabase: any) => {
+  try {
+    console.log(`[SCAN] Searching for CMC ID using name: "${tokenName}" symbol: "${tokenSymbol}"`);
+    
+    const { data: cmcSearchData, error: cmcSearchError } = await supabase.functions.invoke('coinmarketcap-search', {
+      body: {
+        action: 'search',
+        searchTerm: tokenSymbol || tokenName,
+        limit: 5
+      }
+    });
+
+    if (!cmcSearchError && cmcSearchData?.data && cmcSearchData.data.length > 0) {
+      // Try to find exact match by symbol first, then by name
+      const exactSymbolMatch = cmcSearchData.data.find((token: any) => 
+        token.symbol?.toLowerCase() === tokenSymbol?.toLowerCase()
+      );
+      
+      const exactNameMatch = cmcSearchData.data.find((token: any) => 
+        token.name?.toLowerCase() === tokenName?.toLowerCase()
+      );
+      
+      const foundToken = exactSymbolMatch || exactNameMatch || cmcSearchData.data[0];
+      
+      if (foundToken) {
+        console.log(`[SCAN] Found CMC ID ${foundToken.id} for ${tokenName}`);
+        return foundToken.id;
+      }
+    }
+    
+    console.log(`[SCAN] No CMC ID found for ${tokenName}`);
+    return null;
+  } catch (error) {
+    console.error(`[SCAN] Error searching for CMC ID:`, error);
+    return null;
+  }
+};
+
 // Rate limiting for API calls
 let lastCoinGeckoCall = 0
 let lastCMCCall = 0
@@ -135,8 +175,9 @@ serve(async (req) => {
 
     let descriptionSource = 'none';
     let foundMeaningfulDescription = false;
+    let finalCmcId = cmc_id;
 
-    // Check if we have cached description and if it's meaningful
+    // Check if we have cached data and if CMC ID is missing, try to find it
     try {
       const { data: existingToken } = await supabase
         .from('token_data_cache')
@@ -145,9 +186,25 @@ serve(async (req) => {
         .single()
 
       if (existingToken) {
-        console.log(`[SCAN] Found cached token data, checking description quality`)
-        console.log(`[SCAN] Cached description: "${existingToken.description}"`)
+        console.log(`[SCAN] Found cached token data`);
         
+        // If we don't have a CMC ID but have token name/symbol, try to find it
+        if (!finalCmcId && existingToken.name && existingToken.symbol) {
+          finalCmcId = await findCMCIdByName(existingToken.name, existingToken.symbol, supabase);
+          
+          // Save the found CMC ID back to the database
+          if (finalCmcId) {
+            console.log(`[SCAN] Updating database with found CMC ID: ${finalCmcId}`);
+            await supabase
+              .from('token_data_cache')
+              .update({ cmc_id: finalCmcId })
+              .eq('token_address', token_address);
+          }
+        } else if (existingToken.cmc_id) {
+          finalCmcId = existingToken.cmc_id;
+        }
+        
+        // Check description quality
         if (existingToken.description && !isGenericDescription(existingToken.description)) {
           console.log(`[SCAN] Using quality cached description`)
           tokenData = {
@@ -167,7 +224,7 @@ serve(async (req) => {
           foundMeaningfulDescription = true;
           descriptionSource = 'cached';
         } else {
-          console.log(`[SCAN] Cached description is generic, will try to fetch fresh description`)
+          console.log(`[SCAN] Cached description is generic or missing, will fetch fresh description`)
           // Use other cached data but fetch fresh description
           tokenData = {
             ...tokenData,
@@ -188,9 +245,11 @@ serve(async (req) => {
       console.log(`[SCAN] No cached data found or error fetching: ${error}`)
     }
 
-    // Fetch token data - prioritize CMC if cmc_id is provided and we need description
-    if (cmc_id && !foundMeaningfulDescription) {
-      console.log(`[SCAN] Fetching fresh token data from CMC API: ${cmc_id}`)
+    console.log(`[SCAN] Final CMC ID to use: ${finalCmcId}`);
+
+    // Fetch token data - prioritize CMC if cmc_id is available and we need description
+    if (finalCmcId && !foundMeaningfulDescription) {
+      console.log(`[SCAN] Fetching fresh token data from CMC API: ${finalCmcId}`)
       
       try {
         lastCMCCall = await enforceRateLimit(lastCMCCall, MIN_API_INTERVAL)
@@ -198,15 +257,15 @@ serve(async (req) => {
         const { data: cmcData, error: cmcError } = await supabase.functions.invoke('coinmarketcap-search', {
           body: {
             action: 'details',
-            cmcIds: [parseInt(cmc_id)]
+            cmcIds: [parseInt(finalCmcId)]
           }
         });
 
         console.log(`[SCAN] CMC Data Response:`, JSON.stringify(cmcData, null, 2))
 
         if (!cmcError && cmcData?.data && Object.keys(cmcData.data).length > 0) {
-          const cmcInfo = cmcData.data[cmc_id]
-          console.log(`[SCAN] CMC Info for token ${cmc_id}:`, JSON.stringify(cmcInfo, null, 2))
+          const cmcInfo = cmcData.data[finalCmcId]
+          console.log(`[SCAN] CMC Info for token ${finalCmcId}:`, JSON.stringify(cmcInfo, null, 2))
           
           // Check if description exists and is meaningful
           if (cmcInfo?.description) {
@@ -230,12 +289,12 @@ serve(async (req) => {
           const { data: quotesData } = await supabase.functions.invoke('coinmarketcap-search', {
             body: {
               action: 'quotes',
-              cmcIds: [parseInt(cmc_id)],
+              cmcIds: [parseInt(finalCmcId)],
               convert: 'USD'
             }
           });
           
-          const cmcQuotes = quotesData?.data?.[cmc_id]
+          const cmcQuotes = quotesData?.data?.[finalCmcId]
           
           // Extract social links
           const website = cmcInfo?.urls?.website?.[0] || tokenData.website_url
@@ -560,9 +619,10 @@ serve(async (req) => {
     console.log(`[SCAN] Saving token data to database: ${token_address}`)
     console.log(`[SCAN] Token description to save: "${tokenData.description}"`)
     console.log(`[SCAN] Description source: ${descriptionSource}`)
+    console.log(`[SCAN] CMC ID to save: ${finalCmcId}`)
     
     try {
-      // Force update to database with the new/improved description
+      // Force update to database with the new/improved description and CMC ID
       const { data: existingToken } = await supabase
         .from('token_data_cache')
         .select('token_address')
@@ -570,8 +630,8 @@ serve(async (req) => {
         .single()
 
       if (existingToken) {
-        // Token exists - update with new description
-        console.log(`[SCAN] Updating existing token with fresh description`)
+        // Token exists - update with new description and CMC ID
+        console.log(`[SCAN] Updating existing token with fresh description and CMC ID`)
         const { error: updateError } = await supabase
           .from('token_data_cache')
           .update({
@@ -583,7 +643,7 @@ serve(async (req) => {
             github_url: tokenData.github_url,
             logo_url: tokenData.logo_url,
             coingecko_id: tokenData.coingecko_id,
-            cmc_id: cmc_id ? parseInt(cmc_id) : null,
+            cmc_id: finalCmcId ? parseInt(finalCmcId) : null,
             current_price_usd: tokenData.current_price_usd,
             price_change_24h: tokenData.price_change_24h,
             market_cap_usd: tokenData.market_cap_usd,
@@ -608,7 +668,7 @@ serve(async (req) => {
             github_url: tokenData.github_url,
             logo_url: tokenData.logo_url,
             coingecko_id: tokenData.coingecko_id,
-            cmc_id: cmc_id ? parseInt(cmc_id) : null,
+            cmc_id: finalCmcId ? parseInt(finalCmcId) : null,
             current_price_usd: tokenData.current_price_usd,
             price_change_24h: tokenData.price_change_24h,
             market_cap_usd: tokenData.market_cap_usd,
@@ -663,7 +723,7 @@ serve(async (req) => {
       console.log(`[SCAN] Recording scan: {
   user_id: "${user_id}",
   token_address: "${token_address}",
-  cmc_id: ${cmc_id ? parseInt(cmc_id) : null},
+  cmc_id: ${finalCmcId ? parseInt(finalCmcId) : null},
   score_total: ${overallScore},
   pro_scan: ${proScanPermitted},
   is_anonymous: ${!user_id}
@@ -674,7 +734,7 @@ serve(async (req) => {
         .insert({
           user_id: user_id || null,
           token_address,
-          cmc_id: cmc_id ? parseInt(cmc_id) : null,
+          cmc_id: finalCmcId ? parseInt(finalCmcId) : null,
           score_total: overallScore,
           pro_scan: proScanPermitted,
           is_anonymous: !user_id

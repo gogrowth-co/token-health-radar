@@ -16,6 +16,7 @@ export const transformCMCSearchResult = (cmcToken: any): TokenResult => {
     price_change_24h: 0, // Will be populated from quote data
     isErc20: false, // Will be determined from platform data
     description: '', // Will be populated from detail data
+    cmc_id: cmcToken.id, // Include CMC ID from search result
     tokenInfo: {
       name: cmcToken.name || '',
       symbol: cmcToken.symbol || '',
@@ -25,6 +26,7 @@ export const transformCMCSearchResult = (cmcToken: any): TokenResult => {
       github_url: '',
       logo_url: '',
       coingecko_id: '', // Not applicable for CMC
+      cmc_id: cmcToken.id, // Include CMC ID in tokenInfo as well
       current_price_usd: 0,
       price_change_24h: 0,
       market_cap_usd: 0,
@@ -52,6 +54,7 @@ export const transformCMCTokenInfo = (cmcInfo: any, cmcToken: any): TokenInfoEnr
     github_url: github,
     logo_url: cmcInfo.logo || '',
     coingecko_id: '', // Not applicable for CMC
+    cmc_id: cmcToken.id, // Include CMC ID
     current_price_usd: 0, // Will be set from quote data
     price_change_24h: 0, // Will be set from quote data
     market_cap_usd: 0, // Will be set from quote data
@@ -124,7 +127,7 @@ export const extractCMCPlatformData = (cmcInfo: any) => {
   return tokenAddress ? { [normalizedPlatform]: tokenAddress } : {};
 };
 
-// Create meaningful description from CMC data - Enhanced version
+// Create meaningful description from CMC data - Enhanced version with better extraction
 export const createCMCDescription = (cmcInfo: any, cmcToken: any): string => {
   // First priority: Use CMC description if available and meaningful
   if (cmcInfo.description && cmcInfo.description.trim()) {
@@ -140,8 +143,8 @@ export const createCMCDescription = (cmcInfo: any, cmcToken: any): string => {
       .replace(/\s+/g, ' ') // Replace multiple whitespace
       .trim();
     
-    // If we have a substantial description (not just the name), use it
-    if (cleanDesc.length > 50 && !cleanDesc.toLowerCase().includes('is a cryptocurrency')) {
+    // If we have a substantial description, use it
+    if (cleanDesc.length > 30) {
       // Truncate if too long
       if (cleanDesc.length > 300) {
         const truncated = cleanDesc.substring(0, 300);

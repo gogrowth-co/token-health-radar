@@ -20,6 +20,7 @@ import {
   createTokenInfoFromCache,
   callWithRetry
 } from "@/utils/tokenCacheUtils";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // Helper function to detect generic/low-quality descriptions
@@ -35,6 +36,56 @@ const isGenericDescription = (description: string): boolean => {
   ];
   
   return genericPatterns.some(pattern => pattern.test(description.trim()));
+};
+
+// Helper function to save CMC ID to database during search
+const saveCMCIdToDatabase = async (tokenAddress: string, cmcId: number, tokenName: string, tokenSymbol: string) => {
+  try {
+    console.log(`[TOKEN-SEARCH] Saving CMC ID ${cmcId} for token ${tokenAddress}`);
+    
+    // Check if token exists in database
+    const { data: existingToken } = await supabase
+      .from('token_data_cache')
+      .select('token_address')
+      .eq('token_address', tokenAddress)
+      .single();
+
+    if (existingToken) {
+      // Update existing token with CMC ID
+      const { error: updateError } = await supabase
+        .from('token_data_cache')
+        .update({
+          cmc_id: cmcId,
+          name: tokenName,
+          symbol: tokenSymbol
+        })
+        .eq('token_address', tokenAddress);
+
+      if (updateError) {
+        console.error(`[TOKEN-SEARCH] Error updating CMC ID:`, updateError);
+      } else {
+        console.log(`[TOKEN-SEARCH] Successfully updated CMC ID for ${tokenAddress}`);
+      }
+    } else {
+      // Insert new token with CMC ID
+      const { error: insertError } = await supabase
+        .from('token_data_cache')
+        .insert({
+          token_address: tokenAddress,
+          name: tokenName,
+          symbol: tokenSymbol,
+          cmc_id: cmcId
+        });
+
+      if (insertError) {
+        console.error(`[TOKEN-SEARCH] Error inserting CMC ID:`, insertError);
+      } else {
+        console.log(`[TOKEN-SEARCH] Successfully inserted new token with CMC ID for ${tokenAddress}`);
+      }
+    }
+  } catch (error) {
+    console.error(`[TOKEN-SEARCH] Exception saving CMC ID:`, error);
+  }
 };
 
 export default function useTokenSearch(searchTerm: string, isAuthenticated: boolean) {
@@ -96,6 +147,21 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
 
               // Create base token result
               let tokenResult = transformCMCSearchResult(cmcToken);
+              tokenResult.cmc_id = cmcId; // Add CMC ID to the result
+
+              // Extract platform data to get token address
+              const platformData = extractCMCPlatformData(tokenDetail);
+              
+              // Get the first valid EVM address
+              let tokenAddress: string | null = null;
+              if (platformData && Object.keys(platformData).length > 0) {
+                tokenAddress = Object.values(platformData)[0] as string;
+              }
+
+              // Save CMC ID to database if we have a valid address
+              if (tokenAddress && /^0x[a-fA-F0-9]{40}$/.test(tokenAddress)) {
+                await saveCMCIdToDatabase(tokenAddress, cmcId, cmcToken.name, cmcToken.symbol);
+              }
 
               // Try database cache first for non-generic descriptions only
               let tokenInfo: TokenInfoEnriched | null = null;
@@ -153,9 +219,6 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               tokenInfo.price_change_24h = marketData.price_change_24h;
               tokenInfo.market_cap_usd = marketData.market_cap;
 
-              // Extract platform data
-              const platformData = extractCMCPlatformData(tokenDetail);
-              
               // Determine ERC-20 compatibility
               const isErc20Compatible = determineCMCErc20Compatibility(tokenDetail);
 
@@ -169,8 +232,9 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 price_change_24h: marketData.price_change_24h,
                 market_cap: marketData.market_cap,
                 isErc20: isErc20Compatible,
-                description: meaningfulDescription, // Use the meaningful description directly
-                tokenInfo
+                description: meaningfulDescription,
+                tokenInfo,
+                cmc_id: cmcId // Ensure CMC ID is included
               };
 
               console.log(`[TOKEN-SEARCH] Final data for ${cmcToken.name}:`, {
@@ -178,7 +242,8 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 price: marketData.price_usd,
                 market_cap: marketData.market_cap,
                 description: meaningfulDescription,
-                isErc20: isErc20Compatible
+                isErc20: isErc20Compatible,
+                cmc_id: cmcId
               });
 
               enhancedResults.push(tokenResult);
@@ -195,7 +260,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               const fallbackTokenInfo: TokenInfoEnriched = {
                 name: cmcToken.name,
                 symbol: cmcToken.symbol,
-                description: `${cmcToken.name} (${cmcToken.symbol}) digital asset`, // Avoid "cryptocurrency token"
+                description: `${cmcToken.name} (${cmcToken.symbol}) digital asset`,
                 website_url: '',
                 twitter_handle: '',
                 github_url: '',
@@ -207,9 +272,12 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 total_value_locked_usd: 'N/A'
               };
               
+              const fallbackResult = transformCMCSearchResult(cmcToken);
+              fallbackResult.cmc_id = cmcToken.id;
+              
               enhancedResults.push({
-                ...transformCMCSearchResult(cmcToken),
-                description: `${cmcToken.name} (${cmcToken.symbol}) digital asset`, // Display fallback
+                ...fallbackResult,
+                description: `${cmcToken.name} (${cmcToken.symbol}) digital asset`,
                 tokenInfo: fallbackTokenInfo
               });
             }
@@ -239,8 +307,11 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               total_value_locked_usd: 'N/A'
             };
             
+            const fallbackResult = transformCMCSearchResult(cmcToken);
+            fallbackResult.cmc_id = cmcToken.id;
+            
             enhancedResults.push({
-              ...transformCMCSearchResult(cmcToken),
+              ...fallbackResult,
               description: fallbackDescription,
               tokenInfo: fallbackTokenInfo
             });
