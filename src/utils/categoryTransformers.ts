@@ -1,10 +1,27 @@
+
 import { formatCurrency, formatNumber } from "./formattingUtils";
+import { 
+  Shield, 
+  Lock, 
+  AlertCircle, 
+  Activity, 
+  DollarSign, 
+  TrendingUp, 
+  Users, 
+  Coins, 
+  BarChart3, 
+  Github, 
+  Code, 
+  GitCommit,
+  LucideIcon
+} from "lucide-react";
 
 export interface CategoryFeature {
-  label: string;
-  value: string | boolean | number | null | undefined;
-  type: "text" | "boolean";
-  positive?: boolean;
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  badgeLabel: string;
+  badgeVariant: "gray" | "blue" | "green" | "red" | "orange";
 }
 
 export interface SecurityData {
@@ -78,53 +95,78 @@ const safeNumberAccess = (data: any, key: string, fallback: number = 0): number 
   return data && data[key] != null ? Number(data[key]) : fallback;
 };
 
+// Helper to get badge variant for boolean values
+const getBooleanBadgeVariant = (value: boolean, positive: boolean): "green" | "red" => {
+  return (value && positive) || (!value && !positive) ? "green" : "red";
+};
+
+// Helper to get badge label for boolean values
+const getBooleanBadgeLabel = (value: boolean): string => {
+  return value ? "Yes" : "No";
+};
+
 // Transform security data into feature format
 export const transformSecurityData = (data: SecurityData | null): CategoryFeature[] => {
   if (!data) {
     return [
-      { label: "Ownership Renounced", value: "Unknown", type: "boolean" },
-      { label: "Can Mint", value: "Unknown", type: "boolean" },
-      { label: "Honeypot Detection", value: "Unknown", type: "boolean" },
-      { label: "Freeze Authority", value: "Unknown", type: "boolean" },
-      { label: "Audit Status", value: "Unknown", type: "text" },
-      { label: "Multisig Status", value: "Unknown", type: "text" }
+      { icon: Shield, title: "Ownership Renounced", description: "Contract ownership has been renounced (more secure)", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Lock, title: "Can Mint", description: "Ability to create new tokens", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: AlertCircle, title: "Honeypot Detection", description: "Checks if token can be sold after purchase", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Activity, title: "Freeze Authority", description: "Ability to freeze token transfers", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Shield, title: "Audit Status", description: "Security audit verification by third-party firm", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Lock, title: "Multisig Status", description: "Multiple signatures required for critical actions", badgeLabel: "Unknown", badgeVariant: "gray" }
     ];
   }
 
+  const ownershipRenounced = safeBooleanAccess(data, 'ownership_renounced');
+  const canMint = safeBooleanAccess(data, 'can_mint');
+  const honeypotDetected = safeBooleanAccess(data, 'honeypot_detected');
+  const freezeAuthority = safeBooleanAccess(data, 'freeze_authority');
+  const auditStatus = safeAccess(data, 'audit_status', 'Unknown');
+  const multisigStatus = safeAccess(data, 'multisig_status', 'Unknown');
+
   return [
     { 
-      label: "Ownership Renounced", 
-      value: safeBooleanAccess(data, 'ownership_renounced'), 
-      type: "boolean",
-      positive: true
+      icon: Shield, 
+      title: "Ownership Renounced", 
+      description: "Contract ownership has been renounced (more secure)",
+      badgeLabel: getBooleanBadgeLabel(ownershipRenounced),
+      badgeVariant: getBooleanBadgeVariant(ownershipRenounced, true)
     },
     { 
-      label: "Can Mint", 
-      value: safeBooleanAccess(data, 'can_mint'), 
-      type: "boolean",
-      positive: false
+      icon: Lock, 
+      title: "Can Mint", 
+      description: "Ability to create new tokens",
+      badgeLabel: getBooleanBadgeLabel(canMint),
+      badgeVariant: getBooleanBadgeVariant(canMint, false)
     },
     { 
-      label: "Honeypot Detection", 
-      value: safeBooleanAccess(data, 'honeypot_detected'), 
-      type: "boolean",
-      positive: false
+      icon: AlertCircle, 
+      title: "Honeypot Detection", 
+      description: "Checks if token can be sold after purchase",
+      badgeLabel: honeypotDetected ? "Detected" : "Not Detected",
+      badgeVariant: honeypotDetected ? "red" : "green"
     },
     { 
-      label: "Freeze Authority", 
-      value: safeBooleanAccess(data, 'freeze_authority'), 
-      type: "boolean",
-      positive: false
+      icon: Activity, 
+      title: "Freeze Authority", 
+      description: "Ability to freeze token transfers",
+      badgeLabel: getBooleanBadgeLabel(freezeAuthority),
+      badgeVariant: getBooleanBadgeVariant(freezeAuthority, false)
     },
     { 
-      label: "Audit Status", 
-      value: safeAccess(data, 'audit_status', 'Unknown'), 
-      type: "text" 
+      icon: Shield, 
+      title: "Audit Status", 
+      description: "Security audit verification by third-party firm",
+      badgeLabel: auditStatus,
+      badgeVariant: auditStatus === "Verified" ? "green" : auditStatus === "Failed" ? "red" : "gray"
     },
     { 
-      label: "Multisig Status", 
-      value: safeAccess(data, 'multisig_status', 'Unknown'), 
-      type: "text" 
+      icon: Lock, 
+      title: "Multisig Status", 
+      description: "Multiple signatures required for critical actions",
+      badgeLabel: multisigStatus,
+      badgeVariant: multisigStatus === "Active" ? "green" : multisigStatus === "Inactive" ? "red" : "gray"
     }
   ];
 };
@@ -133,52 +175,64 @@ export const transformSecurityData = (data: SecurityData | null): CategoryFeatur
 export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFeature[] => {
   if (!data) {
     return [
-      { label: "Circulating Supply", value: "Unknown", type: "text" },
-      { label: "Supply Cap", value: "Unknown", type: "text" },
-      { label: "TVL (USD)", value: "Unknown", type: "text" },
-      { label: "Treasury (USD)", value: "Unknown", type: "text" },
-      { label: "Burn Mechanism", value: "Unknown", type: "boolean" },
-      { label: "Distribution Score", value: "Unknown", type: "text" },
-      { label: "Vesting Schedule", value: "Unknown", type: "text" }
+      { icon: Coins, title: "Circulating Supply", description: "Number of tokens currently in circulation", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: BarChart3, title: "Supply Cap", description: "Maximum number of tokens that can exist", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: DollarSign, title: "TVL (USD)", description: "Total value locked in the protocol", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: TrendingUp, title: "Treasury (USD)", description: "Value held in project treasury", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Activity, title: "Burn Mechanism", description: "Tokens are permanently removed from supply", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Users, title: "Distribution Score", description: "How well distributed the token supply is", badgeLabel: "Unknown", badgeVariant: "gray" }
     ];
   }
 
+  const circulatingSupply = safeNumberAccess(data, 'circulating_supply');
+  const supplyCap = safeNumberAccess(data, 'supply_cap');
+  const tvlUsd = safeNumberAccess(data, 'tvl_usd');
+  const treasuryUsd = safeNumberAccess(data, 'treasury_usd');
+  const burnMechanism = safeBooleanAccess(data, 'burn_mechanism');
+  const distributionScore = safeAccess(data, 'distribution_score', 'Unknown');
+
   return [
     { 
-      label: "Circulating Supply", 
-      value: formatNumber(safeNumberAccess(data, 'circulating_supply')), 
-      type: "text" 
+      icon: Coins, 
+      title: "Circulating Supply", 
+      description: "Number of tokens currently in circulation",
+      badgeLabel: formatNumber(circulatingSupply),
+      badgeVariant: "blue"
     },
     { 
-      label: "Supply Cap", 
-      value: formatNumber(safeNumberAccess(data, 'supply_cap')), 
-      type: "text" 
+      icon: BarChart3, 
+      title: "Supply Cap", 
+      description: "Maximum number of tokens that can exist",
+      badgeLabel: supplyCap > 0 ? formatNumber(supplyCap) : "No Cap",
+      badgeVariant: supplyCap > 0 ? "blue" : "orange"
     },
     { 
-      label: "TVL (USD)", 
-      value: formatCurrency(safeNumberAccess(data, 'tvl_usd')), 
-      type: "text" 
+      icon: DollarSign, 
+      title: "TVL (USD)", 
+      description: "Total value locked in the protocol",
+      badgeLabel: formatCurrency(tvlUsd),
+      badgeVariant: tvlUsd > 1000000 ? "green" : tvlUsd > 100000 ? "blue" : "gray"
     },
     { 
-      label: "Treasury (USD)", 
-      value: formatCurrency(safeNumberAccess(data, 'treasury_usd')), 
-      type: "text" 
+      icon: TrendingUp, 
+      title: "Treasury (USD)", 
+      description: "Value held in project treasury",
+      badgeLabel: formatCurrency(treasuryUsd),
+      badgeVariant: treasuryUsd > 500000 ? "green" : treasuryUsd > 50000 ? "blue" : "gray"
     },
     { 
-      label: "Burn Mechanism", 
-      value: safeBooleanAccess(data, 'burn_mechanism'), 
-      type: "boolean",
-      positive: true
+      icon: Activity, 
+      title: "Burn Mechanism", 
+      description: "Tokens are permanently removed from supply",
+      badgeLabel: getBooleanBadgeLabel(burnMechanism),
+      badgeVariant: getBooleanBadgeVariant(burnMechanism, true)
     },
     { 
-      label: "Distribution Score", 
-      value: safeAccess(data, 'distribution_score', 'Unknown'), 
-      type: "text" 
-    },
-    { 
-      label: "Vesting Schedule", 
-      value: safeAccess(data, 'vesting_schedule', 'Unknown'), 
-      type: "text" 
+      icon: Users, 
+      title: "Distribution Score", 
+      description: "How well distributed the token supply is",
+      badgeLabel: distributionScore,
+      badgeVariant: distributionScore === "Good" ? "green" : distributionScore === "Fair" ? "blue" : distributionScore === "Poor" ? "red" : "gray"
     }
   ];
 };
@@ -187,39 +241,55 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
 export const transformLiquidityData = (data: LiquidityData | null): CategoryFeature[] => {
   if (!data) {
     return [
-      { label: "Trading Volume (24h)", value: "Unknown", type: "text" },
-      { label: "CEX Listings", value: "Unknown", type: "text" },
-      { label: "Liquidity Lock (Days)", value: "Unknown", type: "text" },
-      { label: "DEX Depth Status", value: "Unknown", type: "text" },
-      { label: "Holder Distribution", value: "Unknown", type: "text" }
+      { icon: TrendingUp, title: "Trading Volume (24h)", description: "Total trading volume in the last 24 hours", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: BarChart3, title: "CEX Listings", description: "Number of centralized exchange listings", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Lock, title: "Liquidity Lock", description: "How long liquidity is locked for", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Activity, title: "DEX Depth", description: "Liquidity depth on decentralized exchanges", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Users, title: "Holder Distribution", description: "How tokens are distributed among holders", badgeLabel: "Unknown", badgeVariant: "gray" }
     ];
   }
 
+  const tradingVolume = safeNumberAccess(data, 'trading_volume_24h_usd');
+  const cexListings = safeNumberAccess(data, 'cex_listings');
+  const liquidityLocked = safeNumberAccess(data, 'liquidity_locked_days');
+  const dexDepth = safeAccess(data, 'dex_depth_status', 'Unknown');
+  const holderDistribution = safeAccess(data, 'holder_distribution', 'Unknown');
+
   return [
     { 
-      label: "Trading Volume (24h)", 
-      value: formatCurrency(safeNumberAccess(data, 'trading_volume_24h_usd')), 
-      type: "text" 
+      icon: TrendingUp, 
+      title: "Trading Volume (24h)", 
+      description: "Total trading volume in the last 24 hours",
+      badgeLabel: formatCurrency(tradingVolume),
+      badgeVariant: tradingVolume > 1000000 ? "green" : tradingVolume > 100000 ? "blue" : "gray"
     },
     { 
-      label: "CEX Listings", 
-      value: safeNumberAccess(data, 'cex_listings').toString(), 
-      type: "text" 
+      icon: BarChart3, 
+      title: "CEX Listings", 
+      description: "Number of centralized exchange listings",
+      badgeLabel: cexListings.toString(),
+      badgeVariant: cexListings >= 5 ? "green" : cexListings >= 2 ? "blue" : cexListings >= 1 ? "orange" : "gray"
     },
     { 
-      label: "Liquidity Lock (Days)", 
-      value: safeNumberAccess(data, 'liquidity_locked_days').toString(), 
-      type: "text" 
+      icon: Lock, 
+      title: "Liquidity Lock", 
+      description: "How long liquidity is locked for",
+      badgeLabel: liquidityLocked > 0 ? `${liquidityLocked} days` : "Not Locked",
+      badgeVariant: liquidityLocked >= 365 ? "green" : liquidityLocked >= 90 ? "blue" : liquidityLocked > 0 ? "orange" : "red"
     },
     { 
-      label: "DEX Depth Status", 
-      value: safeAccess(data, 'dex_depth_status', 'Unknown'), 
-      type: "text" 
+      icon: Activity, 
+      title: "DEX Depth", 
+      description: "Liquidity depth on decentralized exchanges",
+      badgeLabel: dexDepth,
+      badgeVariant: dexDepth === "High" ? "green" : dexDepth === "Medium" ? "blue" : dexDepth === "Low" ? "orange" : "gray"
     },
     { 
-      label: "Holder Distribution", 
-      value: safeAccess(data, 'holder_distribution', 'Unknown'), 
-      type: "text" 
+      icon: Users, 
+      title: "Holder Distribution", 
+      description: "How tokens are distributed among holders",
+      badgeLabel: holderDistribution,
+      badgeVariant: holderDistribution === "Good" ? "green" : holderDistribution === "Fair" ? "blue" : holderDistribution === "Poor" ? "red" : "gray"
     }
   ];
 };
@@ -228,52 +298,55 @@ export const transformLiquidityData = (data: LiquidityData | null): CategoryFeat
 export const transformCommunityData = (data: CommunityData | null): CategoryFeature[] => {
   if (!data) {
     return [
-      { label: "Twitter Followers", value: "Unknown", type: "text" },
-      { label: "Twitter Verified", value: "Unknown", type: "boolean" },
-      { label: "Twitter Growth (7d)", value: "Unknown", type: "text" },
-      { label: "Discord Members", value: "Unknown", type: "text" },
-      { label: "Telegram Members", value: "Unknown", type: "text" },
-      { label: "Team Visibility", value: "Unknown", type: "text" },
-      { label: "Active Channels", value: "Unknown", type: "text" }
+      { icon: Users, title: "Twitter Followers", description: "Number of followers on Twitter/X", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Shield, title: "Twitter Verified", description: "Twitter/X account verification status", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: TrendingUp, title: "Twitter Growth (7d)", description: "Follower growth in the last 7 days", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Users, title: "Discord Members", description: "Number of Discord community members", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Activity, title: "Team Visibility", description: "How visible and accessible the team is", badgeLabel: "Unknown", badgeVariant: "gray" }
     ];
   }
 
+  const twitterFollowers = safeNumberAccess(data, 'twitter_followers');
+  const twitterVerified = safeBooleanAccess(data, 'twitter_verified');
+  const twitterGrowth = safeNumberAccess(data, 'twitter_growth_7d');
+  const discordMembers = safeNumberAccess(data, 'discord_members');
+  const teamVisibility = safeAccess(data, 'team_visibility', 'Unknown');
+
   return [
     { 
-      label: "Twitter Followers", 
-      value: formatNumber(safeNumberAccess(data, 'twitter_followers')), 
-      type: "text" 
+      icon: Users, 
+      title: "Twitter Followers", 
+      description: "Number of followers on Twitter/X",
+      badgeLabel: formatNumber(twitterFollowers),
+      badgeVariant: twitterFollowers >= 100000 ? "green" : twitterFollowers >= 10000 ? "blue" : twitterFollowers >= 1000 ? "orange" : "gray"
     },
     { 
-      label: "Twitter Verified", 
-      value: safeBooleanAccess(data, 'twitter_verified'), 
-      type: "boolean",
-      positive: true
+      icon: Shield, 
+      title: "Twitter Verified", 
+      description: "Twitter/X account verification status",
+      badgeLabel: getBooleanBadgeLabel(twitterVerified),
+      badgeVariant: getBooleanBadgeVariant(twitterVerified, true)
     },
     { 
-      label: "Twitter Growth (7d)", 
-      value: `${safeNumberAccess(data, 'twitter_growth_7d')}%`, 
-      type: "text" 
+      icon: TrendingUp, 
+      title: "Twitter Growth (7d)", 
+      description: "Follower growth in the last 7 days",
+      badgeLabel: `${twitterGrowth}%`,
+      badgeVariant: twitterGrowth > 5 ? "green" : twitterGrowth > 0 ? "blue" : twitterGrowth < 0 ? "red" : "gray"
     },
     { 
-      label: "Discord Members", 
-      value: formatNumber(safeNumberAccess(data, 'discord_members')), 
-      type: "text" 
+      icon: Users, 
+      title: "Discord Members", 
+      description: "Number of Discord community members",
+      badgeLabel: formatNumber(discordMembers),
+      badgeVariant: discordMembers >= 50000 ? "green" : discordMembers >= 5000 ? "blue" : discordMembers >= 500 ? "orange" : "gray"
     },
     { 
-      label: "Telegram Members", 
-      value: formatNumber(safeNumberAccess(data, 'telegram_members')), 
-      type: "text" 
-    },
-    { 
-      label: "Team Visibility", 
-      value: safeAccess(data, 'team_visibility', 'Unknown'), 
-      type: "text" 
-    },
-    { 
-      label: "Active Channels", 
-      value: safeAccess(data, 'active_channels', []).length.toString(), 
-      type: "text" 
+      icon: Activity, 
+      title: "Team Visibility", 
+      description: "How visible and accessible the team is",
+      badgeLabel: teamVisibility,
+      badgeVariant: teamVisibility === "High" ? "green" : teamVisibility === "Medium" ? "blue" : teamVisibility === "Low" ? "red" : "gray"
     }
   ];
 };
@@ -282,46 +355,59 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
 export const transformDevelopmentData = (data: DevelopmentData | null): CategoryFeature[] => {
   if (!data) {
     return [
-      { label: "GitHub Repository", value: "Unknown", type: "text" },
-      { label: "Open Source", value: "Unknown", type: "boolean" },
-      { label: "Contributors", value: "Unknown", type: "text" },
-      { label: "Commits (30d)", value: "Unknown", type: "text" },
-      { label: "Last Commit", value: "Unknown", type: "text" },
-      { label: "Roadmap Progress", value: "Unknown", type: "text" }
+      { icon: Github, title: "Open Source", description: "Code is publicly available for review", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Users, title: "Contributors", description: "Number of active code contributors", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: GitCommit, title: "Commits (30d)", description: "Code commits in the last 30 days", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Activity, title: "Last Commit", description: "When the last code update was made", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Code, title: "Roadmap Progress", description: "Progress on the development roadmap", badgeLabel: "Unknown", badgeVariant: "gray" }
     ];
   }
 
+  const isOpenSource = safeBooleanAccess(data, 'is_open_source');
+  const contributorsCount = safeNumberAccess(data, 'contributors_count');
+  const commits30d = safeNumberAccess(data, 'commits_30d');
+  const lastCommit = safeAccess(data, 'last_commit', null);
+  const roadmapProgress = safeAccess(data, 'roadmap_progress', 'Unknown');
+
+  // Calculate days since last commit
+  const daysSinceCommit = lastCommit ? Math.floor((Date.now() - new Date(lastCommit).getTime()) / (1000 * 60 * 60 * 24)) : null;
+
   return [
     { 
-      label: "GitHub Repository", 
-      value: safeAccess(data, 'github_repo', 'Unknown'), 
-      type: "text" 
+      icon: Github, 
+      title: "Open Source", 
+      description: "Code is publicly available for review",
+      badgeLabel: getBooleanBadgeLabel(isOpenSource),
+      badgeVariant: getBooleanBadgeVariant(isOpenSource, true)
     },
     { 
-      label: "Open Source", 
-      value: safeBooleanAccess(data, 'is_open_source'), 
-      type: "boolean",
-      positive: true
+      icon: Users, 
+      title: "Contributors", 
+      description: "Number of active code contributors",
+      badgeLabel: contributorsCount.toString(),
+      badgeVariant: contributorsCount >= 10 ? "green" : contributorsCount >= 3 ? "blue" : contributorsCount >= 1 ? "orange" : "gray"
     },
     { 
-      label: "Contributors", 
-      value: safeNumberAccess(data, 'contributors_count').toString(), 
-      type: "text" 
+      icon: GitCommit, 
+      title: "Commits (30d)", 
+      description: "Code commits in the last 30 days",
+      badgeLabel: commits30d.toString(),
+      badgeVariant: commits30d >= 20 ? "green" : commits30d >= 5 ? "blue" : commits30d >= 1 ? "orange" : "gray"
     },
     { 
-      label: "Commits (30d)", 
-      value: safeNumberAccess(data, 'commits_30d').toString(), 
-      type: "text" 
+      icon: Activity, 
+      title: "Last Commit", 
+      description: "When the last code update was made",
+      badgeLabel: daysSinceCommit !== null ? `${daysSinceCommit} days ago` : "Unknown",
+      badgeVariant: daysSinceCommit !== null ? 
+        (daysSinceCommit <= 7 ? "green" : daysSinceCommit <= 30 ? "blue" : daysSinceCommit <= 90 ? "orange" : "red") : "gray"
     },
     { 
-      label: "Last Commit", 
-      value: data?.last_commit ? new Date(data.last_commit).toLocaleDateString() : 'Unknown', 
-      type: "text" 
-    },
-    { 
-      label: "Roadmap Progress", 
-      value: safeAccess(data, 'roadmap_progress', 'Unknown'), 
-      type: "text" 
+      icon: Code, 
+      title: "Roadmap Progress", 
+      description: "Progress on the development roadmap",
+      badgeLabel: roadmapProgress,
+      badgeVariant: roadmapProgress === "On Track" ? "green" : roadmapProgress === "Delayed" ? "orange" : roadmapProgress === "Stalled" ? "red" : "gray"
     }
   ];
 };

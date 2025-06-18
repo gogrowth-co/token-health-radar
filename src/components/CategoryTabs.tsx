@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import CategoryDataGrid from "./CategoryDataGrid";
+import CategoryFeatureGrid from "./CategoryFeatureGrid";
 import BlurredCategoryOverlay from "./BlurredCategoryOverlay";
 import { 
   transformSecurityData, 
@@ -167,7 +167,7 @@ export default function CategoryTabs({
       
       {/* Security Tab Content */}
       {renderTabContent(securityData, (
-        <CategoryDataGrid 
+        <CategoryFeatureGrid 
           features={transformSecurityData(securityData)}
           description="Key security indicators for this token's smart contract"
         />
@@ -175,7 +175,7 @@ export default function CategoryTabs({
       
       {/* Tokenomics Tab Content */}
       {renderTabContent(tokenomicsData, (
-        <CategoryDataGrid
+        <CategoryFeatureGrid
           features={transformTokenomicsData(tokenomicsData)}
           description="Economic metrics and token supply analysis"
         />
@@ -183,7 +183,7 @@ export default function CategoryTabs({
       
       {/* Liquidity Tab Content */}
       {renderTabContent(liquidityData, (
-        <CategoryDataGrid
+        <CategoryFeatureGrid
           features={transformLiquidityData(liquidityData)}
           description="Measures of token trading activity and accessibility"
         />
@@ -191,7 +191,7 @@ export default function CategoryTabs({
       
       {/* Community Tab Content */}
       {renderTabContent(communityData, (
-        <CategoryDataGrid
+        <CategoryFeatureGrid
           features={transformCommunityData(communityData)}
           description="Social media presence and community engagement metrics"
         />
@@ -199,7 +199,7 @@ export default function CategoryTabs({
       
       {/* Development Tab Content */}
       {renderTabContent(developmentData, (
-        <CategoryDataGrid
+        <CategoryFeatureGrid
           features={transformDevelopmentData(developmentData)}
           description="GitHub activity and development progress metrics"
         />
