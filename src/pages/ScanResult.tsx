@@ -184,13 +184,6 @@ export default function ScanResult() {
 
           console.log("ScanResult: Calculated overall score:", overallScore, "from scores:", scores);
           
-          if (!hasValidScores && overallScore === 0) {
-            console.warn("ScanResult: No valid scores found, scan may have failed");
-            setError("Scan data incomplete. Please try scanning the token again.");
-            setLoading(false);
-            return;
-          }
-          
           setScanData({
             success: true,
             token_address: tokenAddress,
