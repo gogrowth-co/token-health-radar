@@ -3,7 +3,13 @@ import { useState, useEffect } from "react";
 import { TokenResult } from "@/components/token/types";
 import { TokenInfoEnriched } from "@/components/token/types";
 import { callCoinGeckoAPI, tokenDetailCache, CACHE_VERSION, isValidErc20Token, KNOWN_ERC20_TOKENS } from "@/utils/tokenSearch";
-import { getTokenFromCache, createTokenInfoFromCache, createFallbackMarketData } from "@/utils/tokenCacheUtils";
+import { 
+  getTokenFromCache, 
+  createTokenInfoFromCache, 
+  createEnhancedMarketData,
+  createMeaningfulDescription,
+  callWithRetry
+} from "@/utils/tokenCacheUtils";
 import { toast } from "sonner";
 
 export default function useTokenSearch(searchTerm: string, isAuthenticated: boolean) {
@@ -42,9 +48,8 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
             try {
               let tokenData = null;
               let platforms = {};
-              let marketData = createFallbackMarketData(coin);
+              let tokenInfo: TokenInfoEnriched | null = null;
               let description = '';
-              let tokenInfo: TokenInfoEnriched;
 
               // Phase 1: Try to get detailed data from CoinGecko API
               const cacheKey = `coin:${CACHE_VERSION}:${coin.id}`;
@@ -57,7 +62,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 const detailUrl = `${apiBaseUrl}/coins/${coin.id}?localization=false&tickers=false&market_data=true&community_data=true&developer_data=true&sparkline=false`;
                 
                 try {
-                  tokenData = await callCoinGeckoAPI(detailUrl, true);
+                  tokenData = await callWithRetry(() => callCoinGeckoAPI(detailUrl, true));
                   tokenDetailCache[cacheKey] = tokenData;
                   console.log(`[SEARCH] Successfully fetched API data for ${coin.id}`);
                 } catch (detailError: any) {
@@ -77,72 +82,59 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 if (cachedData) {
                   console.log(`[SEARCH] Found database cache for ${coin.id}`);
                   tokenInfo = createTokenInfoFromCache(cachedData);
-                  marketData = {
-                    price_usd: cachedData.current_price_usd || 0,
-                    price_change_24h: cachedData.price_change_24h || 0,
-                    market_cap: cachedData.market_cap_usd || marketData.market_cap
-                  };
-                  description = cachedData.description || '';
                   platforms = {}; // We don't store platforms in cache currently
-                } else {
-                  console.log(`[SEARCH] No database cache found for ${coin.id}`);
                 }
               }
 
               // Phase 3: Process API data if available
               if (tokenData) {
                 platforms = tokenData.platforms || {};
-                
-                if (tokenData.market_data) {
-                  marketData = {
-                    price_usd: tokenData.market_data.current_price?.usd || 0,
-                    price_change_24h: tokenData.market_data.price_change_percentage_24h || 0,
-                    market_cap: tokenData.market_data.market_cap?.usd || marketData.market_cap
-                  };
-                }
-
-                description = tokenData.description?.en 
-                  ? tokenData.description.en.replace(/<[^>]*>/g, '').split('.')[0] + '.'
-                  : '';
-
-                if (description.length > 200) {
-                  description = description.substring(0, 200) + '...';
-                }
+                description = createMeaningfulDescription(coin, tokenData.description?.en);
 
                 tokenInfo = {
                   name: tokenData.name || coin.name,
-                  symbol: tokenData.symbol?.toUpperCase() || coin.symbol?.toUpperCase(),
+                  symbol: (tokenData.symbol || coin.symbol || '').toUpperCase(),
                   description: description,
                   website_url: tokenData.links?.homepage?.[0] || '',
                   twitter_handle: tokenData.links?.twitter_screen_name || '',
                   github_url: tokenData.links?.repos_url?.github?.[0] || '',
                   logo_url: tokenData.image?.large || tokenData.image?.small || coin.large || coin.thumb || '',
                   coingecko_id: coin.id,
-                  current_price_usd: marketData.price_usd,
-                  price_change_24h: marketData.price_change_24h,
-                  market_cap_usd: marketData.market_cap,
+                  current_price_usd: 0, // Will be set by market data
+                  price_change_24h: 0, // Will be set by market data
+                  market_cap_usd: 0, // Will be set by market data
                   total_value_locked_usd: tokenData.market_data?.total_value_locked?.usd?.toString() || 'N/A'
                 };
               }
 
               // Phase 4: Create fallback tokenInfo if not created yet
-              if (!tokenInfo!) {
+              if (!tokenInfo) {
                 console.log(`[SEARCH] Creating fallback tokenInfo for ${coin.id}`);
+                description = createMeaningfulDescription(coin);
+                
                 tokenInfo = {
                   name: coin.name,
-                  symbol: coin.symbol?.toUpperCase(),
-                  description: description || `${coin.name} (${coin.symbol?.toUpperCase()}) is a cryptocurrency token.`,
+                  symbol: (coin.symbol || '').toUpperCase(),
+                  description: description,
                   website_url: '',
                   twitter_handle: '',
                   github_url: '',
                   logo_url: coin.large || coin.thumb || '',
                   coingecko_id: coin.id,
-                  current_price_usd: marketData.price_usd,
-                  price_change_24h: marketData.price_change_24h,
-                  market_cap_usd: marketData.market_cap,
+                  current_price_usd: 0,
+                  price_change_24h: 0,
+                  market_cap_usd: 0,
                   total_value_locked_usd: 'N/A'
                 };
               }
+
+              // Phase 5: Get enhanced market data with proper fallback chain
+              const marketData = createEnhancedMarketData(coin, tokenData);
+              
+              // Update tokenInfo with market data
+              tokenInfo.current_price_usd = marketData.price_usd;
+              tokenInfo.price_change_24h = marketData.price_change_24h;
+              tokenInfo.market_cap_usd = marketData.market_cap;
 
               // Determine if token is ERC-20 compatible
               const isErc20Compatible = isValidErc20Token({
@@ -154,6 +146,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
                 name: tokenInfo.name,
                 price: marketData.price_usd,
                 market_cap: marketData.market_cap,
+                description: tokenInfo.description,
                 isErc20: isErc20Compatible
               });
 
@@ -181,16 +174,32 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               
               console.error(`[SEARCH] Error processing ${coin.id}:`, err);
               
-              // Add token with basic data even if processing failed
-              const fallbackData = createFallbackMarketData(coin);
+              // Add token with enhanced fallback data even if processing failed
+              const fallbackMarketData = createEnhancedMarketData(coin);
+              const fallbackDescription = createMeaningfulDescription(coin);
+              
               enhancedResults.push({
                 ...coin, 
                 isErc20: KNOWN_ERC20_TOKENS.includes(coin.id),
-                price_usd: fallbackData.price_usd,
-                price_change_24h: fallbackData.price_change_24h,
-                market_cap: fallbackData.market_cap,
+                price_usd: fallbackMarketData.price_usd,
+                price_change_24h: fallbackMarketData.price_change_24h,
+                market_cap: fallbackMarketData.market_cap,
                 platforms: {},
-                description: `${coin.name} (${coin.symbol?.toUpperCase()}) is a cryptocurrency token.`
+                description: fallbackDescription,
+                tokenInfo: {
+                  name: coin.name,
+                  symbol: (coin.symbol || '').toUpperCase(),
+                  description: fallbackDescription,
+                  website_url: '',
+                  twitter_handle: '',
+                  github_url: '',
+                  logo_url: coin.large || coin.thumb || '',
+                  coingecko_id: coin.id,
+                  current_price_usd: fallbackMarketData.price_usd,
+                  price_change_24h: fallbackMarketData.price_change_24h,
+                  market_cap_usd: fallbackMarketData.market_cap,
+                  total_value_locked_usd: 'N/A'
+                }
               });
             }
           }
