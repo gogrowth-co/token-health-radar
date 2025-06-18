@@ -1,3 +1,4 @@
+
 import { Globe, Github, Twitter } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
@@ -98,13 +99,6 @@ export default function TokenProfile({
 }: TokenProfileProps) {
   const isMobile = useIsMobile();
   
-  // Clamp and ellipsis for description
-  const clampedDesc = description
-    ? description.length > (isMobile ? 120 : 256)
-      ? `${description.slice(0, isMobile ? 117 : 253)}...`
-      : description
-    : "";
-
   const shortenAddress = (addr: string) =>
     `${addr.slice(0, 6)}...${addr.slice(-4) || ""}`;
   const copyAddress = async () => {
@@ -180,11 +174,13 @@ export default function TokenProfile({
             </div>
           </div>
 
-          {/* Description */}
-          {clampedDesc && (
-            <p className="text-sm leading-relaxed text-[#4B5563] dark:text-[#A3A3B3]">
-              {clampedDesc}
-            </p>
+          {/* Description - prominently displayed */}
+          {description && (
+            <div className="mb-4">
+              <p className="text-sm leading-relaxed text-[#4B5563] dark:text-[#A3A3B3]">
+                {description}
+              </p>
+            </div>
           )}
 
           {/* Mobile Bottom Section: Price/Market Cap + Health Score */}
@@ -276,7 +272,7 @@ export default function TokenProfile({
     );
   }
 
-  // Desktop layout (existing code)
+  // Desktop layout - updated to include description prominently
   return (
     <Card
       className="overflow-visible transition-all"
@@ -293,84 +289,70 @@ export default function TokenProfile({
       }}
     >
       <div
-        className="flex flex-row justify-between items-stretch min-h-[170px] px-6 py-6"
+        className="flex flex-col min-h-[170px] px-6 py-6"
         style={{ minHeight: 170 }}
       >
-        {/* LEFT SECTION */}
-        <div className="flex items-start gap-6 min-w-0 flex-1">
-          {/* Token Logo */}
-          <OptimizedTokenLogo
-            logo={logo}
-            name={name}
-            className="w-16 h-16 rounded-full"
-            size={64}
-          />
-          <div className="flex flex-col gap-2 min-w-0">
-            {/* Name + Symbol */}
-            <div className="flex items-center gap-3">
-              <h2
-                className="font-semibold text-[20px] leading-[28px] text-gray-900 dark:text-gray-100 truncate"
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
-                {name}
-              </h2>
-              <span
-                className="font-medium text-[14px] px-3 py-1 bg-[#252534] dark:bg-[#252534] text-gray-200 dark:text-gray-300 rounded-full"
-                style={{
-                  borderRadius: "9999px",
-                  letterSpacing: ".01em",
-                  fontWeight: 500,
-                  fontFamily: "Inter, sans-serif",
-                  padding: "6px 12px",
-                }}
-              >
-                ${symbol.toUpperCase()}
-              </span>
-            </div>
-            {/* Description */}
-            {clampedDesc && (
-              <p
-                className="text-[16px] font-normal leading-[22px] text-[#4B5563] dark:text-[#A3A3B3] max-w-[700px] truncate whitespace-pre-line"
-                style={{
-                  display: "-webkit-box",
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
-                }}
-                title={clampedDesc}
-              >
-                {clampedDesc}
-              </p>
-            )}
-            {/* Address */}
-            <div className="mt-2 flex items-center gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={copyAddress}
-                      className="font-mono text-[14px] px-4 py-1 rounded-full bg-[#232334] dark:bg-[#232334] text-[#A3A3B3] dark:text-[#A3A3B3] border-none focus:outline-none transition-all"
-                    >
-                      {shortenAddress(address)}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Click to copy address</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <span
-                className="px-2 py-[2px] rounded-full bg-[#252534] dark:bg-[#252534] text-[#A3A3B3] dark:text-[#A3A3B3] font-semibold text-[12px]"
-                style={{ fontWeight: 600, marginLeft: "2px" }}
-              >
-                {network.toUpperCase()}
-              </span>
+        {/* TOP ROW: Token info, price, and health score */}
+        <div className="flex items-start justify-between mb-4">
+          {/* LEFT SECTION */}
+          <div className="flex items-start gap-6 min-w-0 flex-1">
+            {/* Token Logo */}
+            <OptimizedTokenLogo
+              logo={logo}
+              name={name}
+              className="w-16 h-16 rounded-full"
+              size={64}
+            />
+            <div className="flex flex-col gap-2 min-w-0">
+              {/* Name + Symbol */}
+              <div className="flex items-center gap-3">
+                <h2
+                  className="font-semibold text-[20px] leading-[28px] text-gray-900 dark:text-gray-100 truncate"
+                  style={{ fontFamily: "Inter, sans-serif" }}
+                >
+                  {name}
+                </h2>
+                <span
+                  className="font-medium text-[14px] px-3 py-1 bg-[#252534] dark:bg-[#252534] text-gray-200 dark:text-gray-300 rounded-full"
+                  style={{
+                    borderRadius: "9999px",
+                    letterSpacing: ".01em",
+                    fontWeight: 500,
+                    fontFamily: "Inter, sans-serif",
+                    padding: "6px 12px",
+                  }}
+                >
+                  ${symbol.toUpperCase()}
+                </span>
+              </div>
+              
+              {/* Address */}
+              <div className="flex items-center gap-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={copyAddress}
+                        className="font-mono text-[14px] px-4 py-1 rounded-full bg-[#232334] dark:bg-[#232334] text-[#A3A3B3] dark:text-[#A3A3B3] border-none focus:outline-none transition-all"
+                      >
+                        {shortenAddress(address)}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Click to copy address</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <span
+                  className="px-2 py-[2px] rounded-full bg-[#252534] dark:bg-[#252534] text-[#A3A3B3] dark:text-[#A3A3B3] font-semibold text-[12px]"
+                  style={{ fontWeight: 600, marginLeft: "2px" }}
+                >
+                  {network.toUpperCase()}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* RIGHT SECTION: Price/Market Cap on left, Health Score on right */}
-        <div className="flex items-center gap-20 min-w-[480px] ml-24">
-          {/* Price and Market Cap Section */}
-          <div className="flex flex-col items-start gap-4">
+          {/* CENTER: Price and Market Cap Section */}
+          <div className="flex flex-col items-start gap-4 mx-16">
             {/* Price + Change */}
             <div className="flex flex-col items-start">
               <span className="text-[28px] font-bold leading-[36px] text-[#000] dark:text-[#fff]">
@@ -399,8 +381,8 @@ export default function TokenProfile({
             </div>
           </div>
 
-          {/* Health Score and Socials Section - moved to far right */}
-          <div className="flex flex-col items-center gap-4 ml-16">
+          {/* RIGHT: Health Score and Socials */}
+          <div className="flex flex-col items-center gap-4">
             {/* Health Score */}
             <MiniHealthScore score={overallScore} />
             
@@ -447,7 +429,23 @@ export default function TokenProfile({
             )}
           </div>
         </div>
+
+        {/* BOTTOM ROW: Description prominently displayed */}
+        {description && (
+          <div className="mt-2">
+            <p
+              className="text-[16px] font-normal leading-[24px] text-[#4B5563] dark:text-[#A3A3B3]"
+              style={{
+                fontFamily: "Inter, sans-serif",
+                lineHeight: "1.5",
+              }}
+            >
+              {description}
+            </p>
+          </div>
+        )}
       </div>
+      
       {/* CSS variables for theme */}
       <style>{`
         :root {
