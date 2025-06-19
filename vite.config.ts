@@ -41,4 +41,7 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
   },
+  // Ensure static files are properly served
+  publicDir: 'public',
+  assetsInclude: ['**/*.xml', '**/*.txt'],
 }));

@@ -20,6 +20,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import TokenScanGuide from "./pages/TokenScanGuide";
 import NotFound from "./pages/NotFound";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +37,19 @@ const queryClient = new QueryClient({
   },
 });
 
+const StaticFileHandler = () => {
+  useEffect(() => {
+    // Handle static file requests that shouldn't be handled by React Router
+    const path = window.location.pathname;
+    if (path === '/sitemap.xml' || path === '/robots.txt') {
+      // Force a hard navigation to let the server handle the static file
+      window.location.href = window.location.href;
+    }
+  }, []);
+
+  return null;
+};
+
 const App = () => {
   return (
     <ErrorBoundary>
@@ -46,6 +60,7 @@ const App = () => {
               <Toaster />
               <Sonner />
               <BrowserRouter>
+                <StaticFileHandler />
                 <ErrorBoundary>
                   <Routes>
                     <Route path="/" element={<Landing />} />
