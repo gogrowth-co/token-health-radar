@@ -13,7 +13,7 @@ export default function MobileNav() {
 
   return (
     <>
-      {/* Mobile menu button - 44px minimum touch target */}
+      {/* Mobile menu button */}
       <Button
         variant="ghost"
         size="icon"
@@ -21,7 +21,7 @@ export default function MobileNav() {
         onClick={toggleNav}
         aria-label="Toggle menu"
       >
-        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </Button>
 
       {/* Mobile menu overlay */}
@@ -29,13 +29,13 @@ export default function MobileNav() {
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="fixed inset-0 bg-black/20" onClick={closeNav} />
           <div className="fixed top-0 right-0 bottom-0 w-64 bg-background border-l shadow-lg">
-            <div className="flex items-center justify-between p-4 border-b min-h-[60px]">
-              <span className="font-semibold text-lg">Menu</span>
+            <div className="flex items-center justify-between p-4 border-b min-h-[56px]">
+              <span className="font-semibold text-base">Menu</span>
               <Button variant="ghost" size="icon" onClick={closeNav}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <nav className="flex flex-col p-4 space-y-2">
+            <nav className="flex flex-col p-4 space-y-1">
               <Link 
                 to="/" 
                 className="text-base font-medium py-3 px-3 rounded hover:bg-accent min-h-[44px] flex items-center"

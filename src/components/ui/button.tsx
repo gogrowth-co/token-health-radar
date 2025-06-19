@@ -21,10 +21,10 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-11 px-4 py-2 min-h-[44px]", // Apple's 44px minimum touch target
-        sm: "h-10 rounded-md px-3 min-h-[40px]",
-        lg: "h-12 rounded-md px-8 min-h-[48px]",
-        icon: "h-11 w-11 min-h-[44px] min-w-[44px]", // Square 44px minimum
+        default: "h-10 sm:h-11 px-3 sm:px-4 py-2 min-h-[40px] sm:min-h-[44px] text-sm sm:text-base",
+        sm: "h-8 sm:h-9 rounded-md px-2 sm:px-3 min-h-[32px] sm:min-h-[36px] text-xs sm:text-sm",
+        lg: "h-11 sm:h-12 rounded-md px-6 sm:px-8 min-h-[44px] sm:min-h-[48px] text-sm sm:text-base",
+        icon: "h-9 w-9 sm:h-10 sm:w-10 min-h-[36px] min-w-[36px] sm:min-h-[40px] sm:min-w-[40px]",
       },
     },
     defaultVariants: {
