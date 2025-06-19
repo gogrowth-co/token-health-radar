@@ -1,8 +1,18 @@
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://tokenhealthscan.com/sitemap.xml
+
+# Specific bot directives
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Twitterbot
 Allow: /
@@ -10,5 +20,14 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+# Block certain paths if needed
+# Disallow: /admin/
+# Disallow: /api/
+
+# Cache directives
 User-agent: *
-Allow: /
+Disallow: /lovable-uploads/
+Allow: /lovable-uploads/*.png
+Allow: /lovable-uploads/*.jpg
+Allow: /lovable-uploads/*.jpeg
+Allow: /lovable-uploads/*.webp
