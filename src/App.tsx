@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Landing from "./pages/Landing";
@@ -17,6 +18,7 @@ import LTD from "./pages/LTD";
 import LTDThankYou from "./pages/LTDThankYou";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import TokenScanGuide from "./pages/TokenScanGuide";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -37,36 +39,39 @@ const queryClient = new QueryClient({
 const App = () => {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <AuthProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <ErrorBoundary>
-                <Routes>
-                  <Route path="/" element={<Landing />} />
-                  <Route path="/auth" element={
-                    <ErrorBoundary>
-                      <Auth />
-                    </ErrorBoundary>
-                  } />
-                  <Route path="/confirm" element={<Confirm />} />
-                  <Route path="/scan-loading" element={<ScanLoading />} />
-                  <Route path="/scan-result" element={<ScanResult />} />
-                  <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/ltd" element={<LTD />} />
-                  <Route path="/ltd-thank-you" element={<LTDThankYou />} />
-                  <Route path="/privacy" element={<Privacy />} />
-                  <Route path="/terms" element={<Terms />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </ErrorBoundary>
-            </BrowserRouter>
-          </AuthProvider>
-        </TooltipProvider>
-      </QueryClientProvider>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <AuthProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <ErrorBoundary>
+                  <Routes>
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/auth" element={
+                      <ErrorBoundary>
+                        <Auth />
+                      </ErrorBoundary>
+                    } />
+                    <Route path="/confirm" element={<Confirm />} />
+                    <Route path="/scan-loading" element={<ScanLoading />} />
+                    <Route path="/scan-result" element={<ScanResult />} />
+                    <Route path="/pricing" element={<Pricing />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/ltd" element={<LTD />} />
+                    <Route path="/ltd-thank-you" element={<LTDThankYou />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/token-scan-guide" element={<TokenScanGuide />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </ErrorBoundary>
+              </BrowserRouter>
+            </AuthProvider>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </HelmetProvider>
     </ErrorBoundary>
   );
 };

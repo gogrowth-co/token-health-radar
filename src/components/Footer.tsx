@@ -11,6 +11,9 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} TokenHealthScan. All rights reserved.
           </p>
           <nav className="flex flex-col md:flex-row gap-4 md:gap-6 mt-4 md:mt-0 text-center md:text-left">
+            <Link to="/token-scan-guide" className="text-sm text-muted-foreground hover:underline underline-offset-4">
+              Token Scan Guide
+            </Link>
             <Link to="/pricing" className="text-sm text-muted-foreground hover:underline underline-offset-4">
               Pricing
             </Link>
