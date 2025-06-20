@@ -54,7 +54,7 @@ export default function TokenScanGuide() {
     <div className="flex flex-col min-h-screen">
       <Helmet>
         <title>Complete Token Scanning Guide 2025 - How to Analyze Crypto Tokens</title>
-        <meta name="description" content="Learn how to analyze crypto tokens for security, liquidity, and investment risks. Complete guide to token scanning tools, techniques, and best practices." />
+        <meta name="description" content="Learn how to analyze crypto tokens for security, liquidity, and investment risks. Complete guide to token scanning tools and techniques." />
         <meta name="keywords" content="token scanning, crypto analysis, smart contract security, liquidity verification, token due diligence, DYOR crypto" />
         <link rel="canonical" href="https://tokenhealthscan.com/token-scan-guide" />
         
