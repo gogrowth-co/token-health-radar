@@ -5,7 +5,7 @@ Allow: /
 # Sitemap
 Sitemap: https://tokenhealthscan.com/sitemap.xml
 
-# Specific bot directives
+# Major Search Engine Bots
 User-agent: Googlebot
 Allow: /
 Crawl-delay: 1
@@ -20,11 +20,26 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-# Block certain paths if needed
-# Disallow: /admin/
-# Disallow: /api/
+# AI Crawlers
+User-agent: GPTBot
+Allow: /
 
-# Cache directives
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# File access controls
 User-agent: *
 Disallow: /lovable-uploads/
 Allow: /lovable-uploads/*.png
