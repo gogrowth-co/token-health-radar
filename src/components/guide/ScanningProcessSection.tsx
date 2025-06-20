@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, Shield, BarChart3, Users, Code, Lock } from "lucide-react";
@@ -12,7 +11,14 @@ export default function ScanningProcessSection() {
       </p>
 
       <img 
-        src="/lovable-uploads/90b79610-95d8-4c35-8a07-56103bb73bdc.png" 
+        src="/lovable-uploads/tokenscanrecording01.gif" 
+        alt="TokenHealthScan platform demonstration showing the complete token scanning process from search to detailed analysis results"
+        className="w-full mb-8 rounded-lg shadow-lg"
+        loading="lazy"
+      />
+
+      <img 
+        src="/lovable-uploads/token-health-scan-product.png" 
         alt="TokenHealthScan platform interface showing detailed development analysis for a token, including GitHub activity, number of contributors, recent commits, and roadmap progress"
         className="w-full mb-8 rounded-lg shadow-lg"
         loading="lazy"
