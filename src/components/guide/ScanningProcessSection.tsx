@@ -17,13 +17,6 @@ export default function ScanningProcessSection() {
         loading="lazy"
       />
 
-      <img 
-        src="/lovable-uploads/token-health-scan-product.png" 
-        alt="TokenHealthScan platform interface showing detailed development analysis for a token, including GitHub activity, number of contributors, recent commits, and roadmap progress"
-        className="w-full mb-8 rounded-lg shadow-lg"
-        loading="lazy"
-      />
-
       <div className="bg-muted p-6 rounded-lg mb-8">
         <h3 className="text-xl font-semibold mb-4">Old Way vs. New Way</h3>
         <p className="text-muted-foreground mb-4">
@@ -34,7 +27,6 @@ export default function ScanningProcessSection() {
         </p>
       </div>
 
-      {/* Steps */}
       <div className="space-y-8">
         <div>
           <h3 className="text-2xl font-bold mb-4">Step 1: Search by Name or Address</h3>
@@ -119,7 +111,6 @@ export default function ScanningProcessSection() {
         </div>
       </div>
 
-      {/* CTA Section */}
       <section className="text-center py-12 bg-gradient-to-r from-primary/10 to-blue-600/10 rounded-lg">
         <h2 className="text-3xl font-bold mb-4">Ready to Start Making Smarter Crypto Investments?</h2>
         <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
