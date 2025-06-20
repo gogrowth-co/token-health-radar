@@ -8,7 +8,7 @@ export default function WhyTokenScanningMattersSection() {
       </p>
 
       <img 
-        src="/lovable-uploads/a773e05d-cbb9-44b6-b5b8-b6b1bd4884a8.png" 
+        src="/lovable-uploads/ths-why-token-scanning-matters-in-crypto.png" 
         alt="Photo of Ethereum and Bitcoin coins on top of dollar bills next to a bear trap, illustrating the financial dangers of crypto scams like rug pulls and honeypots"
         className="w-full max-w-2xl mx-auto mb-8 rounded-lg shadow-lg"
         loading="lazy"

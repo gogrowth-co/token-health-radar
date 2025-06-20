@@ -37,7 +37,7 @@ export default function TypesOfScansSection() {
             </ul>
           </div>
           <img 
-            src="/lovable-uploads/ea2b3602-9180-444e-882e-1d6395fe1805.png" 
+            src="/lovable-uploads/ths-smart-contract-security-risks.png" 
             alt="Infographic detailing smart contract security risks such as reentrancy attacks, oracle manipulation, frontrunning, insecure math, and denial of service vulnerabilities"
             className="w-full rounded-lg shadow-lg"
             loading="lazy"
@@ -59,7 +59,7 @@ export default function TypesOfScansSection() {
         </p>
 
         <img 
-          src="/lovable-uploads/153ba67b-19c1-43da-a3e8-69f2ab3985d3.png" 
+          src="/lovable-uploads/ths-liquidity-verification.png" 
           alt="Diagram showing key factors of liquidity verification in crypto tokens, including pool depth, lock status, token holder concentration, and trading patterns"
           className="w-full max-w-2xl mx-auto mb-6 rounded-lg shadow-lg"
           loading="lazy"
@@ -100,7 +100,7 @@ export default function TypesOfScansSection() {
         </p>
 
         <img 
-          src="/lovable-uploads/a9862d4c-7598-4c06-b353-8514435ac69e.png" 
+          src="/lovable-uploads/ths-team-ownership.png" 
           alt="Photo-realistic image of a gold cryptocurrency token in front of silhouetted figures, representing anonymous team ownership and visibility in Web3 projects"
           className="w-full max-w-2xl mx-auto mb-6 rounded-lg shadow-lg"
           loading="lazy"

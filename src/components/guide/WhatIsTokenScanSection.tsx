@@ -10,7 +10,7 @@ export default function WhatIsTokenScanSection() {
       </p>
       
       <img 
-        src="/lovable-uploads/5522e54b-b6ba-49ea-bf0f-a540f1cdce10.png" 
+        src="/lovable-uploads/ths-what-is-token-scan.png" 
         alt="Photo of a person holding a magnifying glass over a Bitcoin token, with a laptop displaying a token health report in the background, symbolizing token scanning analysis"
         className="w-full max-w-2xl mx-auto mb-8 rounded-lg shadow-lg"
         loading="lazy"
