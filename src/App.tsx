@@ -37,16 +37,14 @@ const queryClient = new QueryClient({
   },
 });
 
-const StaticFileHandler = () => {
+// Component that handles static file routes without rendering React content
+const StaticFileRoute = ({ filePath }: { filePath: string }) => {
   useEffect(() => {
-    // Handle static file requests that shouldn't be handled by React Router
-    const path = window.location.pathname;
-    if (path === '/sitemap.xml' || path === '/robots.txt') {
-      // Force a hard navigation to let the server handle the static file
-      window.location.href = window.location.href;
-    }
-  }, []);
+    // Immediately redirect to the static file
+    window.location.replace(filePath);
+  }, [filePath]);
 
+  // Return null to prevent any React content from rendering
   return null;
 };
 
@@ -60,9 +58,13 @@ const App = () => {
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <StaticFileHandler />
                 <ErrorBoundary>
                   <Routes>
+                    {/* Static file routes - handle these first to prevent React rendering */}
+                    <Route path="/sitemap.xml" element={<StaticFileRoute filePath="/sitemap.xml" />} />
+                    <Route path="/robots.txt" element={<StaticFileRoute filePath="/robots.txt" />} />
+                    
+                    {/* Regular app routes */}
                     <Route path="/" element={<Landing />} />
                     <Route path="/auth" element={
                       <ErrorBoundary>
