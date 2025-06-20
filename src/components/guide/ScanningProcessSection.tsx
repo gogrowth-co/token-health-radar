@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, Shield, BarChart3, Users, Code, Lock } from "lucide-react";
@@ -66,7 +67,7 @@ export default function ScanningProcessSection() {
         <div>
           <h3 className="text-2xl font-bold mb-4">Step 4: Your Complete Token Analysis</h3>
           <img 
-            src="/lovable-uploads/ac00a670-c9aa-476a-9282-5bf5287935ba.png" 
+            src="/lovable-uploads/ths-token-id-card.png" 
             alt="Token profile card for Pendle on TokenHealthScan platform showing live price, market cap, health score, and individual scores for security, tokenomics, liquidity, and development"
             className="w-full mb-6 rounded-lg shadow-lg"
             loading="lazy"
