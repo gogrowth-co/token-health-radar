@@ -10,8 +10,8 @@ export default function GuideHeroSection() {
         The Complete Guide to Token Scanning (2025)
       </h1>
       <img 
-        src="/lovable-uploads/9823d2dd-2bbb-4762-9882-69c6848988c4.png" 
-        alt="Illustration of a token under a magnifying glass with a risk report, padlock, droplet, and warning icon, representing a comprehensive crypto token scan guide"
+        src="/lovable-uploads/ths-cover-token-scan-guide.png" 
+        alt="Comprehensive crypto token scanning guide illustration showing magnifying glass analyzing token with security report, padlock for smart contract security, droplet for liquidity analysis, and warning icons for risk assessment"
         className="w-full max-w-2xl mx-auto mb-8 rounded-lg shadow-lg"
         loading="eager"
       />

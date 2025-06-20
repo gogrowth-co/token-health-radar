@@ -24,7 +24,7 @@ export default function TokenScanGuide() {
       "name": "TokenHealthScan",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://tokenhealthscan.com/lovable-uploads/c705b444-0cef-46bf-b4a1-c6663acf1164.png"
+        "url": "https://tokenhealthscan.com/lovable-uploads/token-health-scan-product.png"
       }
     },
     "datePublished": "2025-06-19",
@@ -33,7 +33,7 @@ export default function TokenScanGuide() {
       "@type": "WebPage",
       "@id": "https://tokenhealthscan.com/token-scan-guide"
     },
-    "image": "https://tokenhealthscan.com/lovable-uploads/9823d2dd-2bbb-4762-9882-69c6848988c4.png",
+    "image": "https://tokenhealthscan.com/lovable-uploads/ths-cover-token-scan-guide.png",
     "keywords": ["token scanning", "crypto analysis", "smart contract security", "liquidity verification", "token due diligence", "DYOR crypto"],
     "wordCount": "3500",
     "articleSection": "Cryptocurrency",
@@ -63,7 +63,7 @@ export default function TokenScanGuide() {
         <meta property="og:description" content="Learn how to analyze crypto tokens for security, liquidity, and investment risks. Complete guide to token scanning tools and techniques." />
         <meta property="og:type" content="article" />
         <meta property="og:url" content="https://tokenhealthscan.com/token-scan-guide" />
-        <meta property="og:image" content="https://tokenhealthscan.com/lovable-uploads/9823d2dd-2bbb-4762-9882-69c6848988c4.png" />
+        <meta property="og:image" content="https://tokenhealthscan.com/lovable-uploads/ths-cover-token-scan-guide.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:site_name" content="TokenHealthScan" />
@@ -79,7 +79,7 @@ export default function TokenScanGuide() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Complete Token Scanning Guide 2025 - How to Analyze Crypto Tokens" />
         <meta name="twitter:description" content="Learn how to analyze crypto tokens for security, liquidity, and investment risks. Complete guide to token scanning tools and techniques." />
-        <meta name="twitter:image" content="https://tokenhealthscan.com/lovable-uploads/9823d2dd-2bbb-4762-9882-69c6848988c4.png" />
+        <meta name="twitter:image" content="https://tokenhealthscan.com/lovable-uploads/ths-cover-token-scan-guide.png" />
         <meta name="twitter:site" content="@TokenHealthScan" />
         <meta name="twitter:creator" content="@TokenHealthScan" />
         

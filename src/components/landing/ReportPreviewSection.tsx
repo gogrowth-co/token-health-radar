@@ -12,8 +12,8 @@ const ReportPreviewSection = memo(() => {
         <div className="max-w-4xl mx-auto">
           <div className="relative rounded-lg overflow-hidden shadow-2xl border">
             <img 
-              src="/lovable-uploads/139caadb-8984-4e76-900b-60aa83141ba5.png" 
-              alt="Token Health Scan Report Example" 
+              src="/lovable-uploads/token-health-scan-product.png" 
+              alt="Token Health Scan comprehensive risk assessment report showing security analysis, liquidity verification, and smart contract audit results for cryptocurrency token evaluation" 
               className="w-full h-auto"
               loading="lazy"
               width="800"
