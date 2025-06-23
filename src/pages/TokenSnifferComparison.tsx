@@ -1,4 +1,3 @@
-
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -17,7 +16,7 @@ export default function TokenSnifferComparison() {
     "description": "Compare Token Sniffer and TokenHealthScan to find the best crypto token scanner. Learn how to avoid scams, spot legit projects, and invest smarter in DeFi.",
     "author": {
       "@type": "Person",
-      "name": "Gabriel Mangabeira"
+      "name": "Token Health Scan Editors"
     },
     "publisher": {
       "@type": "Organization",
@@ -62,7 +61,7 @@ export default function TokenSnifferComparison() {
         <meta property="og:site_name" content="TokenHealthScan" />
         <meta property="article:published_time" content="2025-06-23T00:00:00Z" />
         <meta property="article:modified_time" content="2025-06-23T00:00:00Z" />
-        <meta property="article:author" content="Gabriel Mangabeira" />
+        <meta property="article:author" content="Token Health Scan Editors" />
         
         {/* Twitter Card tags */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -74,7 +73,7 @@ export default function TokenSnifferComparison() {
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta name="googlebot" content="index, follow" />
         <meta name="language" content="en" />
-        <meta name="author" content="Gabriel Mangabeira" />
+        <meta name="author" content="Token Health Scan Editors" />
         <meta name="revisit-after" content="7 days" />
         
         <script type="application/ld+json">
@@ -126,7 +125,7 @@ export default function TokenSnifferComparison() {
 
           <footer className="border-t pt-8 mt-12 text-sm text-muted-foreground">
             <p className="mb-2"><strong>Updated:</strong> June 2025</p>
-            <p className="mb-2"><strong>Author:</strong> Gabriel Mangabeira</p>
+            <p className="mb-2"><strong>Author:</strong> Token Health Scan Editors</p>
             <p className="mb-2"><strong>Sources:</strong> GoPlus, CoinGecko, Etherscan, GitHub, Apify</p>
             <p className="italic">Note: Always DYOR (Do Your Own Research). Scanning tools are useful, but no tool replaces personal responsibility in crypto investing.</p>
           </footer>
