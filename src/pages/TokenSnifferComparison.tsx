@@ -7,6 +7,7 @@ import TokenSnifferSection from "@/components/comparison/TokenSnifferSection";
 import TokenHealthScanSection from "@/components/comparison/TokenHealthScanSection";
 import FeatureComparisonTable from "@/components/comparison/FeatureComparisonTable";
 import FAQSection from "@/components/comparison/FAQSection";
+import { Link } from "react-router-dom";
 
 export default function TokenSnifferComparison() {
   const jsonLd = {
@@ -90,7 +91,7 @@ export default function TokenSnifferComparison() {
           <section className="mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-6">What Are Token Scanners and Why Are They Important?</h2>
             <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-              Token scanners analyze blockchain tokens to detect scams, vulnerabilities, and unhealthy token mechanics before you invest. These tools are critical for avoiding fraud and identifying promising projects in the volatile crypto ecosystem.
+              Token scanners analyze blockchain tokens to detect scams, vulnerabilities, and unhealthy token mechanics before you invest. These tools are critical for avoiding fraud and identifying promising projects in the volatile crypto ecosystem. For a comprehensive understanding, check out our <Link to="/token-scan-guide" className="text-primary hover:underline font-medium">complete token scanning guide</Link>.
             </p>
             
             <img 
@@ -101,10 +102,10 @@ export default function TokenSnifferComparison() {
             />
             
             <p className="text-lg text-muted-foreground mb-4 leading-relaxed">
-              In decentralized finance (DeFi), rapid token launches and limited regulation create high risk. Without scanning tools, investors face threats like honeypots, rug pulls, and hidden minting privileges. Using scanners helps reduce these risks.
+              In decentralized finance (DeFi), rapid token launches and limited regulation create high risk. Without scanning tools, investors face threats like honeypots, rug pulls, and hidden minting privileges. Using scanners helps reduce these risks, which is why <Link to="/" className="text-primary hover:underline font-medium">TokenHealthScan</Link> was built to provide comprehensive analysis.
             </p>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              This guide compares Token Sniffer and TokenHealthScan — two leading token analysis tools — based on scope, data depth, and real-world usefulness.
+              This guide compares <a href="https://tokensniffer.com/" target="_blank" rel="nofollow noopener noreferrer" className="text-primary hover:underline font-medium">Token Sniffer</a> and TokenHealthScan — two leading token analysis tools — based on scope, data depth, and real-world usefulness.
             </p>
           </section>
 
@@ -116,10 +117,10 @@ export default function TokenSnifferComparison() {
           <section className="mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-6">Final Verdict: Which Scanner Should You Use?</h2>
             <p className="text-lg text-muted-foreground mb-4 leading-relaxed">
-              If you only want fast contract checks, Token Sniffer works.
+              If you only want fast contract checks, <a href="https://tokensniffer.com/" target="_blank" rel="nofollow noopener noreferrer" className="text-primary hover:underline font-medium">Token Sniffer</a> works.
             </p>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              But if you're serious about avoiding scams and finding real opportunities, TokenHealthScan provides the insights you actually need — from verified API sources, not guesswork.
+              But if you're serious about avoiding scams and finding real opportunities, <Link to="/" className="text-primary hover:underline font-medium">TokenHealthScan</Link> provides the insights you actually need — from verified API sources like <a href="https://coingecko.com/" target="_blank" rel="nofollow noopener noreferrer" className="text-primary hover:underline font-medium">CoinGecko</a>, not guesswork.
             </p>
           </section>
 

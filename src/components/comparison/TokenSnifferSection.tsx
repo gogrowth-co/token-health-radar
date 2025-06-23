@@ -6,7 +6,7 @@ export default function TokenSnifferSection() {
     <section className="mb-12">
       <h2 className="text-2xl md:text-3xl font-bold mb-6">Token Sniffer: Quick Safety Checks, Limited Context</h2>
       <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-        Token Sniffer is a free, user-friendly tool that offers immediate feedback on the security and basic characteristics of Ethereum-based token contracts. It's designed for quick evaluations, providing essential information without requiring a login or any personal details.
+        <a href="https://tokensniffer.com/" target="_blank" rel="nofollow noopener noreferrer" className="text-primary hover:underline font-medium">Token Sniffer</a> is a free, user-friendly tool that offers immediate feedback on the security and basic characteristics of Ethereum-based token contracts. It's designed for quick evaluations, providing essential information without requiring a login or any personal details.
       </p>
       
       <div className="grid gap-3 mb-6">

@@ -1,5 +1,6 @@
 
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 export default function TokenHealthScanSection() {
   return (
@@ -8,7 +9,7 @@ export default function TokenHealthScanSection() {
       
       <h3 className="text-xl font-bold mb-4">What Is TokenHealthScan?</h3>
       <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-        TokenHealthScan is a comprehensive scanner designed to evaluate a token's long-term viability, moving beyond merely assessing immediate contract safety. It provides an in-depth analysis of various crucial aspects that contribute to a token's sustainable success and investment potential.
+        <Link to="/" className="text-primary hover:underline font-medium">TokenHealthScan</Link> is a comprehensive scanner designed to evaluate a token's long-term viability, moving beyond merely assessing immediate contract safety. It provides an in-depth analysis of various crucial aspects that contribute to a token's sustainable success and investment potential.
       </p>
 
       <img 
@@ -42,7 +43,7 @@ export default function TokenHealthScanSection() {
       </div>
 
       <p className="text-lg text-muted-foreground mb-6 leading-relaxed italic">
-        Analogy: Token Sniffer is a smoke detector. TokenHealthScan is a full home inspection.
+        Analogy: <a href="https://tokensniffer.com/" target="_blank" rel="nofollow noopener noreferrer" className="text-primary hover:underline font-medium">Token Sniffer</a> is a smoke detector. TokenHealthScan is a full home inspection.
       </p>
 
       <h3 className="text-xl font-bold mb-4">Verified Data Sources</h3>
@@ -64,7 +65,7 @@ export default function TokenHealthScanSection() {
               <td className="border border-border p-3">Liquidity locks, top wallets</td>
             </tr>
             <tr>
-              <td className="border border-border p-3">CoinGecko / DeFiLlama</td>
+              <td className="border border-border p-3"><a href="https://coingecko.com/" target="_blank" rel="nofollow noopener noreferrer" className="text-primary hover:underline font-medium">CoinGecko</a> / DeFiLlama</td>
               <td className="border border-border p-3">Price, market cap, TVL</td>
             </tr>
             <tr className="bg-muted/50">
