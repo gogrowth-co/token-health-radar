@@ -32,7 +32,7 @@ export default function TokenSnifferComparison() {
       "@type": "WebPage",
       "@id": "https://tokenhealthscan.com/token-sniffer-vs-tokenhealthscan"
     },
-    "image": "https://tokenhealthscan.com/lovable-uploads/3696f598-284d-4583-8dfd-954f23a4efc4.png",
+    "image": "https://tokenhealthscan.com/lovable-uploads/token-sniffer-vs-tokenhealthscan-cover.png",
     "keywords": ["token scanner", "Token Sniffer", "TokenHealthScan", "crypto analysis", "DeFi security", "token due diligence"],
     "wordCount": "2500",
     "articleSection": "Cryptocurrency",
@@ -55,7 +55,7 @@ export default function TokenSnifferComparison() {
         <meta property="og:description" content="Compare Token Sniffer and TokenHealthScan to find the best crypto token scanner. Learn how to avoid scams, spot legit projects, and invest smarter in DeFi." />
         <meta property="og:type" content="article" />
         <meta property="og:url" content="https://tokenhealthscan.com/token-sniffer-vs-tokenhealthscan" />
-        <meta property="og:image" content="https://tokenhealthscan.com/lovable-uploads/3696f598-284d-4583-8dfd-954f23a4efc4.png" />
+        <meta property="og:image" content="https://tokenhealthscan.com/lovable-uploads/token-sniffer-vs-tokenhealthscan-cover.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:site_name" content="TokenHealthScan" />
@@ -67,7 +67,7 @@ export default function TokenSnifferComparison() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Token Sniffer vs TokenHealthScan: What's Better for Scanning Tokens?" />
         <meta name="twitter:description" content="Compare Token Sniffer and TokenHealthScan to find the best crypto token scanner. Learn how to avoid scams, spot legit projects, and invest smarter in DeFi." />
-        <meta name="twitter:image" content="https://tokenhealthscan.com/lovable-uploads/3696f598-284d-4583-8dfd-954f23a4efc4.png" />
+        <meta name="twitter:image" content="https://tokenhealthscan.com/lovable-uploads/token-sniffer-vs-tokenhealthscan-cover.png" />
         
         {/* Additional SEO tags */}
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
@@ -94,7 +94,7 @@ export default function TokenSnifferComparison() {
             </p>
             
             <img 
-              src="/lovable-uploads/e4d09de1-470a-4847-8191-e2f3028c5504.png" 
+              src="/lovable-uploads/why-token-scanning-matters.png" 
               alt="Illustration showing the contrast between investing in a scam token without scanning versus using a token scanner to verify safety and fundamentals in Web3" 
               className="w-full max-w-4xl h-auto rounded-lg shadow-lg mb-6 mx-auto"
               loading="lazy"
