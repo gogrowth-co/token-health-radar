@@ -19,6 +19,7 @@ import LTDThankYou from "./pages/LTDThankYou";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import TokenScanGuide from "./pages/TokenScanGuide";
+import TokenSnifferComparison from "./pages/TokenSnifferComparison";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
 
@@ -81,6 +82,7 @@ const App = () => {
                     <Route path="/privacy" element={<Privacy />} />
                     <Route path="/terms" element={<Terms />} />
                     <Route path="/token-scan-guide" element={<TokenScanGuide />} />
+                    <Route path="/token-sniffer-vs-tokenhealthscan" element={<TokenSnifferComparison />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </ErrorBoundary>
