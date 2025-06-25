@@ -11,9 +11,9 @@ export default function UXOnboarding() {
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="bg-card p-6 rounded-lg border">
           <div className="flex items-center mb-4">
-            <img src="/lovable-uploads/pumpfun1.png" alt="Pump.fun interface" className="w-10 h-10 rounded mr-3" />
-            <h3 className="text-xl font-bold">Pump.fun</h3>
+            <img src="/lovable-uploads/pumpfun1.png" alt="Pump.fun interface" className="w-full max-w-md rounded mr-3" />
           </div>
+          <h3 className="text-xl font-bold mb-4">Pump.fun</h3>
           <div className="space-y-3 text-sm">
             <p><strong>Discovery:</strong> Feeds you the meme firehose. New tokens constantly refresh, sorted by volume or time created.</p>
             <p><strong>Wallet Connection:</strong> Clean, instant. One-click with Phantom, no KYC.</p>
@@ -25,9 +25,9 @@ export default function UXOnboarding() {
 
         <div className="bg-card p-6 rounded-lg border">
           <div className="flex items-center mb-4">
-            <img src="/lovable-uploads/letsbonk1.png" alt="Letsbonk.fun interface" className="w-10 h-10 rounded mr-3" />
-            <h3 className="text-xl font-bold">Letsbonk.fun</h3>
+            <img src="/lovable-uploads/letsbonk1.png" alt="Letsbonk.fun interface" className="w-full max-w-md rounded mr-3" />
           </div>
+          <h3 className="text-xl font-bold mb-4">Letsbonk.fun</h3>
           <div className="space-y-3 text-sm">
             <p><strong>Discovery:</strong> Similar grid-style layout as Pump, but with real-time stats like "Heating Up" and "Last Trade."</p>
             <p><strong>Wallet Connection:</strong> Seamless. Phantom and other common Solana wallets.</p>
@@ -39,9 +39,9 @@ export default function UXOnboarding() {
 
         <div className="bg-card p-6 rounded-lg border">
           <div className="flex items-center mb-4">
-            <img src="/lovable-uploads/believeapp1.png" alt="Believe App interface" className="w-10 h-10 rounded mr-3" />
-            <h3 className="text-xl font-bold">Believe App</h3>
+            <img src="/lovable-uploads/believeapp1.png" alt="Believe App interface" className="w-full max-w-md rounded mr-3" />
           </div>
+          <h3 className="text-xl font-bold mb-4">Believe App</h3>
           <div className="space-y-3 text-sm">
             <p><strong>Discovery:</strong> Feels more curated. Homepage showcases top launches and upcoming tokens.</p>
             <p><strong>Wallet Connection:</strong> Required for launch interaction. Supports standard Solana wallets.</p>
@@ -53,9 +53,9 @@ export default function UXOnboarding() {
 
         <div className="bg-card p-6 rounded-lg border">
           <div className="flex items-center mb-4">
-            <img src="/lovable-uploads/boopfun1.png" alt="Boop.fun interface" className="w-10 h-10 rounded mr-3" />
-            <h3 className="text-xl font-bold">Boop.fun</h3>
+            <img src="/lovable-uploads/boopfun1.png" alt="Boop.fun interface" className="w-full max-w-md rounded mr-3" />
           </div>
+          <h3 className="text-xl font-bold mb-4">Boop.fun</h3>
           <div className="space-y-3 text-sm">
             <p><strong>Discovery:</strong> Invite-only means less browsing, more direct links.</p>
             <p><strong>Wallet Connection:</strong> Smooth, minimal friction.</p>
@@ -67,9 +67,9 @@ export default function UXOnboarding() {
 
         <div className="bg-card p-6 rounded-lg border">
           <div className="flex items-center mb-4">
-            <img src="/lovable-uploads/devfun1.png" alt="Devfun interface" className="w-10 h-10 rounded mr-3" />
-            <h3 className="text-xl font-bold">Devfun</h3>
+            <img src="/lovable-uploads/devfun1.png" alt="Devfun interface" className="w-full max-w-md rounded mr-3" />
           </div>
+          <h3 className="text-xl font-bold mb-4">Devfun</h3>
           <div className="space-y-3 text-sm">
             <p><strong>Discovery:</strong> Mostly developer-focused, unclear UI from public side.</p>
             <p><strong>Wallet Connection:</strong> Expected but unconfirmed.</p>
@@ -80,6 +80,9 @@ export default function UXOnboarding() {
         </div>
 
         <div className="bg-card p-6 rounded-lg border">
+          <div className="flex items-center mb-4">
+            <img src="/lovable-uploads/metadao1.png" alt="MetaDAO interface" className="w-full max-w-md rounded mr-3" />
+          </div>
           <h3 className="text-xl font-bold mb-4">MetaDAO</h3>
           <div className="space-y-3 text-sm">
             <p><strong>Discovery:</strong> Proposal-based, not browsable in the traditional sense.</p>
