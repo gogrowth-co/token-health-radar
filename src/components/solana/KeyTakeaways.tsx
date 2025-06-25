@@ -45,7 +45,7 @@ export default function KeyTakeaways() {
           </div>
 
           <div className="bg-card p-6 rounded-lg border">
-            <h3 className="text-lg font-bold mb-3 text-red-600">5. Community quality > speculation.</h3>
+            <h3 className="text-lg font-bold mb-3 text-red-600">5. Community quality {"> "} speculation.</h3>
             <p className="text-sm text-muted-foreground">
               Platforms that attract speculative attention can generate noise, but not necessarily retention. Sustainable growth comes from engaging real users — not just early flippers.
             </p>
