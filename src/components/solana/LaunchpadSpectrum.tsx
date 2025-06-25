@@ -1,4 +1,3 @@
-
 export default function LaunchpadSpectrum() {
   return (
     <section className="mb-8 md:mb-16">
@@ -10,7 +9,7 @@ export default function LaunchpadSpectrum() {
         </p>
         
         <img 
-          src="/lovable-uploads/Permissionless-vs-Curated Platforms.png" 
+          src="/lovable-uploads/Permissionless-vs-Curated-Platforms.png" 
           alt="Spectrum comparison chart showing permissionless vs curated crypto platforms, from fully open launches like Pump.fun to highly curated platforms like MetaDAO"
           className="w-full rounded-lg shadow-lg mb-6 md:mb-8"
           loading="lazy"
