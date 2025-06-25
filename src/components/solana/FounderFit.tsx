@@ -10,9 +10,9 @@ export default function FounderFit() {
 
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="bg-card p-6 rounded-lg border">
-          <div className="flex items-center mb-4">
-            <img src="/lovable-uploads/meme degen.jpg" alt="Meme degen founder type" className="w-12 h-12 rounded-full mr-3 object-cover" />
-            <h3 className="text-xl font-bold text-green-600">Meme Degen</h3>
+          <div className="mb-4">
+            <img src="/lovable-uploads/meme degen.jpg" alt="Meme degen founder type" className="w-full max-w-md rounded-lg mx-auto mb-3 object-cover" />
+            <h3 className="text-xl font-bold text-green-600 text-center">Meme Degen</h3>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
             If your goal is pure speed and virality — think memes, vibes, and quick upside — you'll feel right at home on Pump.fun or Letsbonk.fun. These platforms thrive on frictionless creation and social momentum. No KYC, no gatekeeping, just launch and tweet. Perfect for riding a wave — but don't expect long-term support.
@@ -23,9 +23,9 @@ export default function FounderFit() {
         </div>
 
         <div className="bg-card p-6 rounded-lg border">
-          <div className="flex items-center mb-4">
-            <img src="/lovable-uploads/experimental dev.png" alt="Experimental developer founder type" className="w-12 h-12 rounded-full mr-3 object-cover" />
-            <h3 className="text-xl font-bold text-purple-600">Experimental Dev</h3>
+          <div className="mb-4">
+            <img src="/lovable-uploads/experimental dev.png" alt="Experimental developer founder type" className="w-full max-w-md rounded-lg mx-auto mb-3 object-cover" />
+            <h3 className="text-xl font-bold text-purple-600 text-center">Experimental Dev</h3>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
             Tinkering with mechanics? Building something weird and unproven? Devfun is your playground. It's not the most polished, but it's designed for devs to experiment publicly. Ideal for those who want to build in public with other devs and iterate based on feedback.
@@ -36,9 +36,9 @@ export default function FounderFit() {
         </div>
 
         <div className="bg-card p-6 rounded-lg border">
-          <div className="flex items-center mb-4">
-            <img src="/lovable-uploads/impact dao.jpg" alt="Impact DAO founder type" className="w-12 h-12 rounded-full mr-3 object-cover" />
-            <h3 className="text-xl font-bold text-blue-600">Impact DAO</h3>
+          <div className="mb-4">
+            <img src="/lovable-uploads/impact dao.jpg" alt="Impact DAO founder type" className="w-full max-w-md rounded-lg mx-auto mb-3 object-cover" />
+            <h3 className="text-xl font-bold text-blue-600 text-center">Impact DAO</h3>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
             If you're launching a DAO with real governance goals — think long-term value creation and shared decision-making. MetaDAO is your best bet. It's not built for memes or pump-and-dumps. It's built for legitimacy, structure, and collective intelligence. Token launches here are slower but more defensible.
@@ -49,9 +49,9 @@ export default function FounderFit() {
         </div>
 
         <div className="bg-card p-6 rounded-lg border">
-          <div className="flex items-center mb-4">
-            <img src="/lovable-uploads/influencer builder.png" alt="Influencer or community builder founder type" className="w-12 h-12 rounded-full mr-3 object-cover" />
-            <h3 className="text-xl font-bold text-orange-600">Influencer or Small Community Builder</h3>
+          <div className="mb-4">
+            <img src="/lovable-uploads/influencer builder.png" alt="Influencer or community builder founder type" className="w-full max-w-md rounded-lg mx-auto mb-3 object-cover" />
+            <h3 className="text-xl font-bold text-orange-600 text-center">Influencer or Small Community Builder</h3>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
             Got a loyal following but not a big dev team? Platforms like Boop.fun and Believe App are solid picks. They offer smoother UX and handle some of the backend mechanics for you. These are great for launching community tokens, creator coins, or small experiments without deep technical lift.
@@ -62,9 +62,9 @@ export default function FounderFit() {
         </div>
 
         <div className="bg-card p-6 rounded-lg border">
-          <div className="flex items-center mb-4">
-            <img src="/lovable-uploads/creator coin.png" alt="Creator coin founder type" className="w-12 h-12 rounded-full mr-3 object-cover" />
-            <h3 className="text-xl font-bold text-pink-600">Creator Coin Launch</h3>
+          <div className="mb-4">
+            <img src="/lovable-uploads/creator coin.png" alt="Creator coin founder type" className="w-full max-w-md rounded-lg mx-auto mb-3 object-cover" />
+            <h3 className="text-xl font-bold text-pink-600 text-center">Creator Coin Launch</h3>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
             Building a token around your personal brand or creative work? You need a platform that balances professionalism with accessibility. Look for tools that offer good branding options and community engagement features without overwhelming technical complexity.
