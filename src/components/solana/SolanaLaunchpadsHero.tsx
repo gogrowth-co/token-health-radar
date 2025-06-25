@@ -10,7 +10,7 @@ export default function SolanaLaunchpadsHero() {
       </h1>
       
       <img 
-        src="/lovable-uploads/solana-launchpads2.png" 
+        src="/lovable-uploads/solana launchpads2.png" 
         alt="Comprehensive overview of Solana launchpad ecosystem showing Pump.fun, MetaDAO, Boop.fun, and other major platforms for token launches"
         className="w-full max-w-4xl mx-auto mb-6 md:mb-8 rounded-lg shadow-lg"
         loading="eager"
