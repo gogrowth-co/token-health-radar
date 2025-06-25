@@ -1,4 +1,3 @@
-
 export default function FounderFit() {
   return (
     <section className="mb-16">
@@ -12,7 +11,7 @@ export default function FounderFit() {
         <div className="bg-card p-6 rounded-lg border">
           <div className="mb-4">
             <img 
-              src="/lovable-uploads/meme degen.jpg" 
+              src="/lovable-uploads/meme-degen.jpg" 
               alt="Meme degen founder type - person focused on viral meme tokens and quick social momentum" 
               className="w-full h-64 rounded-lg mx-auto mb-3 object-cover" 
               loading="lazy"
@@ -30,7 +29,7 @@ export default function FounderFit() {
         <div className="bg-card p-6 rounded-lg border">
           <div className="mb-4">
             <img 
-              src="/lovable-uploads/experimental dev.png" 
+              src="/lovable-uploads/experimental-dev.png" 
               alt="Experimental developer founder type - developer working on experimental blockchain projects" 
               className="w-full h-64 rounded-lg mx-auto mb-3 object-cover" 
               loading="lazy"
@@ -48,7 +47,7 @@ export default function FounderFit() {
         <div className="bg-card p-6 rounded-lg border">
           <div className="mb-4">
             <img 
-              src="/lovable-uploads/impact dao.jpg" 
+              src="/lovable-uploads/impact-dao.jpg" 
               alt="Impact DAO founder type - person focused on governance and collective decision-making" 
               className="w-full h-64 rounded-lg mx-auto mb-3 object-cover" 
               loading="lazy"
@@ -66,7 +65,7 @@ export default function FounderFit() {
         <div className="bg-card p-6 rounded-lg border">
           <div className="mb-4">
             <img 
-              src="/lovable-uploads/influencer builder.png" 
+              src="/lovable-uploads/influencer-builder.png" 
               alt="Influencer or community builder founder type - content creator building community tokens" 
               className="w-full h-64 rounded-lg mx-auto mb-3 object-cover" 
               loading="lazy"
@@ -84,7 +83,7 @@ export default function FounderFit() {
         <div className="bg-card p-6 rounded-lg border">
           <div className="mb-4">
             <img 
-              src="/lovable-uploads/creator coin.png" 
+              src="/lovable-uploads/creator-coin.png" 
               alt="Creator coin founder type - artist or creator launching personal brand tokens" 
               className="w-full h-64 rounded-lg mx-auto mb-3 object-cover" 
               loading="lazy"
