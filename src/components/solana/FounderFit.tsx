@@ -11,7 +11,12 @@ export default function FounderFit() {
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="bg-card p-6 rounded-lg border">
           <div className="mb-4">
-            <img src="/lovable-uploads/meme degen.jpg" alt="Meme degen founder type" className="w-full max-w-md rounded-lg mx-auto mb-3 object-cover" />
+            <img 
+              src="/lovable-uploads/meme degen.jpg" 
+              alt="Meme degen founder type - person focused on viral meme tokens and quick social momentum" 
+              className="w-full h-64 rounded-lg mx-auto mb-3 object-cover" 
+              loading="lazy"
+            />
             <h3 className="text-xl font-bold text-green-600 text-center">Meme Degen</h3>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
@@ -24,7 +29,12 @@ export default function FounderFit() {
 
         <div className="bg-card p-6 rounded-lg border">
           <div className="mb-4">
-            <img src="/lovable-uploads/experimental dev.png" alt="Experimental developer founder type" className="w-full max-w-md rounded-lg mx-auto mb-3 object-cover" />
+            <img 
+              src="/lovable-uploads/experimental dev.png" 
+              alt="Experimental developer founder type - developer working on experimental blockchain projects" 
+              className="w-full h-64 rounded-lg mx-auto mb-3 object-cover" 
+              loading="lazy"
+            />
             <h3 className="text-xl font-bold text-purple-600 text-center">Experimental Dev</h3>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
@@ -37,7 +47,12 @@ export default function FounderFit() {
 
         <div className="bg-card p-6 rounded-lg border">
           <div className="mb-4">
-            <img src="/lovable-uploads/impact dao.jpg" alt="Impact DAO founder type" className="w-full max-w-md rounded-lg mx-auto mb-3 object-cover" />
+            <img 
+              src="/lovable-uploads/impact dao.jpg" 
+              alt="Impact DAO founder type - person focused on governance and collective decision-making" 
+              className="w-full h-64 rounded-lg mx-auto mb-3 object-cover" 
+              loading="lazy"
+            />
             <h3 className="text-xl font-bold text-blue-600 text-center">Impact DAO</h3>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
@@ -50,7 +65,12 @@ export default function FounderFit() {
 
         <div className="bg-card p-6 rounded-lg border">
           <div className="mb-4">
-            <img src="/lovable-uploads/influencer builder.png" alt="Influencer or community builder founder type" className="w-full max-w-md rounded-lg mx-auto mb-3 object-cover" />
+            <img 
+              src="/lovable-uploads/influencer builder.png" 
+              alt="Influencer or community builder founder type - content creator building community tokens" 
+              className="w-full h-64 rounded-lg mx-auto mb-3 object-cover" 
+              loading="lazy"
+            />
             <h3 className="text-xl font-bold text-orange-600 text-center">Influencer or Small Community Builder</h3>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
@@ -63,7 +83,12 @@ export default function FounderFit() {
 
         <div className="bg-card p-6 rounded-lg border">
           <div className="mb-4">
-            <img src="/lovable-uploads/creator coin.png" alt="Creator coin founder type" className="w-full max-w-md rounded-lg mx-auto mb-3 object-cover" />
+            <img 
+              src="/lovable-uploads/creator coin.png" 
+              alt="Creator coin founder type - artist or creator launching personal brand tokens" 
+              className="w-full h-64 rounded-lg mx-auto mb-3 object-cover" 
+              loading="lazy"
+            />
             <h3 className="text-xl font-bold text-pink-600 text-center">Creator Coin Launch</h3>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
