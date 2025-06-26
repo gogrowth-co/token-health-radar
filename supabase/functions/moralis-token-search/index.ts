@@ -15,6 +15,7 @@ interface MoralisTokenResult {
   chain: string;
   decimals?: number;
   verified_contract?: boolean;
+  possible_spam?: boolean;
 }
 
 interface MoralisSearchResponse {
@@ -48,49 +49,71 @@ serve(async (req) => {
 
     console.log(`[MORALIS-SEARCH] Searching for: "${searchTerm}"`);
 
-    // Use the correct Moralis API endpoint for token metadata search
-    const moralisUrl = `https://deep-index.moralis.io/api/v2/erc20/metadata?chain=eth&addresses=${encodeURIComponent(searchTerm)}`;
+    // Check if input is an address
+    const isAddress = /^(0x)?[0-9a-fA-F]{40}$/i.test(searchTerm.trim());
     
-    // If it's not an address, try the search endpoint
-    const isAddress = /^(0x)?[0-9a-fA-F]{40}$/i.test(searchTerm);
-    let finalUrl = moralisUrl;
+    let results: MoralisTokenResult[] = [];
     
-    if (!isAddress) {
-      // For name search, we'll use a different approach
-      // Since Moralis doesn't have a direct name search, we'll return a helpful message
-      return new Response(
-        JSON.stringify({
-          tokens: [],
-          count: 0,
-          message: 'Please enter a token contract address. Name search coming soon.'
-        }),
-        { 
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json' 
-          } 
-        }
-      );
-    }
-    
-    const response = await fetch(finalUrl, {
-      headers: {
-        'X-API-Key': moralisApiKey,
-        'Accept': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      console.error(`[MORALIS-SEARCH] API Error: ${response.status} ${response.statusText}`);
-      const errorText = await response.text();
-      console.error(`[MORALIS-SEARCH] Error details: ${errorText}`);
+    if (isAddress) {
+      // Search by address across multiple chains
+      const chains = ['eth', 'polygon', 'bsc', 'arbitrum', 'avalanche', 'optimism', 'base'];
+      const cleanAddress = searchTerm.startsWith('0x') ? searchTerm : `0x${searchTerm}`;
       
-      if (response.status === 404) {
+      for (const chain of chains) {
+        try {
+          const response = await fetch(
+            `https://deep-index.moralis.io/api/v2/erc20/metadata?chain=${chain}&addresses=${cleanAddress}`,
+            {
+              headers: {
+                'X-API-Key': moralisApiKey,
+                'Accept': 'application/json',
+              },
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data) && data.length > 0) {
+              results.push(...data.map(token => ({ ...token, chain })));
+            }
+          }
+        } catch (error) {
+          console.log(`[MORALIS-SEARCH] Chain ${chain} search failed:`, error);
+          // Continue with other chains
+        }
+      }
+    } else {
+      // Search by name/symbol using the search endpoint
+      try {
+        const response = await fetch(
+          `https://deep-index.moralis.io/api/v2/erc20/metadata/symbols?chain=eth&symbols=${encodeURIComponent(searchTerm)}`,
+          {
+            headers: {
+              'X-API-Key': moralisApiKey,
+              'Accept': 'application/json',
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            results = data.map(token => ({ ...token, chain: 'eth' }));
+          }
+        }
+      } catch (error) {
+        console.error(`[MORALIS-SEARCH] Symbol search failed:`, error);
+      }
+
+      // If no results from symbol search, try searching popular tokens by name match
+      if (results.length === 0) {
+        // This is a fallback - in production you might want to use a different approach
+        // or maintain a database of popular tokens for name-based search
         return new Response(
           JSON.stringify({
             tokens: [],
             count: 0,
-            message: 'Token not found. Please check the contract address.'
+            message: `No tokens found for "${searchTerm}". Try searching by token symbol or contract address.`
           }),
           { 
             headers: { 
@@ -100,29 +123,26 @@ serve(async (req) => {
           }
         );
       }
-      
-      throw new Error(`Moralis API Error: ${response.status}`);
     }
 
-    const data: MoralisTokenResult[] = await response.json();
-    console.log(`[MORALIS-SEARCH] Found ${data?.length || 0} tokens`);
+    console.log(`[MORALIS-SEARCH] Found ${results.length} tokens`);
 
-    // Transform Moralis results to our format
-    const transformedTokens = (Array.isArray(data) ? data : [data])
+    // Transform results to our format
+    const transformedTokens = results
       .filter(token => token && token.address && token.name && token.symbol)
+      .filter(token => !token.possible_spam) // Filter out spam tokens
       .map(token => ({
-        id: `eth-${token.address}`,
+        id: `${token.chain}-${token.address}`,
         name: token.name,
         symbol: token.symbol.toUpperCase(),
         address: token.address,
-        chain: 'eth',
+        chain: token.chain,
         logo: token.logo || token.thumbnail || '',
         verified: token.verified_contract || false,
         decimals: token.decimals || 18,
-        // Create a search-friendly display
         title: `${token.symbol.toUpperCase()} — ${token.name}`,
-        subtitle: 'Ethereum',
-        value: `eth/${token.address}`
+        subtitle: getChainDisplayName(token.chain),
+        value: `${token.chain}/${token.address}`
       }))
       .slice(0, limit);
 
@@ -161,3 +181,17 @@ serve(async (req) => {
     );
   }
 });
+
+function getChainDisplayName(chain: string): string {
+  const chainNames: Record<string, string> = {
+    'eth': 'Ethereum',
+    'polygon': 'Polygon',
+    'bsc': 'BSC',
+    'arbitrum': 'Arbitrum',
+    'avalanche': 'Avalanche',
+    'optimism': 'Optimism',
+    'base': 'Base',
+    'fantom': 'Fantom'
+  };
+  return chainNames[chain.toLowerCase()] || chain.charAt(0).toUpperCase() + chain.slice(1);
+}

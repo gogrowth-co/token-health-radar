@@ -28,7 +28,7 @@ interface TokenSearchAutocompleteProps {
 }
 
 export default function TokenSearchAutocomplete({ 
-  placeholder = "Search token name or paste address...",
+  placeholder = "Search by name, symbol, or contract address...",
   onSelect,
   className = ""
 }: TokenSearchAutocompleteProps) {
@@ -151,7 +151,7 @@ export default function TokenSearchAutocomplete({
     
     if (!searchTerm.trim()) {
       toast.error("Empty search", {
-        description: "Please enter a token contract address"
+        description: "Please enter a token name, symbol, or contract address"
       });
       return;
     }
@@ -164,9 +164,8 @@ export default function TokenSearchAutocomplete({
       // Select first result if available
       handleSelectToken(results[0]);
     } else {
-      toast.error("Invalid input", {
-        description: "Please enter a valid token contract address (0x...)"
-      });
+      // Try to search again or show helpful message
+      performSearch(searchTerm);
     }
   };
 
@@ -279,12 +278,12 @@ export default function TokenSearchAutocomplete({
           ) : searchMessage ? (
             <div className="px-4 py-6 text-center text-muted-foreground">
               <div className="text-sm">{searchMessage}</div>
-              <div className="text-xs mt-1">Currently supports Ethereum contract addresses</div>
+              <div className="text-xs mt-1">Try searching by symbol (e.g., "ETH", "USDC") or paste a contract address</div>
             </div>
           ) : searchTerm.trim() && !isLoading ? (
             <div className="px-4 py-6 text-center text-muted-foreground">
               <div className="text-sm">😕 No tokens found</div>
-              <div className="text-xs mt-1">Please enter a valid contract address (0x...)</div>
+              <div className="text-xs mt-1">Try searching by symbol or contract address</div>
             </div>
           ) : null}
         </div>
