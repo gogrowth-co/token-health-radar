@@ -22,199 +22,52 @@ interface MoralisSearchResponse {
   result: MoralisTokenResult[];
 }
 
-interface MoralisLogoResult {
-  address: string;
-  logo?: string;
-  logo_hash?: string;
-}
+// Chain logo URLs
+const CHAIN_LOGOS: Record<string, string> = {
+  'eth': 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+  'polygon': 'https://cryptologos.cc/logos/polygon-matic-logo.png',
+  'bsc': 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
+  'arbitrum': 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
+  'avalanche': 'https://cryptologos.cc/logos/avalanche-avax-logo.png',
+  'optimism': 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
+  'base': 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png',
+  'fantom': 'https://cryptologos.cc/logos/fantom-ftm-logo.png'
+};
 
-// Enhanced function to fetch token logos using the dedicated logos endpoint
+// Simplified function to fetch token logos using individual metadata calls
 async function fetchTokenLogosFromMoralis(tokens: MoralisTokenResult[], moralisApiKey: string): Promise<MoralisTokenResult[]> {
-  console.log(`[MORALIS-SEARCH] Starting logo fetch for ${tokens.length} tokens`);
-  
-  // Group tokens by chain for batch processing
-  const tokensByChain = tokens.reduce((acc, token) => {
-    if (!acc[token.chain]) {
-      acc[token.chain] = [];
-    }
-    acc[token.chain].push(token);
-    return acc;
-  }, {} as Record<string, MoralisTokenResult[]>);
-
-  const enhancedTokens: MoralisTokenResult[] = [];
-
-  // Process each chain separately
-  for (const [chain, chainTokens] of Object.entries(tokensByChain)) {
-    console.log(`[MORALIS-SEARCH] Processing ${chainTokens.length} tokens on ${chain}`);
-    
-    // Collect addresses for this chain
-    const addresses = chainTokens.map(token => token.address);
-    
-    try {
-      // Try the metadata/logos endpoint for batch logo fetching
-      if (addresses.length > 0) {
-        const logoResponse = await fetch(
-          `https://deep-index.moralis.io/api/v2/erc20/metadata/logos?chain=${chain}`,
-          {
-            method: 'POST',
-            headers: {
-              'X-API-Key': moralisApiKey,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ addresses }),
-          }
-        );
-
-        if (logoResponse.ok) {
-          const logoData: MoralisLogoResult[] = await logoResponse.json();
-          console.log(`[MORALIS-SEARCH] Got ${logoData.length} logo results for ${chain}`);
-          
-          // Create a map of address -> logo for quick lookup
-          const logoMap = logoData.reduce((acc, item) => {
-            if (item.logo) {
-              acc[item.address.toLowerCase()] = item.logo;
-            }
-            return acc;
-          }, {} as Record<string, string>);
-
-          // Apply logos to tokens
-          for (const token of chainTokens) {
-            const logo = logoMap[token.address.toLowerCase()];
-            if (logo) {
-              console.log(`[MORALIS-SEARCH] Found Moralis logo for ${token.symbol}: ${logo}`);
-              enhancedTokens.push({ ...token, logo, thumbnail: logo });
-            } else {
-              // Try individual metadata call as fallback
-              try {
-                const individualResponse = await fetch(
-                  `https://deep-index.moralis.io/api/v2/erc20/${token.address}/metadata?chain=${chain}`,
-                  {
-                    headers: {
-                      'X-API-Key': moralisApiKey,
-                      'Accept': 'application/json',
-                    },
-                  }
-                );
-
-                if (individualResponse.ok) {
-                  const individualData = await individualResponse.json();
-                  if (individualData.logo) {
-                    console.log(`[MORALIS-SEARCH] Found individual logo for ${token.symbol}: ${individualData.logo}`);
-                    enhancedTokens.push({ ...token, logo: individualData.logo, thumbnail: individualData.logo });
-                    continue;
-                  }
-                }
-              } catch (error) {
-                console.log(`[MORALIS-SEARCH] Individual fetch failed for ${token.symbol}:`, error);
-              }
-
-              // No logo found, add without logo
-              enhancedTokens.push(token);
-            }
-          }
-        } else {
-          console.log(`[MORALIS-SEARCH] Batch logo fetch failed for ${chain}:`, logoResponse.status);
-          // Add tokens without logos
-          enhancedTokens.push(...chainTokens);
-        }
-      }
-    } catch (error) {
-      console.error(`[MORALIS-SEARCH] Logo fetch error for ${chain}:`, error);
-      // Add tokens without logos
-      enhancedTokens.push(...chainTokens);
-    }
-
-    // Small delay between chains to avoid rate limiting
-    await new Promise(resolve => setTimeout(resolve, 200));
-  }
-
-  return enhancedTokens;
-}
-
-// Enhanced CoinGecko fallback using contract address
-async function enhanceWithCoinGeckoLogos(tokens: MoralisTokenResult[]): Promise<MoralisTokenResult[]> {
-  console.log(`[MORALIS-SEARCH] Starting CoinGecko logo enhancement for ${tokens.length} tokens`);
+  console.log(`[MORALIS-SEARCH] Starting individual logo fetch for ${tokens.length} tokens`);
   
   const enhancedTokens: MoralisTokenResult[] = [];
-  
+
   for (const token of tokens) {
-    // Skip if already has logo
-    if (token.logo) {
-      enhancedTokens.push(token);
-      continue;
-    }
-
-    // Try CoinGecko for popular tokens or if we have a contract address
     try {
-      // Map chain names to CoinGecko platform IDs
-      const chainToPlatform: Record<string, string> = {
-        'eth': 'ethereum',
-        'polygon': 'polygon-pos',
-        'bsc': 'binance-smart-chain',
-        'arbitrum': 'arbitrum-one',
-        'avalanche': 'avalanche',
-        'optimism': 'optimistic-ethereum',
-        'base': 'base'
-      };
-
-      const platform = chainToPlatform[token.chain];
-      
-      if (platform && token.address) {
-        const coinGeckoResponse = await fetch(
-          `https://api.coingecko.com/api/v3/coins/${platform}/contract/${token.address}`,
-          { 
-            headers: { 'Accept': 'application/json' },
-            signal: AbortSignal.timeout(5000) // 5 second timeout
-          }
-        );
-        
-        if (coinGeckoResponse.ok) {
-          const coinGeckoData = await coinGeckoResponse.json();
-          if (coinGeckoData.image?.large) {
-            console.log(`[MORALIS-SEARCH] Found CoinGecko logo for ${token.symbol}: ${coinGeckoData.image.large}`);
-            enhancedTokens.push({ 
-              ...token, 
-              logo: coinGeckoData.image.large, 
-              thumbnail: coinGeckoData.image.small || coinGeckoData.image.large 
-            });
-            continue;
-          }
+      // Try individual metadata call to get logo
+      const response = await fetch(
+        `https://deep-index.moralis.io/api/v2/erc20/${token.address}/metadata?chain=${token.chain}`,
+        {
+          headers: {
+            'X-API-Key': moralisApiKey,
+            'Accept': 'application/json',
+          },
         }
-      }
+      );
 
-      // Fallback: Try by symbol for very popular tokens
-      if (['ETH', 'USDC', 'USDT', 'BTC', 'WETH', 'DAI', 'LINK', 'UNI', 'AAVE', 'COMP'].includes(token.symbol.toUpperCase())) {
-        try {
-          const symbolResponse = await fetch(
-            `https://api.coingecko.com/api/v3/coins/${token.symbol.toLowerCase()}`,
-            { 
-              headers: { 'Accept': 'application/json' },
-              signal: AbortSignal.timeout(3000) // 3 second timeout
-            }
-          );
-          
-          if (symbolResponse.ok) {
-            const symbolData = await symbolResponse.json();
-            if (symbolData.image?.large) {
-              console.log(`[MORALIS-SEARCH] Found CoinGecko symbol logo for ${token.symbol}: ${symbolData.image.large}`);
-              enhancedTokens.push({ 
-                ...token, 
-                logo: symbolData.image.large, 
-                thumbnail: symbolData.image.small || symbolData.image.large 
-              });
-              continue;
-            }
-          }
-        } catch (error) {
-          console.log(`[MORALIS-SEARCH] CoinGecko symbol fallback failed for ${token.symbol}:`, error);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.logo) {
+          console.log(`[MORALIS-SEARCH] Found logo for ${token.symbol}: ${data.logo}`);
+          enhancedTokens.push({ ...token, logo: data.logo, thumbnail: data.logo });
+        } else {
+          console.log(`[MORALIS-SEARCH] No logo found for ${token.symbol}`);
+          enhancedTokens.push(token);
         }
+      } else {
+        console.log(`[MORALIS-SEARCH] Metadata fetch failed for ${token.symbol}: ${response.status}`);
+        enhancedTokens.push(token);
       }
-
-      // No logo found, add without logo
-      enhancedTokens.push(token);
-
     } catch (error) {
-      console.log(`[MORALIS-SEARCH] CoinGecko lookup failed for ${token.symbol}:`, error);
+      console.error(`[MORALIS-SEARCH] Logo fetch error for ${token.symbol}:`, error);
       enhancedTokens.push(token);
     }
 
@@ -335,17 +188,13 @@ serve(async (req) => {
 
     console.log(`[MORALIS-SEARCH] Found ${results.length} tokens before logo enhancement`);
 
-    // Step 1: Enhance with Moralis logos
-    const tokensWithMoralisLogos = await fetchTokenLogosFromMoralis(results, moralisApiKey);
-    console.log(`[MORALIS-SEARCH] After Moralis logo fetch: ${tokensWithMoralisLogos.filter(t => t.logo).length}/${tokensWithMoralisLogos.length} have logos`);
-
-    // Step 2: Enhance remaining tokens with CoinGecko logos
-    const finalEnhancedTokens = await enhanceWithCoinGeckoLogos(tokensWithMoralisLogos);
-    console.log(`[MORALIS-SEARCH] After CoinGecko enhancement: ${finalEnhancedTokens.filter(t => t.logo).length}/${finalEnhancedTokens.length} have logos`);
+    // Enhanced logo fetching with individual calls
+    const tokensWithLogos = await fetchTokenLogosFromMoralis(results, moralisApiKey);
+    console.log(`[MORALIS-SEARCH] After logo fetch: ${tokensWithLogos.filter(t => t.logo).length}/${tokensWithLogos.length} have logos`);
 
     // Transform results and remove duplicates
     const seenTokens = new Set();
-    const transformedTokens = finalEnhancedTokens
+    const transformedTokens = tokensWithLogos
       .filter(token => token && token.address && token.name && token.symbol)
       .filter(token => !token.possible_spam)
       .filter(token => {
@@ -371,6 +220,7 @@ serve(async (req) => {
           address: token.address,
           chain: token.chain,
           logo: token.logo || token.thumbnail || '',
+          chainLogo: CHAIN_LOGOS[token.chain] || '',
           verified: token.verified_contract || false,
           decimals: token.decimals || 18,
           title: `${token.symbol.toUpperCase()} — ${token.name}`,
