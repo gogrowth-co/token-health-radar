@@ -1,6 +1,5 @@
-
 import { useState, useEffect, useRef } from "react";
-import { Search, ChevronDown } from "lucide-react";
+import { Search, ChevronDown, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +25,77 @@ interface TokenSearchAutocompleteProps {
   onSelect?: (token: TokenSearchResult) => void;
   className?: string;
 }
+
+// Chain priority for sorting
+const CHAIN_PRIORITY: Record<string, number> = {
+  'eth': 1,
+  'arbitrum': 2,
+  'bsc': 3,
+  'polygon': 4,
+  'base': 5,
+  'optimism': 6,
+  'avalanche': 7,
+};
+
+// Enhanced chain display names with better formatting
+const getChainDisplayName = (chain: string) => {
+  const chainNames: Record<string, string> = {
+    'eth': 'Ethereum',
+    'polygon': 'Polygon',
+    'bsc': 'BSC',
+    'arbitrum': 'Arbitrum',
+    'avalanche': 'Avalanche',
+    'optimism': 'Optimism',
+    'base': 'Base',
+    'fantom': 'Fantom'
+  };
+  return chainNames[chain.toLowerCase()] || chain.charAt(0).toUpperCase() + chain.slice(1);
+};
+
+// Chain colors for badges
+const getChainBadgeVariant = (chain: string): "default" | "secondary" | "destructive" | "outline" | "blue" => {
+  const chainColors: Record<string, "default" | "secondary" | "destructive" | "outline" | "blue"> = {
+    'eth': 'blue',
+    'polygon': 'secondary',
+    'bsc': 'default',
+    'arbitrum': 'outline',
+    'base': 'blue',
+    'optimism': 'destructive',
+    'avalanche': 'secondary'
+  };
+  return chainColors[chain.toLowerCase()] || 'outline';
+};
+
+// Text highlighting utility
+const highlightText = (text: string, searchTerm: string) => {
+  if (!searchTerm.trim()) return text;
+  
+  const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+  
+  return parts.map((part, index) => 
+    regex.test(part) ? (
+      <mark key={index} className="bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded">
+        {part}
+      </mark>
+    ) : part
+  );
+};
+
+// Sort tokens by chain priority
+const sortTokensByChain = (tokens: TokenSearchResult[]) => {
+  return tokens.sort((a, b) => {
+    const priorityA = CHAIN_PRIORITY[a.chain] || 999;
+    const priorityB = CHAIN_PRIORITY[b.chain] || 999;
+    
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+    
+    // If same chain priority, sort by symbol alphabetically
+    return a.symbol.localeCompare(b.symbol);
+  });
+};
 
 export default function TokenSearchAutocomplete({ 
   placeholder = "Search by name, symbol, or contract address...",
@@ -70,7 +140,7 @@ export default function TokenSearchAutocomplete({
       console.log(`[TOKEN-AUTOCOMPLETE] Searching for: "${query}"`);
 
       const { data, error } = await supabase.functions.invoke('moralis-token-search', {
-        body: { searchTerm: query, limit: 8 }
+        body: { searchTerm: query, limit: 12 }
       });
 
       if (error) {
@@ -88,9 +158,12 @@ export default function TokenSearchAutocomplete({
       
       console.log(`[TOKEN-AUTOCOMPLETE] Found ${tokens.length} tokens`);
       
-      setResults(tokens);
+      // Sort tokens by chain priority
+      const sortedTokens = sortTokensByChain(tokens);
+      
+      setResults(sortedTokens);
       setSearchMessage(message);
-      setIsOpen(tokens.length > 0 || message.length > 0);
+      setIsOpen(sortedTokens.length > 0 || message.length > 0);
 
     } catch (err: any) {
       console.error('[TOKEN-AUTOCOMPLETE] Search exception:', err);
@@ -115,7 +188,6 @@ export default function TokenSearchAutocomplete({
     if (onSelect) {
       onSelect(token);
     } else {
-      // Default behavior: navigate to scan page
       navigate(`/scan/${token.value}`);
     }
   };
@@ -182,20 +254,6 @@ export default function TokenSearchAutocomplete({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const getChainDisplayName = (chain: string) => {
-    const chainNames: Record<string, string> = {
-      'eth': 'Ethereum',
-      'polygon': 'Polygon',
-      'bsc': 'BSC',
-      'arbitrum': 'Arbitrum',
-      'avalanche': 'Avalanche',
-      'optimism': 'Optimism',
-      'base': 'Base',
-      'fantom': 'Fantom'
-    };
-    return chainNames[chain.toLowerCase()] || chain.charAt(0).toUpperCase() + chain.slice(1);
-  };
-
   return (
     <div ref={searchRef} className={`relative w-full max-w-lg ${className}`}>
       <form onSubmit={handleSubmit} className="relative">
@@ -222,7 +280,7 @@ export default function TokenSearchAutocomplete({
         <Button type="submit" className="sr-only">Search</Button>
       </form>
 
-      {/* Results dropdown */}
+      {/* Enhanced Results dropdown */}
       {isOpen && (
         <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border rounded-lg shadow-lg max-h-80 overflow-y-auto">
           {results.length > 0 ? (
@@ -231,12 +289,12 @@ export default function TokenSearchAutocomplete({
                 <button
                   key={token.id}
                   onClick={() => handleSelectToken(token)}
-                  className={`w-full px-4 py-3 text-left hover:bg-muted/50 transition-colors flex items-center gap-3 ${
-                    index === selectedIndex ? 'bg-muted' : ''
+                  className={`w-full px-4 py-4 text-left hover:bg-muted/20 transition-all duration-200 flex items-center gap-4 group ${
+                    index === selectedIndex ? 'bg-muted/30' : ''
                   }`}
                 >
-                  {/* Token logo */}
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                  {/* Enhanced Token logo with fallback */}
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center overflow-hidden shadow-sm">
                     {token.logo ? (
                       <img 
                         src={token.logo} 
@@ -245,30 +303,39 @@ export default function TokenSearchAutocomplete({
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
+                          target.nextElementSibling?.classList.remove('hidden');
                         }}
                       />
-                    ) : (
-                      <span className="text-xs font-medium text-muted-foreground">
-                        {token.symbol.slice(0, 2)}
-                      </span>
-                    )}
+                    ) : null}
+                    <span className={`text-sm font-bold text-gray-600 dark:text-gray-300 ${token.logo ? 'hidden' : ''}`}>
+                      {token.symbol.slice(0, 2).toUpperCase()}
+                    </span>
                   </div>
 
-                  {/* Token info */}
-                  <div className="flex-1 min-w-0">
+                  {/* Enhanced Token info */}
+                  <div className="flex-1 min-w-0 space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{token.symbol}</span>
-                      <span className="text-muted-foreground">—</span>
-                      <span className="text-sm text-muted-foreground truncate">{token.name}</span>
+                      <span className="font-bold text-base text-foreground">
+                        {highlightText(token.symbol, searchTerm)}
+                      </span>
+                      {token.verified && (
+                        <CheckCircle className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                      )}
                     </div>
-                    <div className="text-xs text-muted-foreground truncate mt-0.5">
+                    <div className="text-sm text-muted-foreground">
+                      {highlightText(token.name, searchTerm)}
+                    </div>
+                    <div className="text-xs font-mono text-muted-foreground/80 truncate bg-muted/30 px-2 py-1 rounded">
                       {token.address}
                     </div>
                   </div>
 
-                  {/* Chain badge */}
+                  {/* Enhanced Chain badge */}
                   <div className="flex-shrink-0">
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge 
+                      variant={getChainBadgeVariant(token.chain)} 
+                      className="text-xs font-medium px-2 py-1 shadow-sm"
+                    >
                       {getChainDisplayName(token.chain)}
                     </Badge>
                   </div>
@@ -276,14 +343,18 @@ export default function TokenSearchAutocomplete({
               ))}
             </div>
           ) : searchMessage ? (
-            <div className="px-4 py-6 text-center text-muted-foreground">
-              <div className="text-sm">{searchMessage}</div>
-              <div className="text-xs mt-1">Try searching by symbol (e.g., "ETH", "USDC") or paste a contract address</div>
+            <div className="px-6 py-8 text-center text-muted-foreground">
+              <div className="text-sm font-medium">{searchMessage}</div>
+              <div className="text-xs mt-2 text-muted-foreground/70">
+                Try searching by symbol (e.g., "ETH", "USDC") or paste a contract address
+              </div>
             </div>
           ) : searchTerm.trim() && !isLoading ? (
-            <div className="px-4 py-6 text-center text-muted-foreground">
-              <div className="text-sm">😕 No tokens found</div>
-              <div className="text-xs mt-1">Try searching by symbol or contract address</div>
+            <div className="px-6 py-8 text-center text-muted-foreground">
+              <div className="text-sm font-medium">😕 No tokens found</div>
+              <div className="text-xs mt-2 text-muted-foreground/70">
+                Try searching by symbol or contract address
+              </div>
             </div>
           ) : null}
         </div>
