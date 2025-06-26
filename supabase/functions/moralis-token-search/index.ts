@@ -18,10 +18,6 @@ interface MoralisTokenResult {
   possible_spam?: boolean;
 }
 
-interface MoralisSearchResponse {
-  result: MoralisTokenResult[];
-}
-
 // Chain logo URLs
 const CHAIN_LOGOS: Record<string, string> = {
   'eth': 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
@@ -33,52 +29,6 @@ const CHAIN_LOGOS: Record<string, string> = {
   'base': 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png',
   'fantom': 'https://cryptologos.cc/logos/fantom-ftm-logo.png'
 };
-
-// Simplified function to fetch token logos using individual metadata calls
-async function fetchTokenLogosFromMoralis(tokens: MoralisTokenResult[], moralisApiKey: string): Promise<MoralisTokenResult[]> {
-  console.log(`[MORALIS-SEARCH] Starting individual logo fetch for ${tokens.length} tokens`);
-  
-  const enhancedTokens: MoralisTokenResult[] = [];
-
-  for (const token of tokens) {
-    try {
-      // Try individual metadata call to get logo
-      const response = await fetch(
-        `https://deep-index.moralis.io/api/v2/erc20/${token.address}/metadata?chain=${token.chain}`,
-        {
-          headers: {
-            'X-API-Key': moralisApiKey,
-            'Accept': 'application/json',
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.logo) {
-          console.log(`[MORALIS-SEARCH] Found logo for ${token.symbol}: ${data.logo}`);
-          enhancedTokens.push({ ...token, logo: data.logo, thumbnail: data.logo });
-        } else {
-          console.log(`[MORALIS-SEARCH] No logo found for ${token.symbol}`);
-          enhancedTokens.push(token);
-        }
-      } else {
-        console.log(`[MORALIS-SEARCH] Metadata fetch failed for ${token.symbol}: ${response.status}`);
-        enhancedTokens.push(token);
-      }
-    } catch (error) {
-      console.error(`[MORALIS-SEARCH] Logo fetch error for ${token.symbol}:`, error);
-      enhancedTokens.push(token);
-    }
-
-    // Small delay to avoid rate limiting
-    if (tokens.indexOf(token) < tokens.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-  }
-
-  return enhancedTokens;
-}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -113,14 +63,14 @@ serve(async (req) => {
     let results: MoralisTokenResult[] = [];
     
     if (isAddress) {
-      // Search by address across multiple chains
+      // Search by address across multiple chains using metadata endpoint
       const chains = ['eth', 'polygon', 'bsc', 'arbitrum', 'avalanche', 'optimism', 'base'];
       const cleanAddress = searchTerm.startsWith('0x') ? searchTerm : `0x${searchTerm}`;
       
       for (const chain of chains) {
         try {
           const response = await fetch(
-            `https://deep-index.moralis.io/api/v2/erc20/${cleanAddress}/metadata?chain=${chain}`,
+            `https://deep-index.moralis.io/api/v2.2/erc20/${cleanAddress}/metadata?chain=${chain}`,
             {
               headers: {
                 'X-API-Key': moralisApiKey,
@@ -132,7 +82,11 @@ serve(async (req) => {
           if (response.ok) {
             const data = await response.json();
             if (data && data.address) {
-              console.log(`[MORALIS-SEARCH] Found token on ${chain}:`, data);
+              console.log(`[MORALIS-SEARCH] Found token on ${chain}:`, {
+                name: data.name,
+                symbol: data.symbol,
+                logo: data.logo
+              });
               results.push({ ...data, chain });
             }
           }
@@ -142,12 +96,13 @@ serve(async (req) => {
         }
       }
     } else {
-      // For symbol/name search, use the symbols endpoint
+      // For symbol/name search, first get addresses then get metadata with logos
       const chains = ['eth', 'polygon', 'bsc', 'arbitrum', 'avalanche', 'optimism', 'base'];
       
       for (const chain of chains) {
         try {
-          const response = await fetch(
+          // First get token addresses
+          const symbolResponse = await fetch(
             `https://deep-index.moralis.io/api/v2/erc20/metadata/symbols?chain=${chain}&symbols=${encodeURIComponent(searchTerm)}`,
             {
               headers: {
@@ -157,11 +112,42 @@ serve(async (req) => {
             }
           );
 
-          if (response.ok) {
-            const data = await response.json();
-            if (Array.isArray(data) && data.length > 0) {
-              console.log(`[MORALIS-SEARCH] Found ${data.length} tokens on ${chain}`);
-              results.push(...data.map(token => ({ ...token, chain })));
+          if (symbolResponse.ok) {
+            const symbolData = await symbolResponse.json();
+            if (Array.isArray(symbolData) && symbolData.length > 0) {
+              console.log(`[MORALIS-SEARCH] Found ${symbolData.length} addresses on ${chain}`);
+              
+              // Now get metadata (including logos) for each token
+              for (const token of symbolData) {
+                try {
+                  const metadataResponse = await fetch(
+                    `https://deep-index.moralis.io/api/v2.2/erc20/${token.address}/metadata?chain=${chain}`,
+                    {
+                      headers: {
+                        'X-API-Key': moralisApiKey,
+                        'Accept': 'application/json',
+                      },
+                    }
+                  );
+
+                  if (metadataResponse.ok) {
+                    const metadata = await metadataResponse.json();
+                    if (metadata && metadata.address) {
+                      console.log(`[MORALIS-SEARCH] Got metadata for ${metadata.symbol} on ${chain}:`, {
+                        name: metadata.name,
+                        symbol: metadata.symbol,
+                        logo: metadata.logo
+                      });
+                      results.push({ ...metadata, chain });
+                    }
+                  }
+                  
+                  // Small delay to avoid rate limiting
+                  await new Promise(resolve => setTimeout(resolve, 50));
+                } catch (error) {
+                  console.error(`[MORALIS-SEARCH] Metadata fetch error for ${token.address}:`, error);
+                }
+              }
             }
           }
         } catch (error) {
@@ -186,15 +172,11 @@ serve(async (req) => {
       }
     }
 
-    console.log(`[MORALIS-SEARCH] Found ${results.length} tokens before logo enhancement`);
-
-    // Enhanced logo fetching with individual calls
-    const tokensWithLogos = await fetchTokenLogosFromMoralis(results, moralisApiKey);
-    console.log(`[MORALIS-SEARCH] After logo fetch: ${tokensWithLogos.filter(t => t.logo).length}/${tokensWithLogos.length} have logos`);
+    console.log(`[MORALIS-SEARCH] Found ${results.length} tokens with logos: ${results.filter(t => t.logo).length}`);
 
     // Transform results and remove duplicates
     const seenTokens = new Set();
-    const transformedTokens = tokensWithLogos
+    const transformedTokens = results
       .filter(token => token && token.address && token.name && token.symbol)
       .filter(token => !token.possible_spam)
       .filter(token => {
@@ -209,7 +191,6 @@ serve(async (req) => {
         console.log(`[MORALIS-SEARCH] Final token data for ${token.symbol}:`, {
           name: token.name,
           logo: token.logo,
-          thumbnail: token.thumbnail,
           chain: token.chain
         });
         
@@ -219,7 +200,7 @@ serve(async (req) => {
           symbol: token.symbol.toUpperCase(),
           address: token.address,
           chain: token.chain,
-          logo: token.logo || token.thumbnail || '',
+          logo: token.logo || '',
           chainLogo: CHAIN_LOGOS[token.chain] || '',
           verified: token.verified_contract || false,
           decimals: token.decimals || 18,
