@@ -83,37 +83,40 @@ serve(async (req) => {
         }
       }
     } else {
-      // Search by name/symbol using the search endpoint
-      try {
-        const response = await fetch(
-          `https://deep-index.moralis.io/api/v2/erc20/metadata/symbols?chain=eth&symbols=${encodeURIComponent(searchTerm)}`,
-          {
-            headers: {
-              'X-API-Key': moralisApiKey,
-              'Accept': 'application/json',
-            },
-          }
-        );
+      // Search by name/symbol across multiple chains
+      const chains = ['eth', 'polygon', 'bsc', 'arbitrum', 'avalanche', 'optimism', 'base'];
+      
+      for (const chain of chains) {
+        try {
+          const response = await fetch(
+            `https://deep-index.moralis.io/api/v2/erc20/metadata/symbols?chain=${chain}&symbols=${encodeURIComponent(searchTerm)}`,
+            {
+              headers: {
+                'X-API-Key': moralisApiKey,
+                'Accept': 'application/json',
+              },
+            }
+          );
 
-        if (response.ok) {
-          const data = await response.json();
-          if (Array.isArray(data)) {
-            results = data.map(token => ({ ...token, chain: 'eth' }));
+          if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data) && data.length > 0) {
+              results.push(...data.map(token => ({ ...token, chain })));
+            }
           }
+        } catch (error) {
+          console.error(`[MORALIS-SEARCH] Symbol search failed for ${chain}:`, error);
+          // Continue with other chains
         }
-      } catch (error) {
-        console.error(`[MORALIS-SEARCH] Symbol search failed:`, error);
       }
 
-      // If no results from symbol search, try searching popular tokens by name match
+      // If no results from multi-chain symbol search, return helpful message
       if (results.length === 0) {
-        // This is a fallback - in production you might want to use a different approach
-        // or maintain a database of popular tokens for name-based search
         return new Response(
           JSON.stringify({
             tokens: [],
             count: 0,
-            message: `No tokens found for "${searchTerm}". Try searching by token symbol or contract address.`
+            message: `No tokens found for "${searchTerm}" across supported chains. Try a different symbol or paste a contract address.`
           }),
           { 
             headers: { 
@@ -125,12 +128,22 @@ serve(async (req) => {
       }
     }
 
-    console.log(`[MORALIS-SEARCH] Found ${results.length} tokens`);
+    console.log(`[MORALIS-SEARCH] Found ${results.length} tokens across chains`);
 
-    // Transform results to our format
+    // Transform results to our format and remove duplicates
+    const seenTokens = new Set();
     const transformedTokens = results
       .filter(token => token && token.address && token.name && token.symbol)
       .filter(token => !token.possible_spam) // Filter out spam tokens
+      .filter(token => {
+        // Remove duplicates based on chain + address combination
+        const tokenKey = `${token.chain}-${token.address}`;
+        if (seenTokens.has(tokenKey)) {
+          return false;
+        }
+        seenTokens.add(tokenKey);
+        return true;
+      })
       .map(token => ({
         id: `${token.chain}-${token.address}`,
         name: token.name,
