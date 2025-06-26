@@ -63,12 +63,16 @@ serve(async (req) => {
     let results: MoralisTokenResult[] = [];
     
     if (isAddress) {
-      // Search by address across multiple chains using metadata endpoint
+      // Direct address search - use metadata endpoint
       const chains = ['eth', 'polygon', 'bsc', 'arbitrum', 'avalanche', 'optimism', 'base'];
       const cleanAddress = searchTerm.startsWith('0x') ? searchTerm : `0x${searchTerm}`;
       
+      console.log(`[MORALIS-SEARCH] Address search for: ${cleanAddress}`);
+      
       for (const chain of chains) {
         try {
+          console.log(`[MORALIS-SEARCH] Checking ${chain} for address ${cleanAddress}`);
+          
           const response = await fetch(
             `https://deep-index.moralis.io/api/v2.2/erc20/${cleanAddress}/metadata?chain=${chain}`,
             {
@@ -79,122 +83,85 @@ serve(async (req) => {
             }
           );
 
+          console.log(`[MORALIS-SEARCH] ${chain} response status: ${response.status}`);
+
           if (response.ok) {
             const data = await response.json();
+            console.log(`[MORALIS-SEARCH] ${chain} response data:`, JSON.stringify(data, null, 2));
+            
             if (data && data.address) {
-              console.log(`[MORALIS-SEARCH] Found token on ${chain}:`, {
-                name: data.name,
-                symbol: data.symbol,
-                logo: data.logo
-              });
+              console.log(`[MORALIS-SEARCH] Found token on ${chain}: ${data.name} (${data.symbol}) with logo: ${data.logo || 'none'}`);
               results.push({ ...data, chain });
             }
+          } else {
+            console.log(`[MORALIS-SEARCH] ${chain} request failed with status: ${response.status}`);
           }
         } catch (error) {
-          console.log(`[MORALIS-SEARCH] Chain ${chain} search failed:`, error);
-          // Continue with other chains
+          console.error(`[MORALIS-SEARCH] Error checking ${chain}:`, error);
         }
       }
     } else {
-      // For symbol/name search, first get addresses then get metadata with logos
-      const chains = ['eth', 'polygon', 'bsc', 'arbitrum', 'avalanche', 'optimism', 'base'];
+      // Symbol/name search - for now, return a helpful message
+      console.log(`[MORALIS-SEARCH] Symbol search requested for: "${searchTerm}"`);
       
-      for (const chain of chains) {
-        try {
-          // First get token addresses
-          const symbolResponse = await fetch(
-            `https://deep-index.moralis.io/api/v2/erc20/metadata/symbols?chain=${chain}&symbols=${encodeURIComponent(searchTerm)}`,
-            {
-              headers: {
-                'X-API-Key': moralisApiKey,
-                'Accept': 'application/json',
-              },
-            }
-          );
-
-          if (symbolResponse.ok) {
-            const symbolData = await symbolResponse.json();
-            if (Array.isArray(symbolData) && symbolData.length > 0) {
-              console.log(`[MORALIS-SEARCH] Found ${symbolData.length} addresses on ${chain}`);
-              
-              // Now get metadata (including logos) for each token
-              for (const token of symbolData) {
-                try {
-                  const metadataResponse = await fetch(
-                    `https://deep-index.moralis.io/api/v2.2/erc20/${token.address}/metadata?chain=${chain}`,
-                    {
-                      headers: {
-                        'X-API-Key': moralisApiKey,
-                        'Accept': 'application/json',
-                      },
-                    }
-                  );
-
-                  if (metadataResponse.ok) {
-                    const metadata = await metadataResponse.json();
-                    if (metadata && metadata.address) {
-                      console.log(`[MORALIS-SEARCH] Got metadata for ${metadata.symbol} on ${chain}:`, {
-                        name: metadata.name,
-                        symbol: metadata.symbol,
-                        logo: metadata.logo
-                      });
-                      results.push({ ...metadata, chain });
-                    }
-                  }
-                  
-                  // Small delay to avoid rate limiting
-                  await new Promise(resolve => setTimeout(resolve, 50));
-                } catch (error) {
-                  console.error(`[MORALIS-SEARCH] Metadata fetch error for ${token.address}:`, error);
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.error(`[MORALIS-SEARCH] Symbol search failed for ${chain}:`, error);
+      return new Response(
+        JSON.stringify({
+          tokens: [],
+          count: 0,
+          message: `Symbol search for "${searchTerm}" is currently unavailable. Please paste the contract address instead for accurate results with logos.`
+        }),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
         }
-      }
-
-      if (results.length === 0) {
-        return new Response(
-          JSON.stringify({
-            tokens: [],
-            count: 0,
-            message: `No tokens found for "${searchTerm}" across supported chains. Try a different symbol or paste a contract address.`
-          }),
-          { 
-            headers: { 
-              ...corsHeaders, 
-              'Content-Type': 'application/json' 
-            } 
-          }
-        );
-      }
+      );
     }
 
-    console.log(`[MORALIS-SEARCH] Found ${results.length} tokens with logos: ${results.filter(t => t.logo).length}`);
+    console.log(`[MORALIS-SEARCH] Total results found: ${results.length}`);
+
+    if (results.length === 0) {
+      return new Response(
+        JSON.stringify({
+          tokens: [],
+          count: 0,
+          message: isAddress 
+            ? `No token found for address "${searchTerm}" across supported chains.`
+            : `No tokens found for "${searchTerm}". Try pasting a contract address instead.`
+        }),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    }
 
     // Transform results and remove duplicates
     const seenTokens = new Set();
     const transformedTokens = results
-      .filter(token => token && token.address && token.name && token.symbol)
-      .filter(token => !token.possible_spam)
       .filter(token => {
+        if (!token || !token.address || !token.name || !token.symbol) {
+          console.log(`[MORALIS-SEARCH] Filtering out invalid token:`, token);
+          return false;
+        }
+        if (token.possible_spam) {
+          console.log(`[MORALIS-SEARCH] Filtering out spam token: ${token.symbol}`);
+          return false;
+        }
+        
         const tokenKey = `${token.chain}-${token.address}`;
         if (seenTokens.has(tokenKey)) {
+          console.log(`[MORALIS-SEARCH] Filtering out duplicate: ${tokenKey}`);
           return false;
         }
         seenTokens.add(tokenKey);
         return true;
       })
       .map(token => {
-        console.log(`[MORALIS-SEARCH] Final token data for ${token.symbol}:`, {
-          name: token.name,
-          logo: token.logo,
-          chain: token.chain
-        });
-        
-        return {
+        const transformedToken = {
           id: `${token.chain}-${token.address}`,
           name: token.name,
           symbol: token.symbol.toUpperCase(),
@@ -208,10 +175,14 @@ serve(async (req) => {
           subtitle: getChainDisplayName(token.chain),
           value: `${token.chain}/${token.address}`
         };
+        
+        console.log(`[MORALIS-SEARCH] Transformed token: ${transformedToken.symbol} - Logo: ${transformedToken.logo || 'none'}`);
+        return transformedToken;
       })
       .slice(0, limit);
 
-    console.log(`[MORALIS-SEARCH] Returning ${transformedTokens.length} tokens, ${transformedTokens.filter(t => t.logo).length} with logos`);
+    const tokensWithLogos = transformedTokens.filter(t => t.logo).length;
+    console.log(`[MORALIS-SEARCH] Returning ${transformedTokens.length} tokens, ${tokensWithLogos} with logos`);
 
     return new Response(
       JSON.stringify({
