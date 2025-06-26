@@ -37,6 +37,7 @@ export default function TokenSearchAutocomplete({
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [searchMessage, setSearchMessage] = useState("");
   
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,6 +48,7 @@ export default function TokenSearchAutocomplete({
     if (!searchTerm.trim()) {
       setResults([]);
       setIsOpen(false);
+      setSearchMessage("");
       return;
     }
 
@@ -62,6 +64,7 @@ export default function TokenSearchAutocomplete({
 
     setIsLoading(true);
     setSelectedIndex(-1);
+    setSearchMessage("");
 
     try {
       console.log(`[TOKEN-AUTOCOMPLETE] Searching for: "${query}"`);
@@ -76,14 +79,18 @@ export default function TokenSearchAutocomplete({
           description: "Unable to search tokens. Please try again."
         });
         setResults([]);
+        setSearchMessage("Search failed. Please try again.");
         return;
       }
 
       const tokens = data?.tokens || [];
+      const message = data?.message || "";
+      
       console.log(`[TOKEN-AUTOCOMPLETE] Found ${tokens.length} tokens`);
       
       setResults(tokens);
-      setIsOpen(tokens.length > 0);
+      setSearchMessage(message);
+      setIsOpen(tokens.length > 0 || message.length > 0);
 
     } catch (err: any) {
       console.error('[TOKEN-AUTOCOMPLETE] Search exception:', err);
@@ -91,6 +98,7 @@ export default function TokenSearchAutocomplete({
         description: "Something went wrong. Please try again."
       });
       setResults([]);
+      setSearchMessage("Search error. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -102,6 +110,7 @@ export default function TokenSearchAutocomplete({
     setSearchTerm(`${token.symbol} — ${token.name}`);
     setIsOpen(false);
     setResults([]);
+    setSearchMessage("");
 
     if (onSelect) {
       onSelect(token);
@@ -142,7 +151,7 @@ export default function TokenSearchAutocomplete({
     
     if (!searchTerm.trim()) {
       toast.error("Empty search", {
-        description: "Please enter a token name or address"
+        description: "Please enter a token contract address"
       });
       return;
     }
@@ -155,8 +164,8 @@ export default function TokenSearchAutocomplete({
       // Select first result if available
       handleSelectToken(results[0]);
     } else {
-      toast.error("No tokens found", {
-        description: "Try a different search term or paste a token address"
+      toast.error("Invalid input", {
+        description: "Please enter a valid token contract address (0x...)"
       });
     }
   };
@@ -267,10 +276,15 @@ export default function TokenSearchAutocomplete({
                 </button>
               ))}
             </div>
+          ) : searchMessage ? (
+            <div className="px-4 py-6 text-center text-muted-foreground">
+              <div className="text-sm">{searchMessage}</div>
+              <div className="text-xs mt-1">Currently supports Ethereum contract addresses</div>
+            </div>
           ) : searchTerm.trim() && !isLoading ? (
             <div className="px-4 py-6 text-center text-muted-foreground">
               <div className="text-sm">😕 No tokens found</div>
-              <div className="text-xs mt-1">Try a different search term or paste a token address</div>
+              <div className="text-xs mt-1">Please enter a valid contract address (0x...)</div>
             </div>
           ) : null}
         </div>
