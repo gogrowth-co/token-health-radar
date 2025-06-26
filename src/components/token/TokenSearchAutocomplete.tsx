@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Search, ChevronDown, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -53,13 +54,13 @@ const getChainDisplayName = (chain: string) => {
 };
 
 // Chain colors for badges
-const getChainBadgeVariant = (chain: string): "default" | "secondary" | "destructive" | "outline" | "blue" => {
-  const chainColors: Record<string, "default" | "secondary" | "destructive" | "outline" | "blue"> = {
-    'eth': 'blue',
+const getChainBadgeVariant = (chain: string): "default" | "secondary" | "destructive" | "outline" => {
+  const chainColors: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+    'eth': 'default',
     'polygon': 'secondary',
-    'bsc': 'default',
-    'arbitrum': 'outline',
-    'base': 'blue',
+    'bsc': 'outline',
+    'arbitrum': 'secondary',
+    'base': 'default',
     'optimism': 'destructive',
     'avalanche': 'secondary'
   };
@@ -282,55 +283,61 @@ export default function TokenSearchAutocomplete({
 
       {/* Enhanced Results dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border rounded-lg shadow-lg max-h-80 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-80 overflow-y-auto">
           {results.length > 0 ? (
             <div className="py-2">
               {results.map((token, index) => (
                 <button
                   key={token.id}
                   onClick={() => handleSelectToken(token)}
-                  className={`w-full px-4 py-4 text-left hover:bg-muted/20 transition-all duration-200 flex items-center gap-4 group ${
-                    index === selectedIndex ? 'bg-muted/30' : ''
+                  className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 flex items-center gap-3 group ${
+                    index === selectedIndex ? 'bg-gray-50 dark:bg-gray-800' : ''
                   }`}
+                  role="option"
+                  aria-selected={index === selectedIndex}
                 >
-                  {/* Enhanced Token logo with fallback */}
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center overflow-hidden shadow-sm">
+                  {/* Token logo with proper fallback */}
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center overflow-hidden shadow-sm border border-gray-200 dark:border-gray-600">
                     {token.logo ? (
                       <img 
                         src={token.logo} 
-                        alt={token.symbol}
+                        alt={`${token.symbol} logo`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          target.nextElementSibling?.classList.remove('hidden');
+                          const img = e.target as HTMLImageElement;
+                          img.style.display = 'none';
+                          const fallback = img.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
                         }}
                       />
                     ) : null}
-                    <span className={`text-sm font-bold text-gray-600 dark:text-gray-300 ${token.logo ? 'hidden' : ''}`}>
+                    <div 
+                      className={`w-full h-full flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300 ${token.logo ? 'hidden' : 'flex'}`}
+                      style={{ display: token.logo ? 'none' : 'flex' }}
+                    >
                       {token.symbol.slice(0, 2).toUpperCase()}
-                    </span>
+                    </div>
                   </div>
 
-                  {/* Enhanced Token info */}
+                  {/* Token information */}
                   <div className="flex-1 min-w-0 space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-base text-foreground">
+                      <span className="font-bold text-base text-gray-900 dark:text-gray-100">
                         {highlightText(token.symbol, searchTerm)}
                       </span>
                       {token.verified && (
                         <CheckCircle className="w-4 h-4 text-blue-500 flex-shrink-0" />
                       )}
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
                       {highlightText(token.name, searchTerm)}
                     </div>
-                    <div className="text-xs font-mono text-muted-foreground/80 truncate bg-muted/30 px-2 py-1 rounded">
+                    <div className="text-xs font-mono text-gray-500 dark:text-gray-500 truncate bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
                       {token.address}
                     </div>
                   </div>
 
-                  {/* Enhanced Chain badge */}
+                  {/* Chain badge */}
                   <div className="flex-shrink-0">
                     <Badge 
                       variant={getChainBadgeVariant(token.chain)} 
@@ -343,16 +350,16 @@ export default function TokenSearchAutocomplete({
               ))}
             </div>
           ) : searchMessage ? (
-            <div className="px-6 py-8 text-center text-muted-foreground">
+            <div className="px-6 py-8 text-center text-gray-600 dark:text-gray-400">
               <div className="text-sm font-medium">{searchMessage}</div>
-              <div className="text-xs mt-2 text-muted-foreground/70">
+              <div className="text-xs mt-2 text-gray-500 dark:text-gray-500">
                 Try searching by symbol (e.g., "ETH", "USDC") or paste a contract address
               </div>
             </div>
           ) : searchTerm.trim() && !isLoading ? (
-            <div className="px-6 py-8 text-center text-muted-foreground">
+            <div className="px-6 py-8 text-center text-gray-600 dark:text-gray-400">
               <div className="text-sm font-medium">😕 No tokens found</div>
-              <div className="text-xs mt-2 text-muted-foreground/70">
+              <div className="text-xs mt-2 text-gray-500 dark:text-gray-500">
                 Try searching by symbol or contract address
               </div>
             </div>
