@@ -15,7 +15,7 @@ interface MoralisTokenMetadata {
   decimals?: number;
   verified_contract?: boolean;
   possible_spam?: boolean;
-  chain: string;
+  chain?: string; // Made optional since it might be undefined
 }
 
 interface TokenResult {
@@ -172,16 +172,30 @@ async function searchBySymbol(searchTerm: string, limit: number): Promise<TokenR
 
     for (const token of data) {
       try {
-        // Filter out spam tokens
+        // Filter out spam tokens early
         if (token.possible_spam) {
-          console.log(`[MORALIS-SEARCH] Filtering out spam token: ${token.symbol} on ${token.chain}`);
+          console.log(`[MORALIS-SEARCH] Filtering out spam token: ${token.symbol} on ${token.chain || 'unknown chain'}`);
+          continue;
+        }
+
+        // CRITICAL: Filter out tokens without valid chain information
+        if (!token.chain || token.chain === undefined || token.chain === null) {
+          console.log(`[MORALIS-SEARCH] Filtering out token without chain info: ${token.name} (${token.symbol})`);
+          continue;
+        }
+
+        // CRITICAL: Filter out tokens without valid address
+        if (!token.address || token.address === undefined || token.address === null) {
+          console.log(`[MORALIS-SEARCH] Filtering out token without address: ${token.name} (${token.symbol})`);
           continue;
         }
 
         console.log(`[MORALIS-SEARCH] Processing token: ${token.name} (${token.symbol}) on ${token.chain} with logo: ${token.logo || 'none'}`);
         
         const transformedToken = transformTokenData(token);
-        results.push(transformedToken);
+        if (transformedToken) {
+          results.push(transformedToken);
+        }
         
         // Limit results
         if (results.length >= limit) {
@@ -189,6 +203,7 @@ async function searchBySymbol(searchTerm: string, limit: number): Promise<TokenR
         }
       } catch (error) {
         console.error(`[MORALIS-SEARCH] Error processing token ${token.address}:`, error);
+        // Continue processing other tokens even if one fails
       }
     }
 
@@ -242,7 +257,10 @@ async function searchByAddress(searchTerm: string): Promise<TokenResult[]> {
         if (tokenData && tokenData.address && !tokenData.possible_spam) {
           // Add chain info to the token data
           const tokenWithChain = { ...tokenData, chain };
-          results.push(transformTokenData(tokenWithChain));
+          const transformedToken = transformTokenData(tokenWithChain);
+          if (transformedToken) {
+            results.push(transformedToken);
+          }
         }
       }
     } catch (error) {
@@ -253,24 +271,46 @@ async function searchByAddress(searchTerm: string): Promise<TokenResult[]> {
   return results;
 }
 
-function transformTokenData(tokenData: MoralisTokenMetadata): TokenResult {
-  return {
-    id: `${tokenData.chain}-${tokenData.address}`,
-    name: tokenData.name,
-    symbol: tokenData.symbol.toUpperCase(),
-    address: tokenData.address,
-    chain: tokenData.chain,
-    logo: tokenData.logo || '',
-    chainLogo: CHAIN_LOGOS[tokenData.chain] || '',
-    verified: tokenData.verified_contract || false,
-    decimals: tokenData.decimals || 18,
-    title: `${tokenData.symbol.toUpperCase()} — ${tokenData.name}`,
-    subtitle: getChainDisplayName(tokenData.chain),
-    value: `${tokenData.chain}/${tokenData.address}`
-  };
+function transformTokenData(tokenData: MoralisTokenMetadata): TokenResult | null {
+  // CRITICAL: Validate required fields before transformation
+  if (!tokenData.chain || !tokenData.address || !tokenData.name || !tokenData.symbol) {
+    console.log(`[MORALIS-SEARCH] Skipping token with missing required fields:`, {
+      chain: tokenData.chain,
+      address: tokenData.address,
+      name: tokenData.name,
+      symbol: tokenData.symbol
+    });
+    return null;
+  }
+
+  try {
+    return {
+      id: `${tokenData.chain}-${tokenData.address}`,
+      name: tokenData.name,
+      symbol: tokenData.symbol.toUpperCase(),
+      address: tokenData.address,
+      chain: tokenData.chain,
+      logo: tokenData.logo || '',
+      chainLogo: CHAIN_LOGOS[tokenData.chain] || '',
+      verified: tokenData.verified_contract || false,
+      decimals: tokenData.decimals || 18,
+      title: `${tokenData.symbol.toUpperCase()} — ${tokenData.name}`,
+      subtitle: getChainDisplayName(tokenData.chain),
+      value: `${tokenData.chain}/${tokenData.address}`
+    };
+  } catch (error) {
+    console.error(`[MORALIS-SEARCH] Error transforming token data:`, error);
+    return null;
+  }
 }
 
-function getChainDisplayName(chain: string): string {
+function getChainDisplayName(chain: string | undefined | null): string {
+  // CRITICAL: Handle undefined/null chain gracefully
+  if (!chain || chain === undefined || chain === null) {
+    console.log(`[MORALIS-SEARCH] Warning: getChainDisplayName called with invalid chain: ${chain}`);
+    return 'Unknown Chain';
+  }
+
   const chainNames: Record<string, string> = {
     'eth': 'Ethereum',
     'polygon': 'Polygon',
@@ -281,5 +321,6 @@ function getChainDisplayName(chain: string): string {
     'base': 'Base',
     'fantom': 'Fantom'
   };
+  
   return chainNames[chain.toLowerCase()] || chain.charAt(0).toUpperCase() + chain.slice(1);
 }
