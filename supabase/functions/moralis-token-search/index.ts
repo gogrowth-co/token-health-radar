@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import Moralis from 'npm:moralis@latest';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -71,6 +72,9 @@ serve(async (req) => {
 
     console.log(`[MORALIS-SEARCH] Searching for: "${searchTerm}"`);
 
+    // Initialize Moralis
+    await Moralis.start({ apiKey: moralisApiKey });
+
     // Check if input is an address
     const isAddress = /^(0x)?[0-9a-fA-F]{40}$/i.test(searchTerm.trim());
     
@@ -78,10 +82,10 @@ serve(async (req) => {
     
     if (isAddress) {
       console.log(`[MORALIS-SEARCH] Address search for: ${searchTerm}`);
-      results = await searchByAddress(searchTerm.trim(), moralisApiKey);
+      results = await searchByAddress(searchTerm.trim());
     } else {
       console.log(`[MORALIS-SEARCH] Symbol search for: ${searchTerm}`);
-      results = await searchBySymbol(searchTerm.trim(), moralisApiKey, limit);
+      results = await searchBySymbol(searchTerm.trim(), limit);
     }
 
     console.log(`[MORALIS-SEARCH] Total results found: ${results.length}`);
@@ -143,36 +147,20 @@ serve(async (req) => {
   }
 });
 
-async function searchBySymbol(searchTerm: string, apiKey: string, limit: number): Promise<TokenResult[]> {
-  // Capitalize the symbol as required by Moralis API
+async function searchBySymbol(searchTerm: string, limit: number): Promise<TokenResult[]> {
   const capitalizedSymbol = searchTerm.toUpperCase();
   
   console.log(`[MORALIS-SEARCH] Multi-chain symbol search for: "${capitalizedSymbol}"`);
   
   try {
-    // Use the correct Moralis endpoint for symbol-based metadata lookup
-    // This endpoint searches across all chains in one call
-    const response = await fetch(
-      `https://deep-index.moralis.io/api/v2.2/erc20/metadata/symbols?symbols=["${capitalizedSymbol}"]`,
-      {
-        headers: {
-          'X-API-Key': apiKey,
-          'Accept': 'application/json',
-        },
-      }
-    );
+    // Use the Moralis SDK method for symbol-based metadata lookup
+    const response = await Moralis.EvmApi.token.getTokenMetadataBySymbol({
+      symbols: [capitalizedSymbol]
+    });
 
-    console.log(`[MORALIS-SEARCH] API Response Status: ${response.status}`);
+    console.log(`[MORALIS-SEARCH] API Response:`, response.raw);
 
-    if (!response.ok) {
-      console.error(`[MORALIS-SEARCH] API Error: ${response.status} ${response.statusText}`);
-      const errorText = await response.text();
-      console.error(`[MORALIS-SEARCH] Error Details: ${errorText}`);
-      return [];
-    }
-
-    const data: MoralisTokenMetadata[] = await response.json();
-    console.log(`[MORALIS-SEARCH] Raw API Response:`, JSON.stringify(data, null, 2));
+    const data: MoralisTokenMetadata[] = response.raw;
     console.log(`[MORALIS-SEARCH] Found ${data.length} tokens across all chains`);
 
     if (!Array.isArray(data) || data.length === 0) {
@@ -230,7 +218,7 @@ async function searchBySymbol(searchTerm: string, apiKey: string, limit: number)
   }
 }
 
-async function searchByAddress(searchTerm: string, apiKey: string): Promise<TokenResult[]> {
+async function searchByAddress(searchTerm: string): Promise<TokenResult[]> {
   const cleanAddress = searchTerm.startsWith('0x') ? searchTerm : `0x${searchTerm}`;
   const results: TokenResult[] = [];
   
@@ -241,23 +229,19 @@ async function searchByAddress(searchTerm: string, apiKey: string): Promise<Toke
     try {
       console.log(`[MORALIS-SEARCH] Checking ${chain} for address ${cleanAddress}`);
       
-      const response = await fetch(
-        `https://deep-index.moralis.io/api/v2.2/erc20/${cleanAddress}/metadata?chain=${chain}`,
-        {
-          headers: {
-            'X-API-Key': apiKey,
-            'Accept': 'application/json',
-          },
-        }
-      );
+      const response = await Moralis.EvmApi.token.getTokenMetadata({
+        chain: chain,
+        addresses: [cleanAddress]
+      });
 
-      if (response.ok) {
-        const data: MoralisTokenMetadata = await response.json();
-        console.log(`[MORALIS-SEARCH] Found token on ${chain}: ${data.name} (${data.symbol}) with logo: ${data.logo || 'none'}`);
+      const data = response.raw;
+      if (data && Array.isArray(data) && data.length > 0) {
+        const tokenData = data[0];
+        console.log(`[MORALIS-SEARCH] Found token on ${chain}: ${tokenData.name} (${tokenData.symbol}) with logo: ${tokenData.logo || 'none'}`);
         
-        if (data && data.address && !data.possible_spam) {
+        if (tokenData && tokenData.address && !tokenData.possible_spam) {
           // Add chain info to the token data
-          const tokenWithChain = { ...data, chain };
+          const tokenWithChain = { ...tokenData, chain };
           results.push(transformTokenData(tokenWithChain));
         }
       }
