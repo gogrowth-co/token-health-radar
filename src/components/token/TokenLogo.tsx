@@ -4,12 +4,26 @@ import { useState } from 'react';
 interface TokenLogoProps {
   logo: string;
   symbol: string;
+  chain?: string;
   className?: string;
 }
 
-export default function TokenLogo({ logo, symbol, className = "w-10 h-10" }: TokenLogoProps) {
+// Chain logos mapping
+const CHAIN_LOGOS: Record<string, string> = {
+  eth: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+  polygon: 'https://cryptologos.cc/logos/polygon-matic-logo.png',
+  bsc: 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
+  arbitrum: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
+  avalanche: 'https://cryptologos.cc/logos/avalanche-avax-logo.png',
+  optimism: 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
+  base: 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png',
+  fantom: 'https://cryptologos.cc/logos/fantom-ftm-logo.png'
+};
+
+export default function TokenLogo({ logo, symbol, chain, className = "w-10 h-10" }: TokenLogoProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [chainImageError, setChainImageError] = useState(false);
 
   const handleImageError = () => {
     setImageError(true);
@@ -19,12 +33,20 @@ export default function TokenLogo({ logo, symbol, className = "w-10 h-10" }: Tok
     setImageLoaded(true);
   };
 
-  // Show fallback if no logo provided or image failed to load
-  const showFallback = !logo || imageError;
+  const handleChainImageError = () => {
+    setChainImageError(true);
+  };
+
+  // Determine what to show based on priority: token logo → chain logo → initials
+  const hasTokenLogo = logo && !imageError;
+  const chainLogo = chain ? CHAIN_LOGOS[chain.toLowerCase()] : null;
+  const hasChainLogo = chainLogo && !chainImageError;
+  const showFallback = !hasTokenLogo && !hasChainLogo;
 
   return (
     <div className={`${className} rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center overflow-hidden shadow-sm border border-gray-200 dark:border-gray-600 relative`}>
-      {!showFallback && (
+      {/* Token logo (highest priority) */}
+      {hasTokenLogo && (
         <img 
           src={logo} 
           alt={`${symbol} logo`}
@@ -35,12 +57,26 @@ export default function TokenLogo({ logo, symbol, className = "w-10 h-10" }: Tok
           onLoad={handleImageLoad}
         />
       )}
+      
+      {/* Chain logo fallback (second priority) */}
+      {!hasTokenLogo && hasChainLogo && (
+        <img 
+          src={chainLogo} 
+          alt={`${chain} chain logo`}
+          className="w-full h-full object-cover"
+          onError={handleChainImageError}
+        />
+      )}
+      
+      {/* Initials fallback (lowest priority) */}
       {showFallback && (
         <div className="w-full h-full flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
           {symbol.slice(0, 2).toUpperCase()}
         </div>
       )}
-      {!showFallback && !imageLoaded && (
+      
+      {/* Loading state for token logo */}
+      {hasTokenLogo && !imageLoaded && (
         <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center">
           <div className="text-xs font-bold text-gray-500 dark:text-gray-400">
             {symbol.slice(0, 2).toUpperCase()}

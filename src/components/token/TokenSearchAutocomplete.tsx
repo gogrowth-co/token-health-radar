@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Search, ChevronDown, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -296,11 +297,12 @@ export default function TokenSearchAutocomplete({
                   role="option"
                   aria-selected={index === selectedIndex}
                 >
-                  {/* Token logo with proper fallback */}
+                  {/* Token logo with chain fallback */}
                   <div className="flex-shrink-0">
                     <TokenLogo 
                       logo={token.logo} 
                       symbol={token.symbol}
+                      chain={token.chain}
                       className="w-10 h-10"
                     />
                   </div>
