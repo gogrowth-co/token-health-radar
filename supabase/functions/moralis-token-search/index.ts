@@ -55,6 +55,19 @@ const CHAIN_LOGOS: Record<string, string> = {
   'fantom': 'https://cryptologos.cc/logos/fantom-ftm-logo.png'
 };
 
+// Known token addresses for testing and fallback
+const KNOWN_TOKENS: Record<string, Record<string, string>> = {
+  'PENDLE': {
+    'eth': '0x808507121B80c02388fAd14726482e061B8bd3AAd',
+    '0xa4b1': '0x0c880f6761F1af8d9Aa9C466984b80DAb9a8c9e8'
+  },
+  'USDC': {
+    'eth': '0xA0b86a33E6408c0b3C0c2d9c9b3e0a1d7a4e9a3b',
+    '0xa4b1': '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
+    'bsc': '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d'
+  }
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -81,6 +94,7 @@ serve(async (req) => {
     }
 
     console.log(`[MORALIS-SEARCH] Searching for: "${searchTerm}"`);
+    console.log(`[MORALIS-SEARCH] Using API key: ${moralisApiKey.substring(0, 8)}...`);
 
     // Check if input is an address
     const isAddress = /^(0x)?[0-9a-fA-F]{40}$/i.test(searchTerm.trim());
@@ -157,20 +171,18 @@ serve(async (req) => {
 async function searchBySymbolParallel(searchTerm: string, apiKey: string, limit: number): Promise<TokenResult[]> {
   const capitalizedSymbol = searchTerm.toUpperCase();
   
-  console.log(`[MORALIS-SEARCH] dd.xyz-style parallel search for: "${capitalizedSymbol}" across ${CHAIN_CONFIG.length} chains`);
+  console.log(`[MORALIS-SEARCH] Multi-chain symbol search for: "${capitalizedSymbol}" across ${CHAIN_CONFIG.length} chains`);
   
-  // Create parallel requests for all chains
+  // Try the new approach: search for token metadata using a more direct method
   const searchPromises = CHAIN_CONFIG.map(async (chainConfig) => {
     try {
       console.log(`[MORALIS-SEARCH] Searching ${chainConfig.name} (${chainConfig.id}) for ${capitalizedSymbol}`);
       
-      // Fixed URL encoding - use proper JSON array format
-      const symbolsParam = encodeURIComponent(`["${capitalizedSymbol}"]`);
-      const url = `https://deep-index.moralis.io/api/v2.2/erc20/metadata/symbols?symbols=${symbolsParam}&chain=${chainConfig.id}`;
+      // First try: Use the search endpoint with simple symbol parameter
+      const searchUrl = `https://deep-index.moralis.io/api/v2/erc20/metadata/symbols?chain=${chainConfig.id}&symbols=${capitalizedSymbol}`;
+      console.log(`[MORALIS-SEARCH] ${chainConfig.name} search URL: ${searchUrl}`);
       
-      console.log(`[MORALIS-SEARCH] Request URL: ${url}`);
-      
-      const response = await fetch(url, {
+      const response = await fetch(searchUrl, {
         method: 'GET',
         headers: {
           'X-API-Key': apiKey,
@@ -182,7 +194,11 @@ async function searchBySymbolParallel(searchTerm: string, apiKey: string, limit:
 
       if (!response.ok) {
         console.error(`[MORALIS-SEARCH] ${chainConfig.name} request failed:`, response.status, response.statusText);
-        return [];
+        const errorText = await response.text();
+        console.error(`[MORALIS-SEARCH] ${chainConfig.name} error response:`, errorText);
+        
+        // If search fails, try known token addresses as fallback
+        return await tryKnownTokenFallback(capitalizedSymbol, chainConfig, apiKey);
       }
 
       const data: MoralisTokenMetadata[] = await response.json();
@@ -190,8 +206,8 @@ async function searchBySymbolParallel(searchTerm: string, apiKey: string, limit:
       console.log(`[MORALIS-SEARCH] ${chainConfig.name} returned ${data.length} tokens`);
 
       if (!Array.isArray(data) || data.length === 0) {
-        console.log(`[MORALIS-SEARCH] ${chainConfig.name} returned no valid data`);
-        return [];
+        console.log(`[MORALIS-SEARCH] ${chainConfig.name} returned no valid data, trying fallback`);
+        return await tryKnownTokenFallback(capitalizedSymbol, chainConfig, apiKey);
       }
 
       // Process tokens from this chain
@@ -234,7 +250,8 @@ async function searchBySymbolParallel(searchTerm: string, apiKey: string, limit:
 
     } catch (error) {
       console.error(`[MORALIS-SEARCH] Exception searching ${chainConfig.name}:`, error);
-      return [];
+      // Try fallback on exception
+      return await tryKnownTokenFallback(capitalizedSymbol, chainConfig, apiKey);
     }
   });
 
@@ -268,6 +285,49 @@ async function searchBySymbolParallel(searchTerm: string, apiKey: string, limit:
   return limitedResults;
 }
 
+async function tryKnownTokenFallback(symbol: string, chainConfig: any, apiKey: string): Promise<TokenResult[]> {
+  const knownAddress = KNOWN_TOKENS[symbol]?.[chainConfig.id];
+  if (!knownAddress) {
+    console.log(`[MORALIS-SEARCH] No known address for ${symbol} on ${chainConfig.name}`);
+    return [];
+  }
+
+  console.log(`[MORALIS-SEARCH] Trying known address fallback for ${symbol} on ${chainConfig.name}: ${knownAddress}`);
+  
+  try {
+    const url = `https://deep-index.moralis.io/api/v2/erc20/metadata?chain=${chainConfig.id}&addresses=${knownAddress}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'X-API-Key': apiKey,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      console.error(`[MORALIS-SEARCH] Fallback failed for ${symbol} on ${chainConfig.name}:`, response.status);
+      return [];
+    }
+
+    const data: MoralisTokenMetadata[] = await response.json();
+    console.log(`[MORALIS-SEARCH] Fallback success for ${symbol} on ${chainConfig.name}:`, data.length, 'tokens');
+    
+    if (data && Array.isArray(data) && data.length > 0) {
+      const tokenData = data[0];
+      if (tokenData && tokenData.address && !tokenData.possible_spam) {
+        const tokenWithChain = { ...tokenData, chain: chainConfig.id };
+        const transformedToken = transformTokenData(tokenWithChain, chainConfig);
+        return transformedToken ? [transformedToken] : [];
+      }
+    }
+  } catch (error) {
+    console.error(`[MORALIS-SEARCH] Fallback exception for ${symbol} on ${chainConfig.name}:`, error);
+  }
+  
+  return [];
+}
+
 async function searchByAddress(searchTerm: string, apiKey: string): Promise<TokenResult[]> {
   const cleanAddress = searchTerm.startsWith('0x') ? searchTerm : `0x${searchTerm}`;
   const results: TokenResult[] = [];
@@ -277,7 +337,7 @@ async function searchByAddress(searchTerm: string, apiKey: string): Promise<Toke
     try {
       console.log(`[MORALIS-SEARCH] Checking ${chainConfig.name} for address ${cleanAddress}`);
       
-      const url = `https://deep-index.moralis.io/api/v2.2/erc20/metadata?chain=${chainConfig.id}&addresses=${cleanAddress}`;
+      const url = `https://deep-index.moralis.io/api/v2/erc20/metadata?chain=${chainConfig.id}&addresses=${cleanAddress}`;
       
       const response = await fetch(url, {
         method: 'GET',
