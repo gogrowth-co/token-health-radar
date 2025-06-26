@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import Moralis from 'npm:moralis@latest';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,7 +14,6 @@ interface MoralisTokenMetadata {
   decimals?: number;
   verified_contract?: boolean;
   possible_spam?: boolean;
-  chain?: string; // Made optional since it might be undefined
 }
 
 interface TokenResult {
@@ -33,15 +31,27 @@ interface TokenResult {
   value: string;
 }
 
-// Chain logo URLs
+// Chain configuration for parallel searches
+const CHAIN_CONFIG = [
+  { id: 'eth', name: 'Ethereum', logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
+  { id: '0xa', name: 'Optimism', logo: 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png' },
+  { id: '0xa4b1', name: 'Arbitrum', logo: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png' },
+  { id: 'bsc', name: 'BSC', logo: 'https://cryptologos.cc/logos/bnb-bnb-logo.png' },
+  { id: '0x2105', name: 'Base', logo: 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png' }
+];
+
+// Chain logos mapping (including hex IDs)
 const CHAIN_LOGOS: Record<string, string> = {
   'eth': 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
   'polygon': 'https://cryptologos.cc/logos/polygon-matic-logo.png',
   'bsc': 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
   'arbitrum': 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
+  '0xa4b1': 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
   'avalanche': 'https://cryptologos.cc/logos/avalanche-avax-logo.png',
   'optimism': 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
+  '0xa': 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
   'base': 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png',
+  '0x2105': 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png',
   'fantom': 'https://cryptologos.cc/logos/fantom-ftm-logo.png'
 };
 
@@ -72,9 +82,6 @@ serve(async (req) => {
 
     console.log(`[MORALIS-SEARCH] Searching for: "${searchTerm}"`);
 
-    // Initialize Moralis
-    await Moralis.start({ apiKey: moralisApiKey });
-
     // Check if input is an address
     const isAddress = /^(0x)?[0-9a-fA-F]{40}$/i.test(searchTerm.trim());
     
@@ -82,10 +89,10 @@ serve(async (req) => {
     
     if (isAddress) {
       console.log(`[MORALIS-SEARCH] Address search for: ${searchTerm}`);
-      results = await searchByAddress(searchTerm.trim());
+      results = await searchByAddress(searchTerm.trim(), moralisApiKey);
     } else {
       console.log(`[MORALIS-SEARCH] Symbol search for: ${searchTerm}`);
-      results = await searchBySymbol(searchTerm.trim(), limit);
+      results = await searchBySymbolParallel(searchTerm.trim(), moralisApiKey, limit);
     }
 
     console.log(`[MORALIS-SEARCH] Total results found: ${results.length}`);
@@ -147,132 +154,160 @@ serve(async (req) => {
   }
 });
 
-async function searchBySymbol(searchTerm: string, limit: number): Promise<TokenResult[]> {
+async function searchBySymbolParallel(searchTerm: string, apiKey: string, limit: number): Promise<TokenResult[]> {
   const capitalizedSymbol = searchTerm.toUpperCase();
   
-  console.log(`[MORALIS-SEARCH] Multi-chain symbol search for: "${capitalizedSymbol}"`);
+  console.log(`[MORALIS-SEARCH] dd.xyz-style parallel search for: "${capitalizedSymbol}" across ${CHAIN_CONFIG.length} chains`);
   
-  try {
-    // Use the Moralis SDK method for symbol-based metadata lookup
-    const response = await Moralis.EvmApi.token.getTokenMetadataBySymbol({
-      symbols: [capitalizedSymbol]
-    });
+  // Create parallel requests for all chains
+  const searchPromises = CHAIN_CONFIG.map(async (chainConfig) => {
+    try {
+      console.log(`[MORALIS-SEARCH] Searching ${chainConfig.name} (${chainConfig.id}) for ${capitalizedSymbol}`);
+      
+      const url = `https://deep-index.moralis.io/api/v2.2/erc20/metadata/symbols?symbols=["${capitalizedSymbol}"]&chain=${chainConfig.id}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'X-API-Key': apiKey,
+          'Accept': 'application/json'
+        }
+      });
 
-    console.log(`[MORALIS-SEARCH] API Response:`, response.raw);
+      if (!response.ok) {
+        console.error(`[MORALIS-SEARCH] ${chainConfig.name} request failed:`, response.status, response.statusText);
+        return [];
+      }
 
-    const data: MoralisTokenMetadata[] = response.raw;
-    console.log(`[MORALIS-SEARCH] Found ${data.length} tokens across all chains`);
+      const data: MoralisTokenMetadata[] = await response.json();
+      console.log(`[MORALIS-SEARCH] ${chainConfig.name} returned ${data.length} tokens`);
 
-    if (!Array.isArray(data) || data.length === 0) {
-      console.log(`[MORALIS-SEARCH] No tokens found for symbol: ${capitalizedSymbol}`);
+      if (!Array.isArray(data) || data.length === 0) {
+        return [];
+      }
+
+      // Process tokens from this chain
+      const processedTokens: TokenResult[] = [];
+      
+      for (const token of data) {
+        try {
+          // Filter out spam tokens
+          if (token.possible_spam) {
+            console.log(`[MORALIS-SEARCH] Filtering out spam token: ${token.symbol} on ${chainConfig.name}`);
+            continue;
+          }
+
+          // Ensure required fields exist
+          if (!token.address || !token.name || !token.symbol) {
+            console.log(`[MORALIS-SEARCH] Filtering out token with missing required fields on ${chainConfig.name}`);
+            continue;
+          }
+
+          console.log(`[MORALIS-SEARCH] Processing token: ${token.name} (${token.symbol}) on ${chainConfig.name} with logo: ${token.logo || 'none'}`);
+          
+          // Attach chain information explicitly since we know which chain this came from
+          const tokenWithChain = { 
+            ...token, 
+            chain: chainConfig.id // Explicitly set chain from our request
+          };
+          
+          const transformedToken = transformTokenData(tokenWithChain, chainConfig);
+          if (transformedToken) {
+            processedTokens.push(transformedToken);
+          }
+        } catch (error) {
+          console.error(`[MORALIS-SEARCH] Error processing token ${token.address} on ${chainConfig.name}:`, error);
+          // Continue processing other tokens even if one fails
+        }
+      }
+
+      return processedTokens;
+
+    } catch (error) {
+      console.error(`[MORALIS-SEARCH] Exception searching ${chainConfig.name}:`, error);
       return [];
     }
+  });
 
-    const results: TokenResult[] = [];
+  // Wait for all parallel requests to complete
+  const chainResults = await Promise.all(searchPromises);
+  
+  // Flatten and combine all results
+  const allResults = chainResults.flat();
+  
+  console.log(`[MORALIS-SEARCH] Combined results from all chains: ${allResults.length} tokens`);
 
-    for (const token of data) {
-      try {
-        // Filter out spam tokens early
-        if (token.possible_spam) {
-          console.log(`[MORALIS-SEARCH] Filtering out spam token: ${token.symbol} on ${token.chain || 'unknown chain'}`);
-          continue;
-        }
+  // Sort by chain priority (Ethereum first, then others)
+  const chainPriority: Record<string, number> = {
+    'eth': 1,
+    '0xa4b1': 2, // Arbitrum
+    'bsc': 3,
+    '0xa': 4, // Optimism
+    '0x2105': 5, // Base
+  };
 
-        // CRITICAL: Filter out tokens without valid chain information
-        if (!token.chain || token.chain === undefined || token.chain === null) {
-          console.log(`[MORALIS-SEARCH] Filtering out token without chain info: ${token.name} (${token.symbol})`);
-          continue;
-        }
+  allResults.sort((a, b) => {
+    const priorityA = chainPriority[a.chain] || 999;
+    const priorityB = chainPriority[b.chain] || 999;
+    return priorityA - priorityB;
+  });
 
-        // CRITICAL: Filter out tokens without valid address
-        if (!token.address || token.address === undefined || token.address === null) {
-          console.log(`[MORALIS-SEARCH] Filtering out token without address: ${token.name} (${token.symbol})`);
-          continue;
-        }
-
-        console.log(`[MORALIS-SEARCH] Processing token: ${token.name} (${token.symbol}) on ${token.chain} with logo: ${token.logo || 'none'}`);
-        
-        const transformedToken = transformTokenData(token);
-        if (transformedToken) {
-          results.push(transformedToken);
-        }
-        
-        // Limit results
-        if (results.length >= limit) {
-          break;
-        }
-      } catch (error) {
-        console.error(`[MORALIS-SEARCH] Error processing token ${token.address}:`, error);
-        // Continue processing other tokens even if one fails
-      }
-    }
-
-    // Sort by chain priority (Ethereum first, then others)
-    const chainPriority: Record<string, number> = {
-      'eth': 1,
-      'arbitrum': 2,
-      'polygon': 3,
-      'bsc': 4,
-      'avalanche': 5,
-      'optimism': 6,
-      'base': 7
-    };
-
-    results.sort((a, b) => {
-      const priorityA = chainPriority[a.chain] || 999;
-      const priorityB = chainPriority[b.chain] || 999;
-      return priorityA - priorityB;
-    });
-
-    console.log(`[MORALIS-SEARCH] Returning ${results.length} processed tokens`);
-    return results;
-
-  } catch (error) {
-    console.error(`[MORALIS-SEARCH] Exception in searchBySymbol:`, error);
-    return [];
-  }
+  // Apply limit after sorting
+  const limitedResults = allResults.slice(0, limit);
+  
+  console.log(`[MORALIS-SEARCH] Returning ${limitedResults.length} processed tokens after limit`);
+  return limitedResults;
 }
 
-async function searchByAddress(searchTerm: string): Promise<TokenResult[]> {
+async function searchByAddress(searchTerm: string, apiKey: string): Promise<TokenResult[]> {
   const cleanAddress = searchTerm.startsWith('0x') ? searchTerm : `0x${searchTerm}`;
   const results: TokenResult[] = [];
   
-  // Supported chains for address lookup
-  const supportedChains = ['eth', 'polygon', 'bsc', 'arbitrum', 'avalanche', 'optimism', 'base'];
-  
-  for (const chain of supportedChains) {
+  // Use same chain configuration for address search
+  for (const chainConfig of CHAIN_CONFIG) {
     try {
-      console.log(`[MORALIS-SEARCH] Checking ${chain} for address ${cleanAddress}`);
+      console.log(`[MORALIS-SEARCH] Checking ${chainConfig.name} for address ${cleanAddress}`);
       
-      const response = await Moralis.EvmApi.token.getTokenMetadata({
-        chain: chain,
-        addresses: [cleanAddress]
+      const url = `https://deep-index.moralis.io/api/v2.2/erc20/metadata?chain=${chainConfig.id}&addresses=${cleanAddress}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'X-API-Key': apiKey,
+          'Accept': 'application/json'
+        }
       });
 
-      const data = response.raw;
+      if (!response.ok) {
+        console.error(`[MORALIS-SEARCH] ${chainConfig.name} address request failed:`, response.status);
+        continue;
+      }
+
+      const data: MoralisTokenMetadata[] = await response.json();
+      
       if (data && Array.isArray(data) && data.length > 0) {
         const tokenData = data[0];
-        console.log(`[MORALIS-SEARCH] Found token on ${chain}: ${tokenData.name} (${tokenData.symbol}) with logo: ${tokenData.logo || 'none'}`);
+        console.log(`[MORALIS-SEARCH] Found token on ${chainConfig.name}: ${tokenData.name} (${tokenData.symbol}) with logo: ${tokenData.logo || 'none'}`);
         
         if (tokenData && tokenData.address && !tokenData.possible_spam) {
           // Add chain info to the token data
-          const tokenWithChain = { ...tokenData, chain };
-          const transformedToken = transformTokenData(tokenWithChain);
+          const tokenWithChain = { ...tokenData, chain: chainConfig.id };
+          const transformedToken = transformTokenData(tokenWithChain, chainConfig);
           if (transformedToken) {
             results.push(transformedToken);
           }
         }
       }
     } catch (error) {
-      console.error(`[MORALIS-SEARCH] Error checking ${chain}:`, error);
+      console.error(`[MORALIS-SEARCH] Error checking ${chainConfig.name}:`, error);
     }
   }
   
   return results;
 }
 
-function transformTokenData(tokenData: MoralisTokenMetadata): TokenResult | null {
-  // CRITICAL: Validate required fields before transformation
+function transformTokenData(tokenData: MoralisTokenMetadata & { chain: string }, chainConfig?: { id: string; name: string; logo: string }): TokenResult | null {
+  // Validate required fields before transformation
   if (!tokenData.chain || !tokenData.address || !tokenData.name || !tokenData.symbol) {
     console.log(`[MORALIS-SEARCH] Skipping token with missing required fields:`, {
       chain: tokenData.chain,
@@ -291,11 +326,11 @@ function transformTokenData(tokenData: MoralisTokenMetadata): TokenResult | null
       address: tokenData.address,
       chain: tokenData.chain,
       logo: tokenData.logo || '',
-      chainLogo: CHAIN_LOGOS[tokenData.chain] || '',
+      chainLogo: CHAIN_LOGOS[tokenData.chain] || (chainConfig?.logo || ''),
       verified: tokenData.verified_contract || false,
       decimals: tokenData.decimals || 18,
       title: `${tokenData.symbol.toUpperCase()} — ${tokenData.name}`,
-      subtitle: getChainDisplayName(tokenData.chain),
+      subtitle: getChainDisplayName(tokenData.chain, chainConfig),
       value: `${tokenData.chain}/${tokenData.address}`
     };
   } catch (error) {
@@ -304,21 +339,30 @@ function transformTokenData(tokenData: MoralisTokenMetadata): TokenResult | null
   }
 }
 
-function getChainDisplayName(chain: string | undefined | null): string {
-  // CRITICAL: Handle undefined/null chain gracefully
+function getChainDisplayName(chain: string, chainConfig?: { id: string; name: string; logo: string }): string {
+  // Handle undefined/null chain gracefully
   if (!chain || chain === undefined || chain === null) {
     console.log(`[MORALIS-SEARCH] Warning: getChainDisplayName called with invalid chain: ${chain}`);
     return 'Unknown Chain';
   }
 
+  // If we have chainConfig from our parallel search, use it
+  if (chainConfig && chainConfig.id === chain) {
+    return chainConfig.name;
+  }
+
+  // Fallback to mapping for hex chain IDs and standard names
   const chainNames: Record<string, string> = {
     'eth': 'Ethereum',
     'polygon': 'Polygon',
     'bsc': 'BSC',
     'arbitrum': 'Arbitrum',
+    '0xa4b1': 'Arbitrum',
     'avalanche': 'Avalanche',
     'optimism': 'Optimism',
+    '0xa': 'Optimism',
     'base': 'Base',
+    '0x2105': 'Base',
     'fantom': 'Fantom'
   };
   

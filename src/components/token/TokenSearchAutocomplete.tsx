@@ -30,38 +30,47 @@ interface TokenSearchAutocompleteProps {
 // Chain priority for sorting
 const CHAIN_PRIORITY: Record<string, number> = {
   'eth': 1,
+  '0xa4b1': 2, // Arbitrum
   'arbitrum': 2,
   'bsc': 3,
   'polygon': 4,
+  '0x2105': 5, // Base
   'base': 5,
+  '0xa': 6, // Optimism
   'optimism': 6,
   'avalanche': 7,
 };
 
-// Enhanced chain display names with better formatting
+// Enhanced chain display names with hex ID support
 const getChainDisplayName = (chain: string) => {
   const chainNames: Record<string, string> = {
     'eth': 'Ethereum',
     'polygon': 'Polygon',
     'bsc': 'BSC',
     'arbitrum': 'Arbitrum',
+    '0xa4b1': 'Arbitrum',
     'avalanche': 'Avalanche',
     'optimism': 'Optimism',
+    '0xa': 'Optimism',
     'base': 'Base',
+    '0x2105': 'Base',
     'fantom': 'Fantom'
   };
   return chainNames[chain.toLowerCase()] || chain.charAt(0).toUpperCase() + chain.slice(1);
 };
 
-// Chain colors for badges
+// Chain colors for badges including hex IDs
 const getChainBadgeVariant = (chain: string): "default" | "secondary" | "destructive" | "outline" => {
   const chainColors: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
     'eth': 'default',
     'polygon': 'secondary',
     'bsc': 'outline',
     'arbitrum': 'secondary',
+    '0xa4b1': 'secondary', // Arbitrum
     'base': 'default',
+    '0x2105': 'default', // Base
     'optimism': 'destructive',
+    '0xa': 'destructive', // Optimism
     'avalanche': 'secondary'
   };
   return chainColors[chain.toLowerCase()] || 'outline';
@@ -83,7 +92,7 @@ const highlightText = (text: string, searchTerm: string) => {
   );
 };
 
-// Sort tokens by chain priority
+// Sort tokens by updated chain priority
 const sortTokensByChain = (tokens: TokenSearchResult[]) => {
   return tokens.sort((a, b) => {
     const priorityA = CHAIN_PRIORITY[a.chain] || 999;
@@ -138,7 +147,7 @@ export default function TokenSearchAutocomplete({
     setSearchMessage("");
 
     try {
-      console.log(`[TOKEN-AUTOCOMPLETE] Searching for: "${query}"`);
+      console.log(`[TOKEN-AUTOCOMPLETE] dd.xyz-style search for: "${query}"`);
 
       const { data, error } = await supabase.functions.invoke('moralis-token-search', {
         body: { searchTerm: query, limit: 12 }
@@ -157,9 +166,9 @@ export default function TokenSearchAutocomplete({
       const tokens = data?.tokens || [];
       const message = data?.message || "";
       
-      console.log(`[TOKEN-AUTOCOMPLETE] Found ${tokens.length} tokens`);
+      console.log(`[TOKEN-AUTOCOMPLETE] Found ${tokens.length} tokens across chains`);
       
-      // Sort tokens by chain priority
+      // Sort tokens by updated chain priority
       const sortedTokens = sortTokensByChain(tokens);
       
       setResults(sortedTokens);

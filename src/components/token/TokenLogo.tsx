@@ -9,15 +9,18 @@ interface TokenLogoProps {
   showChainBadge?: boolean;
 }
 
-// Chain logos mapping
+// Updated chain logos mapping with hex chain IDs
 const CHAIN_LOGOS: Record<string, string> = {
   eth: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
   polygon: 'https://cryptologos.cc/logos/polygon-matic-logo.png',
   bsc: 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
   arbitrum: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
+  '0xa4b1': 'https://cryptologos.cc/logos/arbitrum-arb-logo.png', // Arbitrum hex ID
   avalanche: 'https://cryptologos.cc/logos/avalanche-avax-logo.png',
   optimism: 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
+  '0xa': 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png', // Optimism hex ID
   base: 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png',
+  '0x2105': 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png', // Base hex ID
   fantom: 'https://cryptologos.cc/logos/fantom-ftm-logo.png'
 };
 
