@@ -164,7 +164,11 @@ async function searchBySymbolParallel(searchTerm: string, apiKey: string, limit:
     try {
       console.log(`[MORALIS-SEARCH] Searching ${chainConfig.name} (${chainConfig.id}) for ${capitalizedSymbol}`);
       
-      const url = `https://deep-index.moralis.io/api/v2.2/erc20/metadata/symbols?symbols=["${capitalizedSymbol}"]&chain=${chainConfig.id}`;
+      // Fixed URL encoding - use proper JSON array format
+      const symbolsParam = encodeURIComponent(`["${capitalizedSymbol}"]`);
+      const url = `https://deep-index.moralis.io/api/v2.2/erc20/metadata/symbols?symbols=${symbolsParam}&chain=${chainConfig.id}`;
+      
+      console.log(`[MORALIS-SEARCH] Request URL: ${url}`);
       
       const response = await fetch(url, {
         method: 'GET',
@@ -174,15 +178,19 @@ async function searchBySymbolParallel(searchTerm: string, apiKey: string, limit:
         }
       });
 
+      console.log(`[MORALIS-SEARCH] ${chainConfig.name} response status: ${response.status}`);
+
       if (!response.ok) {
         console.error(`[MORALIS-SEARCH] ${chainConfig.name} request failed:`, response.status, response.statusText);
         return [];
       }
 
       const data: MoralisTokenMetadata[] = await response.json();
+      console.log(`[MORALIS-SEARCH] ${chainConfig.name} raw response:`, JSON.stringify(data, null, 2));
       console.log(`[MORALIS-SEARCH] ${chainConfig.name} returned ${data.length} tokens`);
 
       if (!Array.isArray(data) || data.length === 0) {
+        console.log(`[MORALIS-SEARCH] ${chainConfig.name} returned no valid data`);
         return [];
       }
 
@@ -221,6 +229,7 @@ async function searchBySymbolParallel(searchTerm: string, apiKey: string, limit:
         }
       }
 
+      console.log(`[MORALIS-SEARCH] ${chainConfig.name} processed ${processedTokens.length} valid tokens`);
       return processedTokens;
 
     } catch (error) {
