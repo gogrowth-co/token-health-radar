@@ -6,6 +6,7 @@ interface TokenLogoProps {
   symbol: string;
   chain?: string;
   className?: string;
+  showChainBadge?: boolean;
 }
 
 // Chain logos mapping
@@ -20,7 +21,13 @@ const CHAIN_LOGOS: Record<string, string> = {
   fantom: 'https://cryptologos.cc/logos/fantom-ftm-logo.png'
 };
 
-export default function TokenLogo({ logo, symbol, chain, className = "w-10 h-10" }: TokenLogoProps) {
+export default function TokenLogo({ 
+  logo, 
+  symbol, 
+  chain, 
+  className = "w-10 h-10",
+  showChainBadge = true
+}: TokenLogoProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [chainImageError, setChainImageError] = useState(false);
@@ -81,6 +88,18 @@ export default function TokenLogo({ logo, symbol, chain, className = "w-10 h-10"
           <div className="text-xs font-bold text-gray-500 dark:text-gray-400">
             {symbol.slice(0, 2).toUpperCase()}
           </div>
+        </div>
+      )}
+
+      {/* Chain badge overlay (if token logo is shown and chain is available) */}
+      {hasTokenLogo && chainLogo && showChainBadge && !chainImageError && (
+        <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-gray-800 bg-white dark:bg-gray-800 overflow-hidden">
+          <img 
+            src={chainLogo} 
+            alt={`${chain} chain`}
+            className="w-full h-full object-cover"
+            onError={handleChainImageError}
+          />
         </div>
       )}
     </div>

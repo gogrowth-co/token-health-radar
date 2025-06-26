@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Search, ChevronDown, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -282,7 +281,7 @@ export default function TokenSearchAutocomplete({
         <Button type="submit" className="sr-only">Search</Button>
       </form>
 
-      {/* Enhanced Results dropdown */}
+      {/* Enhanced Results dropdown with dual-logo display */}
       {isOpen && (
         <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-80 overflow-y-auto">
           {results.length > 0 ? (
@@ -297,13 +296,14 @@ export default function TokenSearchAutocomplete({
                   role="option"
                   aria-selected={index === selectedIndex}
                 >
-                  {/* Token logo with chain fallback */}
+                  {/* Token logo with chain badge */}
                   <div className="flex-shrink-0">
                     <TokenLogo 
                       logo={token.logo} 
                       symbol={token.symbol}
                       chain={token.chain}
                       className="w-10 h-10"
+                      showChainBadge={true}
                     />
                   </div>
 
