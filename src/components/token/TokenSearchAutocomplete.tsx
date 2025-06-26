@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Search, ChevronDown, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -7,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import TokenLogo from "./TokenLogo";
 
 interface TokenSearchResult {
   id: string;
@@ -76,7 +76,7 @@ const highlightText = (text: string, searchTerm: string) => {
   
   return parts.map((part, index) => 
     regex.test(part) ? (
-      <mark key={index} className="bg-yellow-100 dark:bg-yellow-700 px-0.5 rounded">
+      <mark key={index} className="bg-amber-100 dark:bg-amber-500/20 px-0.5 rounded">
         {part}
       </mark>
     ) : part
@@ -290,36 +290,23 @@ export default function TokenSearchAutocomplete({
                 <button
                   key={token.id}
                   onClick={() => handleSelectToken(token)}
-                  className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 flex items-center gap-5 group border-b border-gray-100 dark:border-gray-800 last:border-b-0 hover:shadow-sm ${
+                  className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 flex items-center gap-4 group border-b border-gray-100 dark:border-gray-800 last:border-b-0 hover:shadow-sm ${
                     index === selectedIndex ? 'bg-gray-50 dark:bg-gray-800' : ''
                   }`}
                   role="option"
                   aria-selected={index === selectedIndex}
                 >
-                  {/* Token logo with improved fallback logic */}
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center overflow-hidden shadow-sm border border-gray-200 dark:border-gray-600">
-                    {token.logo ? (
-                      <img 
-                        src={token.logo} 
-                        alt={`${token.symbol} logo`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const img = e.target as HTMLImageElement;
-                          const container = img.parentElement;
-                          if (container) {
-                            container.innerHTML = `<div class="w-full h-full flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">${token.symbol.slice(0, 2).toUpperCase()}</div>`;
-                          }
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
-                        {token.symbol.slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
+                  {/* Token logo with proper fallback */}
+                  <div className="flex-shrink-0">
+                    <TokenLogo 
+                      logo={token.logo} 
+                      symbol={token.symbol}
+                      className="w-10 h-10"
+                    />
                   </div>
 
-                  {/* Token information with improved typography */}
-                  <div className="flex-1 min-w-0 space-y-1">
+                  {/* Token information with improved typography and alignment */}
+                  <div className="flex-1 min-w-0 space-y-1 flex flex-col justify-center">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-base text-gray-900 dark:text-gray-100">
                         {highlightText(token.symbol, searchTerm)}
@@ -336,8 +323,8 @@ export default function TokenSearchAutocomplete({
                     </div>
                   </div>
 
-                  {/* Chain badge with improved styling */}
-                  <div className="flex-shrink-0">
+                  {/* Chain badge with improved styling and alignment */}
+                  <div className="flex-shrink-0 flex items-center">
                     <Badge 
                       variant={getChainBadgeVariant(token.chain)} 
                       className="text-xs font-medium px-2 py-1 shadow-sm border border-gray-200 dark:border-gray-600"
