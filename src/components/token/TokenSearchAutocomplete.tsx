@@ -67,7 +67,7 @@ const getChainBadgeVariant = (chain: string): "default" | "secondary" | "destruc
   return chainColors[chain.toLowerCase()] || 'outline';
 };
 
-// Text highlighting utility
+// Text highlighting utility with improved colors
 const highlightText = (text: string, searchTerm: string) => {
   if (!searchTerm.trim()) return text;
   
@@ -76,7 +76,7 @@ const highlightText = (text: string, searchTerm: string) => {
   
   return parts.map((part, index) => 
     regex.test(part) ? (
-      <mark key={index} className="bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded">
+      <mark key={index} className="bg-yellow-100 dark:bg-yellow-700 px-0.5 rounded">
         {part}
       </mark>
     ) : part
@@ -290,13 +290,13 @@ export default function TokenSearchAutocomplete({
                 <button
                   key={token.id}
                   onClick={() => handleSelectToken(token)}
-                  className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 flex items-center gap-3 group ${
+                  className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 flex items-center gap-5 group border-b border-gray-100 dark:border-gray-800 last:border-b-0 hover:shadow-sm ${
                     index === selectedIndex ? 'bg-gray-50 dark:bg-gray-800' : ''
                   }`}
                   role="option"
                   aria-selected={index === selectedIndex}
                 >
-                  {/* Token logo with proper fallback */}
+                  {/* Token logo with improved fallback logic */}
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center overflow-hidden shadow-sm border border-gray-200 dark:border-gray-600">
                     {token.logo ? (
                       <img 
@@ -305,21 +305,20 @@ export default function TokenSearchAutocomplete({
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           const img = e.target as HTMLImageElement;
-                          img.style.display = 'none';
-                          const fallback = img.nextElementSibling as HTMLElement;
-                          if (fallback) fallback.style.display = 'flex';
+                          const container = img.parentElement;
+                          if (container) {
+                            container.innerHTML = `<div class="w-full h-full flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">${token.symbol.slice(0, 2).toUpperCase()}</div>`;
+                          }
                         }}
                       />
-                    ) : null}
-                    <div 
-                      className={`w-full h-full flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300 ${token.logo ? 'hidden' : 'flex'}`}
-                      style={{ display: token.logo ? 'none' : 'flex' }}
-                    >
-                      {token.symbol.slice(0, 2).toUpperCase()}
-                    </div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
+                        {token.symbol.slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Token information */}
+                  {/* Token information with improved typography */}
                   <div className="flex-1 min-w-0 space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-base text-gray-900 dark:text-gray-100">
@@ -329,19 +328,19 @@ export default function TokenSearchAutocomplete({
                         <CheckCircle className="w-4 h-4 text-blue-500 flex-shrink-0" />
                       )}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">
                       {highlightText(token.name, searchTerm)}
                     </div>
-                    <div className="text-xs font-mono text-gray-500 dark:text-gray-500 truncate bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                    <div className="text-xs font-mono text-gray-500 dark:text-gray-500 truncate bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded max-w-full">
                       {token.address}
                     </div>
                   </div>
 
-                  {/* Chain badge */}
+                  {/* Chain badge with improved styling */}
                   <div className="flex-shrink-0">
                     <Badge 
                       variant={getChainBadgeVariant(token.chain)} 
-                      className="text-xs font-medium px-2 py-1 shadow-sm"
+                      className="text-xs font-medium px-2 py-1 shadow-sm border border-gray-200 dark:border-gray-600"
                     >
                       {getChainDisplayName(token.chain)}
                     </Badge>
