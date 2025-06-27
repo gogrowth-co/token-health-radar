@@ -107,26 +107,6 @@ const sortTokensByChain = (tokens: TokenSearchResult[]) => {
   });
 };
 
-// Chain logos mapping
-const CHAIN_LOGOS: Record<string, string> = {
-  eth: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
-  ethereum: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
-  bsc: 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
-  'binance-smart-chain': 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
-  arbitrum: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
-  'arbitrum-one': 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
-  '0xa4b1': 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
-  optimism: 'https://cryptologos.cc/logos/optimism-eth-logo.png',
-  'optimistic-ethereum': 'https://cryptologos.cc/logos/optimism-eth-logo.png',
-  '0xa': 'https://cryptologos.cc/logos/optimism-eth-logo.png',
-  base: 'https://cryptologos.cc/logos/base-base-logo.png',
-  '0x2105': 'https://cryptologos.cc/logos/base-base-logo.png',
-  polygon: 'https://cryptologos.cc/logos/polygon-matic-logo.png',
-  'polygon-pos': 'https://cryptologos.cc/logos/polygon-matic-logo.png',
-  avalanche: 'https://cryptologos.cc/logos/avalanche-avax-logo.png',
-  fantom: 'https://cryptologos.cc/logos/fantom-ftm-logo.png'
-};
-
 export default function TokenSearchAutocomplete({ 
   placeholder = "Search by name, symbol, or contract address...",
   onSelect,
@@ -310,7 +290,7 @@ export default function TokenSearchAutocomplete({
         <Button type="submit" className="sr-only">Search</Button>
       </form>
 
-      {/* Enhanced Results dropdown with chain logo overlay */}
+      {/* Enhanced Results dropdown with dual-logo display */}
       {isOpen && (
         <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-80 overflow-y-auto">
           {results.length > 0 ? (
@@ -325,7 +305,7 @@ export default function TokenSearchAutocomplete({
                   role="option"
                   aria-selected={index === selectedIndex}
                 >
-                  {/* Token logo with chain badge overlay */}
+                  {/* Token logo with chain badge */}
                   <div className="flex-shrink-0">
                     <TokenLogo 
                       logo={token.logo} 
@@ -354,21 +334,14 @@ export default function TokenSearchAutocomplete({
                     </div>
                   </div>
 
-                  {/* Chain logo badge replacing text badge */}
+                  {/* Chain badge with improved styling and alignment */}
                   <div className="flex-shrink-0 flex items-center">
-                    <div className="w-6 h-6 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-sm overflow-hidden flex items-center justify-center">
-                      {CHAIN_LOGOS[token.chain.toLowerCase()] ? (
-                        <img 
-                          src={CHAIN_LOGOS[token.chain.toLowerCase()]} 
-                          alt={`${getChainDisplayName(token.chain)} logo`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="text-[8px] font-bold text-gray-700 dark:text-gray-300">
-                          {getChainDisplayName(token.chain).slice(0, 2).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
+                    <Badge 
+                      variant={getChainBadgeVariant(token.chain)} 
+                      className="text-xs font-medium px-2 py-1 shadow-sm border border-gray-200 dark:border-gray-600"
+                    >
+                      {getChainDisplayName(token.chain)}
+                    </Badge>
                   </div>
                 </button>
               ))}
