@@ -290,7 +290,7 @@ export default function TokenSearchAutocomplete({
         <Button type="submit" className="sr-only">Search</Button>
       </form>
 
-      {/* Enhanced Results dropdown with dual-logo display */}
+      {/* Enhanced Results dropdown with chain logo overlay */}
       {isOpen && (
         <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-80 overflow-y-auto">
           {results.length > 0 ? (
@@ -305,7 +305,7 @@ export default function TokenSearchAutocomplete({
                   role="option"
                   aria-selected={index === selectedIndex}
                 >
-                  {/* Token logo with chain badge */}
+                  {/* Token logo with chain badge overlay */}
                   <div className="flex-shrink-0">
                     <TokenLogo 
                       logo={token.logo} 
