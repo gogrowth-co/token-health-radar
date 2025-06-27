@@ -29,6 +29,23 @@ const CHAIN_LOGOS: Record<string, string> = {
   fantom: 'https://cryptologos.cc/logos/fantom-ftm-logo.png'
 };
 
+// Chain name abbreviations for fallback display
+const CHAIN_ABBREVIATIONS: Record<string, string> = {
+  eth: 'ETH',
+  ethereum: 'ETH',
+  bsc: 'BSC',
+  'binance-smart-chain': 'BSC',
+  arbitrum: 'ARB',
+  'arbitrum-one': 'ARB',
+  optimism: 'OP',
+  'optimistic-ethereum': 'OP',
+  base: 'BASE',
+  polygon: 'MATIC',
+  'polygon-pos': 'MATIC',
+  avalanche: 'AVAX',
+  fantom: 'FTM'
+};
+
 export default function TokenLogo({ 
   logo, 
   symbol, 
@@ -40,23 +57,43 @@ export default function TokenLogo({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [chainImageError, setChainImageError] = useState(false);
 
+  console.log(`[TOKEN-LOGO] Rendering for ${symbol}:`);
+  console.log(`  - Token logo:`, logo);
+  console.log(`  - Chain:`, chain);
+  console.log(`  - Show chain badge:`, showChainBadge);
+  
+  const chainLogo = chain ? CHAIN_LOGOS[chain.toLowerCase()] : null;
+  const chainAbbr = chain ? CHAIN_ABBREVIATIONS[chain.toLowerCase()] : null;
+  
+  console.log(`  - Chain logo URL:`, chainLogo);
+  console.log(`  - Chain abbreviation:`, chainAbbr);
+  console.log(`  - Chain image error:`, chainImageError);
+
   const handleImageError = () => {
+    console.log(`[TOKEN-LOGO] Token image failed to load for ${symbol}`);
     setImageError(true);
   };
 
   const handleImageLoad = () => {
+    console.log(`[TOKEN-LOGO] Token image loaded successfully for ${symbol}`);
     setImageLoaded(true);
   };
 
   const handleChainImageError = () => {
+    console.log(`[TOKEN-LOGO] Chain image failed to load for chain:`, chain);
     setChainImageError(true);
   };
 
   // Determine what to show based on priority: token logo → chain logo → initials
   const hasTokenLogo = logo && !imageError;
-  const chainLogo = chain ? CHAIN_LOGOS[chain.toLowerCase()] : null;
   const hasChainLogo = chainLogo && !chainImageError;
   const showFallback = !hasTokenLogo && !hasChainLogo;
+
+  // Chain badge should show if we have a token logo AND chain data AND showChainBadge is true
+  const shouldShowChainBadge = hasTokenLogo && chain && showChainBadge;
+
+  console.log(`  - Has token logo:`, hasTokenLogo);
+  console.log(`  - Should show chain badge:`, shouldShowChainBadge);
 
   return (
     <div className={`${className} rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center overflow-hidden shadow-sm border border-gray-200 dark:border-gray-600 relative`}>
@@ -99,15 +136,23 @@ export default function TokenLogo({
         </div>
       )}
 
-      {/* Chain badge overlay - positioned to actually overlap the token logo */}
-      {hasTokenLogo && chainLogo && showChainBadge && !chainImageError && (
-        <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-gray-900 bg-white dark:bg-gray-900 overflow-hidden shadow-md">
-          <img 
-            src={chainLogo} 
-            alt={`${chain} chain`}
-            className="w-full h-full object-cover"
-            onError={handleChainImageError}
-          />
+      {/* Chain badge overlay - ALWAYS show when conditions are met, with fallback */}
+      {shouldShowChainBadge && (
+        <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-gray-900 bg-white dark:bg-gray-900 overflow-hidden shadow-md flex items-center justify-center">
+          {/* Try to show chain logo first */}
+          {chainLogo && !chainImageError ? (
+            <img 
+              src={chainLogo} 
+              alt={`${chain} chain`}
+              className="w-full h-full object-cover"
+              onError={handleChainImageError}
+            />
+          ) : (
+            /* Fallback to chain abbreviation */
+            <div className="text-[8px] font-bold text-gray-700 dark:text-gray-300">
+              {chainAbbr || chain?.slice(0, 2).toUpperCase() || '?'}
+            </div>
+          )}
         </div>
       )}
     </div>
