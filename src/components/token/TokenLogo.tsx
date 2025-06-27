@@ -12,12 +12,17 @@ interface TokenLogoProps {
 // Updated chain logos mapping with hex chain IDs
 const CHAIN_LOGOS: Record<string, string> = {
   eth: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+  ethereum: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
   polygon: 'https://cryptologos.cc/logos/polygon-matic-logo.png',
+  'polygon-pos': 'https://cryptologos.cc/logos/polygon-matic-logo.png',
   bsc: 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
+  'binance-smart-chain': 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
   arbitrum: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
+  'arbitrum-one': 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
   '0xa4b1': 'https://cryptologos.cc/logos/arbitrum-arb-logo.png', // Arbitrum hex ID
   avalanche: 'https://cryptologos.cc/logos/avalanche-avax-logo.png',
   optimism: 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
+  'optimistic-ethereum': 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
   '0xa': 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png', // Optimism hex ID
   base: 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png',
   '0x2105': 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png', // Base hex ID
@@ -94,9 +99,9 @@ export default function TokenLogo({
         </div>
       )}
 
-      {/* Chain badge overlay - positioned at bottom-right corner */}
+      {/* Enhanced chain badge overlay - positioned at bottom-right corner with partial overlap */}
       {hasTokenLogo && chainLogo && showChainBadge && !chainImageError && (
-        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white dark:border-gray-900 bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
+        <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full border-2 border-white dark:border-gray-900 bg-white dark:bg-gray-900 overflow-hidden shadow-lg transform translate-x-1 translate-y-1">
           <img 
             src={chainLogo} 
             alt={`${chain} chain`}
