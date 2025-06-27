@@ -4,7 +4,7 @@ import { Info, AlertTriangle } from "lucide-react";
 import TokenCard from "@/components/TokenCard";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { TokenResult as TokenResultType } from "./types";
+import { TokenResult as TokenResultType } from "@/components/token/types";
 import { formatCurrencyValue } from "@/utils/tokenFormatters";
 import { isTokenScanSupported } from "@/utils/tokenStorage";
 import TokenLogo from "./token/TokenLogo";
