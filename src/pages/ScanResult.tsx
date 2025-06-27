@@ -38,10 +38,20 @@ export default function ScanResult() {
   const [coinGeckoDescription, setCoinGeckoDescription] = useState<string>('');
   const [descriptionLoading, setDescriptionLoading] = useState(false);
   
-  // Get parameters from URL
-  const tokenAddress = searchParams.get("token") || "";
+  // Get parameters from URL - support both formats
+  const tokenFromParam = searchParams.get("token") || "";
+  const addressFromParam = searchParams.get("address") || "";
+  const tokenAddress = tokenFromParam || addressFromParam; // Use token param first, fallback to address
   const coinGeckoId = searchParams.get("id") || "";
   const isLimited = searchParams.get("limited") === "true";
+
+  console.log("ScanResult: URL params:", {
+    token: tokenFromParam,
+    address: addressFromParam,
+    finalTokenAddress: tokenAddress,
+    coinGeckoId,
+    isLimited
+  });
 
   // Check user's scan access status
   useEffect(() => {
@@ -126,6 +136,7 @@ export default function ScanResult() {
         console.log("ScanResult: Loading data for token:", tokenAddress, "CoinGecko ID:", coinGeckoId);
         
         if (!tokenAddress) {
+          console.error("ScanResult: No token address found in URL params");
           setError("No token address provided");
           return;
         }
