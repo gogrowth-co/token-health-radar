@@ -88,14 +88,26 @@ export default function TokenResult({ token, onSelectToken }: TokenResultProps) 
       .map(platform => chainNames[platform] || platform.charAt(0).toUpperCase() + platform.slice(1));
   };
 
-  // Get primary chain for logo badge
+  // Get primary chain for logo badge - return simplified chain key
   const getPrimaryChain = () => {
     if (!token.platforms || Object.keys(token.platforms).length === 0) {
       return undefined;
     }
     
-    // Return the first platform key as the primary chain
-    return Object.keys(token.platforms)[0];
+    // Map platform keys to simplified chain keys for logo display
+    const chainMapping: Record<string, string> = {
+      'ethereum': 'eth',
+      'binance-smart-chain': 'bsc',
+      'arbitrum-one': 'arbitrum',
+      'optimistic-ethereum': 'optimism',
+      'base': 'base',
+      'polygon-pos': 'polygon',
+      'avalanche': 'avalanche',
+      'fantom': 'fantom'
+    };
+    
+    const primaryPlatform = Object.keys(token.platforms)[0];
+    return chainMapping[primaryPlatform] || primaryPlatform;
   };
 
   const supportedChains = getSupportedChains();

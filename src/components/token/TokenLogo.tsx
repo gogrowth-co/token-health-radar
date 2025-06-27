@@ -9,23 +9,23 @@ interface TokenLogoProps {
   showChainBadge?: boolean;
 }
 
-// Updated chain logos mapping with hex chain IDs
+// Updated chain logos mapping with your specified URLs
 const CHAIN_LOGOS: Record<string, string> = {
   eth: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
   ethereum: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
-  polygon: 'https://cryptologos.cc/logos/polygon-matic-logo.png',
-  'polygon-pos': 'https://cryptologos.cc/logos/polygon-matic-logo.png',
   bsc: 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
   'binance-smart-chain': 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
   arbitrum: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
   'arbitrum-one': 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
   '0xa4b1': 'https://cryptologos.cc/logos/arbitrum-arb-logo.png', // Arbitrum hex ID
+  optimism: 'https://cryptologos.cc/logos/optimism-eth-logo.png',
+  'optimistic-ethereum': 'https://cryptologos.cc/logos/optimism-eth-logo.png',
+  '0xa': 'https://cryptologos.cc/logos/optimism-eth-logo.png', // Optimism hex ID
+  base: 'https://cryptologos.cc/logos/base-base-logo.png',
+  '0x2105': 'https://cryptologos.cc/logos/base-base-logo.png', // Base hex ID
+  polygon: 'https://cryptologos.cc/logos/polygon-matic-logo.png',
+  'polygon-pos': 'https://cryptologos.cc/logos/polygon-matic-logo.png',
   avalanche: 'https://cryptologos.cc/logos/avalanche-avax-logo.png',
-  optimism: 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
-  'optimistic-ethereum': 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
-  '0xa': 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png', // Optimism hex ID
-  base: 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png',
-  '0x2105': 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png', // Base hex ID
   fantom: 'https://cryptologos.cc/logos/fantom-ftm-logo.png'
 };
 
