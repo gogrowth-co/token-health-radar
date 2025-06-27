@@ -6,6 +6,53 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Chain ID normalization mapping
+const CHAIN_ID_MAP: Record<string, string> = {
+  '1': '0x1',        // Ethereum mainnet
+  'eth': '0x1',
+  'ethereum': '0x1',
+  '137': '0x89',     // Polygon
+  'polygon': '0x89',
+  '56': '0x38',      // BSC
+  'bsc': '0x38',
+  '42161': '0xa4b1', // Arbitrum
+  'arbitrum': '0xa4b1',
+  '43114': '0xa86a', // Avalanche
+  'avalanche': '0xa86a'
+};
+
+// Normalize chain ID to hex format
+const normalizeChainId = (chainId: string): string => {
+  if (!chainId) return '0x1'; // Default to Ethereum
+  
+  const normalized = chainId.toLowerCase();
+  return CHAIN_ID_MAP[normalized] || chainId;
+};
+
+// Helper function to get GoPlus API chain ID from hex chain ID
+const getGoPlusChainId = (hexChainId: string): string => {
+  const chainMap: Record<string, string> = {
+    '0x1': '1',      // Ethereum
+    '0x89': '137',   // Polygon
+    '0x38': '56',    // BSC
+    '0xa4b1': '42161', // Arbitrum
+    '0xa86a': '43114'  // Avalanche
+  };
+  return chainMap[hexChainId] || '1'; // Default to Ethereum
+};
+
+// Helper function to get chain name for logging
+const getChainName = (chainId: string): string => {
+  const chainNames: Record<string, string> = {
+    '0x1': 'Ethereum',
+    '0x89': 'Polygon',
+    '0x38': 'BSC',
+    '0xa4b1': 'Arbitrum',
+    '0xa86a': 'Avalanche'
+  };
+  return chainNames[chainId] || chainId;
+};
+
 // Helper function to detect generic/low-quality descriptions
 const isGenericDescription = (description: string): boolean => {
   if (!description || description.trim().length === 0) return true;
@@ -136,7 +183,11 @@ serve(async (req) => {
   try {
     const { token_address, chain_id, coingecko_id, cmc_id, user_id } = await req.json()
     
-    console.log(`[SCAN] Starting scan for token: ${token_address}, chain: ${chain_id}, user: ${user_id}, coingecko_id: ${coingecko_id}, cmc_id: ${cmc_id}`)
+    // Normalize chain ID to ensure consistency
+    const normalizedChainId = normalizeChainId(chain_id || '0x1');
+    const chainName = getChainName(normalizedChainId);
+    
+    console.log(`[SCAN] Starting scan for token: ${token_address}, chain: ${normalizedChainId} (${chainName}), user: ${user_id}, coingecko_id: ${coingecko_id}, cmc_id: ${cmc_id}`)
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -182,7 +233,7 @@ serve(async (req) => {
         .from('token_data_cache')
         .select('*')
         .eq('token_address', token_address)
-        .eq('chain_id', chain_id || '0x1')
+        .eq('chain_id', normalizedChainId)
         .single()
 
       if (existingToken) {
@@ -199,7 +250,7 @@ serve(async (req) => {
               .from('token_data_cache')
               .update({ cmc_id: finalCmcId })
               .eq('token_address', token_address)
-              .eq('chain_id', chain_id || '0x1');
+              .eq('chain_id', normalizedChainId);
           }
         } else if (existingToken.cmc_id) {
           finalCmcId = existingToken.cmc_id;
@@ -451,44 +502,37 @@ serve(async (req) => {
     if (!proScanPermitted) {
       console.log(`[SCAN] Basic scan - using default security data`)
     } else {
-      console.log(`[SCAN] Pro scan - fetching security data`)
+      console.log(`[SCAN] Pro scan - fetching security data for ${chainName}`)
       
       try {
-        // Fetch security data from external API - adjust API based on chain
-        let apiUrl = `https://api.gopluslabs.io/api/v1/token_security/1/${token_address}` // Default to Ethereum
+        // Get GoPlus chain ID for API call
+        const goPlusChainId = getGoPlusChainId(normalizedChainId);
+        const apiUrl = `https://api.gopluslabs.io/api/v1/token_security/${goPlusChainId}/${token_address}`;
         
-        // Map chain IDs to GoPlus supported chains
-        if (chain_id === '0xa4b1') { // Arbitrum
-          apiUrl = `https://api.gopluslabs.io/api/v1/token_security/42161/${token_address}`
-        } else if (chain_id === '0x89') { // Polygon
-          apiUrl = `https://api.gopluslabs.io/api/v1/token_security/137/${token_address}`
-        } else if (chain_id === '0x38') { // BSC
-          apiUrl = `https://api.gopluslabs.io/api/v1/token_security/56/${token_address}`
-        }
-        
-        console.log(`[SCAN] Calling GoPlus API: ${apiUrl}`)
+        console.log(`[SCAN] Calling GoPlus API for ${chainName}: ${apiUrl}`)
         
         const response = await fetch(apiUrl)
         if (response.ok) {
           const data = await response.json()
-          if (data.result) {
+          if (data.result && data.result[token_address.toLowerCase()]) {
+            const result = data.result[token_address.toLowerCase()];
             securityData = {
-              ownership_renounced: data.result.is_proxy === '1' ? data.result.proxy_is_renounced === '1' : data.result.owner_is_renounced === '1',
-              can_mint: data.result.is_mintable === '1',
-              honeypot_detected: data.result.honeypot_related === '1',
-              freeze_authority: data.result.can_take_back_ownership === '1',
-              multisig_status: data.result.is_proxy === '1' ? (data.result.proxy_is_multi_sig === '1' ? 'MultiSig' : 'Not MultiSig') : 'Not Proxy',
-              audit_status: data.result.audit_status || 'Not audited'
+              ownership_renounced: result.is_proxy === '1' ? result.proxy_is_renounced === '1' : result.owner_is_renounced === '1',
+              can_mint: result.is_mintable === '1',
+              honeypot_detected: result.honeypot_related === '1',
+              freeze_authority: result.can_take_back_ownership === '1',
+              multisig_status: result.is_proxy === '1' ? (result.proxy_is_multi_sig === '1' ? 'MultiSig' : 'Not MultiSig') : 'Not Proxy',
+              audit_status: result.audit_status || 'Not audited'
             }
-            console.log(`[SCAN] Security data successfully collected from GoPlus API`)
+            console.log(`[SCAN] Security data successfully collected from GoPlus API for ${chainName}`)
           } else {
-            console.warn(`[SCAN] No security data found in GoPlus API response`)
+            console.warn(`[SCAN] No security data found in GoPlus API response for ${chainName}`)
           }
         } else {
-          console.error(`[SCAN] GoPlus API error: ${response.status} ${response.statusText}`)
+          console.error(`[SCAN] GoPlus API error for ${chainName}: ${response.status} ${response.statusText}`)
         }
       } catch (error) {
-        console.error(`[SCAN] Error fetching security data:`, error)
+        console.error(`[SCAN] Error fetching security data for ${chainName}:`, error)
       }
     }
     
@@ -628,23 +672,23 @@ serve(async (req) => {
     
     const overallScore = Math.round((scores.security + scores.liquidity + scores.tokenomics + scores.community + scores.development) / 5)
 
-    console.log(`[SCAN] Saving token data to database: ${token_address}, chain: ${chain_id}`)
+    console.log(`[SCAN] Saving token data to database: ${token_address}, chain: ${normalizedChainId} (${chainName})`)
     console.log(`[SCAN] Token description to save: "${tokenData.description}"`)
     console.log(`[SCAN] Description source: ${descriptionSource}`)
     console.log(`[SCAN] CMC ID to save: ${finalCmcId}`)
     
     try {
-      // Force update to database with the new/improved description and CMC ID - with chain support
+      // Force update to database with the new/improved description and CMC ID - with normalized chain support
       const { data: existingToken } = await supabase
         .from('token_data_cache')
         .select('token_address')
         .eq('token_address', token_address)
-        .eq('chain_id', chain_id || '0x1')
+        .eq('chain_id', normalizedChainId)
         .single()
 
       if (existingToken) {
-        // Token exists - update with new description and CMC ID
-        console.log(`[SCAN] Updating existing token with fresh description and CMC ID`)
+        // Token exists - update with new data
+        console.log(`[SCAN] Updating existing token for ${chainName}`)
         const { error: updateError } = await supabase
           .from('token_data_cache')
           .update({
@@ -663,18 +707,18 @@ serve(async (req) => {
             total_value_locked_usd: tokenData.total_value_locked_usd
           })
           .eq('token_address', token_address)
-          .eq('chain_id', chain_id || '0x1')
+          .eq('chain_id', normalizedChainId)
 
         if (updateError) throw updateError
-        console.log(`[SCAN] Successfully updated existing token data for: ${token_address}`)
+        console.log(`[SCAN] Successfully updated existing token data for: ${token_address} on ${chainName}`)
       } else {
         // Token doesn't exist - insert new record
-        console.log(`[SCAN] Token doesn't exist, inserting new record`)
+        console.log(`[SCAN] Token doesn't exist on ${chainName}, inserting new record`)
         const { error: insertError } = await supabase
           .from('token_data_cache')
           .insert({
             token_address,
-            chain_id: chain_id || '0x1',
+            chain_id: normalizedChainId,
             name: tokenData.name,
             symbol: tokenData.symbol,
             description: tokenData.description,
@@ -691,40 +735,40 @@ serve(async (req) => {
           })
 
         if (insertError) throw insertError
-        console.log(`[SCAN] Successfully inserted new token data for: ${token_address}`)
+        console.log(`[SCAN] Successfully inserted new token data for: ${token_address} on ${chainName}`)
       }
 
-      // Save category data with chain support
+      // Save category data with normalized chain support
       const savePromises = [
         supabase.from('token_security_cache').upsert({
           token_address,
-          chain_id: chain_id || '0x1',
+          chain_id: normalizedChainId,
           ...securityData,
           score: scores.security
         }, { onConflict: 'token_address,chain_id' }),
         
         supabase.from('token_tokenomics_cache').upsert({
           token_address,
-          chain_id: chain_id || '0x1',
+          chain_id: normalizedChainId,
           score: scores.tokenomics
         }, { onConflict: 'token_address,chain_id' }),
         
         supabase.from('token_liquidity_cache').upsert({
           token_address,
-          chain_id: chain_id || '0x1',
+          chain_id: normalizedChainId,
           score: scores.liquidity
         }, { onConflict: 'token_address,chain_id' }),
         
         supabase.from('token_development_cache').upsert({
           token_address,
-          chain_id: chain_id || '0x1',
+          chain_id: normalizedChainId,
           ...developmentData,
           score: scores.development
         }, { onConflict: 'token_address,chain_id' }),
         
         supabase.from('token_community_cache').upsert({
           token_address,
-          chain_id: chain_id || '0x1',
+          chain_id: normalizedChainId,
           score: scores.community
         }, { onConflict: 'token_address,chain_id' })
       ]
@@ -739,11 +783,11 @@ serve(async (req) => {
         }
       })
 
-      // Record the scan with chain support
+      // Record the scan with normalized chain support
       console.log(`[SCAN] Recording scan: {
   user_id: "${user_id}",
   token_address: "${token_address}",
-  chain_id: "${chain_id || '0x1'}",
+  chain_id: "${normalizedChainId}",
   cmc_id: ${finalCmcId ? parseInt(finalCmcId) : null},
   score_total: ${overallScore},
   pro_scan: ${proScanPermitted},
@@ -755,7 +799,7 @@ serve(async (req) => {
         .insert({
           user_id: user_id || null,
           token_address,
-          chain_id: chain_id || '0x1',
+          chain_id: normalizedChainId,
           cmc_id: finalCmcId ? parseInt(finalCmcId) : null,
           score_total: overallScore,
           pro_scan: proScanPermitted,
@@ -769,10 +813,10 @@ serve(async (req) => {
       }
 
     } catch (error) {
-      console.error(`[SCAN] Error saving data to database:`, error)
+      console.error(`[SCAN] Error saving data to database for ${chainName}:`, error)
     }
 
-    console.log(`[SCAN] Scan completed successfully for ${token_address} on chain ${chain_id}, overall score: ${overallScore}, pro_scan: ${proScanPermitted}, development_score: ${developmentScore}`)
+    console.log(`[SCAN] Scan completed successfully for ${token_address} on ${chainName}, overall score: ${overallScore}, pro_scan: ${proScanPermitted}`)
 
     // Return the scan results
     return new Response(JSON.stringify({
@@ -782,7 +826,9 @@ serve(async (req) => {
       overall_score: overallScore,
       pro_scan: proScanPermitted,
       security_data: securityData,
-      development_data: developmentData
+      development_data: developmentData,
+      chain_id: normalizedChainId,
+      chain_name: chainName
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

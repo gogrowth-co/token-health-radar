@@ -6,21 +6,55 @@ import type { Database } from "@/integrations/supabase/types";
 // Use the actual database type instead of custom interface
 type TokenDataCacheRow = Database['public']['Tables']['token_data_cache']['Row'];
 
+// Chain ID mapping for consistent handling
+const CHAIN_ID_MAP: Record<string, string> = {
+  '1': '0x1',        // Ethereum mainnet
+  'eth': '0x1',
+  'ethereum': '0x1',
+  '137': '0x89',     // Polygon
+  'polygon': '0x89',
+  '56': '0x38',      // BSC
+  'bsc': '0x38',
+  '42161': '0xa4b1', // Arbitrum
+  'arbitrum': '0xa4b1',
+  '43114': '0xa86a', // Avalanche
+  'avalanche': '0xa86a',
+  '10': '0xa',       // Optimism
+  'optimism': '0xa',
+  '8453': '0x2105',  // Base
+  'base': '0x2105',
+  '250': '0xfa',     // Fantom
+  'fantom': '0xfa'
+};
+
+/**
+ * Normalize chain ID to hex format
+ */
+export const normalizeChainId = (chainId: string): string => {
+  if (!chainId) return '0x1'; // Default to Ethereum
+  
+  const normalized = chainId.toLowerCase();
+  return CHAIN_ID_MAP[normalized] || chainId;
+};
+
 /**
  * Fetch token data from database cache by CoinGecko ID or CMC ID with chain support
  */
 export const getTokenFromCache = async (identifier: string, chainId: string = '0x1'): Promise<TokenDataCacheRow | null> => {
   try {
+    const normalizedChainId = normalizeChainId(chainId);
+    console.log(`[CACHE] Searching for token: ${identifier} on chain: ${normalizedChainId}`);
+    
     // Try by CoinGecko ID first with chain context
     const { data: geckoData, error: geckoError } = await supabase
       .from("token_data_cache")
       .select("*")
       .eq("coingecko_id", identifier)
-      .eq("chain_id", chainId)
+      .eq("chain_id", normalizedChainId)
       .maybeSingle();
 
     if (geckoData && !geckoError) {
-      console.log(`[CACHE] Found cached data for ${identifier} on chain ${chainId}:`, geckoData);
+      console.log(`[CACHE] Found cached data for ${identifier} on chain ${normalizedChainId}:`, geckoData);
       return geckoData;
     }
 
@@ -30,17 +64,17 @@ export const getTokenFromCache = async (identifier: string, chainId: string = '0
         .from("token_data_cache")
         .select("*")
         .or(`symbol.ilike.%${identifier}%,name.ilike.%${identifier}%`)
-        .eq("chain_id", chainId)
+        .eq("chain_id", normalizedChainId)
         .limit(1)
         .maybeSingle();
       
       if (searchData && !searchError) {
-        console.log(`[CACHE] Found cached data for ${identifier} on chain ${chainId}:`, searchData);
+        console.log(`[CACHE] Found cached data for ${identifier} on chain ${normalizedChainId}:`, searchData);
         return searchData;
       }
     }
 
-    console.log(`[CACHE] No cached data found for ${identifier} on chain ${chainId}`);
+    console.log(`[CACHE] No cached data found for ${identifier} on chain ${normalizedChainId}`);
     return null;
   } catch (err) {
     console.warn(`[CACHE] Exception fetching cached data for ${identifier} on chain ${chainId}:`, err);
@@ -192,4 +226,17 @@ export const callWithRetry = async <T>(apiCall: () => Promise<T>, maxRetries = 2
   
   // This should never be reached due to the throw above, but TypeScript needs it
   throw new Error('Maximum retry attempts exceeded');
+};
+
+/**
+ * Get supported chain names for display
+ */
+export const getSupportedChains = (): Record<string, string> => {
+  return {
+    '0x1': 'Ethereum',
+    '0x89': 'Polygon', 
+    '0x38': 'BSC',
+    '0xa4b1': 'Arbitrum',
+    '0xa86a': 'Avalanche'
+  };
 };
