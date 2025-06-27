@@ -57,35 +57,58 @@ const CHAIN_MAP = {
   }
 };
 
-// Chain ID mapping for consistent handling
+// Enhanced chain ID mapping for better normalization
 const CHAIN_ID_MAP: Record<string, string> = {
+  // Decimal to hex
   '1': '0x1',        // Ethereum mainnet
+  '137': '0x89',     // Polygon
+  '56': '0x38',      // BSC
+  '42161': '0xa4b1', // Arbitrum
+  '43114': '0xa86a', // Avalanche
+  '10': '0xa',       // Optimism
+  '8453': '0x2105',  // Base
+  '250': '0xfa',     // Fantom
+  
+  // Name to hex
   'eth': '0x1',
   'ethereum': '0x1',
-  '137': '0x89',     // Polygon
   'polygon': '0x89',
-  '56': '0x38',      // BSC
+  'matic': '0x89',
   'bsc': '0x38',
-  '42161': '0xa4b1', // Arbitrum
+  'bnb': '0x38',
+  'binance': '0x38',
   'arbitrum': '0xa4b1',
-  '43114': '0xa86a', // Avalanche
+  'arb': '0xa4b1',
   'avalanche': '0xa86a',
-  '10': '0xa',       // Optimism
+  'avax': '0xa86a',
   'optimism': '0xa',
-  '8453': '0x2105',  // Base
+  'op': '0xa',
   'base': '0x2105',
-  '250': '0xfa',     // Fantom
-  'fantom': '0xfa'
+  'fantom': '0xfa',
+  'ftm': '0xfa'
 };
 
 /**
- * Normalize chain ID to hex format
+ * Normalize chain ID to hex format with enhanced mapping
  */
 export const normalizeChainId = (chainId: string): string => {
   if (!chainId) return '0x1'; // Default to Ethereum
   
-  const normalized = chainId.toLowerCase();
-  return CHAIN_ID_MAP[normalized] || chainId;
+  // If already in hex format, return as is
+  if (chainId.startsWith('0x')) {
+    return chainId;
+  }
+  
+  const normalized = chainId.toLowerCase().trim();
+  const mappedChain = CHAIN_ID_MAP[normalized];
+  
+  if (mappedChain) {
+    console.log(`[CHAIN-NORMALIZE] Mapped '${chainId}' -> '${mappedChain}'`);
+    return mappedChain;
+  }
+  
+  console.warn(`[CHAIN-NORMALIZE] Unknown chain format: '${chainId}', defaulting to Ethereum`);
+  return '0x1'; // Default to Ethereum for unknown formats
 };
 
 /**
@@ -270,7 +293,7 @@ export const callWithRetry = async <T>(apiCall: () => Promise<T>, maxRetries = 2
 };
 
 /**
- * Get supported chain names for display
+ * Get supported chain names for display - enhanced version
  */
 export const getSupportedChains = (): Record<string, string> => {
   const chains: Record<string, string> = {};

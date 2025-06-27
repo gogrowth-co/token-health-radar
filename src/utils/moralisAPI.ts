@@ -1,6 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { normalizeChainId, getSupportedChains } from "./tokenCacheUtils";
 
 // Unified chain configuration (matches backend)
 const CHAIN_MAP = {
@@ -54,31 +54,6 @@ const CHAIN_MAP = {
   }
 };
 
-// Normalize chain ID to Moralis format
-const normalizeChainId = (chainId: string): string => {
-  if (chainId.startsWith('0x')) {
-    return chainId;
-  }
-  
-  const chainMap: Record<string, string> = {
-    '1': '0x1',
-    'eth': '0x1',
-    'ethereum': '0x1',
-    '56': '0x38',
-    'bsc': '0x38',
-    '137': '0x89',
-    'polygon': '0x89',
-    '42161': '0xa4b1',
-    'arbitrum': '0xa4b1',
-    '10': '0xa',
-    'optimism': '0xa',
-    '8453': '0x2105',
-    'base': '0x2105'
-  };
-  
-  return chainMap[chainId.toLowerCase()] || chainId;
-};
-
 // Rate limiting for edge function calls
 let lastMoralisCallTime = 0;
 export const MIN_MORALIS_API_CALL_INTERVAL = 1000; // 1 second between calls
@@ -99,7 +74,7 @@ export const callMoralisAPI = async (action: string, params: Record<string, any>
   try {
     console.log(`[MORALIS-API] Making edge function request for: ${action}`, params);
     
-    // Normalize chain ID if provided
+    // Normalize chain ID if provided using the shared function
     const requestBody = {
       action,
       ...params,
@@ -223,11 +198,5 @@ export const verifyTokenAddress = async (tokenAddress: string, chainId: string) 
   }
 };
 
-// Get supported chains for display
-export const getSupportedChains = (): Record<string, string> => {
-  const chains: Record<string, string> = {};
-  Object.entries(CHAIN_MAP).forEach(([key, config]) => {
-    chains[config.moralis] = config.name;
-  });
-  return chains;
-};
+// Export the shared getSupportedChains function
+export { getSupportedChains };
