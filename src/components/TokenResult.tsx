@@ -89,7 +89,18 @@ export default function TokenResult({ token, onSelectToken }: TokenResultProps) 
       .map(platform => chainNames[platform] || platform.charAt(0).toUpperCase() + platform.slice(1));
   };
 
+  // Get primary chain for logo badge
+  const getPrimaryChain = () => {
+    if (!token.platforms || Object.keys(token.platforms).length === 0) {
+      return undefined;
+    }
+    
+    // Return the first platform key as the primary chain
+    return Object.keys(token.platforms)[0];
+  };
+
   const supportedChains = getSupportedChains();
+  const primaryChain = getPrimaryChain();
 
   return (
     <div className="relative border rounded-lg overflow-hidden shadow-sm">
@@ -99,7 +110,7 @@ export default function TokenResult({ token, onSelectToken }: TokenResultProps) 
           <TokenLogo 
             logo={token.tokenInfo?.logo_url || token.large || token.thumb || ''}
             symbol={token.symbol}
-            chain={token.tokenInfo?.chain}
+            chain={primaryChain}
             className="w-12 h-12"
             showChainBadge={true}
           />
