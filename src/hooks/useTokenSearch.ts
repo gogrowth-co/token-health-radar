@@ -3,18 +3,17 @@ import { useState, useEffect } from "react";
 import { TokenResult } from "@/components/token/types";
 import { TokenInfoEnriched } from "@/components/token/types";
 import { 
-  searchTokensByCMC, 
-  getTokenDetails, 
-  getTokenQuotes 
-} from "@/utils/coinMarketCapAPI";
+  searchTokensByMoralis, 
+  getTokenMetadata, 
+  getTokenPrice 
+} from "@/utils/moralisAPI";
 import { 
-  transformCMCSearchResult,
-  transformCMCTokenInfo,
-  transformCMCQuoteData,
-  determineCMCErc20Compatibility,
-  extractCMCPlatformData,
-  createCMCDescription
-} from "@/utils/cmcDataTransformers";
+  transformMoralisSearchResult,
+  transformMoralisTokenInfo,
+  determineMoralisErc20Compatibility,
+  extractMoralisPlatformData,
+  createMoralisDescription
+} from "@/utils/moralisDataTransformers";
 import { 
   getTokenFromCache, 
   createTokenInfoFromCache,
@@ -38,53 +37,54 @@ const isGenericDescription = (description: string): boolean => {
   return genericPatterns.some(pattern => pattern.test(description.trim()));
 };
 
-// Helper function to save CMC ID to database during search
-const saveCMCIdToDatabase = async (tokenAddress: string, cmcId: number, tokenName: string, tokenSymbol: string) => {
+// Helper function to save token address to database during search
+const saveTokenAddressToDatabase = async (tokenAddress: string, chainId: string, tokenName: string, tokenSymbol: string) => {
   try {
-    console.log(`[TOKEN-SEARCH] Saving CMC ID ${cmcId} for token ${tokenAddress}`);
+    console.log(`[TOKEN-SEARCH] Saving token address ${tokenAddress} for ${tokenName}`);
     
     // Check if token exists in database
     const { data: existingToken } = await supabase
       .from('token_data_cache')
       .select('token_address')
       .eq('token_address', tokenAddress)
+      .eq('chain_id', chainId)
       .single();
 
     if (existingToken) {
-      // Update existing token with CMC ID
+      // Update existing token
       const { error: updateError } = await supabase
         .from('token_data_cache')
         .update({
-          cmc_id: cmcId,
           name: tokenName,
           symbol: tokenSymbol
         })
-        .eq('token_address', tokenAddress);
+        .eq('token_address', tokenAddress)
+        .eq('chain_id', chainId);
 
       if (updateError) {
-        console.error(`[TOKEN-SEARCH] Error updating CMC ID:`, updateError);
+        console.error(`[TOKEN-SEARCH] Error updating token:`, updateError);
       } else {
-        console.log(`[TOKEN-SEARCH] Successfully updated CMC ID for ${tokenAddress}`);
+        console.log(`[TOKEN-SEARCH] Successfully updated token for ${tokenAddress}`);
       }
     } else {
-      // Insert new token with CMC ID
+      // Insert new token
       const { error: insertError } = await supabase
         .from('token_data_cache')
         .insert({
           token_address: tokenAddress,
+          chain_id: chainId,
           name: tokenName,
-          symbol: tokenSymbol,
-          cmc_id: cmcId
+          symbol: tokenSymbol
         });
 
       if (insertError) {
-        console.error(`[TOKEN-SEARCH] Error inserting CMC ID:`, insertError);
+        console.error(`[TOKEN-SEARCH] Error inserting token:`, insertError);
       } else {
-        console.log(`[TOKEN-SEARCH] Successfully inserted new token with CMC ID for ${tokenAddress}`);
+        console.log(`[TOKEN-SEARCH] Successfully inserted new token for ${tokenAddress}`);
       }
     }
   } catch (error) {
-    console.error(`[TOKEN-SEARCH] Exception saving CMC ID:`, error);
+    console.error(`[TOKEN-SEARCH] Exception saving token:`, error);
   }
 };
 
@@ -105,201 +105,149 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
       setError(null);
       
       try {
-        console.log(`[TOKEN-SEARCH] Starting search for: "${searchTerm}"`);
+        console.log(`[TOKEN-SEARCH] Starting Moralis search for: "${searchTerm}"`);
 
-        // Phase 1: Search tokens using CoinMarketCap edge function
-        const cmcSearchResults = await callWithRetry(() => searchTokensByCMC(searchTerm.trim()));
+        // Phase 1: Search tokens using Moralis API
+        const moralisSearchResults = await callWithRetry(() => searchTokensByMoralis(searchTerm.trim(), 5));
         
-        if (!cmcSearchResults || cmcSearchResults.length === 0) {
+        if (!moralisSearchResults || moralisSearchResults.length === 0) {
           console.log("[TOKEN-SEARCH] No tokens found");
           setResults([]);
           setError(`No tokens found matching "${searchTerm}". Please try a different search term.`);
           return;
         }
 
-        // Take top 3 results
-        const topTokens = cmcSearchResults.slice(0, 3);
+        // Take top 3 results for detailed processing
+        const topTokens = moralisSearchResults.slice(0, 3);
         const enhancedResults: TokenResult[] = [];
         
-        // Extract CMC IDs for batch requests
-        const cmcIds = topTokens.map((token: any) => token.id);
-        
-        console.log(`[TOKEN-SEARCH] Processing ${topTokens.length} tokens:`, cmcIds);
+        console.log(`[TOKEN-SEARCH] Processing ${topTokens.length} tokens from Moralis`);
 
-        try {
-          // Phase 2: Batch fetch token details and quotes
-          const [detailsData, quotesData] = await Promise.allSettled([
-            callWithRetry(() => getTokenDetails(cmcIds)),
-            callWithRetry(() => getTokenQuotes(cmcIds))
-          ]);
+        // Phase 2: Process each token with metadata and price data
+        for (const moralisToken of topTokens) {
+          try {
+            console.log(`[TOKEN-SEARCH] Processing token ${moralisToken.name} (${moralisToken.symbol})`);
 
-          const tokenDetails = detailsData.status === 'fulfilled' ? detailsData.value : {};
-          const tokenQuotes = quotesData.status === 'fulfilled' ? quotesData.value : {};
+            // Create base token result
+            let tokenResult = transformMoralisSearchResult(moralisToken);
 
-          // Phase 3: Process each token with collected data
-          for (const cmcToken of topTokens) {
+            // Extract platform data
+            const platformData = extractMoralisPlatformData(moralisToken);
+            
+            // Save token to database
+            if (moralisToken.address && moralisToken.chain) {
+              await saveTokenAddressToDatabase(
+                moralisToken.address, 
+                moralisToken.chain, 
+                moralisToken.name, 
+                moralisToken.symbol
+              );
+            }
+
+            // Try to get cached data first
+            let tokenInfo: TokenInfoEnriched | null = null;
+            let meaningfulDescription = '';
+            
             try {
-              const cmcId = cmcToken.id;
-              const tokenDetail = tokenDetails[cmcId] || {};
-              const tokenQuote = tokenQuotes[cmcId] || {};
-
-              console.log(`[TOKEN-SEARCH] Processing token ${cmcToken.name} (${cmcId})`);
-
-              // Create base token result
-              let tokenResult = transformCMCSearchResult(cmcToken);
-              tokenResult.cmc_id = cmcId; // Add CMC ID to the result
-
-              // Extract platform data to get token address
-              const platformData = extractCMCPlatformData(tokenDetail);
-              
-              // Get the first valid EVM address
-              let tokenAddress: string | null = null;
-              if (platformData && Object.keys(platformData).length > 0) {
-                tokenAddress = Object.values(platformData)[0] as string;
+              const cachedData = await getTokenFromCache(moralisToken.address);
+              if (cachedData && cachedData.description && !isGenericDescription(cachedData.description)) {
+                console.log(`[TOKEN-SEARCH] Found quality cached description for ${moralisToken.symbol}`);
+                tokenInfo = createTokenInfoFromCache(cachedData);
+                meaningfulDescription = cachedData.description;
+              } else if (cachedData) {
+                console.log(`[TOKEN-SEARCH] Found cached data for ${moralisToken.symbol} but description is generic`);
+                tokenInfo = createTokenInfoFromCache(cachedData);
               }
+            } catch (cacheError) {
+              console.log(`[TOKEN-SEARCH] Cache lookup failed for ${moralisToken.symbol}:`, cacheError);
+            }
 
-              // Save CMC ID to database if we have a valid address
-              if (tokenAddress && /^0x[a-fA-F0-9]{40}$/.test(tokenAddress)) {
-                await saveCMCIdToDatabase(tokenAddress, cmcId, cmcToken.name, cmcToken.symbol);
-              }
-
-              // Try database cache first for non-generic descriptions only
-              let tokenInfo: TokenInfoEnriched | null = null;
-              let meaningfulDescription = '';
+            // If no meaningful cached description, try to get metadata and create description
+            if (!meaningfulDescription) {
+              console.log(`[TOKEN-SEARCH] Getting metadata from Moralis for ${moralisToken.name}`);
               
               try {
-                const cachedData = await getTokenFromCache(cmcToken.slug);
-                if (cachedData && cachedData.description && !isGenericDescription(cachedData.description)) {
-                  console.log(`[TOKEN-SEARCH] Found quality cached description for ${cmcToken.slug}`);
-                  tokenInfo = createTokenInfoFromCache(cachedData);
-                  meaningfulDescription = cachedData.description;
-                } else if (cachedData) {
-                  console.log(`[TOKEN-SEARCH] Found cached data for ${cmcToken.slug} but description is generic, will use CMC data`);
-                  tokenInfo = createTokenInfoFromCache(cachedData);
-                }
-              } catch (cacheError) {
-                console.log(`[TOKEN-SEARCH] Cache lookup failed for ${cmcToken.slug}:`, cacheError);
-              }
-
-              // If no meaningful cached description, try to create from CMC data
-              if (!meaningfulDescription) {
-                console.log(`[TOKEN-SEARCH] Creating description from CMC data for ${cmcToken.name}`);
+                // Get token metadata
+                const metadata = await callWithRetry(() => getTokenMetadata(moralisToken.address, moralisToken.chain));
                 
-                // Try CMC description first
-                const cmcDescription = createCMCDescription(tokenDetail, cmcToken);
-                console.log(`[TOKEN-SEARCH] CMC generated description: "${cmcDescription}"`);
+                // Create description from Moralis data
+                const moralisDescription = createMoralisDescription(metadata, moralisToken);
+                console.log(`[TOKEN-SEARCH] Moralis generated description: "${moralisDescription}"`);
                 
-                if (!isGenericDescription(cmcDescription)) {
-                  meaningfulDescription = cmcDescription;
-                  console.log(`[TOKEN-SEARCH] Using meaningful CMC description`);
-                } else {
-                  console.log(`[TOKEN-SEARCH] CMC description is generic, will use basic info`);
-                  // Create basic informative description without "cryptocurrency token" suffix
-                  if (cmcToken.rank && cmcToken.rank > 0) {
-                    meaningfulDescription = `${cmcToken.name} (${cmcToken.symbol}) is ranked #${cmcToken.rank} by market capitalization`;
-                  } else {
-                    meaningfulDescription = `${cmcToken.name} (${cmcToken.symbol}) digital asset`;
-                  }
-                }
+                meaningfulDescription = moralisDescription;
+              } catch (metadataError) {
+                console.log(`[TOKEN-SEARCH] Metadata fetch failed, using basic description`);
+                meaningfulDescription = `${moralisToken.name} (${moralisToken.symbol}) token on ${moralisToken.chain}`;
               }
-
-              // Create or update tokenInfo
-              if (!tokenInfo) {
-                tokenInfo = transformCMCTokenInfo(tokenDetail, cmcToken);
-              }
-              
-              // Set the meaningful description
-              tokenInfo.description = meaningfulDescription;
-
-              // Get market data from quotes
-              const marketData = transformCMCQuoteData(tokenQuote);
-              
-              // Update tokenInfo with market data
-              tokenInfo.current_price_usd = marketData.price_usd;
-              tokenInfo.price_change_24h = marketData.price_change_24h;
-              tokenInfo.market_cap_usd = marketData.market_cap;
-
-              // Determine ERC-20 compatibility
-              const isErc20Compatible = determineCMCErc20Compatibility(tokenDetail);
-
-              // Update token result with all collected data
-              tokenResult = {
-                ...tokenResult,
-                thumb: tokenDetail.logo || '',
-                large: tokenDetail.logo || '',
-                platforms: platformData,
-                price_usd: marketData.price_usd,
-                price_change_24h: marketData.price_change_24h,
-                market_cap: marketData.market_cap,
-                isErc20: isErc20Compatible,
-                description: meaningfulDescription,
-                tokenInfo,
-                cmc_id: cmcId // Ensure CMC ID is included
-              };
-
-              console.log(`[TOKEN-SEARCH] Final data for ${cmcToken.name}:`, {
-                name: tokenInfo.name,
-                price: marketData.price_usd,
-                market_cap: marketData.market_cap,
-                description: meaningfulDescription,
-                isErc20: isErc20Compatible,
-                cmc_id: cmcId
-              });
-
-              enhancedResults.push(tokenResult);
-              
-              // Small delay between tokens
-              if (topTokens.indexOf(cmcToken) < topTokens.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, 300));
-              }
-              
-            } catch (err: any) {
-              console.error(`[TOKEN-SEARCH] Error processing ${cmcToken.name}:`, err);
-              
-              // Add token with fallback data even if processing failed
-              const fallbackTokenInfo: TokenInfoEnriched = {
-                name: cmcToken.name,
-                symbol: cmcToken.symbol,
-                description: `${cmcToken.name} (${cmcToken.symbol}) digital asset`,
-                website_url: '',
-                twitter_handle: '',
-                github_url: '',
-                logo_url: '',
-                coingecko_id: '',
-                current_price_usd: 0,
-                price_change_24h: 0,
-                market_cap_usd: 0,
-                total_value_locked_usd: 'N/A'
-              };
-              
-              const fallbackResult = transformCMCSearchResult(cmcToken);
-              fallbackResult.cmc_id = cmcToken.id;
-              
-              enhancedResults.push({
-                ...fallbackResult,
-                description: `${cmcToken.name} (${cmcToken.symbol}) digital asset`,
-                tokenInfo: fallbackTokenInfo
-              });
             }
-          }
-          
-        } catch (batchError: any) {
-          console.error("[TOKEN-SEARCH] Batch API calls failed:", batchError);
-          
-          // Fallback: create basic results from search data only
-          for (const cmcToken of topTokens) {
-            const fallbackDescription = cmcToken.rank && cmcToken.rank > 0 
-              ? `${cmcToken.name} (${cmcToken.symbol}) is ranked #${cmcToken.rank} by market capitalization`
-              : `${cmcToken.name} (${cmcToken.symbol}) digital asset`;
+
+            // Create or update tokenInfo
+            if (!tokenInfo) {
+              tokenInfo = transformMoralisTokenInfo({}, moralisToken);
+            }
+            
+            // Set the meaningful description
+            tokenInfo.description = meaningfulDescription;
+
+            // Try to get price data
+            try {
+              const priceData = await callWithRetry(() => getTokenPrice(moralisToken.address, moralisToken.chain));
               
+              if (priceData && typeof priceData.usdPrice === 'number') {
+                tokenInfo.current_price_usd = priceData.usdPrice;
+                tokenInfo.price_change_24h = priceData.change24h || 0;
+                tokenInfo.market_cap_usd = priceData.marketCap || 0;
+              }
+            } catch (priceError) {
+              console.log(`[TOKEN-SEARCH] Price fetch failed for ${moralisToken.symbol}:`, priceError);
+              // Price data is optional, continue without it
+            }
+
+            // Determine ERC-20 compatibility
+            const isErc20Compatible = determineMoralisErc20Compatibility(moralisToken);
+
+            // Update token result with all collected data
+            tokenResult = {
+              ...tokenResult,
+              thumb: moralisToken.logo || '',
+              large: moralisToken.logo || '',
+              platforms: platformData,
+              price_usd: tokenInfo.current_price_usd || 0,
+              price_change_24h: tokenInfo.price_change_24h || 0,
+              market_cap: tokenInfo.market_cap_usd || 0,
+              isErc20: isErc20Compatible,
+              description: meaningfulDescription,
+              tokenInfo
+            };
+
+            console.log(`[TOKEN-SEARCH] Final data for ${moralisToken.name}:`, {
+              name: tokenInfo.name,
+              price: tokenInfo.current_price_usd,
+              market_cap: tokenInfo.market_cap_usd,
+              description: meaningfulDescription,
+              isErc20: isErc20Compatible,
+              verified: moralisToken.verified
+            });
+
+            enhancedResults.push(tokenResult);
+            
+            // Small delay between tokens
+            if (topTokens.indexOf(moralisToken) < topTokens.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 300));
+            }
+            
+          } catch (err: any) {
+            console.error(`[TOKEN-SEARCH] Error processing ${moralisToken.name}:`, err);
+            
+            // Add token with fallback data even if processing failed
             const fallbackTokenInfo: TokenInfoEnriched = {
-              name: cmcToken.name,
-              symbol: cmcToken.symbol,
-              description: fallbackDescription,
+              name: moralisToken.name,
+              symbol: moralisToken.symbol,
+              description: `${moralisToken.name} (${moralisToken.symbol}) token on ${moralisToken.chain}`,
               website_url: '',
               twitter_handle: '',
               github_url: '',
-              logo_url: '',
+              logo_url: moralisToken.logo || '',
               coingecko_id: '',
               current_price_usd: 0,
               price_change_24h: 0,
@@ -307,18 +255,17 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
               total_value_locked_usd: 'N/A'
             };
             
-            const fallbackResult = transformCMCSearchResult(cmcToken);
-            fallbackResult.cmc_id = cmcToken.id;
+            const fallbackResult = transformMoralisSearchResult(moralisToken);
             
             enhancedResults.push({
               ...fallbackResult,
-              description: fallbackDescription,
+              description: `${moralisToken.name} (${moralisToken.symbol}) token on ${moralisToken.chain}`,
               tokenInfo: fallbackTokenInfo
             });
           }
         }
         
-        console.log("[TOKEN-SEARCH] Final enhanced results:", enhancedResults);
+        console.log("[TOKEN-SEARCH] Final Moralis-based results:", enhancedResults);
         setResults(enhancedResults);
         
       } catch (err: any) {
