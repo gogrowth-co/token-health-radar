@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -94,35 +93,41 @@ export default function ScanLoading() {
       const tokenInfo = getTokenInfoFromStorage();
       console.log('[SCAN-LOADING] Token info from storage:', tokenInfo);
 
-      // Determine final parameters for scan
+      // Determine final parameters for scan - use address as primary identifier
       const scanParams: any = {
         user_id: user?.id || null
       };
 
-      // Handle address and chain parameters
-      if (chain && address) {
-        scanParams.token_address = address;
-        scanParams.chain_id = chain;
-        console.log('[SCAN-LOADING] Using chain/address parameters');
-      } else if (token) {
-        scanParams.token_address = token;
-        scanParams.chain_id = chain || '0x1'; // Default to Ethereum if no chain specified
-        console.log('[SCAN-LOADING] Using token parameter with fallback chain');
-      } else if (tokenInfo?.address) {
-        scanParams.token_address = tokenInfo.address;
-        scanParams.chain_id = tokenInfo.chain_id || chain || '0x1';
-        console.log('[SCAN-LOADING] Using token info from localStorage');
-      } else {
+      // Use token address as the primary identifier
+      let finalTokenAddress = address || token;
+      let finalChainId = chain || '0x1'; // Default to Ethereum
+
+      if (!finalTokenAddress && tokenInfo?.address) {
+        finalTokenAddress = tokenInfo.address;
+        finalChainId = tokenInfo.chain_id || chain || '0x1';
+      }
+
+      if (!finalTokenAddress) {
         throw new Error('No token address provided for scan');
       }
 
-      // Add additional token context if available
-      if (tokenInfo?.id) {
-        scanParams.coingecko_id = tokenInfo.id;
+      // Normalize chain ID to hex format
+      if (!finalChainId.startsWith('0x')) {
+        const chainMap: Record<string, string> = {
+          '1': '0x1',
+          '137': '0x89',
+          '56': '0x38',
+          '42161': '0xa4b1',
+          '43114': '0xa86a',
+          '10': '0xa',
+          '8453': '0x2105',
+          '250': '0xfa'
+        };
+        finalChainId = chainMap[finalChainId] || `0x${parseInt(finalChainId).toString(16)}`;
       }
-      if (tokenInfo?.cmc_id) {
-        scanParams.cmc_id = tokenInfo.cmc_id;
-      }
+
+      scanParams.token_address = finalTokenAddress;
+      scanParams.chain_id = finalChainId;
 
       console.log('[SCAN-LOADING] Final scan parameters:', scanParams);
 
@@ -186,7 +191,8 @@ export default function ScanLoading() {
 
   // Trigger the actual scan when component mounts
   useEffect(() => {
-    if (!chain && !address && !token) {
+    const finalAddress = address || token;
+    if (!finalAddress && !chain) {
       console.error('[SCAN-LOADING] No token parameters provided');
       setScanStatus('error');
       setErrorMessage('No token information provided. Please go back and select a token to scan.');
@@ -287,13 +293,13 @@ export default function ScanLoading() {
             <h1 className="text-3xl font-bold mb-4">
               {scanStatus === 'success' ? 'Scan Complete!' : 'Scanning Token Health'}
             </h1>
-            {chain && address && (
+            {chain && (address || token) && (
               <div className="flex items-center justify-center gap-2 mb-4">
                 <Badge variant="secondary" className="font-mono text-sm">
                   {getChainDisplayName(chain)}
                 </Badge>
                 <span className="text-muted-foreground text-sm font-mono">
-                  {address.slice(0, 6)}...{address.slice(-4)}
+                  {(address || token)?.slice(0, 6)}...{(address || token)?.slice(-4)}
                 </span>
               </div>
             )}

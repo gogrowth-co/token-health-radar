@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { TokenResult, TokenInfoEnriched } from "@/components/token/types";
 import type { Database } from "@/integrations/supabase/types";
@@ -38,46 +37,30 @@ export const normalizeChainId = (chainId: string): string => {
 };
 
 /**
- * Fetch token data from database cache by CoinGecko ID or CMC ID with chain support
+ * Fetch token data from database cache by token address and chain ID
  */
-export const getTokenFromCache = async (identifier: string, chainId: string = '0x1'): Promise<TokenDataCacheRow | null> => {
+export const getTokenFromCache = async (tokenAddress: string, chainId: string = '0x1'): Promise<TokenDataCacheRow | null> => {
   try {
     const normalizedChainId = normalizeChainId(chainId);
-    console.log(`[CACHE] Searching for token: ${identifier} on chain: ${normalizedChainId}`);
+    console.log(`[CACHE] Searching for token: ${tokenAddress} on chain: ${normalizedChainId}`);
     
-    // Try by CoinGecko ID first with chain context
-    const { data: geckoData, error: geckoError } = await supabase
+    // Search by token address and chain ID
+    const { data: tokenData, error: tokenError } = await supabase
       .from("token_data_cache")
       .select("*")
-      .eq("coingecko_id", identifier)
+      .eq("token_address", tokenAddress.toLowerCase())
       .eq("chain_id", normalizedChainId)
       .maybeSingle();
 
-    if (geckoData && !geckoError) {
-      console.log(`[CACHE] Found cached data for ${identifier} on chain ${normalizedChainId}:`, geckoData);
-      return geckoData;
+    if (tokenData && !tokenError) {
+      console.log(`[CACHE] Found cached data for ${tokenAddress} on chain ${normalizedChainId}:`, tokenData);
+      return tokenData;
     }
 
-    // If still not found and looks like a slug, try by symbol/name with chain context
-    if (typeof identifier === 'string') {
-      const { data: searchData, error: searchError } = await supabase
-        .from("token_data_cache")
-        .select("*")
-        .or(`symbol.ilike.%${identifier}%,name.ilike.%${identifier}%`)
-        .eq("chain_id", normalizedChainId)
-        .limit(1)
-        .maybeSingle();
-      
-      if (searchData && !searchError) {
-        console.log(`[CACHE] Found cached data for ${identifier} on chain ${normalizedChainId}:`, searchData);
-        return searchData;
-      }
-    }
-
-    console.log(`[CACHE] No cached data found for ${identifier} on chain ${normalizedChainId}`);
+    console.log(`[CACHE] No cached data found for ${tokenAddress} on chain ${normalizedChainId}`);
     return null;
   } catch (err) {
-    console.warn(`[CACHE] Exception fetching cached data for ${identifier} on chain ${chainId}:`, err);
+    console.warn(`[CACHE] Exception fetching cached data for ${tokenAddress} on chain ${chainId}:`, err);
     return null;
   }
 };
@@ -237,6 +220,7 @@ export const getSupportedChains = (): Record<string, string> => {
     '0x89': 'Polygon', 
     '0x38': 'BSC',
     '0xa4b1': 'Arbitrum',
-    '0xa86a': 'Avalanche'
+    '0xa86a': 'Avalanche',
+    '0x2105': 'Base'
   };
 };
