@@ -1,10 +1,7 @@
-
 import { memo } from "react";
 import TokenSearchInput from "@/components/TokenSearchInput";
-
 const HowItWorksSection = memo(() => {
-  return (
-    <section className="py-12 md:py-16">
+  return <section className="py-12 md:py-16">
       <div className="container px-4 md:px-6">
         <div className="text-center mb-8 md:mb-10">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tighter">How It Works</h2>
@@ -45,14 +42,9 @@ const HowItWorksSection = memo(() => {
           </div>
         </div>
         
-        <div className="flex justify-center mt-8 md:mt-10 px-4 sm:px-0">
-          <TokenSearchInput placeholder="Try it now - enter any token name or address" textPosition="below" />
-        </div>
+        
       </div>
-    </section>
-  );
+    </section>;
 });
-
 HowItWorksSection.displayName = 'HowItWorksSection';
-
 export default HowItWorksSection;
