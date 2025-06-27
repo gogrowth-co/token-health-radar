@@ -117,8 +117,8 @@ serve(async (req) => {
           tokens: [],
           count: 0,
           message: isAddress 
-            ? `No token found for address "${searchTerm}" across supported chains.`
-            : `No tokens found for "${searchTerm}". Try searching for a different token or paste a contract address.`
+            ? `No verified token found for address "${searchTerm}" across supported chains.`
+            : `No verified tokens found for "${searchTerm}". Try searching for a different token or paste a contract address.`
         }),
         { 
           headers: { 
@@ -130,7 +130,7 @@ serve(async (req) => {
     }
 
     const tokensWithLogos = results.filter(t => t.logo).length;
-    console.log(`[MORALIS-SEARCH] Returning ${results.length} tokens, ${tokensWithLogos} with logos`);
+    console.log(`[MORALIS-SEARCH] Returning ${results.length} verified tokens, ${tokensWithLogos} with logos`);
 
     return new Response(
       JSON.stringify({
@@ -173,12 +173,11 @@ async function searchBySymbolParallel(searchTerm: string, apiKey: string, limit:
   
   console.log(`[MORALIS-SEARCH] Multi-chain symbol search for: "${capitalizedSymbol}" across ${CHAIN_CONFIG.length} chains`);
   
-  // Try the new approach: search for token metadata using a more direct method
+  // Execute searches for all chains in parallel
   const searchPromises = CHAIN_CONFIG.map(async (chainConfig) => {
     try {
-      console.log(`[MORALIS-SEARCH] Searching ${chainConfig.name} (${chainConfig.id}) for ${capitalizedSymbol}`);
+      console.log(`[MORALIS-SEARCH] Starting search on ${chainConfig.name} (${chainConfig.id}) for ${capitalizedSymbol}`);
       
-      // First try: Use the search endpoint with simple symbol parameter
       const searchUrl = `https://deep-index.moralis.io/api/v2/erc20/metadata/symbols?chain=${chainConfig.id}&symbols=${capitalizedSymbol}`;
       console.log(`[MORALIS-SEARCH] ${chainConfig.name} search URL: ${searchUrl}`);
       
@@ -197,37 +196,45 @@ async function searchBySymbolParallel(searchTerm: string, apiKey: string, limit:
         const errorText = await response.text();
         console.error(`[MORALIS-SEARCH] ${chainConfig.name} error response:`, errorText);
         
-        // If search fails, try known token addresses as fallback
+        // Try known token addresses as fallback
         return await tryKnownTokenFallback(capitalizedSymbol, chainConfig, apiKey);
       }
 
       const data: MoralisTokenMetadata[] = await response.json();
-      console.log(`[MORALIS-SEARCH] ${chainConfig.name} raw response:`, JSON.stringify(data, null, 2));
-      console.log(`[MORALIS-SEARCH] ${chainConfig.name} returned ${data.length} tokens`);
+      console.log(`[MORALIS-SEARCH] ${chainConfig.name} returned ${data.length} raw tokens`);
 
       if (!Array.isArray(data) || data.length === 0) {
         console.log(`[MORALIS-SEARCH] ${chainConfig.name} returned no valid data, trying fallback`);
         return await tryKnownTokenFallback(capitalizedSymbol, chainConfig, apiKey);
       }
 
-      // Process tokens from this chain
+      // Enhanced filtering and processing
       const processedTokens: TokenResult[] = [];
+      let filteredCount = 0;
       
       for (const token of data) {
         try {
-          // Filter out spam tokens
+          // Enhanced filtering: both spam and verification checks
           if (token.possible_spam) {
-            console.log(`[MORALIS-SEARCH] Filtering out spam token: ${token.symbol} on ${chainConfig.name}`);
+            console.log(`[MORALIS-SEARCH] ${chainConfig.name}: Filtering out spam token: ${token.symbol}`);
+            filteredCount++;
+            continue;
+          }
+
+          if (!token.verified_contract) {
+            console.log(`[MORALIS-SEARCH] ${chainConfig.name}: Filtering out unverified token: ${token.symbol}`);
+            filteredCount++;
             continue;
           }
 
           // Ensure required fields exist
           if (!token.address || !token.name || !token.symbol) {
-            console.log(`[MORALIS-SEARCH] Filtering out token with missing required fields on ${chainConfig.name}`);
+            console.log(`[MORALIS-SEARCH] ${chainConfig.name}: Filtering out token with missing required fields`);
+            filteredCount++;
             continue;
           }
 
-          console.log(`[MORALIS-SEARCH] Processing token: ${token.name} (${token.symbol}) on ${chainConfig.name} with logo: ${token.logo || 'none'}`);
+          console.log(`[MORALIS-SEARCH] ${chainConfig.name}: Processing verified token: ${token.name} (${token.symbol}) with logo: ${token.logo || 'none'}`);
           
           // Attach chain information explicitly since we know which chain this came from
           const tokenWithChain = { 
@@ -245,7 +252,7 @@ async function searchBySymbolParallel(searchTerm: string, apiKey: string, limit:
         }
       }
 
-      console.log(`[MORALIS-SEARCH] ${chainConfig.name} processed ${processedTokens.length} valid tokens`);
+      console.log(`[MORALIS-SEARCH] ${chainConfig.name}: Filtered out ${filteredCount} tokens, processed ${processedTokens.length} verified tokens`);
       return processedTokens;
 
     } catch (error) {
@@ -261,7 +268,7 @@ async function searchBySymbolParallel(searchTerm: string, apiKey: string, limit:
   // Flatten and combine all results
   const allResults = chainResults.flat();
   
-  console.log(`[MORALIS-SEARCH] Combined results from all chains: ${allResults.length} tokens`);
+  console.log(`[MORALIS-SEARCH] Combined results from all chains: ${allResults.length} verified tokens`);
 
   // Sort by chain priority (Ethereum first, then others)
   const chainPriority: Record<string, number> = {
@@ -281,7 +288,7 @@ async function searchBySymbolParallel(searchTerm: string, apiKey: string, limit:
   // Apply limit after sorting
   const limitedResults = allResults.slice(0, limit);
   
-  console.log(`[MORALIS-SEARCH] Returning ${limitedResults.length} processed tokens after limit`);
+  console.log(`[MORALIS-SEARCH] Returning ${limitedResults.length} verified tokens after limit and sorting`);
   return limitedResults;
 }
 
@@ -315,10 +322,13 @@ async function tryKnownTokenFallback(symbol: string, chainConfig: any, apiKey: s
     
     if (data && Array.isArray(data) && data.length > 0) {
       const tokenData = data[0];
-      if (tokenData && tokenData.address && !tokenData.possible_spam) {
+      // Apply same filtering criteria to fallback tokens
+      if (tokenData && tokenData.address && !tokenData.possible_spam && tokenData.verified_contract) {
         const tokenWithChain = { ...tokenData, chain: chainConfig.id };
         const transformedToken = transformTokenData(tokenWithChain, chainConfig);
         return transformedToken ? [transformedToken] : [];
+      } else {
+        console.log(`[MORALIS-SEARCH] Fallback token for ${symbol} on ${chainConfig.name} failed verification criteria`);
       }
     }
   } catch (error) {
@@ -356,15 +366,18 @@ async function searchByAddress(searchTerm: string, apiKey: string): Promise<Toke
       
       if (data && Array.isArray(data) && data.length > 0) {
         const tokenData = data[0];
-        console.log(`[MORALIS-SEARCH] Found token on ${chainConfig.name}: ${tokenData.name} (${tokenData.symbol}) with logo: ${tokenData.logo || 'none'}`);
+        console.log(`[MORALIS-SEARCH] Found token on ${chainConfig.name}: ${tokenData.name} (${tokenData.symbol}) with verification: ${tokenData.verified_contract}, spam: ${tokenData.possible_spam}`);
         
-        if (tokenData && tokenData.address && !tokenData.possible_spam) {
+        // Apply enhanced filtering for address search as well
+        if (tokenData && tokenData.address && !tokenData.possible_spam && tokenData.verified_contract) {
           // Add chain info to the token data
           const tokenWithChain = { ...tokenData, chain: chainConfig.id };
           const transformedToken = transformTokenData(tokenWithChain, chainConfig);
           if (transformedToken) {
             results.push(transformedToken);
           }
+        } else {
+          console.log(`[MORALIS-SEARCH] Address token on ${chainConfig.name} failed verification criteria`);
         }
       }
     } catch (error) {
@@ -372,6 +385,7 @@ async function searchByAddress(searchTerm: string, apiKey: string): Promise<Toke
     }
   }
   
+  console.log(`[MORALIS-SEARCH] Address search found ${results.length} verified tokens across all chains`);
   return results;
 }
 
