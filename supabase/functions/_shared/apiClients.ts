@@ -1,4 +1,3 @@
-
 import { CHAIN_MAP, getChainConfigByMoralisId } from './chainConfig.ts';
 
 // GoPlus Security API client
@@ -115,6 +114,11 @@ export async function fetchMoralisMetadata(tokenAddress: string, chainId: string
       console.log(`[MORALIS] No metadata found for token: ${tokenAddress}`);
       return null;
     }
+
+    console.log(`[MORALIS] Rich metadata extracted for: ${tokenData.name} (${tokenData.symbol})`);
+    console.log(`[MORALIS] Description available: ${!!tokenData.description}`);
+    console.log(`[MORALIS] Links available: ${Object.keys(tokenData.links || {}).length} social links`);
+    console.log(`[MORALIS] Security score: ${tokenData.security_score || 'N/A'}`);
     
     return {
       name: tokenData.name || '',
@@ -124,7 +128,13 @@ export async function fetchMoralisMetadata(tokenAddress: string, chainId: string
       thumbnail: tokenData.thumbnail || '',
       total_supply: tokenData.total_supply || '0',
       verified_contract: tokenData.verified_contract || false,
-      possible_spam: tokenData.possible_spam || false
+      possible_spam: tokenData.possible_spam || false,
+      description: tokenData.description || '',
+      links: tokenData.links || {},
+      security_score: tokenData.security_score || null,
+      market_cap: tokenData.market_cap || null,
+      circulating_supply: tokenData.circulating_supply || null,
+      fully_diluted_valuation: tokenData.fully_diluted_valuation || null
     };
   } catch (error) {
     console.error(`[MORALIS] Error fetching metadata:`, error);

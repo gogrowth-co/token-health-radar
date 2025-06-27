@@ -51,23 +51,31 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     const symbol = metadata?.symbol || market?.symbol || 'UNKNOWN';
     const logo_url = metadata?.logo || metadata?.thumbnail || '';
     
-    // Create a meaningful description using Moralis data
-    const description = metadata?.name 
-      ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
-      : `${name} on ${chainConfig.name}`;
+    // Use rich description from Moralis if available, otherwise create a basic one
+    const description = metadata?.description && metadata.description.trim() 
+      ? metadata.description
+      : metadata?.name 
+        ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
+        : `${name} on ${chainConfig.name}`;
 
-    // Combine data from all sources
+    // Extract social links from Moralis metadata
+    const links = metadata?.links || {};
+    const website_url = links.website || '';
+    const twitter_handle = links.twitter ? links.twitter.replace('https://twitter.com/', '').replace('@', '') : '';
+    const github_url = links.github || '';
+
+    // Combine data from all sources, prioritizing Moralis for richer data
     const combinedData = {
       name,
       symbol,
       description,
       logo_url,
-      website_url: '', // Moralis doesn't provide social links in metadata endpoint
-      twitter_handle: '',
-      github_url: '',
+      website_url,
+      twitter_handle,
+      github_url,
       current_price_usd: market?.current_price_usd || 0,
       price_change_24h: market?.price_change_24h || 0,
-      market_cap_usd: market?.market_cap_usd || 0,
+      market_cap_usd: metadata?.market_cap ? parseFloat(metadata.market_cap) : (market?.market_cap_usd || 0),
       total_supply: metadata?.total_supply || '0',
       trading_volume_24h_usd: market?.trading_volume_24h_usd || 0
     };
@@ -76,7 +84,12 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       name: combinedData.name,
       symbol: combinedData.symbol,
       logo_available: !!combinedData.logo_url,
-      description_length: combinedData.description.length
+      description_length: combinedData.description.length,
+      social_links: {
+        website: !!combinedData.website_url,
+        twitter: !!combinedData.twitter_handle,
+        github: !!combinedData.github_url
+      }
     });
 
     return {
