@@ -1,9 +1,10 @@
+
 import { memo } from "react";
 import TokenSearchInput from "@/components/TokenSearchInput";
 
 const HeroSection = memo(() => {
   return (
-    <section className="relative py-8 md:py-12 lg:py-20 pb-32 md:pb-40 lg:pb-48 overflow-hidden">
+    <section className="relative py-32 md:py-40 lg:py-48 pb-32 md:pb-40 lg:pb-48 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-radial from-primary/10 to-transparent -z-10"></div>
       
       <div className="container px-4 md:px-6 space-y-6 md:space-y-8 text-center">
