@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -135,9 +134,9 @@ serve(async (req) => {
   }
 
   try {
-    const { token_address, coingecko_id, cmc_id, user_id } = await req.json()
+    const { token_address, chain_id, coingecko_id, cmc_id, user_id } = await req.json()
     
-    console.log(`[SCAN] Starting scan for token: ${token_address}, user: ${user_id}, coingecko_id: ${coingecko_id}, cmc_id: ${cmc_id}`)
+    console.log(`[SCAN] Starting scan for token: ${token_address}, chain: ${chain_id}, user: ${user_id}, coingecko_id: ${coingecko_id}, cmc_id: ${cmc_id}`)
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -183,6 +182,7 @@ serve(async (req) => {
         .from('token_data_cache')
         .select('*')
         .eq('token_address', token_address)
+        .eq('chain_id', chain_id || '0x1')
         .single()
 
       if (existingToken) {
@@ -198,7 +198,8 @@ serve(async (req) => {
             await supabase
               .from('token_data_cache')
               .update({ cmc_id: finalCmcId })
-              .eq('token_address', token_address);
+              .eq('token_address', token_address)
+              .eq('chain_id', chain_id || '0x1');
           }
         } else if (existingToken.cmc_id) {
           finalCmcId = existingToken.cmc_id;
@@ -453,8 +454,18 @@ serve(async (req) => {
       console.log(`[SCAN] Pro scan - fetching security data`)
       
       try {
-        // Fetch security data from external API
-        const apiUrl = `https://api.gopluslabs.io/api/v1/token_security/56/${token_address}`
+        // Fetch security data from external API - adjust API based on chain
+        let apiUrl = `https://api.gopluslabs.io/api/v1/token_security/1/${token_address}` // Default to Ethereum
+        
+        // Map chain IDs to GoPlus supported chains
+        if (chain_id === '0xa4b1') { // Arbitrum
+          apiUrl = `https://api.gopluslabs.io/api/v1/token_security/42161/${token_address}`
+        } else if (chain_id === '0x89') { // Polygon
+          apiUrl = `https://api.gopluslabs.io/api/v1/token_security/137/${token_address}`
+        } else if (chain_id === '0x38') { // BSC
+          apiUrl = `https://api.gopluslabs.io/api/v1/token_security/56/${token_address}`
+        }
+        
         console.log(`[SCAN] Calling GoPlus API: ${apiUrl}`)
         
         const response = await fetch(apiUrl)
@@ -617,17 +628,18 @@ serve(async (req) => {
     
     const overallScore = Math.round((scores.security + scores.liquidity + scores.tokenomics + scores.community + scores.development) / 5)
 
-    console.log(`[SCAN] Saving token data to database: ${token_address}`)
+    console.log(`[SCAN] Saving token data to database: ${token_address}, chain: ${chain_id}`)
     console.log(`[SCAN] Token description to save: "${tokenData.description}"`)
     console.log(`[SCAN] Description source: ${descriptionSource}`)
     console.log(`[SCAN] CMC ID to save: ${finalCmcId}`)
     
     try {
-      // Force update to database with the new/improved description and CMC ID
+      // Force update to database with the new/improved description and CMC ID - with chain support
       const { data: existingToken } = await supabase
         .from('token_data_cache')
         .select('token_address')
         .eq('token_address', token_address)
+        .eq('chain_id', chain_id || '0x1')
         .single()
 
       if (existingToken) {
@@ -651,6 +663,7 @@ serve(async (req) => {
             total_value_locked_usd: tokenData.total_value_locked_usd
           })
           .eq('token_address', token_address)
+          .eq('chain_id', chain_id || '0x1')
 
         if (updateError) throw updateError
         console.log(`[SCAN] Successfully updated existing token data for: ${token_address}`)
@@ -661,6 +674,7 @@ serve(async (req) => {
           .from('token_data_cache')
           .insert({
             token_address,
+            chain_id: chain_id || '0x1',
             name: tokenData.name,
             symbol: tokenData.symbol,
             description: tokenData.description,
@@ -680,34 +694,39 @@ serve(async (req) => {
         console.log(`[SCAN] Successfully inserted new token data for: ${token_address}`)
       }
 
-      // Save category data
+      // Save category data with chain support
       const savePromises = [
         supabase.from('token_security_cache').upsert({
           token_address,
+          chain_id: chain_id || '0x1',
           ...securityData,
           score: scores.security
-        }, { onConflict: 'token_address' }),
+        }, { onConflict: 'token_address,chain_id' }),
         
         supabase.from('token_tokenomics_cache').upsert({
           token_address,
+          chain_id: chain_id || '0x1',
           score: scores.tokenomics
-        }, { onConflict: 'token_address' }),
+        }, { onConflict: 'token_address,chain_id' }),
         
         supabase.from('token_liquidity_cache').upsert({
           token_address,
+          chain_id: chain_id || '0x1',
           score: scores.liquidity
-        }, { onConflict: 'token_address' }),
+        }, { onConflict: 'token_address,chain_id' }),
         
         supabase.from('token_development_cache').upsert({
           token_address,
+          chain_id: chain_id || '0x1',
           ...developmentData,
           score: scores.development
-        }, { onConflict: 'token_address' }),
+        }, { onConflict: 'token_address,chain_id' }),
         
         supabase.from('token_community_cache').upsert({
           token_address,
+          chain_id: chain_id || '0x1',
           score: scores.community
-        }, { onConflict: 'token_address' })
+        }, { onConflict: 'token_address,chain_id' })
       ]
 
       const results = await Promise.allSettled(savePromises)
@@ -720,10 +739,11 @@ serve(async (req) => {
         }
       })
 
-      // Record the scan
+      // Record the scan with chain support
       console.log(`[SCAN] Recording scan: {
   user_id: "${user_id}",
   token_address: "${token_address}",
+  chain_id: "${chain_id || '0x1'}",
   cmc_id: ${finalCmcId ? parseInt(finalCmcId) : null},
   score_total: ${overallScore},
   pro_scan: ${proScanPermitted},
@@ -735,6 +755,7 @@ serve(async (req) => {
         .insert({
           user_id: user_id || null,
           token_address,
+          chain_id: chain_id || '0x1',
           cmc_id: finalCmcId ? parseInt(finalCmcId) : null,
           score_total: overallScore,
           pro_scan: proScanPermitted,
@@ -751,7 +772,7 @@ serve(async (req) => {
       console.error(`[SCAN] Error saving data to database:`, error)
     }
 
-    console.log(`[SCAN] Scan completed successfully for ${token_address}, overall score: ${overallScore}, pro_scan: ${proScanPermitted}, development_score: ${developmentScore}`)
+    console.log(`[SCAN] Scan completed successfully for ${token_address} on chain ${chain_id}, overall score: ${overallScore}, pro_scan: ${proScanPermitted}, development_score: ${developmentScore}`)
 
     // Return the scan results
     return new Response(JSON.stringify({

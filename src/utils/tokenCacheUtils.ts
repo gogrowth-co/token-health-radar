@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { TokenResult, TokenInfoEnriched } from "@/components/token/types";
 import type { Database } from "@/integrations/supabase/types";
@@ -6,41 +7,43 @@ import type { Database } from "@/integrations/supabase/types";
 type TokenDataCacheRow = Database['public']['Tables']['token_data_cache']['Row'];
 
 /**
- * Fetch token data from database cache by CoinGecko ID or CMC ID
+ * Fetch token data from database cache by CoinGecko ID or CMC ID with chain support
  */
-export const getTokenFromCache = async (identifier: string): Promise<TokenDataCacheRow | null> => {
+export const getTokenFromCache = async (identifier: string, chainId: string = '0x1'): Promise<TokenDataCacheRow | null> => {
   try {
-    // Try by CoinGecko ID first
+    // Try by CoinGecko ID first with chain context
     const { data: geckoData, error: geckoError } = await supabase
       .from("token_data_cache")
       .select("*")
       .eq("coingecko_id", identifier)
+      .eq("chain_id", chainId)
       .maybeSingle();
 
     if (geckoData && !geckoError) {
-      console.log(`[CACHE] Found cached data for ${identifier}:`, geckoData);
+      console.log(`[CACHE] Found cached data for ${identifier} on chain ${chainId}:`, geckoData);
       return geckoData;
     }
 
-    // If still not found and looks like a slug, try by symbol/name
+    // If still not found and looks like a slug, try by symbol/name with chain context
     if (typeof identifier === 'string') {
       const { data: searchData, error: searchError } = await supabase
         .from("token_data_cache")
         .select("*")
         .or(`symbol.ilike.%${identifier}%,name.ilike.%${identifier}%`)
+        .eq("chain_id", chainId)
         .limit(1)
         .maybeSingle();
       
       if (searchData && !searchError) {
-        console.log(`[CACHE] Found cached data for ${identifier}:`, searchData);
+        console.log(`[CACHE] Found cached data for ${identifier} on chain ${chainId}:`, searchData);
         return searchData;
       }
     }
 
-    console.log(`[CACHE] No cached data found for ${identifier}`);
+    console.log(`[CACHE] No cached data found for ${identifier} on chain ${chainId}`);
     return null;
   } catch (err) {
-    console.warn(`[CACHE] Exception fetching cached data for ${identifier}:`, err);
+    console.warn(`[CACHE] Exception fetching cached data for ${identifier} on chain ${chainId}:`, err);
     return null;
   }
 };
@@ -58,7 +61,7 @@ export const createTokenInfoFromCache = (cacheData: TokenDataCacheRow): TokenInf
     github_url: cacheData.github_url || '',
     logo_url: cacheData.logo_url || '',
     coingecko_id: cacheData.coingecko_id || '',
-    cmc_id: null, // CMC ID not in database schema yet
+    cmc_id: cacheData.cmc_id || null,
     current_price_usd: Number(cacheData.current_price_usd) || 0,
     price_change_24h: Number(cacheData.price_change_24h) || 0,
     market_cap_usd: Number(cacheData.market_cap_usd) || 0,

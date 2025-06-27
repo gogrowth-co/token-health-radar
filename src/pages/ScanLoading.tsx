@@ -53,6 +53,10 @@ export default function ScanLoading() {
             params.set("address", address);
           } else if (token) {
             params.set("token", token);
+            // If we have a token param but no chain, default to Ethereum
+            if (!chain) {
+              params.set("chain", "0x1");
+            }
           }
           
           setTimeout(() => {
@@ -78,14 +82,22 @@ export default function ScanLoading() {
 
   const getChainDisplayName = (chainId: string) => {
     const chainNames: Record<string, string> = {
+      '0x1': 'Ethereum',
       'eth': 'Ethereum',
       'ethereum': 'Ethereum',
+      '0x89': 'Polygon',
       'polygon': 'Polygon',
+      '0x38': 'BSC',
       'bsc': 'BSC',
+      '0xa4b1': 'Arbitrum',
       'arbitrum': 'Arbitrum',
+      '0xa86a': 'Avalanche',
       'avalanche': 'Avalanche',
+      '0xa': 'Optimism',
       'optimism': 'Optimism',
+      '0x2105': 'Base',
       'base': 'Base',
+      '0xfa': 'Fantom',
       'fantom': 'Fantom'
     };
     return chainNames[chainId?.toLowerCase()] || chainId;

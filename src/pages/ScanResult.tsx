@@ -38,10 +38,11 @@ export default function ScanResult() {
   const [coinGeckoDescription, setCoinGeckoDescription] = useState<string>('');
   const [descriptionLoading, setDescriptionLoading] = useState(false);
   
-  // Get parameters from URL - support both formats
+  // Get parameters from URL - support both formats and chain
   const tokenFromParam = searchParams.get("token") || "";
   const addressFromParam = searchParams.get("address") || "";
   const tokenAddress = tokenFromParam || addressFromParam; // Use token param first, fallback to address
+  const chainId = searchParams.get("chain") || "0x1"; // Default to Ethereum mainnet
   const coinGeckoId = searchParams.get("id") || "";
   const isLimited = searchParams.get("limited") === "true";
 
@@ -49,6 +50,7 @@ export default function ScanResult() {
     token: tokenFromParam,
     address: addressFromParam,
     finalTokenAddress: tokenAddress,
+    chainId,
     coinGeckoId,
     isLimited
   });
@@ -133,7 +135,7 @@ export default function ScanResult() {
         setLoading(true);
         setError(null);
         
-        console.log("ScanResult: Loading data for token:", tokenAddress, "CoinGecko ID:", coinGeckoId);
+        console.log("ScanResult: Loading data for token:", tokenAddress, "Chain:", chainId, "CoinGecko ID:", coinGeckoId);
         
         if (!tokenAddress) {
           console.error("ScanResult: No token address found in URL params");
@@ -143,13 +145,14 @@ export default function ScanResult() {
 
         console.log("ScanResult: User authenticated:", isAuthenticated, "User ID:", user?.id);
 
-        // Load scan data from database with better error handling
+        // Load scan data from database with chain support
         try {
-          // First try to get token data - this is the primary table
+          // First try to get token data - this is the primary table with chain support
           const { data: tokenData, error: tokenError } = await supabase
             .from('token_data_cache')
             .select('*')
             .eq('token_address', tokenAddress)
+            .eq('chain_id', chainId)
             .maybeSingle();
 
           if (tokenError) {
@@ -158,7 +161,7 @@ export default function ScanResult() {
           }
 
           if (!tokenData) {
-            console.warn("[DB] No token data found for address:", tokenAddress);
+            console.warn("[DB] No token data found for address:", tokenAddress, "chain:", chainId);
             
             // Try fallback to localStorage
             const selectedTokenData = localStorage.getItem("selectedToken");
@@ -170,6 +173,7 @@ export default function ScanResult() {
                   setScanData({
                     success: true,
                     token_address: tokenAddress,
+                    chain_id: chainId,
                     overall_score: 0,
                     token_info: {
                       name: selectedToken.name,
@@ -184,11 +188,11 @@ export default function ScanResult() {
                       twitter_handle: "",
                       github_url: ""
                     },
-                    security: { score: 0, token_address: tokenAddress },
-                    tokenomics: { score: 0, token_address: tokenAddress },
-                    liquidity: { score: 0, token_address: tokenAddress },
-                    development: { score: 0, token_address: tokenAddress },
-                    community: { score: 0, token_address: tokenAddress }
+                    security: { score: 0, token_address: tokenAddress, chain_id: chainId },
+                    tokenomics: { score: 0, token_address: tokenAddress, chain_id: chainId },
+                    liquidity: { score: 0, token_address: tokenAddress, chain_id: chainId },
+                    development: { score: 0, token_address: tokenAddress, chain_id: chainId },
+                    community: { score: 0, token_address: tokenAddress, chain_id: chainId }
                   });
                   setLoading(false);
                   return;
@@ -205,13 +209,13 @@ export default function ScanResult() {
 
           console.log("[DB] Token data found:", tokenData);
 
-          // Now load all cache data
+          // Now load all cache data with chain support
           const cacheQueries = [
-            { name: 'security', query: supabase.from('token_security_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
-            { name: 'tokenomics', query: supabase.from('token_tokenomics_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
-            { name: 'liquidity', query: supabase.from('token_liquidity_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
-            { name: 'development', query: supabase.from('token_development_cache').select('*').eq('token_address', tokenAddress).maybeSingle() },
-            { name: 'community', query: supabase.from('token_community_cache').select('*').eq('token_address', tokenAddress).maybeSingle() }
+            { name: 'security', query: supabase.from('token_security_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
+            { name: 'tokenomics', query: supabase.from('token_tokenomics_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
+            { name: 'liquidity', query: supabase.from('token_liquidity_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
+            { name: 'development', query: supabase.from('token_development_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
+            { name: 'community', query: supabase.from('token_community_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() }
           ];
 
           const cacheResults = await Promise.allSettled(cacheQueries.map(q => q.query));
@@ -225,14 +229,14 @@ export default function ScanResult() {
             
             if (result.status === 'rejected') {
               console.error(`[DB] ${cacheName} cache query failed:`, result.reason);
-              cacheData[cacheName] = { score: 0, token_address: tokenAddress };
+              cacheData[cacheName] = { score: 0, token_address: tokenAddress, chain_id: chainId };
             } else {
               const { data, error } = result.value;
               if (error) {
                 console.error(`[DB] ${cacheName} cache error:`, error);
-                cacheData[cacheName] = { score: 0, token_address: tokenAddress };
+                cacheData[cacheName] = { score: 0, token_address: tokenAddress, chain_id: chainId };
               } else {
-                cacheData[cacheName] = data || { score: 0, token_address: tokenAddress };
+                cacheData[cacheName] = data || { score: 0, token_address: tokenAddress, chain_id: chainId };
                 if (data && data.score && data.score > 0) {
                   hasValidScores = true;
                 }
@@ -258,6 +262,7 @@ export default function ScanResult() {
           setScanData({
             success: true,
             token_address: tokenAddress,
+            chain_id: chainId,
             overall_score: overallScore,
             token_info: tokenData,
             security: cacheData.security,
@@ -281,7 +286,7 @@ export default function ScanResult() {
     };
 
     loadScanData();
-  }, [tokenAddress, coinGeckoId, user, isAuthenticated]);
+  }, [tokenAddress, chainId, coinGeckoId, user, isAuthenticated]);
 
   const handleCategoryChange = (category: ScanCategory) => {
     setActiveTab(category);
@@ -369,7 +374,7 @@ export default function ScanResult() {
     ? coinGeckoDescription 
     : tokenInfo?.description || "";
   
-  const networkName = "ETH";
+  const networkName = chainId === "0xa4b1" ? "ARB" : "ETH";
 
   // Use the calculated overall score from the scan data
   const overallScore = scanData.overall_score || 0;

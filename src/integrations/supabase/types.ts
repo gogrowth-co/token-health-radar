@@ -75,6 +75,7 @@ export type Database = {
       token_community_cache: {
         Row: {
           active_channels: string[] | null
+          chain_id: string
           discord_members: number | null
           score: number | null
           team_visibility: string | null
@@ -87,6 +88,7 @@ export type Database = {
         }
         Insert: {
           active_channels?: string[] | null
+          chain_id?: string
           discord_members?: number | null
           score?: number | null
           team_visibility?: string | null
@@ -99,6 +101,7 @@ export type Database = {
         }
         Update: {
           active_channels?: string[] | null
+          chain_id?: string
           discord_members?: number | null
           score?: number | null
           team_visibility?: string | null
@@ -111,16 +114,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "token_community_cache_token_address_fkey"
-            columns: ["token_address"]
+            foreignKeyName: "token_community_cache_token_address_chain_id_fkey"
+            columns: ["token_address", "chain_id"]
             isOneToOne: true
             referencedRelation: "token_data_cache"
-            referencedColumns: ["token_address"]
+            referencedColumns: ["token_address", "chain_id"]
           },
         ]
       }
       token_data_cache: {
         Row: {
+          chain_id: string
           cmc_id: number | null
           coingecko_id: string | null
           created_at: string | null
@@ -139,6 +143,7 @@ export type Database = {
           website_url: string | null
         }
         Insert: {
+          chain_id?: string
           cmc_id?: number | null
           coingecko_id?: string | null
           created_at?: string | null
@@ -157,6 +162,7 @@ export type Database = {
           website_url?: string | null
         }
         Update: {
+          chain_id?: string
           cmc_id?: number | null
           coingecko_id?: string | null
           created_at?: string | null
@@ -178,6 +184,7 @@ export type Database = {
       }
       token_development_cache: {
         Row: {
+          chain_id: string
           commits_30d: number | null
           contributors_count: number | null
           github_repo: string | null
@@ -189,6 +196,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          chain_id?: string
           commits_30d?: number | null
           contributors_count?: number | null
           github_repo?: string | null
@@ -200,6 +208,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          chain_id?: string
           commits_30d?: number | null
           contributors_count?: number | null
           github_repo?: string | null
@@ -212,17 +221,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "token_development_cache_token_address_fkey"
-            columns: ["token_address"]
+            foreignKeyName: "token_development_cache_token_address_chain_id_fkey"
+            columns: ["token_address", "chain_id"]
             isOneToOne: true
             referencedRelation: "token_data_cache"
-            referencedColumns: ["token_address"]
+            referencedColumns: ["token_address", "chain_id"]
           },
         ]
       }
       token_liquidity_cache: {
         Row: {
           cex_listings: number | null
+          chain_id: string
           dex_depth_status: string | null
           holder_distribution: string | null
           liquidity_locked_days: number | null
@@ -233,6 +243,7 @@ export type Database = {
         }
         Insert: {
           cex_listings?: number | null
+          chain_id?: string
           dex_depth_status?: string | null
           holder_distribution?: string | null
           liquidity_locked_days?: number | null
@@ -243,6 +254,7 @@ export type Database = {
         }
         Update: {
           cex_listings?: number | null
+          chain_id?: string
           dex_depth_status?: string | null
           holder_distribution?: string | null
           liquidity_locked_days?: number | null
@@ -253,16 +265,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "token_liquidity_cache_token_address_fkey"
-            columns: ["token_address"]
+            foreignKeyName: "token_liquidity_cache_token_address_chain_id_fkey"
+            columns: ["token_address", "chain_id"]
             isOneToOne: true
             referencedRelation: "token_data_cache"
-            referencedColumns: ["token_address"]
+            referencedColumns: ["token_address", "chain_id"]
           },
         ]
       }
       token_scans: {
         Row: {
+          chain_id: string
           cmc_id: number | null
           id: string
           is_anonymous: boolean | null
@@ -273,6 +286,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          chain_id?: string
           cmc_id?: number | null
           id?: string
           is_anonymous?: boolean | null
@@ -283,6 +297,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          chain_id?: string
           cmc_id?: number | null
           id?: string
           is_anonymous?: boolean | null
@@ -294,11 +309,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "token_scans_token_address_fkey"
-            columns: ["token_address"]
+            foreignKeyName: "token_scans_token_address_chain_id_fkey"
+            columns: ["token_address", "chain_id"]
             isOneToOne: false
             referencedRelation: "token_data_cache"
-            referencedColumns: ["token_address"]
+            referencedColumns: ["token_address", "chain_id"]
           },
         ]
       }
@@ -306,6 +321,7 @@ export type Database = {
         Row: {
           audit_status: string | null
           can_mint: boolean | null
+          chain_id: string
           freeze_authority: boolean | null
           honeypot_detected: boolean | null
           multisig_status: string | null
@@ -317,6 +333,7 @@ export type Database = {
         Insert: {
           audit_status?: string | null
           can_mint?: boolean | null
+          chain_id?: string
           freeze_authority?: boolean | null
           honeypot_detected?: boolean | null
           multisig_status?: string | null
@@ -328,6 +345,7 @@ export type Database = {
         Update: {
           audit_status?: string | null
           can_mint?: boolean | null
+          chain_id?: string
           freeze_authority?: boolean | null
           honeypot_detected?: boolean | null
           multisig_status?: string | null
@@ -338,17 +356,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "token_security_cache_token_address_fkey"
-            columns: ["token_address"]
+            foreignKeyName: "token_security_cache_token_address_chain_id_fkey"
+            columns: ["token_address", "chain_id"]
             isOneToOne: true
             referencedRelation: "token_data_cache"
-            referencedColumns: ["token_address"]
+            referencedColumns: ["token_address", "chain_id"]
           },
         ]
       }
       token_tokenomics_cache: {
         Row: {
           burn_mechanism: boolean | null
+          chain_id: string
           circulating_supply: number | null
           distribution_score: string | null
           score: number | null
@@ -361,6 +380,7 @@ export type Database = {
         }
         Insert: {
           burn_mechanism?: boolean | null
+          chain_id?: string
           circulating_supply?: number | null
           distribution_score?: string | null
           score?: number | null
@@ -373,6 +393,7 @@ export type Database = {
         }
         Update: {
           burn_mechanism?: boolean | null
+          chain_id?: string
           circulating_supply?: number | null
           distribution_score?: string | null
           score?: number | null
@@ -385,11 +406,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "token_tokenomics_cache_token_address_fkey"
-            columns: ["token_address"]
+            foreignKeyName: "token_tokenomics_cache_token_address_chain_id_fkey"
+            columns: ["token_address", "chain_id"]
             isOneToOne: true
             referencedRelation: "token_data_cache"
-            referencedColumns: ["token_address"]
+            referencedColumns: ["token_address", "chain_id"]
           },
         ]
       }
