@@ -20,11 +20,11 @@ export default function Landing() {
       <main className="flex-1">
         {/* Critical above-the-fold content */}
         <HeroSection />
+        <BenefitsSection />
         
         {/* Lazy-loaded below-the-fold content */}
         <LazyHowItWorks />
         <LazyReportPreview />
-        <BenefitsSection />
         <LazyFeatureGrid />
         <LazySocialProof />
         <LazyPricingTeaser />
