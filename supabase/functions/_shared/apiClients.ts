@@ -142,6 +142,92 @@ export async function fetchMoralisMetadata(tokenAddress: string, chainId: string
   }
 }
 
+// GitHub API client for development metrics
+export async function fetchGitHubRepoData(githubUrl: string) {
+  try {
+    // Extract owner and repo from GitHub URL
+    const urlPattern = /github\.com\/([^\/]+)\/([^\/]+)/;
+    const match = githubUrl.match(urlPattern);
+    
+    if (!match) {
+      console.log(`[GITHUB] Invalid GitHub URL format: ${githubUrl}`);
+      return null;
+    }
+    
+    const [, owner, repo] = match;
+    const cleanRepo = repo.replace(/\.git$/, ''); // Remove .git suffix if present
+    
+    // Get API key from environment
+    const apiKey = Deno.env.get('GITHUB_API_KEY');
+    if (!apiKey) {
+      console.log(`[GITHUB] No API key configured`);
+      return null;
+    }
+
+    const headers = {
+      'Authorization': `token ${apiKey}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'TokenHealthScan/1.0'
+    };
+
+    // Fetch repository data
+    const repoUrl = `https://api.github.com/repos/${owner}/${cleanRepo}`;
+    console.log(`[GITHUB] Fetching repo data: ${repoUrl}`);
+    
+    const repoResponse = await fetch(repoUrl, { headers });
+    if (!repoResponse.ok) {
+      throw new Error(`GitHub API error: ${repoResponse.status}`);
+    }
+    
+    const repoData = await repoResponse.json();
+    
+    // Fetch recent commits (last 30 days)
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const commitsUrl = `https://api.github.com/repos/${owner}/${cleanRepo}/commits?since=${since}&per_page=100`;
+    
+    const commitsResponse = await fetch(commitsUrl, { headers });
+    const commitsData = commitsResponse.ok ? await commitsResponse.json() : [];
+    
+    // Fetch open and closed issues
+    const issuesUrl = `https://api.github.com/repos/${owner}/${cleanRepo}/issues?state=all&per_page=100`;
+    const issuesResponse = await fetch(issuesUrl, { headers });
+    const issuesData = issuesResponse.ok ? await issuesResponse.json() : [];
+    
+    // Calculate metrics
+    const openIssues = issuesData.filter((issue: any) => issue.state === 'open' && !issue.pull_request).length;
+    const closedIssues = issuesData.filter((issue: any) => issue.state === 'closed' && !issue.pull_request).length;
+    const totalIssues = openIssues + closedIssues;
+    
+    console.log(`[GITHUB] Repository metrics for ${owner}/${cleanRepo}:`);
+    console.log(`[GITHUB] - Stars: ${repoData.stargazers_count}`);
+    console.log(`[GITHUB] - Forks: ${repoData.forks_count}`);
+    console.log(`[GITHUB] - Commits (30d): ${commitsData.length}`);
+    console.log(`[GITHUB] - Open Issues: ${openIssues}`);
+    console.log(`[GITHUB] - Closed Issues: ${closedIssues}`);
+    console.log(`[GITHUB] - Last Push: ${repoData.pushed_at}`);
+    
+    return {
+      owner,
+      repo: cleanRepo,
+      stars: repoData.stargazers_count || 0,
+      forks: repoData.forks_count || 0,
+      commits_30d: commitsData.length || 0,
+      open_issues: openIssues,
+      closed_issues: closedIssues,
+      total_issues: totalIssues,
+      last_push: repoData.pushed_at,
+      is_archived: repoData.archived || false,
+      is_fork: repoData.fork || false,
+      language: repoData.language || null,
+      created_at: repoData.created_at,
+      updated_at: repoData.updated_at
+    };
+  } catch (error) {
+    console.error(`[GITHUB] Error fetching repository data:`, error);
+    return null;
+  }
+}
+
 // Calculate security score based on real data
 export function calculateSecurityScore(securityData: any): number {
   if (!securityData) return 0;
@@ -208,4 +294,70 @@ export function calculateTokenomicsScore(moralisData: any, marketData: any): num
   }
   
   return Math.max(0, Math.min(100, score));
+}
+
+// Calculate development score based on real GitHub data
+export function calculateDevelopmentScore(githubData: any): number {
+  if (!githubData) {
+    console.log(`[GITHUB] No GitHub data available, using conservative score`);
+    return 25; // Conservative score when no GitHub data is available
+  }
+  
+  let score = 20; // Base score
+  
+  // 1. Commit Activity (40% weight) - Recent development activity
+  const commits30d = githubData.commits_30d || 0;
+  if (commits30d > 20) score += 40; // Very active
+  else if (commits30d > 10) score += 30; // Active
+  else if (commits30d > 5) score += 20; // Moderate
+  else if (commits30d > 0) score += 10; // Some activity
+  // No commits = no additional points
+  
+  // 2. Issue Management (25% weight) - How well issues are handled
+  const totalIssues = githubData.total_issues || 0;
+  const openIssues = githubData.open_issues || 0;
+  const closedIssues = githubData.closed_issues || 0;
+  
+  if (totalIssues > 0) {
+    const issueResolutionRatio = closedIssues / totalIssues;
+    if (issueResolutionRatio > 0.8) score += 25; // Excellent issue management
+    else if (issueResolutionRatio > 0.6) score += 20; // Good issue management
+    else if (issueResolutionRatio > 0.4) score += 15; // Fair issue management
+    else if (issueResolutionRatio > 0.2) score += 10; // Poor issue management
+    // Very poor issue management = no additional points
+  } else {
+    score += 15; // Moderate score for no issues (could be good or bad)
+  }
+  
+  // 3. Community Engagement (20% weight) - Stars and forks indicate community interest
+  const stars = githubData.stars || 0;
+  const forks = githubData.forks || 0;
+  
+  if (stars > 1000 || forks > 100) score += 20; // High community interest
+  else if (stars > 100 || forks > 20) score += 15; // Moderate community interest
+  else if (stars > 10 || forks > 5) score += 10; // Some community interest
+  else if (stars > 0 || forks > 0) score += 5; // Minimal community interest
+  
+  // 4. Code Freshness (15% weight) - How recent the last push was
+  if (githubData.last_push) {
+    const lastPushDate = new Date(githubData.last_push);
+    const daysSinceLastPush = (Date.now() - lastPushDate.getTime()) / (1000 * 60 * 60 * 24);
+    
+    if (daysSinceLastPush < 7) score += 15; // Very fresh
+    else if (daysSinceLastPush < 30) score += 12; // Fresh
+    else if (daysSinceLastPush < 90) score += 8; // Moderately fresh
+    else if (daysSinceLastPush < 180) score += 4; // Stale
+    // Very stale = no additional points
+  }
+  
+  // Penalties
+  if (githubData.is_archived) score -= 20; // Archived repositories are not actively maintained
+  if (githubData.is_fork && !commits30d) score -= 10; // Fork without recent commits might not be original development
+  
+  const finalScore = Math.max(0, Math.min(100, score));
+  
+  console.log(`[GITHUB] Development score calculated: ${finalScore}`);
+  console.log(`[GITHUB] - Base: 20, Commits: ${commits30d}, Issues: ${openIssues}/${closedIssues}, Stars: ${stars}, Forks: ${forks}`);
+  
+  return finalScore;
 }

@@ -8,9 +8,11 @@ import {
   fetchGoPlusSecurity,
   fetchGeckoTerminalData,
   fetchMoralisMetadata,
+  fetchGitHubRepoData,
   calculateSecurityScore,
   calculateLiquidityScore,
-  calculateTokenomicsScore
+  calculateTokenomicsScore,
+  calculateDevelopmentScore
 } from '../_shared/apiClients.ts'
 
 const supabase = createClient(
@@ -45,6 +47,17 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       market: market ? 'available' : 'unavailable', 
       metadata: metadata ? 'available' : 'unavailable'
     });
+
+    // Fetch GitHub data if GitHub URL is available in metadata
+    let githubData = null;
+    if (metadata?.links?.github) {
+      console.log(`[SCAN] GitHub URL found: ${metadata.links.github}`);
+      const githubResult = await Promise.allSettled([fetchGitHubRepoData(metadata.links.github)]);
+      githubData = githubResult[0].status === 'fulfilled' ? githubResult[0].value : null;
+      console.log(`[SCAN] GitHub data: ${githubData ? 'available' : 'unavailable'}`);
+    } else {
+      console.log(`[SCAN] No GitHub URL found in metadata`);
+    }
 
     // Prioritize Moralis metadata, with market data as fallback
     const name = metadata?.name || market?.name || `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
@@ -96,7 +109,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       tokenData: combinedData,
       securityData: security,
       marketData: market,
-      metadataData: metadata
+      metadataData: metadata,
+      githubData: githubData
     };
   } catch (error) {
     console.error(`[SCAN] Error fetching token data from APIs:`, error);
@@ -109,11 +123,10 @@ function generateCategoryData(apiData: any) {
   const securityScore = calculateSecurityScore(apiData.securityData);
   const liquidityScore = calculateLiquidityScore(apiData.marketData);
   const tokenomicsScore = calculateTokenomicsScore(apiData.metadataData, apiData.marketData);
+  const developmentScore = calculateDevelopmentScore(apiData.githubData);
   
-  // Community and development scores - these would need additional APIs
-  // For now, provide conservative scores indicating limited data
+  // Community score - this would need additional APIs (Twitter, Discord, etc.)
   const communityScore = 30; // Conservative score
-  const developmentScore = 25; // Conservative score
 
   return {
     security: {
@@ -154,11 +167,11 @@ function generateCategoryData(apiData: any) {
       score: communityScore
     },
     development: {
-      github_repo: '',
-      contributors_count: 0,
-      commits_30d: 0,
-      last_commit: null,
-      is_open_source: null,
+      github_repo: apiData.githubData ? `${apiData.githubData.owner}/${apiData.githubData.repo}` : '',
+      contributors_count: 0, // Could be enhanced later
+      commits_30d: apiData.githubData?.commits_30d || 0,
+      last_commit: apiData.githubData?.last_push || null,
+      is_open_source: !!apiData.githubData,
       roadmap_progress: 'unknown',
       score: developmentScore
     }
@@ -218,7 +231,7 @@ Deno.serve(async (req) => {
 
     console.log(`[SCAN] Token data collected for: ${apiData.tokenData.name} (${apiData.tokenData.symbol})`);
 
-    // Generate category data with real API integration
+    // Generate category data with real API integration including GitHub
     const categoryData = generateCategoryData(apiData);
     const overallScore = calculateOverallScore(categoryData);
 
@@ -405,7 +418,8 @@ Deno.serve(async (req) => {
         data_sources: {
           security: apiData.securityData ? 'GoPlus API' : 'unavailable',
           market: apiData.marketData ? 'GeckoTerminal API' : 'unavailable',
-          metadata: apiData.metadataData ? 'Moralis API' : 'unavailable'
+          metadata: apiData.metadataData ? 'Moralis API' : 'unavailable',
+          development: apiData.githubData ? 'GitHub API' : 'unavailable'
         },
         category_scores: {
           security: categoryData.security.score,
