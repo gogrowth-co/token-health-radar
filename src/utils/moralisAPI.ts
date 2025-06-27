@@ -2,6 +2,83 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Unified chain configuration (matches backend)
+const CHAIN_MAP = {
+  ethereum: {
+    name: 'Ethereum',
+    moralis: '0x1',
+    goplus: '1',
+    gecko: 'eth',
+    etherscan: 'https://api.etherscan.io',
+    symbol: 'ETH'
+  },
+  bsc: {
+    name: 'BNB Chain',
+    moralis: '0x38',
+    goplus: '56',
+    gecko: 'bsc',
+    etherscan: 'https://api.bscscan.com',
+    symbol: 'BNB'
+  },
+  arbitrum: {
+    name: 'Arbitrum',
+    moralis: '0xa4b1',
+    goplus: '42161',
+    gecko: 'arbitrum',
+    etherscan: 'https://api.arbiscan.io',
+    symbol: 'ETH'
+  },
+  optimism: {
+    name: 'Optimism',
+    moralis: '0xa',
+    goplus: '10',
+    gecko: 'optimism',
+    etherscan: 'https://api-optimistic.etherscan.io',
+    symbol: 'ETH'
+  },
+  base: {
+    name: 'Base',
+    moralis: '0x2105',
+    goplus: '8453',
+    gecko: 'base',
+    etherscan: 'https://api.basescan.org',
+    symbol: 'ETH'
+  },
+  polygon: {
+    name: 'Polygon',
+    moralis: '0x89',
+    goplus: '137',
+    gecko: 'polygon_pos',
+    etherscan: 'https://api.polygonscan.com',
+    symbol: 'MATIC'
+  }
+};
+
+// Normalize chain ID to Moralis format
+const normalizeChainId = (chainId: string): string => {
+  if (chainId.startsWith('0x')) {
+    return chainId;
+  }
+  
+  const chainMap: Record<string, string> = {
+    '1': '0x1',
+    'eth': '0x1',
+    'ethereum': '0x1',
+    '56': '0x38',
+    'bsc': '0x38',
+    '137': '0x89',
+    'polygon': '0x89',
+    '42161': '0xa4b1',
+    'arbitrum': '0xa4b1',
+    '10': '0xa',
+    'optimism': '0xa',
+    '8453': '0x2105',
+    'base': '0x2105'
+  };
+  
+  return chainMap[chainId.toLowerCase()] || chainId;
+};
+
 // Rate limiting for edge function calls
 let lastMoralisCallTime = 0;
 export const MIN_MORALIS_API_CALL_INTERVAL = 1000; // 1 second between calls
@@ -22,9 +99,11 @@ export const callMoralisAPI = async (action: string, params: Record<string, any>
   try {
     console.log(`[MORALIS-API] Making edge function request for: ${action}`, params);
     
+    // Normalize chain ID if provided
     const requestBody = {
       action,
-      ...params
+      ...params,
+      ...(params.chainId && { chainId: normalizeChainId(params.chainId) })
     };
 
     console.log(`[MORALIS-API] Request body:`, requestBody);
@@ -65,7 +144,7 @@ export const callMoralisAPI = async (action: string, params: Record<string, any>
   }
 };
 
-// Search tokens using Moralis API
+// Search tokens using Moralis API with consistent chain handling
 export const searchTokensByMoralis = async (searchTerm: string, limit = 10) => {
   try {
     console.log(`[MORALIS-API] Searching for tokens: "${searchTerm}"`);
@@ -86,14 +165,16 @@ export const searchTokensByMoralis = async (searchTerm: string, limit = 10) => {
   }
 };
 
-// Get token metadata using Moralis API
+// Get token metadata using Moralis API with normalized chain ID
 export const getTokenMetadata = async (tokenAddress: string, chainId: string) => {
   try {
     console.log(`[MORALIS-API] Fetching metadata for token: ${tokenAddress} on chain: ${chainId}`);
     
+    const normalizedChainId = normalizeChainId(chainId);
+    
     const data = await callMoralisAPI('metadata', {
-      tokenAddress,
-      chainId
+      tokenAddress: tokenAddress.toLowerCase(),
+      chainId: normalizedChainId
     });
     
     return data.metadata || {};
@@ -103,14 +184,16 @@ export const getTokenMetadata = async (tokenAddress: string, chainId: string) =>
   }
 };
 
-// Get token price using Moralis API (if available)
+// Get token price using Moralis API with normalized chain ID
 export const getTokenPrice = async (tokenAddress: string, chainId: string) => {
   try {
     console.log(`[MORALIS-API] Fetching price for token: ${tokenAddress} on chain: ${chainId}`);
     
+    const normalizedChainId = normalizeChainId(chainId);
+    
     const data = await callMoralisAPI('price', {
-      tokenAddress,
-      chainId
+      tokenAddress: tokenAddress.toLowerCase(),
+      chainId: normalizedChainId
     });
     
     return data.price || {};
@@ -121,14 +204,16 @@ export const getTokenPrice = async (tokenAddress: string, chainId: string) => {
   }
 };
 
-// Verify token address and get basic info
+// Verify token address and get basic info with consistent chain handling
 export const verifyTokenAddress = async (tokenAddress: string, chainId: string) => {
   try {
     console.log(`[MORALIS-API] Verifying token address: ${tokenAddress} on chain: ${chainId}`);
     
+    const normalizedChainId = normalizeChainId(chainId);
+    
     const data = await callMoralisAPI('verify', {
-      tokenAddress,
-      chainId
+      tokenAddress: tokenAddress.toLowerCase(),
+      chainId: normalizedChainId
     });
     
     return data.verified || false;
@@ -136,4 +221,13 @@ export const verifyTokenAddress = async (tokenAddress: string, chainId: string) 
     console.error(`[MORALIS-API] Token verification failed:`, error);
     return false;
   }
+};
+
+// Get supported chains for display
+export const getSupportedChains = (): Record<string, string> => {
+  const chains: Record<string, string> = {};
+  Object.entries(CHAIN_MAP).forEach(([key, config]) => {
+    chains[config.moralis] = config.name;
+  });
+  return chains;
 };

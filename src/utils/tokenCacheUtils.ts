@@ -1,10 +1,61 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { TokenResult, TokenInfoEnriched } from "@/components/token/types";
 import type { Database } from "@/integrations/supabase/types";
 
 // Use the actual database type instead of custom interface
 type TokenDataCacheRow = Database['public']['Tables']['token_data_cache']['Row'];
+
+// Unified chain configuration (matches edge function)
+const CHAIN_MAP = {
+  ethereum: {
+    name: 'Ethereum',
+    moralis: '0x1',
+    goplus: '1',
+    gecko: 'eth',
+    etherscan: 'https://api.etherscan.io',
+    symbol: 'ETH'
+  },
+  bsc: {
+    name: 'BNB Chain',
+    moralis: '0x38',
+    goplus: '56',
+    gecko: 'bsc',
+    etherscan: 'https://api.bscscan.com',
+    symbol: 'BNB'
+  },
+  arbitrum: {
+    name: 'Arbitrum',
+    moralis: '0xa4b1',
+    goplus: '42161',
+    gecko: 'arbitrum',
+    etherscan: 'https://api.arbiscan.io',
+    symbol: 'ETH'
+  },
+  optimism: {
+    name: 'Optimism',
+    moralis: '0xa',
+    goplus: '10',
+    gecko: 'optimism',
+    etherscan: 'https://api-optimistic.etherscan.io',
+    symbol: 'ETH'
+  },
+  base: {
+    name: 'Base',
+    moralis: '0x2105',
+    goplus: '8453',
+    gecko: 'base',
+    etherscan: 'https://api.basescan.org',
+    symbol: 'ETH'
+  },
+  polygon: {
+    name: 'Polygon',
+    moralis: '0x89',
+    goplus: '137',
+    gecko: 'polygon_pos',
+    etherscan: 'https://api.polygonscan.com',
+    symbol: 'MATIC'
+  }
+};
 
 // Chain ID mapping for consistent handling
 const CHAIN_ID_MAP: Record<string, string> = {
@@ -35,6 +86,13 @@ export const normalizeChainId = (chainId: string): string => {
   
   const normalized = chainId.toLowerCase();
   return CHAIN_ID_MAP[normalized] || chainId;
+};
+
+/**
+ * Get chain configuration by Moralis chain ID
+ */
+export const getChainConfigByMoralisId = (chainId: string): any => {
+  return Object.values(CHAIN_MAP).find(chain => chain.moralis === chainId);
 };
 
 /**
@@ -215,12 +273,9 @@ export const callWithRetry = async <T>(apiCall: () => Promise<T>, maxRetries = 2
  * Get supported chain names for display
  */
 export const getSupportedChains = (): Record<string, string> => {
-  return {
-    '0x1': 'Ethereum',
-    '0x89': 'Polygon', 
-    '0x38': 'BSC',
-    '0xa4b1': 'Arbitrum',
-    '0xa86a': 'Avalanche',
-    '0x2105': 'Base'
-  };
+  const chains: Record<string, string> = {};
+  Object.entries(CHAIN_MAP).forEach(([key, config]) => {
+    chains[config.moralis] = config.name;
+  });
+  return chains;
 };

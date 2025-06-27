@@ -125,7 +125,6 @@ export type Database = {
       token_data_cache: {
         Row: {
           chain_id: string
-          cmc_id: number | null
           coingecko_id: string | null
           created_at: string | null
           current_price_usd: number | null
@@ -144,7 +143,6 @@ export type Database = {
         }
         Insert: {
           chain_id?: string
-          cmc_id?: number | null
           coingecko_id?: string | null
           created_at?: string | null
           current_price_usd?: number | null
@@ -163,7 +161,6 @@ export type Database = {
         }
         Update: {
           chain_id?: string
-          cmc_id?: number | null
           coingecko_id?: string | null
           created_at?: string | null
           current_price_usd?: number | null
@@ -276,7 +273,6 @@ export type Database = {
       token_scans: {
         Row: {
           chain_id: string
-          cmc_id: number | null
           id: string
           is_anonymous: boolean | null
           pro_scan: boolean | null
@@ -287,7 +283,6 @@ export type Database = {
         }
         Insert: {
           chain_id?: string
-          cmc_id?: number | null
           id?: string
           is_anonymous?: boolean | null
           pro_scan?: boolean | null
@@ -298,7 +293,6 @@ export type Database = {
         }
         Update: {
           chain_id?: string
-          cmc_id?: number | null
           id?: string
           is_anonymous?: boolean | null
           pro_scan?: boolean | null
