@@ -78,49 +78,56 @@ export async function fetchGeckoTerminalData(tokenAddress: string, chainId: stri
   }
 }
 
-// Etherscan API client for token metadata
-export async function fetchEtherscanMetadata(tokenAddress: string, chainId: string) {
+// Moralis API client for comprehensive token metadata
+export async function fetchMoralisMetadata(tokenAddress: string, chainId: string) {
   try {
     const chainConfig = getChainConfigByMoralisId(chainId);
     if (!chainConfig) {
-      console.log(`[ETHERSCAN] Unsupported chain: ${chainId}`);
+      console.log(`[MORALIS] Unsupported chain: ${chainId}`);
       return null;
     }
 
     // Get API key from environment
-    const apiKey = Deno.env.get('ETHERSCAN_API_KEY');
+    const apiKey = Deno.env.get('MORALIS_API_KEY');
     if (!apiKey) {
-      console.log(`[ETHERSCAN] No API key configured`);
+      console.log(`[MORALIS] No API key configured`);
       return null;
     }
 
-    const url = `${chainConfig.etherscan}/api?module=token&action=tokeninfo&contractaddress=${tokenAddress}&apikey=${apiKey}`;
-    console.log(`[ETHERSCAN] Fetching metadata: ${url}`);
+    const url = `https://deep-index.moralis.io/api/v2.2/erc20/metadata?chain=${chainId}&addresses%5B0%5D=${tokenAddress.toLowerCase()}`;
+    console.log(`[MORALIS] Fetching metadata: ${url}`);
     
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'X-API-Key': apiKey,
+        'accept': 'application/json'
+      }
+    });
+
     if (!response.ok) {
-      throw new Error(`Etherscan API error: ${response.status}`);
+      throw new Error(`Moralis API error: ${response.status}`);
     }
     
     const data = await response.json();
-    if (data.status !== '1' || !data.result?.[0]) {
-      console.log(`[ETHERSCAN] No metadata found for token: ${tokenAddress}`);
+    const tokenData = data[0];
+    
+    if (!tokenData) {
+      console.log(`[MORALIS] No metadata found for token: ${tokenAddress}`);
       return null;
     }
     
-    const tokenData = data.result[0];
-    
     return {
-      name: tokenData.tokenName || '',
+      name: tokenData.name || '',
       symbol: tokenData.symbol || '',
-      total_supply: parseInt(tokenData.totalSupply) || 0,
       decimals: parseInt(tokenData.decimals) || 18,
-      website: tokenData.website || '',
-      twitter: tokenData.twitter || '',
-      github: tokenData.github || ''
+      logo: tokenData.logo || '',
+      thumbnail: tokenData.thumbnail || '',
+      total_supply: tokenData.total_supply || '0',
+      verified_contract: tokenData.verified_contract || false,
+      possible_spam: tokenData.possible_spam || false
     };
   } catch (error) {
-    console.error(`[ETHERSCAN] Error fetching metadata:`, error);
+    console.error(`[MORALIS] Error fetching metadata:`, error);
     return null;
   }
 }
@@ -165,17 +172,23 @@ export function calculateLiquidityScore(marketData: any): number {
 }
 
 // Calculate tokenomics score based on real data
-export function calculateTokenomicsScore(etherscanData: any, marketData: any): number {
-  if (!etherscanData && !marketData) return 0;
+export function calculateTokenomicsScore(moralisData: any, marketData: any): number {
+  if (!moralisData && !marketData) return 0;
   
   let score = 40; // Base score
   
   // Supply analysis
-  if (etherscanData?.total_supply) {
-    const supply = etherscanData.total_supply;
+  if (moralisData?.total_supply) {
+    const supply = parseFloat(moralisData.total_supply);
     if (supply < 1000000000) score += 15; // Low supply is good
     else if (supply > 1000000000000) score -= 10; // Very high supply is concerning
   }
+  
+  // Contract verification
+  if (moralisData?.verified_contract) score += 10;
+  
+  // Spam detection (negative factor)
+  if (moralisData?.possible_spam) score -= 20;
   
   // Price stability (less volatility is better for tokenomics)
   if (marketData?.price_change_24h !== undefined) {

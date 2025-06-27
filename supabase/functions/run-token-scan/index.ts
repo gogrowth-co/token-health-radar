@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { 
@@ -8,7 +7,7 @@ import {
 import {
   fetchGoPlusSecurity,
   fetchGeckoTerminalData,
-  fetchEtherscanMetadata,
+  fetchMoralisMetadata,
   calculateSecurityScore,
   calculateLiquidityScore,
   calculateTokenomicsScore
@@ -19,7 +18,7 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
-// Fetch comprehensive token data from multiple APIs
+// Fetch comprehensive token data from multiple APIs using Moralis as primary metadata source
 async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
   console.log(`[SCAN] Fetching token data from multiple APIs for: ${tokenAddress} on chain: ${chainId}`);
   
@@ -34,7 +33,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     const [securityData, marketData, metadataData] = await Promise.allSettled([
       fetchGoPlusSecurity(tokenAddress, chainId),
       fetchGeckoTerminalData(tokenAddress, chainId),
-      fetchEtherscanMetadata(tokenAddress, chainId)
+      fetchMoralisMetadata(tokenAddress, chainId)
     ]);
 
     const security = securityData.status === 'fulfilled' ? securityData.value : null;
@@ -47,21 +46,38 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       metadata: metadata ? 'available' : 'unavailable'
     });
 
+    // Prioritize Moralis metadata, with market data as fallback
+    const name = metadata?.name || market?.name || `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
+    const symbol = metadata?.symbol || market?.symbol || 'UNKNOWN';
+    const logo_url = metadata?.logo || metadata?.thumbnail || '';
+    
+    // Create a meaningful description using Moralis data
+    const description = metadata?.name 
+      ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
+      : `${name} on ${chainConfig.name}`;
+
     // Combine data from all sources
     const combinedData = {
-      name: market?.name || metadata?.name || `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`,
-      symbol: market?.symbol || metadata?.symbol || 'UNKNOWN',
-      description: `${market?.name || metadata?.name || 'Token'} on ${chainConfig.name}`,
-      logo_url: '',
-      website_url: metadata?.website || '',
-      twitter_handle: metadata?.twitter || '',
-      github_url: metadata?.github || '',
+      name,
+      symbol,
+      description,
+      logo_url,
+      website_url: '', // Moralis doesn't provide social links in metadata endpoint
+      twitter_handle: '',
+      github_url: '',
       current_price_usd: market?.current_price_usd || 0,
       price_change_24h: market?.price_change_24h || 0,
       market_cap_usd: market?.market_cap_usd || 0,
-      total_supply: metadata?.total_supply || 0,
+      total_supply: metadata?.total_supply || '0',
       trading_volume_24h_usd: market?.trading_volume_24h_usd || 0
     };
+
+    console.log(`[SCAN] Combined token data:`, {
+      name: combinedData.name,
+      symbol: combinedData.symbol,
+      logo_available: !!combinedData.logo_url,
+      description_length: combinedData.description.length
+    });
 
     return {
       tokenData: combinedData,
@@ -125,11 +141,11 @@ function generateCategoryData(apiData: any) {
       score: communityScore
     },
     development: {
-      github_repo: apiData.metadataData?.github || '',
+      github_repo: '',
       contributors_count: 0,
       commits_30d: 0,
       last_commit: null,
-      is_open_source: apiData.metadataData?.github ? true : null,
+      is_open_source: null,
       roadmap_progress: 'unknown',
       score: developmentScore
     }
@@ -180,7 +196,7 @@ Deno.serve(async (req) => {
     const proScan = false; // Will be enhanced later with proper pro check
     console.log(`[SCAN] Pro scan permitted: ${proScan}`);
 
-    // Fetch comprehensive token data from multiple APIs
+    // Fetch comprehensive token data from multiple APIs using Moralis as primary metadata source
     const apiData = await fetchTokenDataFromAPIs(token_address, normalizedChainId);
     
     if (!apiData) {
@@ -376,7 +392,7 @@ Deno.serve(async (req) => {
         data_sources: {
           security: apiData.securityData ? 'GoPlus API' : 'unavailable',
           market: apiData.marketData ? 'GeckoTerminal API' : 'unavailable',
-          metadata: apiData.metadataData ? 'Etherscan API' : 'unavailable'
+          metadata: apiData.metadataData ? 'Moralis API' : 'unavailable'
         },
         category_scores: {
           security: categoryData.security.score,
