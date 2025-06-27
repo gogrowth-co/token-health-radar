@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { TokenResult, TokenInfoEnriched } from "@/components/token/types";
 import type { Database } from "@/integrations/supabase/types";
@@ -78,7 +79,6 @@ export const createTokenInfoFromCache = (cacheData: TokenDataCacheRow): TokenInf
     github_url: cacheData.github_url || '',
     logo_url: cacheData.logo_url || '',
     coingecko_id: cacheData.coingecko_id || '',
-    cmc_id: cacheData.cmc_id || null,
     current_price_usd: Number(cacheData.current_price_usd) || 0,
     price_change_24h: Number(cacheData.price_change_24h) || 0,
     market_cap_usd: Number(cacheData.market_cap_usd) || 0,
