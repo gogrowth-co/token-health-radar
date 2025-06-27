@@ -1,12 +1,12 @@
 
 import { Button } from "@/components/ui/button";
 import { Info, AlertTriangle } from "lucide-react";
-import TokenCard from "@/components/TokenCard";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TokenResult as TokenResultType } from "./types";
 import { formatCurrencyValue } from "@/utils/tokenFormatters";
 import { isTokenScanSupported } from "@/utils/tokenStorage";
+import TokenLogo from "./TokenLogo";
 
 interface TokenResultProps {
   token: TokenResultType;
@@ -88,20 +88,72 @@ export default function TokenResult({ token, onSelectToken }: TokenResultProps) 
       .map(platform => chainNames[platform] || platform.charAt(0).toUpperCase() + platform.slice(1));
   };
 
+  // Get primary chain for logo badge - return simplified chain key
+  const getPrimaryChain = () => {
+    if (!token.platforms || Object.keys(token.platforms).length === 0) {
+      return undefined;
+    }
+    
+    // Map platform keys to simplified chain keys for logo display
+    const chainMapping: Record<string, string> = {
+      'ethereum': 'eth',
+      'binance-smart-chain': 'bsc',
+      'arbitrum-one': 'arbitrum',
+      'optimistic-ethereum': 'optimism',
+      'base': 'base',
+      'polygon-pos': 'polygon',
+      'avalanche': 'avalanche',
+      'fantom': 'fantom'
+    };
+    
+    const primaryPlatform = Object.keys(token.platforms)[0];
+    return chainMapping[primaryPlatform] || primaryPlatform;
+  };
+
   const supportedChains = getSupportedChains();
+  const primaryChain = getPrimaryChain();
 
   return (
     <div className="relative border rounded-lg overflow-hidden shadow-sm">
-      <TokenCard
-        name={token.name}
-        symbol={token.symbol.toUpperCase()}
-        logo={token.tokenInfo?.logo_url || token.large || token.thumb}
-        marketCap={getMarketCapDisplay()}
-        price={token.price_usd || 0}
-        priceChange={token.price_change_24h || 0}
-        description={getTokenDescription()}
-        showActions={false}
-      />
+      <div className="p-6">
+        <div className="flex items-start gap-4 mb-4">
+          {/* Use the enhanced TokenLogo with chain badge */}
+          <TokenLogo 
+            logo={token.tokenInfo?.logo_url || token.large || token.thumb || ''}
+            symbol={token.symbol}
+            chain={primaryChain}
+            className="w-12 h-12"
+            showChainBadge={true}
+          />
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-semibold text-lg truncate">{token.name}</h3>
+              <span className="text-sm font-medium text-muted-foreground">
+                {token.symbol.toUpperCase()}
+              </span>
+            </div>
+            
+            {/* Market cap and price info */}
+            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+              <span>{getMarketCapDisplay()}</span>
+              {token.price_usd && token.price_usd > 0 && (
+                <span>${token.price_usd.toLocaleString()}</span>
+              )}
+              {token.price_change_24h !== undefined && token.price_usd && token.price_usd > 0 && (
+                <span className={`${token.price_change_24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {token.price_change_24h >= 0 ? '+' : ''}{token.price_change_24h.toFixed(2)}%
+                </span>
+              )}
+            </div>
+            
+            {/* Description */}
+            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+              {getTokenDescription()}
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Enhanced footer with chain info and support status */}
       <div className="flex items-center justify-between px-4 py-3 border-t">
