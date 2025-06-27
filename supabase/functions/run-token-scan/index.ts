@@ -19,26 +19,6 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
-// Clear all existing cached data for a token before inserting fresh data
-async function clearExistingCacheData(tokenAddress: string, chainId: string) {
-  console.log(`[SCAN] Clearing all existing cache data for ${tokenAddress} on ${chainId}`);
-  
-  const clearOperations = [
-    supabase.from('token_security_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId),
-    supabase.from('token_tokenomics_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId),
-    supabase.from('token_liquidity_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId),
-    supabase.from('token_community_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId),
-    supabase.from('token_development_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId)
-  ];
-
-  try {
-    await Promise.all(clearOperations);
-    console.log(`[SCAN] Successfully cleared all cache data for ${tokenAddress} on ${chainId}`);
-  } catch (error) {
-    console.error(`[SCAN] Error clearing cache data:`, error);
-  }
-}
-
 // Fetch comprehensive token data from multiple APIs
 async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
   console.log(`[SCAN] Fetching token data from multiple APIs for: ${tokenAddress} on chain: ${chainId}`);
@@ -186,7 +166,7 @@ Deno.serve(async (req) => {
       throw new Error('Token address and chain ID are required');
     }
 
-    // Normalize chain ID
+    // Normalize chain ID and validate
     const normalizedChainId = normalizeChainId(chain_id);
     const chainConfig = getChainConfigByMoralisId(normalizedChainId);
     
@@ -199,9 +179,6 @@ Deno.serve(async (req) => {
     // Check if user has pro access (simplified for now)
     const proScan = false; // Will be enhanced later with proper pro check
     console.log(`[SCAN] Pro scan permitted: ${proScan}`);
-
-    // Clear existing cache data first to ensure fresh data
-    await clearExistingCacheData(token_address, normalizedChainId);
 
     // Fetch comprehensive token data from multiple APIs
     const apiData = await fetchTokenDataFromAPIs(token_address, normalizedChainId);
@@ -218,152 +195,174 @@ Deno.serve(async (req) => {
 
     console.log(`[SCAN] Calculated overall score: ${overallScore}`);
 
-    // Save token data to database
-    console.log(`[SCAN] Saving token data to database: ${token_address}, chain: ${normalizedChainId}`);
-    
-    // Delete and recreate the main token record to ensure freshness
-    await supabase
-      .from('token_data_cache')
-      .delete()
-      .eq('token_address', token_address)
-      .eq('chain_id', normalizedChainId);
-
-    // Insert fresh token data
-    const { error: insertError } = await supabase
-      .from('token_data_cache')
-      .insert({
-        token_address,
-        chain_id: normalizedChainId,
-        name: apiData.tokenData.name,
-        symbol: apiData.tokenData.symbol,
-        description: apiData.tokenData.description,
-        logo_url: apiData.tokenData.logo_url,
-        website_url: apiData.tokenData.website_url,
-        twitter_handle: apiData.tokenData.twitter_handle,
-        github_url: apiData.tokenData.github_url,
-        current_price_usd: apiData.tokenData.current_price_usd,
-        price_change_24h: apiData.tokenData.price_change_24h,
-        market_cap_usd: apiData.tokenData.market_cap_usd
-      });
-
-    if (insertError) {
-      console.error(`[SCAN] Error inserting token data:`, insertError);
-      throw new Error(`Failed to save token data: ${insertError.message}`);
+    // Use database transaction for data consistency
+    const { error: transactionError } = await supabase.rpc('begin');
+    if (transactionError) {
+      console.error(`[SCAN] Failed to start transaction:`, transactionError);
     }
 
-    console.log(`[SCAN] Inserted token data for: ${token_address} on ${chainConfig.name}`);
+    try {
+      // UPSERT token data to main cache table
+      console.log(`[SCAN] Upserting token data to database: ${token_address}, chain: ${normalizedChainId}`);
+      
+      const { error: upsertError } = await supabase
+        .from('token_data_cache')
+        .upsert({
+          token_address,
+          chain_id: normalizedChainId,
+          name: apiData.tokenData.name,
+          symbol: apiData.tokenData.symbol,
+          description: apiData.tokenData.description,
+          logo_url: apiData.tokenData.logo_url,
+          website_url: apiData.tokenData.website_url,
+          twitter_handle: apiData.tokenData.twitter_handle,
+          github_url: apiData.tokenData.github_url,
+          current_price_usd: apiData.tokenData.current_price_usd,
+          price_change_24h: apiData.tokenData.price_change_24h,
+          market_cap_usd: apiData.tokenData.market_cap_usd
+        }, {
+          onConflict: 'token_address,chain_id'
+        });
 
-    // Save category data to cache tables
-    const cacheOperations = [
-      {
-        table: 'token_security_cache',
-        data: {
-          token_address,
-          chain_id: normalizedChainId,
-          score: categoryData.security.score,
-          ownership_renounced: categoryData.security.ownership_renounced,
-          can_mint: categoryData.security.can_mint,
-          honeypot_detected: categoryData.security.honeypot_detected,
-          freeze_authority: categoryData.security.freeze_authority,
-          audit_status: categoryData.security.audit_status,
-          multisig_status: categoryData.security.multisig_status
-        }
-      },
-      {
-        table: 'token_tokenomics_cache',
-        data: {
-          token_address,
-          chain_id: normalizedChainId,
-          score: categoryData.tokenomics.score,
-          supply_cap: categoryData.tokenomics.supply_cap,
-          circulating_supply: categoryData.tokenomics.circulating_supply,
-          burn_mechanism: categoryData.tokenomics.burn_mechanism,
-          vesting_schedule: categoryData.tokenomics.vesting_schedule,
-          distribution_score: categoryData.tokenomics.distribution_score,
-          tvl_usd: categoryData.tokenomics.tvl_usd,
-          treasury_usd: categoryData.tokenomics.treasury_usd
-        }
-      },
-      {
-        table: 'token_liquidity_cache',
-        data: {
-          token_address,
-          chain_id: normalizedChainId,
-          score: categoryData.liquidity.score,
-          trading_volume_24h_usd: categoryData.liquidity.trading_volume_24h_usd,
-          liquidity_locked_days: categoryData.liquidity.liquidity_locked_days,
-          dex_depth_status: categoryData.liquidity.dex_depth_status,
-          holder_distribution: categoryData.liquidity.holder_distribution,
-          cex_listings: categoryData.liquidity.cex_listings
-        }
-      },
-      {
-        table: 'token_community_cache',
-        data: {
-          token_address,
-          chain_id: normalizedChainId,
-          score: categoryData.community.score,
-          twitter_followers: categoryData.community.twitter_followers,
-          twitter_verified: categoryData.community.twitter_verified,
-          twitter_growth_7d: categoryData.community.twitter_growth_7d,
-          discord_members: categoryData.community.discord_members,
-          telegram_members: categoryData.community.telegram_members,
-          active_channels: categoryData.community.active_channels,
-          team_visibility: categoryData.community.team_visibility
-        }
-      },
-      {
-        table: 'token_development_cache',
-        data: {
-          token_address,
-          chain_id: normalizedChainId,
-          score: categoryData.development.score,
-          github_repo: categoryData.development.github_repo,
-          contributors_count: categoryData.development.contributors_count,
-          commits_30d: categoryData.development.commits_30d,
-          last_commit: categoryData.development.last_commit,
-          is_open_source: categoryData.development.is_open_source,
-          roadmap_progress: categoryData.development.roadmap_progress
-        }
+      if (upsertError) {
+        console.error(`[SCAN] Error upserting token data:`, upsertError);
+        throw new Error(`Failed to save token data: ${upsertError.message}`);
       }
-    ];
 
-    // Execute all cache operations (insert fresh data)
-    for (const operation of cacheOperations) {
-      try {
-        const { error } = await supabase
-          .from(operation.table)
-          .insert(operation.data);
+      console.log(`[SCAN] Successfully upserted token data for: ${token_address} on ${chainConfig.name}`);
 
-        if (error) {
-          console.error(`[SCAN] Error saving ${operation.table}:`, error);
-        } else {
-          const categoryName = operation.table.replace('token_', '').replace('_cache', '');
-          console.log(`[SCAN] Successfully saved ${categoryName} data with score: ${operation.data.score}`);
-        }
-      } catch (error) {
-        console.error(`[SCAN] Exception saving ${operation.table}:`, error);
-      }
-    }
-
-    // Record the scan
-    if (user_id) {
-      try {
-        await supabase
-          .from('token_scans')
-          .insert({
-            user_id,
+      // UPSERT category data to cache tables using individual operations
+      const cacheOperations = [
+        {
+          table: 'token_security_cache',
+          data: {
             token_address,
             chain_id: normalizedChainId,
-            score_total: overallScore,
-            pro_scan: proScan,
-            is_anonymous: false
-          });
-        
-        console.log(`[SCAN] Successfully recorded scan`);
-      } catch (error) {
-        console.error(`[SCAN] Error recording scan:`, error);
+            score: categoryData.security.score,
+            ownership_renounced: categoryData.security.ownership_renounced,
+            can_mint: categoryData.security.can_mint,
+            honeypot_detected: categoryData.security.honeypot_detected,
+            freeze_authority: categoryData.security.freeze_authority,
+            audit_status: categoryData.security.audit_status,
+            multisig_status: categoryData.security.multisig_status
+          }
+        },
+        {
+          table: 'token_tokenomics_cache',
+          data: {
+            token_address,
+            chain_id: normalizedChainId,
+            score: categoryData.tokenomics.score,
+            supply_cap: categoryData.tokenomics.supply_cap,
+            circulating_supply: categoryData.tokenomics.circulating_supply,
+            burn_mechanism: categoryData.tokenomics.burn_mechanism,
+            vesting_schedule: categoryData.tokenomics.vesting_schedule,
+            distribution_score: categoryData.tokenomics.distribution_score,
+            tvl_usd: categoryData.tokenomics.tvl_usd,
+            treasury_usd: categoryData.tokenomics.treasury_usd
+          }
+        },
+        {
+          table: 'token_liquidity_cache',
+          data: {
+            token_address,
+            chain_id: normalizedChainId,
+            score: categoryData.liquidity.score,
+            trading_volume_24h_usd: categoryData.liquidity.trading_volume_24h_usd,
+            liquidity_locked_days: categoryData.liquidity.liquidity_locked_days,
+            dex_depth_status: categoryData.liquidity.dex_depth_status,
+            holder_distribution: categoryData.liquidity.holder_distribution,
+            cex_listings: categoryData.liquidity.cex_listings
+          }
+        },
+        {
+          table: 'token_community_cache',
+          data: {
+            token_address,
+            chain_id: normalizedChainId,
+            score: categoryData.community.score,
+            twitter_followers: categoryData.community.twitter_followers,
+            twitter_verified: categoryData.community.twitter_verified,
+            twitter_growth_7d: categoryData.community.twitter_growth_7d,
+            discord_members: categoryData.community.discord_members,
+            telegram_members: categoryData.community.telegram_members,
+            active_channels: categoryData.community.active_channels,
+            team_visibility: categoryData.community.team_visibility
+          }
+        },
+        {
+          table: 'token_development_cache',
+          data: {
+            token_address,
+            chain_id: normalizedChainId,
+            score: categoryData.development.score,
+            github_repo: categoryData.development.github_repo,
+            contributors_count: categoryData.development.contributors_count,
+            commits_30d: categoryData.development.commits_30d,
+            last_commit: categoryData.development.last_commit,
+            is_open_source: categoryData.development.is_open_source,
+            roadmap_progress: categoryData.development.roadmap_progress
+          }
+        }
+      ];
+
+      // Execute all cache operations using UPSERT
+      for (const operation of cacheOperations) {
+        try {
+          const { error } = await supabase
+            .from(operation.table)
+            .upsert(operation.data, {
+              onConflict: 'token_address,chain_id'
+            });
+
+          if (error) {
+            console.error(`[SCAN] Error upserting ${operation.table}:`, error);
+          } else {
+            const categoryName = operation.table.replace('token_', '').replace('_cache', '');
+            console.log(`[SCAN] Successfully upserted ${categoryName} data with score: ${operation.data.score}`);
+          }
+        } catch (error) {
+          console.error(`[SCAN] Exception upserting ${operation.table}:`, error);
+        }
       }
+
+      // Record the scan with proper chain_id validation
+      if (user_id) {
+        try {
+          const { error: scanError } = await supabase
+            .from('token_scans')
+            .insert({
+              user_id,
+              token_address,
+              chain_id: normalizedChainId, // Ensure chain_id is always set
+              score_total: overallScore,
+              pro_scan: proScan,
+              is_anonymous: false
+            });
+          
+          if (scanError) {
+            console.error(`[SCAN] Error recording scan:`, scanError);
+          } else {
+            console.log(`[SCAN] Successfully recorded scan for user ${user_id}`);
+          }
+        } catch (error) {
+          console.error(`[SCAN] Exception recording scan:`, error);
+        }
+      }
+
+      // Commit transaction
+      const { error: commitError } = await supabase.rpc('commit');
+      if (commitError) {
+        console.error(`[SCAN] Failed to commit transaction:`, commitError);
+      }
+
+    } catch (error) {
+      // Rollback transaction on error
+      const { error: rollbackError } = await supabase.rpc('rollback');
+      if (rollbackError) {
+        console.error(`[SCAN] Failed to rollback transaction:`, rollbackError);
+      }
+      throw error;
     }
 
     console.log(`[SCAN] Comprehensive scan completed for ${token_address} on ${chainConfig.name}, overall score: ${overallScore}`);
