@@ -9,24 +9,24 @@ interface TokenLogoProps {
   showChainBadge?: boolean;
 }
 
-// Updated chain logos mapping with your specified URLs
+// Updated chain logos mapping with better URLs
 const CHAIN_LOGOS: Record<string, string> = {
-  eth: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
-  ethereum: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
-  bsc: 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
-  'binance-smart-chain': 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
-  arbitrum: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
-  'arbitrum-one': 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
-  '0xa4b1': 'https://cryptologos.cc/logos/arbitrum-arb-logo.png', // Arbitrum hex ID
-  optimism: 'https://cryptologos.cc/logos/optimism-eth-logo.png',
-  'optimistic-ethereum': 'https://cryptologos.cc/logos/optimism-eth-logo.png',
-  '0xa': 'https://cryptologos.cc/logos/optimism-eth-logo.png', // Optimism hex ID
-  base: 'https://cryptologos.cc/logos/base-base-logo.png',
-  '0x2105': 'https://cryptologos.cc/logos/base-base-logo.png', // Base hex ID
-  polygon: 'https://cryptologos.cc/logos/polygon-matic-logo.png',
-  'polygon-pos': 'https://cryptologos.cc/logos/polygon-matic-logo.png',
-  avalanche: 'https://cryptologos.cc/logos/avalanche-avax-logo.png',
-  fantom: 'https://cryptologos.cc/logos/fantom-ftm-logo.png'
+  eth: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+  ethereum: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+  bsc: 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png',
+  'binance-smart-chain': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png',
+  arbitrum: 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg',
+  'arbitrum-one': 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg',
+  '0xa4b1': 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg',
+  optimism: 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
+  'optimistic-ethereum': 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
+  '0xa': 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
+  base: 'https://assets.coingecko.com/coins/images/29271/small/base-logo-in-blue.png',
+  '0x2105': 'https://assets.coingecko.com/coins/images/29271/small/base-logo-in-blue.png',
+  polygon: 'https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png',
+  'polygon-pos': 'https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png',
+  avalanche: 'https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png',
+  fantom: 'https://assets.coingecko.com/coins/images/4001/small/Fantom.png'
 };
 
 // Chain name abbreviations for fallback display
@@ -37,9 +37,12 @@ const CHAIN_ABBREVIATIONS: Record<string, string> = {
   'binance-smart-chain': 'BSC',
   arbitrum: 'ARB',
   'arbitrum-one': 'ARB',
+  '0xa4b1': 'ARB',
   optimism: 'OP',
   'optimistic-ethereum': 'OP',
+  '0xa': 'OP',
   base: 'BASE',
+  '0x2105': 'BASE',
   polygon: 'MATIC',
   'polygon-pos': 'MATIC',
   avalanche: 'AVAX',
@@ -136,9 +139,9 @@ export default function TokenLogo({
         </div>
       )}
 
-      {/* Chain badge overlay - ALWAYS show when conditions are met, with fallback */}
+      {/* Chain badge overlay - ALWAYS show when conditions are met, with improved fallback */}
       {shouldShowChainBadge && (
-        <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-gray-900 bg-white dark:bg-gray-900 overflow-hidden shadow-md flex items-center justify-center">
+        <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-2 border-white dark:border-gray-900 bg-white dark:bg-gray-800 overflow-hidden shadow-lg flex items-center justify-center">
           {/* Try to show chain logo first */}
           {chainLogo && !chainImageError ? (
             <img 
@@ -148,8 +151,8 @@ export default function TokenLogo({
               onError={handleChainImageError}
             />
           ) : (
-            /* Fallback to chain abbreviation */
-            <div className="text-[8px] font-bold text-gray-700 dark:text-gray-300">
+            /* Fallback to chain abbreviation with better styling */
+            <div className="text-[7px] font-bold text-gray-700 dark:text-gray-300 leading-none">
               {chainAbbr || chain?.slice(0, 2).toUpperCase() || '?'}
             </div>
           )}
