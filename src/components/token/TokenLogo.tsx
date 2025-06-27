@@ -99,9 +99,9 @@ export default function TokenLogo({
         </div>
       )}
 
-      {/* Enhanced chain badge overlay - positioned at bottom-right corner with partial overlap */}
+      {/* Chain badge overlay - positioned at bottom-right corner with partial overlap */}
       {hasTokenLogo && chainLogo && showChainBadge && !chainImageError && (
-        <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full border-2 border-white dark:border-gray-900 bg-white dark:bg-gray-900 overflow-hidden shadow-lg transform translate-x-1 translate-y-1">
+        <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full border-2 border-white dark:border-gray-900 bg-white dark:bg-gray-900 overflow-hidden shadow-md">
           <img 
             src={chainLogo} 
             alt={`${chain} chain`}
