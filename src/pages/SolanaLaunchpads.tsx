@@ -1,3 +1,4 @@
+
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -14,15 +15,32 @@ import KeyTakeaways from "@/components/solana/KeyTakeaways";
 import SolanaFAQ from "@/components/solana/SolanaFAQ";
 
 export default function SolanaLaunchpads() {
+  const currentDate = new Date().toISOString();
+  const publishDate = "2025-01-15T10:00:00.000Z";
+  
+  // Calculate article content for word count and body
+  const articleContent = `
+    Discover and compare the best Solana launchpads for your token. From Pump.fun's viral memes to MetaDAO's governance-first approach - find the perfect platform for your project.
+    
+    Solana has become crypto's go-to sandbox for token experimentation. From meme coins that explode overnight to community-governed DAOs with novel economic models, it's where ideas get tested—and where retail investors move fast.
+    
+    In 2025, the number of Solana token launch platforms has exploded. It's no longer just about Pump.fun. A new generation of tools—like Devfun, Believe App, and Letsbonk.fun—are changing how tokens get launched, discovered, and traded.
+    
+    This comprehensive guide covers: Pump.fun's viral mechanics and community-driven launches, MetaDAO's governance-first approach for serious projects, Believe App's professional token launch experience, Boop.fun's invite-only premium platform, Letsbonk.fun's improved user experience, Devfun's developer-focused tools, comparative analysis of all major platforms, launch mechanics and bonding curves, token distribution strategies, UX and community onboarding approaches, founder fit recommendations, launch planning considerations, tracking tools and dashboards.
+  `;
+  
+  const wordCount = articleContent.trim().split(/\s+/).length;
+
   const schemaMarkup = {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": "Solana Launchpads Guide 2025: From Pump.fun to MetaDAO",
-    "description": "Discover and compare the best Solana launchpads for your token. Read the full article and find the best launchpad for your project.",
-    "image": "https://tokenhealthscan.com/lovable-uploads/solana%20launchpads2.png",
+    "description": "Discover and compare the best Solana launchpads for your token. From Pump.fun's viral memes to MetaDAO's governance-first approach - find the perfect platform for your project.",
+    "image": "https://tokenhealthscan.com/lovable-uploads/solana-launchpads2.png",
     "author": {
-      "@type": "Organization",
-      "name": "Token Health Scan Editors"
+      "@type": "Person",
+      "name": "TokenHealthScan Editorial Team",
+      "url": "https://tokenhealthscan.com/about"
     },
     "publisher": {
       "@type": "Organization",
@@ -32,12 +50,68 @@ export default function SolanaLaunchpads() {
         "url": "https://tokenhealthscan.com/lovable-uploads/tokenhealthscan-og.png"
       }
     },
-    "datePublished": "2025-01-01",
-    "dateModified": "2025-01-01",
+    "datePublished": publishDate,
+    "dateModified": currentDate,
+    "wordCount": wordCount,
+    "articleBody": articleContent.trim(),
+    "articleSection": "Cryptocurrency Analysis",
+    "about": [
+      {
+        "@type": "Thing",
+        "name": "Solana Blockchain"
+      },
+      {
+        "@type": "Thing", 
+        "name": "Token Launchpads"
+      },
+      {
+        "@type": "Thing",
+        "name": "Cryptocurrency"
+      }
+    ],
+    "mentions": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "Pump.fun"
+      },
+      {
+        "@type": "SoftwareApplication", 
+        "name": "MetaDAO"
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "Believe App"
+      }
+    ],
     "mainEntityOfPage": {
       "@type": "WebPage",
       "@id": "https://tokenhealthscan.com/solana-launchpads"
     }
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://tokenhealthscan.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Guides",
+        "item": "https://tokenhealthscan.com/guides"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Solana Launchpads Guide",
+        "item": "https://tokenhealthscan.com/solana-launchpads"
+      }
+    ]
   };
 
   const faqSchemaMarkup = {
@@ -107,19 +181,33 @@ export default function SolanaLaunchpads() {
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>Solana Launchpads Guide 2025: From Pump.fun to MetaDAO | TokenHealthScan</title>
-        <meta name="description" content="Discover and compare the best Solana launchpads for your token. Read the full article and find the best launchpad for your project." />
-        <meta name="keywords" content="Solana launchpads, Pump.fun, MetaDAO, token launch, meme coins, crypto launchpad, Solana tokens, DeFi launch" />
+        <meta name="description" content="Discover and compare the best Solana launchpads for your token. From Pump.fun's viral memes to MetaDAO's governance-first approach - find the perfect platform for your project." />
+        <meta name="keywords" content="Solana launchpads, Pump.fun, MetaDAO, token launch, meme coins, crypto launchpad, Solana tokens, DeFi launch, bonding curves, token distribution" />
+        <meta name="author" content="TokenHealthScan Editorial Team" />
+        <meta name="article:published_time" content={publishDate} />
+        <meta name="article:modified_time" content={currentDate} />
+        <meta name="article:section" content="Cryptocurrency Analysis" />
+        <meta name="article:tag" content="Solana" />
+        <meta name="article:tag" content="Launchpads" />
+        <meta name="article:tag" content="Token Launch" />
         <meta property="og:title" content="Complete Guide to Solana Launchpads 2025 - TokenHealthScan" />
-        <meta property="og:description" content="Discover and compare the best Solana launchpads for your token. Read the full article and find the best launchpad for your project." />
-        <meta property="og:image" content="https://tokenhealthscan.com/lovable-uploads/solana%20launchpads2.png" />
+        <meta property="og:description" content="Discover and compare the best Solana launchpads for your token. From Pump.fun's viral memes to MetaDAO's governance-first approach - find the perfect platform for your project." />
+        <meta property="og:image" content="https://tokenhealthscan.com/lovable-uploads/solana-launchpads2.png" />
+        <meta property="og:image:alt" content="Comprehensive overview of Solana launchpad ecosystem showing Pump.fun, MetaDAO, Boop.fun, and other major platforms" />
         <meta property="og:type" content="article" />
+        <meta property="og:url" content="https://tokenhealthscan.com/solana-launchpads" />
+        <meta property="og:site_name" content="TokenHealthScan" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Complete Guide to Solana Launchpads 2025" />
         <meta name="twitter:description" content="Discover and compare the best Solana launchpads for your token." />
-        <meta name="twitter:image" content="https://tokenhealthscan.com/lovable-uploads/solana%20launchpads2.png" />
+        <meta name="twitter:image" content="https://tokenhealthscan.com/lovable-uploads/solana-launchpads2.png" />
+        <meta name="twitter:image:alt" content="Solana launchpad ecosystem comparison guide" />
         <link rel="canonical" href="https://tokenhealthscan.com/solana-launchpads" />
         <script type="application/ld+json">
           {JSON.stringify(schemaMarkup)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
         </script>
         <script type="application/ld+json">
           {JSON.stringify(faqSchemaMarkup)}
@@ -129,17 +217,19 @@ export default function SolanaLaunchpads() {
       <Navbar />
       
       <main className="container mx-auto px-4 py-4 md:py-8 max-w-6xl">
-        <SolanaLaunchpadsHero />
-        <LaunchpadSpectrum />
-        <ComparativeAnalysis />
-        <LaunchMechanics />
-        <TokenDistribution />
-        <UXOnboarding />
-        <FounderFit />
-        <LaunchPlans />
-        <ToolsDashboards />
-        <KeyTakeaways />
-        <SolanaFAQ />
+        <article>
+          <SolanaLaunchpadsHero />
+          <LaunchpadSpectrum />
+          <ComparativeAnalysis />
+          <LaunchMechanics />
+          <TokenDistribution />
+          <UXOnboarding />
+          <FounderFit />
+          <LaunchPlans />
+          <ToolsDashboards />
+          <KeyTakeaways />
+          <SolanaFAQ />
+        </article>
       </main>
       
       <Footer />

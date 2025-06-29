@@ -6,9 +6,11 @@ import { ArrowRight } from "lucide-react";
 export default function SolanaLaunchpadsHero() {
   return (
     <section className="text-center py-6 md:py-12 mb-8 md:mb-16">
-      <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 px-2">
-        A Deep Dive Into Solana's Token Launchpads: From Memes to Mechanisms
-      </h1>
+      <header>
+        <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 px-2">
+          A Deep Dive Into Solana's Token Launchpads: From Memes to Mechanisms
+        </h1>
+      </header>
       
       <img 
         src="/lovable-uploads/solana-launchpads2.png" 
