@@ -38,9 +38,9 @@ export default function SolanaLaunchpads() {
     "description": "Discover and compare the best Solana launchpads for your token. From Pump.fun's viral memes to MetaDAO's governance-first approach - find the perfect platform for your project.",
     "image": "https://tokenhealthscan.com/lovable-uploads/solana-launchpads2.png",
     "author": {
-      "@type": "Person",
-      "name": "TokenHealthScan Editorial Team",
-      "url": "https://tokenhealthscan.com/about"
+      "@type": "Organization",
+      "name": "TokenHealthScan",
+      "url": "https://tokenhealthscan.com"
     },
     "publisher": {
       "@type": "Organization",
@@ -183,7 +183,7 @@ export default function SolanaLaunchpads() {
         <title>Solana Launchpads Guide 2025: From Pump.fun to MetaDAO | TokenHealthScan</title>
         <meta name="description" content="Discover and compare the best Solana launchpads for your token. From Pump.fun's viral memes to MetaDAO's governance-first approach - find the perfect platform for your project." />
         <meta name="keywords" content="Solana launchpads, Pump.fun, MetaDAO, token launch, meme coins, crypto launchpad, Solana tokens, DeFi launch, bonding curves, token distribution" />
-        <meta name="author" content="TokenHealthScan Editorial Team" />
+        <meta name="author" content="Token Health Scan Editors" />
         <meta name="article:published_time" content={publishDate} />
         <meta name="article:modified_time" content={currentDate} />
         <meta name="article:section" content="Cryptocurrency Analysis" />
@@ -229,6 +229,13 @@ export default function SolanaLaunchpads() {
           <ToolsDashboards />
           <KeyTakeaways />
           <SolanaFAQ />
+          
+          <footer className="border-t pt-8 mt-12 text-sm text-muted-foreground">
+            <p className="mb-2"><strong>Updated:</strong> June 2025</p>
+            <p className="mb-2"><strong>Author:</strong> Token Health Scan Editors</p>
+            <p className="mb-2"><strong>Sources:</strong> GoPlus, CoinGecko, Etherscan, GitHub, Apify</p>
+            <p className="italic">Note: Always DYOR (Do Your Own Research). Scanning tools are useful, but no tool replaces personal responsibility in crypto investing.</p>
+          </footer>
         </article>
       </main>
       
