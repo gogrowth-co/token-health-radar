@@ -1,3 +1,4 @@
+
 import { CHAIN_MAP, getChainConfigByMoralisId } from './chainConfig.ts';
 
 // GoPlus Security API client
@@ -56,21 +57,63 @@ export async function fetchGeckoTerminalData(tokenAddress: string, chainId: stri
     }
     
     const data = await response.json();
+    
+    // Add comprehensive logging to debug the API response structure
+    console.log(`[GECKO] Raw API response structure:`, JSON.stringify(data, null, 2));
+    
     const tokenData = data.data?.attributes;
     
     if (!tokenData) {
       console.log(`[GECKO] No market data found for token: ${tokenAddress}`);
+      console.log(`[GECKO] Response structure:`, JSON.stringify(data, null, 2));
       return null;
     }
-    
-    return {
-      current_price_usd: parseFloat(tokenData.price_usd) || 0,
-      price_change_24h: parseFloat(tokenData.price_change_percentage?.h24) || 0,
-      market_cap_usd: parseFloat(tokenData.market_cap_usd) || 0,
-      trading_volume_24h_usd: parseFloat(tokenData.volume_usd?.h24) || 0,
+
+    // Log the specific price change data for debugging
+    console.log(`[GECKO] Price change data path check:`, {
+      'tokenData.price_change_percentage': tokenData.price_change_percentage,
+      'tokenData.price_change_percentage?.h24': tokenData.price_change_percentage?.h24,
+      'Full price_change_percentage object': JSON.stringify(tokenData.price_change_percentage, null, 2)
+    });
+
+    // Extract price change with proper error handling
+    const priceChange24h = tokenData.price_change_percentage?.h24;
+    const parsedPriceChange = priceChange24h !== null && priceChange24h !== undefined 
+      ? parseFloat(priceChange24h) 
+      : null;
+
+    // Extract other market data
+    const currentPriceUsd = parseFloat(tokenData.price_usd) ?? 0;
+    const marketCapUsd = parseFloat(tokenData.market_cap_usd) ?? 0;
+    const tradingVolume24hUsd = parseFloat(tokenData.volume_usd?.h24) ?? 0;
+
+    // Data validation - warn about potential issues
+    if (parsedPriceChange === 0 && tradingVolume24hUsd > 0) {
+      console.warn(`[GECKO] Potential data anomaly: 24h price change is exactly 0% but trading volume is ${tradingVolume24hUsd} USD`);
+    }
+
+    if (parsedPriceChange === null) {
+      console.warn(`[GECKO] No valid 24h price change data found for token: ${tokenAddress}`);
+    }
+
+    const result = {
+      current_price_usd: currentPriceUsd,
+      price_change_24h: parsedPriceChange ?? 0, // Use 0 as fallback only when data is truly missing
+      market_cap_usd: marketCapUsd,
+      trading_volume_24h_usd: tradingVolume24hUsd,
       name: tokenData.name || '',
       symbol: tokenData.symbol || ''
     };
+
+    console.log(`[GECKO] Processed market data:`, {
+      token: `${result.name} (${result.symbol})`,
+      price_usd: result.current_price_usd,
+      price_change_24h: result.price_change_24h,
+      volume_24h_usd: result.trading_volume_24h_usd,
+      market_cap_usd: result.market_cap_usd
+    });
+    
+    return result;
   } catch (error) {
     console.error(`[GECKO] Error fetching market data:`, error);
     return null;
@@ -246,7 +289,6 @@ export function calculateSecurityScore(securityData: any): number {
   return Math.max(0, Math.min(100, score));
 }
 
-// Calculate liquidity score based on real data
 export function calculateLiquidityScore(marketData: any): number {
   if (!marketData) return 0;
   
@@ -267,7 +309,6 @@ export function calculateLiquidityScore(marketData: any): number {
   return Math.max(0, Math.min(100, score));
 }
 
-// Calculate tokenomics score based on real data
 export function calculateTokenomicsScore(moralisData: any, marketData: any): number {
   if (!moralisData && !marketData) return 0;
   
@@ -296,7 +337,6 @@ export function calculateTokenomicsScore(moralisData: any, marketData: any): num
   return Math.max(0, Math.min(100, score));
 }
 
-// Calculate development score based on real GitHub data
 export function calculateDevelopmentScore(githubData: any): number {
   if (!githubData) {
     console.log(`[GITHUB] No GitHub data available, using conservative score`);
