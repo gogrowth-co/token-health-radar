@@ -14,10 +14,9 @@ export function AuthButton() {
   }
 
   if (isAuthenticated) {
-    const dashboardPath = isAdmin ? "/admin/users" : "/dashboard";
     return (
       <Button variant="outline" size="sm" asChild>
-        <Link to={dashboardPath}>My Dashboard</Link>
+        <Link to="/dashboard">My Dashboard</Link>
       </Button>
     );
   }

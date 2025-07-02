@@ -7,8 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Link } from "react-router-dom";
-import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowRight, Loader2, Shield } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type ScanHistory = {
@@ -22,6 +23,7 @@ type ScanHistory = {
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
+  const { isAdmin } = useUserRole();
   const [scans, setScans] = useState<ScanHistory[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -109,10 +111,18 @@ export default function Dashboard() {
       <Navbar />
       
       <main className="flex-1 container px-4 py-8">
-        <div className="max-w-5xl mx-auto space-y-8">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          </div>
+          <div className="max-w-5xl mx-auto space-y-8">
+            <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+              {isAdmin && (
+                <Button asChild variant="outline">
+                  <Link to="/admin/users">
+                    <Shield className="h-4 w-4 mr-2" />
+                    Admin Panel
+                  </Link>
+                </Button>
+              )}
+            </div>
           
           <div className="grid gap-8 md:grid-cols-3">
             <div className="md:col-span-1">
