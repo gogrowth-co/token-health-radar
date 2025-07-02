@@ -38,27 +38,56 @@ export default function AdminUsers() {
   } | null>(null);
 
   useEffect(() => {
+    console.log('AdminUsers Debug - Component mounted, fetching users...');
     fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      console.log('AdminUsers Debug - Fetching user data...');
+      
       const { data, error } = await supabase.rpc('get_admin_user_data');
       
+      console.log('AdminUsers Debug - Database response:', {
+        data,
+        error,
+        dataLength: data?.length,
+        timestamp: new Date().toISOString()
+      });
+      
       if (error) {
-        console.error('Error fetching users:', error);
+        console.error('AdminUsers Error - Failed to fetch users:', {
+          error,
+          errorCode: error.code,
+          errorMessage: error.message,
+          errorDetails: error.details,
+          errorHint: error.hint
+        });
+        
         toast({
           title: "Error",
-          description: "Failed to load user data",
+          description: `Failed to load user data: ${error.message}`,
           variant: "destructive",
         });
         return;
       }
 
-      setUsers((data || []) as AdminUser[]);
+      const userData = (data || []) as AdminUser[];
+      console.log('AdminUsers Debug - Processed user data:', {
+        userCount: userData.length,
+        adminUsers: userData.filter(u => u.is_admin).map(u => ({ id: u.id, email: u.email })),
+        currentUserData: userData.find(u => u.id === 'a97608f8-5df3-4780-9832-d15cbe8414ac')
+      });
+      
+      setUsers(userData);
     } catch (error) {
-      console.error('Exception fetching users:', error);
+      console.error('AdminUsers Exception - Unexpected error:', {
+        error,
+        errorStack: error instanceof Error ? error.stack : 'No stack trace',
+        errorMessage: error instanceof Error ? error.message : String(error)
+      });
+      
       toast({
         title: "Error",
         description: "Failed to load user data",

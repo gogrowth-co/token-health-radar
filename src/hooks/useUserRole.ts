@@ -31,23 +31,38 @@ export function useUserRole() {
         console.log('useUserRole Debug - Database response:', {
           data,
           error,
-          userId: user.id
+          userId: user.id,
+          userEmail: user.email,
+          timestamp: new Date().toISOString()
         });
 
         if (error) {
-          console.error('Error fetching user role:', error);
+          console.error('useUserRole Error - Database error:', {
+            error,
+            errorCode: error.code,
+            errorMessage: error.message,
+            errorDetails: error.details,
+            userId: user.id
+          });
           setRole('user'); // Default to user role on error
         } else {
           const finalRole = data || 'user';
           console.log('useUserRole Debug - Final role determined:', {
             rawData: data,
             finalRole,
-            isAdmin: finalRole === 'admin'
+            isAdmin: finalRole === 'admin',
+            userId: user.id,
+            userEmail: user.email
           });
           setRole(finalRole);
         }
       } catch (error) {
-        console.error('Exception fetching user role:', error);
+        console.error('useUserRole Exception - Unexpected error:', {
+          error,
+          errorStack: error instanceof Error ? error.stack : 'No stack trace',
+          errorMessage: error instanceof Error ? error.message : String(error),
+          userId: user.id
+        });
         setRole('user');
       } finally {
         setLoading(false);
