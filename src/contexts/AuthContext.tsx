@@ -31,10 +31,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
-    let retryCount = 0;
-    const maxRetries = 3;
+    let cleanupListener: (() => void) | null = null;
     
-    // Enhanced session initialization with retry logic
     const initializeAuth = async () => {
       if (!mounted) return;
       
@@ -42,49 +40,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log('Auth Context - Initializing authentication...');
         setLoading(true);
         
-        // Set up auth state listener FIRST to catch any auth events
+        // Set up auth state listener FIRST
         const { data: authListener } = supabase.auth.onAuthStateChange(
           (event, newSession) => {
             if (!mounted) return;
             
-            try {
-              console.log('Auth Context - State change:', { 
-                event, 
-                hasSession: !!newSession,
-                userId: newSession?.user?.id,
-                userEmail: newSession?.user?.email
-              });
-              
-              setSession(newSession);
-              setUser(newSession?.user || null);
-              
-              // Only set loading to false after we have processed the auth state
-              if (event !== 'INITIAL_SESSION') {
-                setLoading(false);
-              }
-            } catch (error) {
-              console.error('Auth Context - Error processing auth state change:', error);
+            console.log('Auth Context - State change:', { 
+              event, 
+              hasSession: !!newSession,
+              userId: newSession?.user?.id,
+              userEmail: newSession?.user?.email
+            });
+            
+            setSession(newSession);
+            setUser(newSession?.user || null);
+            
+            // Set loading to false after initial session is processed
+            if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+              setLoading(false);
             }
           }
         );
+
+        // Store cleanup function
+        cleanupListener = () => {
+          if (authListener?.subscription) {
+            authListener.subscription.unsubscribe();
+          }
+        };
 
         // Then check for existing session
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
           console.error('Auth Context - Error getting session:', sessionError);
-          
-          // Retry logic for session retrieval
-          if (retryCount < maxRetries) {
-            retryCount++;
-            console.log(`Auth Context - Retrying session retrieval (${retryCount}/${maxRetries})...`);
-            setTimeout(() => initializeAuth(), 1000 * retryCount);
-            return;
-          }
         }
         
         if (mounted) {
-          console.log('Auth Context - Session retrieved:', { 
+          console.log('Auth Context - Initial session check:', { 
             hasSession: !!sessionData.session,
             userId: sessionData.session?.user?.id,
             userEmail: sessionData.session?.user?.email
@@ -94,21 +87,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(sessionData.session?.user || null);
           setLoading(false);
         }
-
-        return () => {
-          if (authListener?.subscription) {
-            authListener.subscription.unsubscribe();
-          }
-        };
         
       } catch (error) {
-        console.error('Auth Context - Unexpected error during initialization:', error);
-        
-        if (mounted && retryCount < maxRetries) {
-          retryCount++;
-          console.log(`Auth Context - Retrying initialization (${retryCount}/${maxRetries})...`);
-          setTimeout(() => initializeAuth(), 1000 * retryCount);
-        } else if (mounted) {
+        console.error('Auth Context - Initialization error:', error);
+        if (mounted) {
           setLoading(false);
         }
       }
@@ -118,6 +100,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => {
       mounted = false;
+      if (cleanupListener) {
+        cleanupListener();
+      }
     };
   }, []);
 

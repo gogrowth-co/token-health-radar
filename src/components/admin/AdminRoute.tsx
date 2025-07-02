@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Shield } from 'lucide-react';
@@ -13,31 +13,20 @@ export default function AdminRoute({ children }: AdminRouteProps) {
   const { isAuthenticated, loading: authLoading, user } = useAuth();
   const { isAdmin, role, loading: roleLoading } = useUserRole();
 
-  // Enhanced debug logging for admin route access
-  console.log('AdminRoute Debug - Access Check:', {
+  console.log('AdminRoute - Access check:', {
     isAuthenticated,
     authLoading,
     roleLoading,
     isAdmin,
     role,
     userId: user?.id,
-    userEmail: user?.email,
-    timestamp: new Date().toISOString(),
-    hasUser: !!user,
-    sessionAvailable: !!user
+    userEmail: user?.email
   });
 
-  // Show loading while checking auth and role - wait for both to complete
+  // Show loading while checking auth and role
   const isLoading = authLoading || roleLoading;
   
   if (isLoading) {
-    console.log('AdminRoute Debug - Loading state:', { 
-      authLoading, 
-      roleLoading,
-      hasUser: !!user,
-      userId: user?.id 
-    });
-    
     return (
       <div className="flex flex-col min-h-screen">
         <Navbar />
@@ -50,15 +39,6 @@ export default function AdminRoute({ children }: AdminRouteProps) {
                 Verifying admin access for {user?.email || 'user'}
               </p>
             </div>
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-xs">
-                <p><strong>Loading Debug:</strong></p>
-                <p>Auth Loading: {authLoading ? 'Yes' : 'No'}</p>
-                <p>Role Loading: {roleLoading ? 'Yes' : 'No'}</p>
-                <p>User Available: {user?.id ? 'Yes' : 'No'}</p>
-                <p>Email: {user?.email || 'N/A'}</p>
-              </div>
-            )}
           </div>
         </main>
         <Footer />
@@ -66,11 +46,10 @@ export default function AdminRoute({ children }: AdminRouteProps) {
     );
   }
 
-  // Enhanced access control checks
-  const hasValidUser = isAuthenticated && user?.id;
-  const hasAdminAccess = isAdmin && role === 'admin';
+  // Simplified access control - user must be authenticated and admin
+  const hasAccess = isAuthenticated && user?.id && isAdmin;
   
-  if (!hasValidUser || !hasAdminAccess) {
+  if (!hasAccess) {
     const reason = !isAuthenticated 
       ? 'Not authenticated' 
       : !user?.id 
@@ -79,13 +58,11 @@ export default function AdminRoute({ children }: AdminRouteProps) {
           ? `Not admin (role: ${role})` 
           : 'Unknown access denial reason';
           
-    console.error('AdminRoute Debug - Access Denied:', {
+    console.log('AdminRoute - Access denied:', {
       isAuthenticated,
-      hasValidUser,
+      hasUser: !!user?.id,
       isAdmin,
-      hasAdminAccess,
       role,
-      userId: user?.id,
       userEmail: user?.email,
       reason
     });
@@ -110,11 +87,9 @@ export default function AdminRoute({ children }: AdminRouteProps) {
                 <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded text-sm text-left">
                   <p><strong>Debug Info:</strong></p>
                   <p>Authenticated: {isAuthenticated ? 'Yes' : 'No'}</p>
-                  <p>Valid User: {hasValidUser ? 'Yes' : 'No'}</p>
-                  <p>Admin: {isAdmin ? 'Yes' : 'No'}</p>
-                  <p>Admin Access: {hasAdminAccess ? 'Yes' : 'No'}</p>
-                  <p>Role: {role || 'None'}</p>
                   <p>User ID: {user?.id || 'None'}</p>
+                  <p>Admin: {isAdmin ? 'Yes' : 'No'}</p>
+                  <p>Role: {role || 'None'}</p>
                   <p>Email: {user?.email || 'None'}</p>
                   <p>Reason: {reason}</p>
                 </div>
@@ -127,16 +102,7 @@ export default function AdminRoute({ children }: AdminRouteProps) {
     );
   }
 
-  console.log('AdminRoute Debug - Access Granted:', {
-    isAuthenticated,
-    hasValidUser,
-    isAdmin,
-    hasAdminAccess,
-    role,
-    userId: user?.id,
-    userEmail: user?.email,
-    timestamp: new Date().toISOString()
-  });
+  console.log('AdminRoute - Access granted for:', user?.email);
 
   // Render children if admin access is confirmed
   return <>{children}</>;

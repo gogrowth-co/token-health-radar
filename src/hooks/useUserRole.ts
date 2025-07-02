@@ -8,8 +8,6 @@ export function useUserRole() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [role, setRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
-  const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 3;
 
   useEffect(() => {
     let mounted = true;
@@ -17,103 +15,59 @@ export function useUserRole() {
     async function fetchUserRole() {
       // Wait for auth to finish loading
       if (authLoading) {
-        console.log('useUserRole Debug - Waiting for auth to finish loading...');
         return;
       }
       
       if (!isAuthenticated || !user?.id) {
-        console.log('useUserRole Debug - No authenticated user:', { 
-          isAuthenticated, 
-          hasUser: !!user,
-          userId: user?.id,
-          authLoading
-        });
+        console.log('useUserRole - No authenticated user');
         setRole(null);
         setLoading(false);
         return;
       }
 
-      console.log('useUserRole Debug - Fetching role for user:', {
+      // Special hardcoded admin check for gmangabeira@gmail.com
+      if (user.email === 'gmangabeira@gmail.com') {
+        console.log('useUserRole - Hardcoded admin access for gmangabeira@gmail.com');
+        setRole('admin');
+        setLoading(false);
+        return;
+      }
+
+      console.log('useUserRole - Fetching role for user:', {
         userId: user.id,
-        email: user.email,
-        attempt: retryCount + 1
+        email: user.email
       });
 
       try {
         setLoading(true);
         
-        // Query user_roles table directly for reliability - use maybeSingle to handle no data case
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .maybeSingle();
+        // Use the database function for consistent role checking
+        const { data: roleData, error } = await supabase.rpc('get_user_role', {
+          _user_id: user.id
+        });
 
-        console.log('useUserRole Debug - Database response:', {
-          data,
-          error: error ? {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint
-          } : null,
+        console.log('useUserRole - Role function response:', {
+          roleData,
+          error: error?.message,
           userId: user.id,
-          userEmail: user.email,
-          timestamp: new Date().toISOString()
+          userEmail: user.email
         });
 
         if (error) {
-          console.error('useUserRole Error - Database error:', {
-            error,
-            errorCode: error.code,
-            errorMessage: error.message,
-            errorDetails: error.details,
-            userId: user.id,
-            retryCount
-          });
-          
-          // Retry logic for database errors
-          if (retryCount < maxRetries && mounted) {
-            console.log(`useUserRole Debug - Retrying role fetch (${retryCount + 1}/${maxRetries})...`);
-            setRetryCount(prev => prev + 1);
-            setTimeout(() => {
-              if (mounted) fetchUserRole();
-            }, 1000 * (retryCount + 1));
-            return;
-          }
-          
-          setRole('user'); // Default to user role on persistent error
+          console.error('useUserRole - Role fetch error:', error);
+          setRole('user'); // Default to user role on error
         } else {
-          const finalRole = data?.role || 'user';
-          console.log('useUserRole Debug - Final role determined:', {
-            rawData: data,
+          const finalRole = roleData || 'user';
+          console.log('useUserRole - Final role determined:', {
             finalRole,
             isAdmin: finalRole === 'admin',
             userId: user.id,
             userEmail: user.email
           });
           setRole(finalRole);
-          setRetryCount(0); // Reset retry count on success
         }
       } catch (error) {
-        console.error('useUserRole Exception - Unexpected error:', {
-          error,
-          errorStack: error instanceof Error ? error.stack : 'No stack trace',
-          errorMessage: error instanceof Error ? error.message : String(error),
-          userId: user.id,
-          retryCount
-        });
-        
-        // Retry logic for exceptions
-        if (retryCount < maxRetries && mounted) {
-          console.log(`useUserRole Debug - Retrying after exception (${retryCount + 1}/${maxRetries})...`);
-          setRetryCount(prev => prev + 1);
-          setTimeout(() => {
-            if (mounted) fetchUserRole();
-          }, 1000 * (retryCount + 1));
-          return;
-        }
-        
+        console.error('useUserRole - Unexpected error:', error);
         setRole('user');
       } finally {
         if (mounted) {
@@ -127,11 +81,11 @@ export function useUserRole() {
     return () => {
       mounted = false;
     };
-  }, [user?.id, isAuthenticated, authLoading, retryCount]);
+  }, [user?.id, user?.email, isAuthenticated, authLoading]);
 
-  const isAdmin = role === 'admin';
+  const isAdmin = role === 'admin' || user?.email === 'gmangabeira@gmail.com';
 
-  console.log('useUserRole Debug - Hook state:', {
+  console.log('useUserRole - Current state:', {
     role,
     isAdmin,
     loading,
