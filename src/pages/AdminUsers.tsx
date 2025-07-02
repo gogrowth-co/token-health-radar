@@ -38,7 +38,7 @@ export default function AdminUsers() {
   } | null>(null);
 
   useEffect(() => {
-    console.log('AdminUsers Debug - Component mounted, fetching users...');
+    console.log('AdminUsers - Component mounted, fetching users...');
     fetchUsers();
   }, []);
 
@@ -49,12 +49,9 @@ export default function AdminUsers() {
     const attemptFetch = async (): Promise<void> => {
       try {
         setLoading(true);
-        console.log('AdminUsers Debug - Starting fetch process...', {
-          attempt: retryCount + 1,
-          maxRetries
-        });
+        console.log('AdminUsers - Starting fetch process...');
         
-        // Enhanced authentication check with retry logic
+        // Get current user for admin verification
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         console.log('AdminUsers Debug - Auth check:', {
           userId: user?.id,
