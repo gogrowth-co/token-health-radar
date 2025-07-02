@@ -42,9 +42,12 @@ export function useUserRole() {
       try {
         setLoading(true);
         
-        const { data, error } = await supabase.rpc('get_user_role', {
-          _user_id: user.id
-        });
+        // Query user_roles table directly for reliability
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
 
         console.log('useUserRole Debug - Database response:', {
           data,
@@ -81,7 +84,7 @@ export function useUserRole() {
           
           setRole('user'); // Default to user role on persistent error
         } else {
-          const finalRole = data || 'user';
+          const finalRole = data?.role || 'user';
           console.log('useUserRole Debug - Final role determined:', {
             rawData: data,
             finalRole,

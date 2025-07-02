@@ -347,6 +347,13 @@ export default function AdminUsers() {
           <div className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-primary" />
             <h1 className="text-3xl font-bold">User Management</h1>
+            {process.env.NODE_ENV === 'development' && (
+              <div className="ml-auto text-xs text-muted-foreground border p-2 rounded">
+                <p><strong>Debug Info:</strong></p>
+                <p>Admin Access Confirmed</p>
+                <p>Total Users: {users.length}</p>
+              </div>
+            )}
           </div>
 
           {/* Search and Filter Controls */}

@@ -43,7 +43,7 @@ export function AuthButton() {
         )}
         {process.env.NODE_ENV === 'development' && (
           <div className="text-xs text-muted-foreground">
-            {user?.email} | {role || 'user'}
+            {user?.email} | {role || 'user'} | ID: {user?.id?.slice(0, 8)}
           </div>
         )}
       </div>
