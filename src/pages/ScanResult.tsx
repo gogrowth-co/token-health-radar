@@ -10,8 +10,6 @@ import CategoryTabs from "@/components/CategoryTabs";
 import CategoryScoresGrid from "@/components/CategoryScoresGrid";
 import ScanLimitIndicator from "@/components/ScanLimitIndicator";
 import UpgradeModal from "@/components/UpgradeModal";
-import RefreshScanButton from "@/components/RefreshScanButton";
-import DataFreshnessIndicator from "@/components/DataFreshnessIndicator";
 import { toast } from "sonner";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -363,18 +361,6 @@ export default function ScanResult() {
             network={networkName}
           />
 
-          {/* Data freshness and refresh controls */}
-          <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600 dark:text-gray-400">Data Freshness:</span>
-              <DataFreshnessIndicator lastUpdated={scanData?.lastUpdated} />
-            </div>
-            <RefreshScanButton 
-              tokenAddress={tokenAddress}
-              chainId={chainId}
-              className="ml-auto"
-            />
-          </div>
 
           <CategoryScoresGrid
             securityScore={scanData.security?.score || 0}

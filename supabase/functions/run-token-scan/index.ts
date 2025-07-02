@@ -269,6 +269,9 @@ Deno.serve(async (req) => {
 
   try {
     const { token_address, chain_id, user_id, force_refresh = true } = await req.json();
+    
+    // ALWAYS force fresh scans - ignore any cached data
+    const alwaysRefresh = true;
 
     console.log(`[SCAN] Starting FRESH comprehensive scan for token: ${token_address}, chain: ${chain_id}, user: ${user_id}, force_refresh: ${force_refresh}`);
 
@@ -286,10 +289,8 @@ Deno.serve(async (req) => {
 
     console.log(`[SCAN] Scanning on ${chainConfig.name} (${normalizedChainId})`);
 
-    // FORCE FRESH SCAN: Delete all cached data before scanning
-    if (force_refresh) {
-      await invalidateTokenCache(token_address.toLowerCase(), normalizedChainId);
-    }
+    // FORCE FRESH SCAN: Delete all cached data before scanning (ALWAYS)
+    await invalidateTokenCache(token_address.toLowerCase(), normalizedChainId);
 
     // Check if user has pro access (simplified for now)
     const proScan = false; // Will be enhanced later with proper pro check
