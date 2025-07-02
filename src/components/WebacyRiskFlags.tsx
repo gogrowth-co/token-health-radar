@@ -25,20 +25,24 @@ export default function WebacyRiskFlags({
   
   if (!webacyFlags || webacyFlags.length === 0) {
     return (
-      <Card className="mt-4">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Shield className="h-5 w-5 text-green-500" />
+      <div className="relative p-5 rounded-lg bg-white dark:bg-muted border border-gray-100 dark:border-gray-700 shadow-sm min-h-[140px] flex flex-col">
+        <div className="flex items-center gap-2 mb-2">
+          <Shield className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
             Smart Contract Risk Flags (via Webacy)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Info className="h-4 w-4" />
-            <span>No significant risk flags detected or data unavailable</span>
-          </div>
-        </CardContent>
-      </Card>
+          </h3>
+        </div>
+        
+        <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          No significant risk flags detected or data unavailable
+        </div>
+        
+        <div className="mt-auto">
+          <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+            Clean
+          </span>
+        </div>
+      </div>
     );
   }
 
