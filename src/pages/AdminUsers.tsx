@@ -47,6 +47,14 @@ export default function AdminUsers() {
       setLoading(true);
       console.log('AdminUsers Debug - Fetching user data...');
       
+      // Check current user's authentication status
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      console.log('AdminUsers Debug - Current auth user:', {
+        user: user?.id,
+        email: user?.email,
+        authError
+      });
+      
       const { data, error } = await supabase.rpc('get_admin_user_data');
       
       console.log('AdminUsers Debug - Database response:', {
@@ -67,7 +75,9 @@ export default function AdminUsers() {
         
         toast({
           title: "Error",
-          description: `Failed to load user data: ${error.message}`,
+          description: error.message.includes('permission') 
+            ? "Admin access required to view user data"
+            : `Failed to load user data: ${error.message}`,
           variant: "destructive",
         });
         return;
