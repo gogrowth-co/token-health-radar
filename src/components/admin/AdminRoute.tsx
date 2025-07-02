@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Shield } from 'lucide-react';
@@ -69,6 +69,15 @@ export default function AdminRoute({ children }: AdminRouteProps) {
   // Enhanced access control checks
   const hasValidUser = isAuthenticated && user?.id;
   const hasAdminAccess = isAdmin && role === 'admin';
+  
+  // Force refresh user role if we have a valid user but no admin access
+  useEffect(() => {
+    if (hasValidUser && !hasAdminAccess && !roleLoading) {
+      console.log('AdminRoute Debug - Forcing role refresh for user:', user?.email);
+      // Force a hard refresh of the page to clear any cached role data
+      window.location.reload();
+    }
+  }, [hasValidUser, hasAdminAccess, roleLoading, user?.email]);
   
   if (!hasValidUser || !hasAdminAccess) {
     const reason = !isAuthenticated 

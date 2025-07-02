@@ -42,12 +42,12 @@ export function useUserRole() {
       try {
         setLoading(true);
         
-        // Query user_roles table directly for reliability
+        // Query user_roles table directly for reliability - use maybeSingle to handle no data case
         const { data, error } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         console.log('useUserRole Debug - Database response:', {
           data,

@@ -39,7 +39,13 @@ export default function AdminUsers() {
 
   useEffect(() => {
     console.log('AdminUsers Debug - Component mounted, fetching users...');
-    fetchUsers();
+    // Force a session refresh to ensure we have the latest user data
+    supabase.auth.refreshSession().then(() => {
+      fetchUsers();
+    }).catch((error) => {
+      console.error('AdminUsers Debug - Session refresh failed:', error);
+      fetchUsers(); // Try anyway
+    });
   }, []);
 
   const fetchUsers = async () => {
@@ -64,8 +70,8 @@ export default function AdminUsers() {
           attempt: retryCount + 1
         });
         
-        // More robust user validation
-        if (!user?.id || !user?.email) {
+        // More robust user validation - ensure user exists before proceeding
+        if (!user || !user.id || !user.email) {
           console.error('AdminUsers Error - Invalid or missing user data:', {
             hasUser: !!user,
             hasUserId: !!user?.id,
