@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { useUserRole } from "@/hooks/useUserRole";
 
 type SubscriberData = {
   plan: string;
@@ -18,6 +19,7 @@ type SubscriberData = {
 
 export function UserProfile() {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useUserRole();
   const [subscriberData, setSubscriberData] = useState<SubscriberData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
@@ -172,7 +174,17 @@ export function UserProfile() {
                   )}
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-2 space-y-2">
+                  {isAdmin && (
+                    <Button 
+                      variant="secondary" 
+                      className="w-full"
+                      asChild
+                    >
+                      <Link to="/admin/users">Admin Dashboard</Link>
+                    </Button>
+                  )}
+                  
                   {subscriberData.plan === "lifetime" ? (
                     <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
                       <p className="text-sm text-purple-700 font-medium">
