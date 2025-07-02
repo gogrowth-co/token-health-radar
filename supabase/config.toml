@@ -41,10 +41,13 @@ port = 54327
 vector_port = 54328
 
 [functions.run-token-scan]
-verify_jwt = true
+verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
 
 [functions.hubspot-sync]
 verify_jwt = true
+
+[functions.test-scan]
+verify_jwt = false

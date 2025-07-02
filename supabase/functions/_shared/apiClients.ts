@@ -122,35 +122,81 @@ export async function fetchGeckoTerminalData(tokenAddress: string, chainId: stri
 
 // Moralis API client for comprehensive token metadata
 export async function fetchMoralisMetadata(tokenAddress: string, chainId: string) {
+  console.log(`[MORALIS] === STARTING MORALIS API CALL ===`);
+  console.log(`[MORALIS] Token: ${tokenAddress}, Chain: ${chainId}`);
+  
   try {
     const chainConfig = getChainConfigByMoralisId(chainId);
     if (!chainConfig) {
-      console.log(`[MORALIS] Unsupported chain: ${chainId}`);
+      console.error(`[MORALIS] FAILED - Unsupported chain: ${chainId}`);
       return null;
     }
 
     // Get API key from environment
     const apiKey = Deno.env.get('MORALIS_API_KEY');
     if (!apiKey) {
-      console.log(`[MORALIS] No API key configured`);
+      console.error(`[MORALIS] FAILED - MORALIS_API_KEY not configured in environment`);
       return null;
     }
 
-    const url = `https://deep-index.moralis.io/api/v2.2/erc20/metadata?chain=${chainId}&addresses%5B0%5D=${tokenAddress.toLowerCase()}`;
-    console.log(`[MORALIS] Fetching metadata: ${url}`);
+    console.log(`[MORALIS] API Key: ${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)} (${apiKey.length} chars)`);
+    console.log(`[MORALIS] Chain: ${chainConfig.name} (${chainConfig.id})`);
+    console.log(`[MORALIS] Target token: ${tokenAddress.toLowerCase()}`);
     
-    const response = await fetch(url, {
+    const url = `https://deep-index.moralis.io/api/v2.2/erc20/${tokenAddress.toLowerCase()}?chain=${chainConfig.id}&include=percent_change`;
+    console.log(`[MORALIS] Request URL: ${url}`);
+    
+    // Test API key with a simple request first
+    console.log(`[MORALIS] Testing API authentication...`);
+    const testResponse = await fetch(`https://deep-index.moralis.io/api/v2.2/erc20/metadata?chain=${chainConfig.id}&addresses=${tokenAddress.toLowerCase()}`, {
       headers: {
         'X-API-Key': apiKey,
-        'accept': 'application/json'
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log(`[MORALIS] Auth test response status: ${testResponse.status}`);
+    if (testResponse.status === 401 || testResponse.status === 403) {
+      console.error(`[MORALIS] FAILED - API authentication failed. Status: ${testResponse.status}`);
+      const errorText = await testResponse.text();
+      console.error(`[MORALIS] Auth error response:`, errorText);
+      return null;
+    }
+
+    // Now make the actual request
+    const metadataUrl = `https://deep-index.moralis.io/api/v2.2/erc20/metadata?chain=${chainConfig.id}&addresses%5B0%5D=${tokenAddress.toLowerCase()}`;
+    console.log(`[MORALIS] Making actual request: ${metadataUrl}`);
+    
+    const response = await fetch(metadataUrl, {
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json'
       }
     });
 
+    console.log(`[MORALIS] Response status: ${response.status}`);
+    console.log(`[MORALIS] Response headers:`, Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
-      throw new Error(`Moralis API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`[MORALIS] FAILED - API error: ${response.status} ${response.statusText}`);
+      console.error(`[MORALIS] Error response body:`, errorText);
+      throw new Error(`Moralis API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
     
-    const data = await response.json();
+    const responseText = await response.text();
+    console.log(`[MORALIS] Raw response text:`, responseText.substring(0, 500) + '...');
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+      console.log(`[MORALIS] Parsed JSON response (first token):`, JSON.stringify(data[0], null, 2));
+    } catch (jsonError) {
+      console.error(`[MORALIS] FAILED - Invalid JSON response:`, jsonError);
+      console.error(`[MORALIS] Response text was:`, responseText);
+      return null;
+    }
+    
     const tokenData = data[0];
     
     if (!tokenData) {
@@ -187,10 +233,13 @@ export async function fetchMoralisMetadata(tokenAddress: string, chainId: string
 
 // Webacy Security API client for contract risk analysis
 export async function fetchWebacySecurity(tokenAddress: string, chainId: string) {
+  console.log(`[WEBACY] === STARTING WEBACY API CALL ===`);
+  console.log(`[WEBACY] Token: ${tokenAddress}, Chain: ${chainId}`);
+  
   try {
     const chainConfig = getChainConfigByMoralisId(chainId);
     if (!chainConfig) {
-      console.log(`[WEBACY] Unsupported chain: ${chainId}`);
+      console.error(`[WEBACY] FAILED - Unsupported chain: ${chainId}`);
       return null;
     }
 
@@ -206,20 +255,43 @@ export async function fetchWebacySecurity(tokenAddress: string, chainId: string)
 
     const webacyChain = webacyChainMap[chainId];
     if (!webacyChain) {
-      console.log(`[WEBACY] Chain ${chainId} not supported by Webacy`);
+      console.error(`[WEBACY] FAILED - Chain ${chainId} not supported by Webacy. Supported chains:`, Object.keys(webacyChainMap));
       return null;
     }
 
     // Get API key from environment
     const apiKey = Deno.env.get('WEBACY_API_KEY');
     if (!apiKey) {
-      console.log(`[WEBACY] No API key configured`);
+      console.error(`[WEBACY] FAILED - WEBACY_API_KEY not configured in environment`);
       return null;
     }
 
-    const url = `https://api.webacy.com/risk/${webacyChain}/${tokenAddress.toLowerCase()}`;
-    console.log(`[WEBACY] Fetching contract risk data: ${url}`);
+    console.log(`[WEBACY] API Key: ${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)} (${apiKey.length} chars)`);
+    console.log(`[WEBACY] Chain mapping: ${chainId} -> ${webacyChain}`);
+    console.log(`[WEBACY] Target token: ${tokenAddress.toLowerCase()}`);
     
+    const url = `https://api.webacy.com/risk/${webacyChain}/${tokenAddress.toLowerCase()}`;
+    console.log(`[WEBACY] Request URL: ${url}`);
+    
+    // Test API key first with a simple validation request
+    console.log(`[WEBACY] Testing API authentication...`);
+    const testResponse = await fetch(`https://api.webacy.com/risk/ethereum/0x0000000000000000000000000000000000000000`, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log(`[WEBACY] Auth test response status: ${testResponse.status}`);
+    if (testResponse.status === 401 || testResponse.status === 403) {
+      console.error(`[WEBACY] FAILED - API authentication failed. Status: ${testResponse.status}`);
+      const errorText = await testResponse.text();
+      console.error(`[WEBACY] Auth error response:`, errorText);
+      return null;
+    }
+
+    // Now make the actual request  
+    console.log(`[WEBACY] Making actual request for token data...`);
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -227,21 +299,40 @@ export async function fetchWebacySecurity(tokenAddress: string, chainId: string)
       }
     });
 
+    console.log(`[WEBACY] Response status: ${response.status}`);
+    console.log(`[WEBACY] Response headers:`, Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
       if (response.status === 404) {
-        console.log(`[WEBACY] No risk data found for token: ${tokenAddress}`);
+        console.warn(`[WEBACY] No risk data found for token: ${tokenAddress} (404 - token not indexed)`);
         return null;
       }
-      throw new Error(`Webacy API error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`[WEBACY] FAILED - API error: ${response.status} ${response.statusText}`);
+      console.error(`[WEBACY] Error response body:`, errorText);
+      throw new Error(`Webacy API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
     
-    const data = await response.json();
-    console.log(`[WEBACY] Raw API response:`, JSON.stringify(data, null, 2));
+    const responseText = await response.text();
+    console.log(`[WEBACY] Raw response text:`, responseText);
     
-    if (!data || !data.address) {
-      console.log(`[WEBACY] Invalid response structure for token: ${tokenAddress}`);
+    let data;
+    try {
+      data = JSON.parse(responseText);
+      console.log(`[WEBACY] Parsed JSON response:`, JSON.stringify(data, null, 2));
+    } catch (jsonError) {
+      console.error(`[WEBACY] FAILED - Invalid JSON response:`, jsonError);
+      console.error(`[WEBACY] Response text was:`, responseText);
       return null;
     }
+    
+    if (!data) {
+      console.error(`[WEBACY] FAILED - Empty response data for token: ${tokenAddress}`);
+      return null;
+    }
+
+    console.log(`[WEBACY] SUCCESS - Received valid response for token: ${tokenAddress}`);
+    console.log(`[WEBACY] Response structure keys:`, Object.keys(data));
 
     // Extract risk flags and categorize by severity
     const riskFlags = data.flags || [];

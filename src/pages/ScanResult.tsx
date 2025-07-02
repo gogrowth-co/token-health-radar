@@ -10,6 +10,7 @@ import CategoryTabs from "@/components/CategoryTabs";
 import CategoryScoresGrid from "@/components/CategoryScoresGrid";
 import ScanLimitIndicator from "@/components/ScanLimitIndicator";
 import UpgradeModal from "@/components/UpgradeModal";
+import TestScanButton from "@/components/TestScanButton";
 import { toast } from "sonner";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -344,6 +345,17 @@ export default function ScanResult() {
               className="mb-4"
             />
           )}
+
+          {/* Debug: Test scan button */}
+          <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+              🔧 Debug Mode: Test Token Scan Function
+            </h3>
+            <TestScanButton 
+              tokenAddress={tokenAddress}
+              chainId={chainId}
+            />
+          </div>
 
           <TokenProfile
             name={properName}

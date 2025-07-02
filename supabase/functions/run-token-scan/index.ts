@@ -273,10 +273,37 @@ Deno.serve(async (req) => {
     // ALWAYS force fresh scans - ignore any cached data
     const alwaysRefresh = true;
 
-    console.log(`[SCAN] Starting FRESH comprehensive scan for token: ${token_address}, chain: ${chain_id}, user: ${user_id}, force_refresh: ${force_refresh}`);
+    console.log(`[SCAN] === STARTING COMPREHENSIVE TOKEN SCAN ===`);
+    console.log(`[SCAN] Token: ${token_address}, Chain: ${chain_id}, User: ${user_id}, Force Refresh: ${force_refresh}`);
+    console.log(`[SCAN] Timestamp: ${new Date().toISOString()}`);
 
     if (!token_address || !chain_id) {
+      console.error(`[SCAN] Missing required parameters - token_address: ${token_address}, chain_id: ${chain_id}`);
       throw new Error('Token address and chain ID are required');
+    }
+
+    // PHASE 1: Validate API Keys
+    console.log(`[SCAN] === PHASE 1: API KEY VALIDATION ===`);
+    const apiKeys = {
+      webacy: Deno.env.get('WEBACY_API_KEY'),
+      moralis: Deno.env.get('MORALIS_API_KEY'), 
+      github: Deno.env.get('GITHUB_API_KEY')
+    };
+    
+    console.log(`[SCAN] API Key Status:`, {
+      webacy: apiKeys.webacy ? 'CONFIGURED' : 'MISSING',
+      moralis: apiKeys.moralis ? 'CONFIGURED' : 'MISSING',
+      github: apiKeys.github ? 'CONFIGURED' : 'MISSING'
+    });
+
+    if (!apiKeys.webacy) {
+      console.error(`[SCAN] CRITICAL: WEBACY_API_KEY not configured`);
+    }
+    if (!apiKeys.moralis) {
+      console.error(`[SCAN] CRITICAL: MORALIS_API_KEY not configured`);
+    }
+    if (!apiKeys.github) {
+      console.warn(`[SCAN] WARNING: GITHUB_API_KEY not configured - development scores will be limited`);
     }
 
     // Normalize chain ID and validate
