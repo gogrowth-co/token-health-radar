@@ -521,7 +521,7 @@ export type Database = {
     }
     Functions: {
       get_admin_user_data: {
-        Args: Record<PropertyKey, never>
+        Args: Record<PropertyKey, never> | { _caller_user_id: string }
         Returns: {
           id: string
           email: string

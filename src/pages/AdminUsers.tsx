@@ -56,7 +56,7 @@ export default function AdminUsers() {
         authError: authError?.message
       });
       
-      if (!user) {
+      if (!user?.id) {
         console.error('AdminUsers Error - No authenticated user found');
         toast({
           title: "Authentication Error",
@@ -88,9 +88,11 @@ export default function AdminUsers() {
         return;
       }
       
-      // Now try to fetch admin user data
-      console.log('AdminUsers Debug - Fetching admin user data...');
-      const { data, error } = await supabase.rpc('get_admin_user_data');
+      // Now try to fetch admin user data with the user ID parameter
+      console.log('AdminUsers Debug - Fetching admin user data with user ID:', user.id);
+      const { data, error } = await supabase.rpc('get_admin_user_data', {
+        _caller_user_id: user.id
+      });
       
       console.log('AdminUsers Debug - RPC Response:', {
         hasData: !!data,
@@ -106,22 +108,9 @@ export default function AdminUsers() {
       
       if (error) {
         console.error('AdminUsers Error - RPC call failed:', error);
-        
-        // Try alternative approach if RPC fails
-        console.log('AdminUsers Debug - Trying fallback query...');
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('user_roles')
-          .select('*')
-          .eq('role', 'admin');
-          
-        console.log('AdminUsers Debug - Fallback query result:', {
-          fallbackData,
-          fallbackError: fallbackError?.message
-        });
-        
         toast({
           title: "Database Error",
-          description: `Failed to load user data: ${error.message}. Please check the console for details.`,
+          description: `Failed to load user data: ${error.message}`,
           variant: "destructive",
         });
         return;
