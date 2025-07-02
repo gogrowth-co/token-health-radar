@@ -33,6 +33,9 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
 
   try {
     // Fetch data from all APIs in parallel - prioritize Webacy for security
+    console.log(`[SCAN] Calling external APIs for fresh data...`);
+    const apiStartTime = Date.now();
+    
     const [webacySecurityData, goplusSecurityData, marketData, metadataData] = await Promise.allSettled([
       fetchWebacySecurity(tokenAddress, chainId),
       fetchGoPlusSecurity(tokenAddress, chainId),
@@ -40,10 +43,28 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       fetchMoralisMetadata(tokenAddress, chainId)
     ]);
 
+    const apiEndTime = Date.now();
+    console.log(`[SCAN] API calls completed in ${apiEndTime - apiStartTime}ms`);
+
+    // Log detailed API results for debugging
     const webacySecurity = webacySecurityData.status === 'fulfilled' ? webacySecurityData.value : null;
     const goplusSecurity = goplusSecurityData.status === 'fulfilled' ? goplusSecurityData.value : null;
     const market = marketData.status === 'fulfilled' ? marketData.value : null;
     const metadata = metadataData.status === 'fulfilled' ? metadataData.value : null;
+
+    // Log API failures for debugging
+    if (webacySecurityData.status === 'rejected') {
+      console.error(`[SCAN] Webacy API failed:`, webacySecurityData.reason);
+    }
+    if (goplusSecurityData.status === 'rejected') {
+      console.error(`[SCAN] GoPlus API failed:`, goplusSecurityData.reason);
+    }
+    if (marketData.status === 'rejected') {
+      console.error(`[SCAN] GeckoTerminal API failed:`, marketData.reason);
+    }
+    if (metadataData.status === 'rejected') {
+      console.error(`[SCAN] Moralis API failed:`, metadataData.reason);
+    }
 
     // Merge security data with Webacy taking priority
     const security = webacySecurity || goplusSecurity;
@@ -53,7 +74,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       goplusSecurity: goplusSecurity ? 'available' : 'unavailable',
       security: security ? 'available' : 'unavailable',
       market: market ? 'available' : 'unavailable', 
-      metadata: metadata ? 'available' : 'unavailable'
+      metadata: metadata ? 'available' : 'unavailable',
+      totalApiTime: `${apiEndTime - apiStartTime}ms`
     });
 
     // Fetch GitHub data if GitHub URL is available in metadata
@@ -211,6 +233,34 @@ function calculateOverallScore(categoryData: any) {
     : 0;
 }
 
+// Delete cached data to force fresh scan
+async function invalidateTokenCache(tokenAddress: string, chainId: string) {
+  console.log(`[CACHE-INVALIDATION] Clearing cached data for: ${tokenAddress} on chain: ${chainId}`);
+  
+  const deleteOperations = [
+    supabase.from('token_data_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId),
+    supabase.from('token_security_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId),
+    supabase.from('token_tokenomics_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId),
+    supabase.from('token_liquidity_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId),
+    supabase.from('token_community_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId),
+    supabase.from('token_development_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId)
+  ];
+
+  const results = await Promise.allSettled(deleteOperations);
+  
+  let deletedCount = 0;
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled' && !result.value.error) {
+      deletedCount++;
+    } else if (result.status === 'rejected' || result.value.error) {
+      console.warn(`[CACHE-INVALIDATION] Failed to delete from cache table ${index}:`, result.status === 'rejected' ? result.reason : result.value.error);
+    }
+  });
+
+  console.log(`[CACHE-INVALIDATION] Successfully cleared ${deletedCount}/6 cache tables for ${tokenAddress}`);
+  return deletedCount;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -218,9 +268,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { token_address, chain_id, user_id } = await req.json();
+    const { token_address, chain_id, user_id, force_refresh = true } = await req.json();
 
-    console.log(`[SCAN] Starting comprehensive scan for token: ${token_address}, chain: ${chain_id}, user: ${user_id}`);
+    console.log(`[SCAN] Starting FRESH comprehensive scan for token: ${token_address}, chain: ${chain_id}, user: ${user_id}, force_refresh: ${force_refresh}`);
 
     if (!token_address || !chain_id) {
       throw new Error('Token address and chain ID are required');
@@ -236,11 +286,17 @@ Deno.serve(async (req) => {
 
     console.log(`[SCAN] Scanning on ${chainConfig.name} (${normalizedChainId})`);
 
+    // FORCE FRESH SCAN: Delete all cached data before scanning
+    if (force_refresh) {
+      await invalidateTokenCache(token_address.toLowerCase(), normalizedChainId);
+    }
+
     // Check if user has pro access (simplified for now)
     const proScan = false; // Will be enhanced later with proper pro check
     console.log(`[SCAN] Pro scan permitted: ${proScan}`);
 
     // Fetch comprehensive token data from multiple APIs using Moralis as primary metadata source
+    console.log(`[SCAN] Fetching FRESH data from APIs...`);
     const apiData = await fetchTokenDataFromAPIs(token_address, normalizedChainId);
     
     if (!apiData) {

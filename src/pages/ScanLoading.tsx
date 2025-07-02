@@ -74,13 +74,14 @@ export default function ScanLoading() {
 
   const triggerTokenScan = async (retryAttempt = 0) => {
     try {
-      console.log('[SCAN-LOADING] Starting comprehensive token scan...');
+      console.log('[SCAN-LOADING] Starting FRESH comprehensive token scan...');
       console.log('[SCAN-LOADING] Parameters:', { 
         rawChain, 
         normalizedChain, 
         address, 
         token, 
-        user: user?.id 
+        user: user?.id,
+        forceRefresh: true
       });
       
       // Get token info from localStorage for additional context
@@ -89,7 +90,8 @@ export default function ScanLoading() {
 
       // Determine final parameters for scan - use address as primary identifier
       const scanParams: any = {
-        user_id: user?.id || null
+        user_id: user?.id || null,
+        force_refresh: true // Force fresh scan every time
       };
 
       // Use token address as the primary identifier

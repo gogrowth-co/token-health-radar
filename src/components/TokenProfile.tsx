@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import * as React from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import OptimizedTokenLogo from "@/components/OptimizedTokenLogo";
+import RefreshScanButton from "@/components/RefreshScanButton";
+import DataFreshnessIndicator from "@/components/DataFreshnessIndicator";
 
 // Mini health score widget with better visibility for dark and light themes
 function MiniHealthScore({ score = 0 }: { score: number }) {

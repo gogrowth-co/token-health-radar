@@ -192,9 +192,10 @@ export default function useTokenSelection() {
         id: tokenInfoToSave.id
       });
 
-      // Navigate to scan loading - the actual limit enforcement happens in the backend
+      // Navigate to scan loading with force_refresh parameter for fresh scans
+      urlParams.set('force_refresh', 'true');
       const scanUrl = `/scan-loading?${urlParams.toString()}`;
-      console.log(`[TOKEN-SELECTION] Navigating to: ${scanUrl}`);
+      console.log(`[TOKEN-SELECTION] Navigating to fresh scan: ${scanUrl}`);
       navigate(scanUrl);
 
     } catch (error) {
