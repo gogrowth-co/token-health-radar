@@ -43,124 +43,218 @@ export default function AdminUsers() {
   }, []);
 
   const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      console.log('AdminUsers Debug - Starting fetch process...');
-      
-      // Check current user's authentication status first
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      console.log('AdminUsers Debug - Auth check:', {
-        userId: user?.id,
-        email: user?.email,
-        hasUser: !!user,
-        authError: authError?.message
-      });
-      
-      if (!user?.id) {
-        console.error('AdminUsers Error - No authenticated user found');
-        toast({
-          title: "Authentication Error",
-          description: "Please log in to access the admin dashboard",
-          variant: "destructive",
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    const attemptFetch = async (): Promise<void> => {
+      try {
+        setLoading(true);
+        console.log('AdminUsers Debug - Starting fetch process...', {
+          attempt: retryCount + 1,
+          maxRetries
         });
-        return;
-      }
-      
-      // Check user role first
-      console.log('AdminUsers Debug - Checking user role...');
-      const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
-        _user_id: user.id
-      });
-      
-      console.log('AdminUsers Debug - User role check:', {
-        roleData,
-        roleError: roleError?.message,
-        isAdmin: roleData === 'admin'
-      });
-      
-      if (roleError || roleData !== 'admin') {
-        console.error('AdminUsers Error - User is not admin:', { roleData, roleError });
-        toast({
-          title: "Access Denied",
-          description: "Admin privileges required to access user data",
-          variant: "destructive",
+        
+        // Enhanced authentication check with retry logic
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        console.log('AdminUsers Debug - Auth check:', {
+          userId: user?.id,
+          email: user?.email,
+          hasUser: !!user,
+          authError: authError?.message,
+          attempt: retryCount + 1
         });
-        return;
-      }
-      
-      // Now try to fetch admin user data with the user ID parameter
-      console.log('AdminUsers Debug - Fetching admin user data with user ID:', user.id);
-      const { data, error } = await supabase.rpc('get_admin_user_data', {
-        _caller_user_id: user.id
-      });
-      
-      console.log('AdminUsers Debug - RPC Response:', {
-        hasData: !!data,
-        dataLength: data?.length || 0,
-        error: error ? {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        } : null,
-        timestamp: new Date().toISOString()
-      });
-      
-      if (error) {
-        console.error('AdminUsers Error - RPC call failed:', error);
-        toast({
-          title: "Database Error",
-          description: `Failed to load user data: ${error.message}`,
-          variant: "destructive",
+        
+        // More robust user validation
+        if (!user?.id || !user?.email) {
+          console.error('AdminUsers Error - Invalid or missing user data:', {
+            hasUser: !!user,
+            hasUserId: !!user?.id,
+            hasUserEmail: !!user?.email,
+            user: user ? { id: user.id, email: user.email } : null
+          });
+          
+          if (retryCount < maxRetries) {
+            retryCount++;
+            console.log(`AdminUsers Debug - Retrying auth check (${retryCount}/${maxRetries})...`);
+            setTimeout(() => attemptFetch(), 1000 * retryCount);
+            return;
+          }
+          
+          toast({
+            title: "Authentication Error",
+            description: "Please log in to access the admin dashboard. User session may have expired.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Enhanced role verification with detailed logging
+        console.log('AdminUsers Debug - Checking user role for:', {
+          userId: user.id,
+          email: user.email
         });
-        return;
-      }
+        
+        const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
+          _user_id: user.id
+        });
+        
+        console.log('AdminUsers Debug - User role check:', {
+          roleData,
+          roleError: roleError ? {
+            code: roleError.code,
+            message: roleError.message,
+            details: roleError.details
+          } : null,
+          isAdmin: roleData === 'admin',
+          userId: user.id,
+          email: user.email
+        });
+        
+        if (roleError) {
+          console.error('AdminUsers Error - Role check failed:', roleError);
+          
+          if (retryCount < maxRetries) {
+            retryCount++;
+            console.log(`AdminUsers Debug - Retrying role check (${retryCount}/${maxRetries})...`);
+            setTimeout(() => attemptFetch(), 1000 * retryCount);
+            return;
+          }
+          
+          toast({
+            title: "Role Verification Failed",
+            description: `Unable to verify admin status: ${roleError.message}`,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        if (roleData !== 'admin') {
+          console.error('AdminUsers Error - User is not admin:', { 
+            roleData, 
+            userId: user.id,
+            email: user.email
+          });
+          
+          toast({
+            title: "Access Denied",
+            description: `Admin privileges required. Current role: ${roleData || 'user'}`,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Enhanced admin data fetch with comprehensive logging
+        console.log('AdminUsers Debug - Fetching admin user data...', {
+          callerId: user.id,
+          callerEmail: user.email,
+          callerRole: roleData
+        });
+        
+        const { data, error } = await supabase.rpc('get_admin_user_data', {
+          _caller_user_id: user.id
+        });
+        
+        console.log('AdminUsers Debug - RPC Response:', {
+          hasData: !!data,
+          dataLength: data?.length || 0,
+          error: error ? {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          } : null,
+          callerId: user.id,
+          timestamp: new Date().toISOString()
+        });
+        
+        if (error) {
+          console.error('AdminUsers Error - RPC call failed:', error);
+          
+          if (retryCount < maxRetries) {
+            retryCount++;
+            console.log(`AdminUsers Debug - Retrying data fetch (${retryCount}/${maxRetries})...`);
+            setTimeout(() => attemptFetch(), 1000 * retryCount);
+            return;
+          }
+          
+          toast({
+            title: "Database Error",
+            description: `Failed to load user data: ${error.message}`,
+            variant: "destructive",
+          });
+          return;
+        }
 
-      if (!data || data.length === 0) {
-        console.log('AdminUsers Debug - No data returned from function');
+        if (!data || data.length === 0) {
+          console.log('AdminUsers Debug - No data returned from function');
+          
+          // Check if this is actually an access issue vs empty data
+          const { data: testUsers, error: testError } = await supabase
+            .from('user_roles')
+            .select('user_id, role')
+            .limit(1);
+            
+          console.log('AdminUsers Debug - Test query result:', {
+            testUsers,
+            testError: testError?.message,
+            hasTestData: !!testUsers?.length
+          });
+          
+          toast({
+            title: "No Data Found",
+            description: "No user data found. This might indicate a permissions issue or empty database.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const userData = data as AdminUser[];
+        console.log('AdminUsers Debug - Successfully processed user data:', {
+          userCount: userData.length,
+          adminCount: userData.filter(u => u.is_admin).length,
+          sampleUsers: userData.slice(0, 3).map(u => ({ 
+            id: u.id, 
+            email: u.email, 
+            isAdmin: u.is_admin 
+          })),
+          gmangabeiraFound: userData.some(u => u.email === 'gmangabeira@gmail.com')
+        });
+        
+        setUsers(userData);
+        
         toast({
-          title: "No Data",
-          description: "No user data found. This might be a permissions issue.",
+          title: "Success",
+          description: `Loaded ${userData.length} users successfully`,
+          variant: "default",
+        });
+        
+      } catch (error) {
+        console.error('AdminUsers Exception - Unexpected error:', {
+          error,
+          errorStack: error instanceof Error ? error.stack : 'No stack trace',
+          errorMessage: error instanceof Error ? error.message : String(error),
+          errorName: error instanceof Error ? error.name : 'Unknown',
+          attempt: retryCount + 1
+        });
+        
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log(`AdminUsers Debug - Retrying after exception (${retryCount}/${maxRetries})...`);
+          setTimeout(() => attemptFetch(), 1000 * retryCount);
+          return;
+        }
+        
+        toast({
+          title: "Unexpected Error",
+          description: `An unexpected error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
           variant: "destructive",
         });
-        return;
+      } finally {
+        setLoading(false);
       }
-
-      const userData = data as AdminUser[];
-      console.log('AdminUsers Debug - Successfully processed user data:', {
-        userCount: userData.length,
-        adminCount: userData.filter(u => u.is_admin).length,
-        sampleUsers: userData.slice(0, 3).map(u => ({ 
-          id: u.id, 
-          email: u.email, 
-          isAdmin: u.is_admin 
-        }))
-      });
-      
-      setUsers(userData);
-      
-      toast({
-        title: "Success",
-        description: `Loaded ${userData.length} users`,
-        variant: "default",
-      });
-      
-    } catch (error) {
-      console.error('AdminUsers Exception - Unexpected error:', {
-        error,
-        errorStack: error instanceof Error ? error.stack : 'No stack trace',
-        errorMessage: error instanceof Error ? error.message : String(error),
-        errorName: error instanceof Error ? error.name : 'Unknown'
-      });
-      
-      toast({
-        title: "Unexpected Error",
-        description: `An unexpected error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    };
+    
+    await attemptFetch();
   };
 
   const handleRoleChange = async (userId: string, newRole: 'admin' | 'user') => {

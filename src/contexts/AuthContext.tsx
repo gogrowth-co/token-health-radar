@@ -31,65 +31,93 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    let retryCount = 0;
+    const maxRetries = 3;
     
-    // Initial session check with enhanced error handling
-    const getSession = async () => {
+    // Enhanced session initialization with retry logic
+    const initializeAuth = async () => {
       if (!mounted) return;
       
-      setLoading(true);
-      
       try {
-        console.log('Auth session check started');
+        console.log('Auth Context - Initializing authentication...');
+        setLoading(true);
         
-        const { data, error } = await supabase.auth.getSession();
+        // Set up auth state listener FIRST to catch any auth events
+        const { data: authListener } = supabase.auth.onAuthStateChange(
+          (event, newSession) => {
+            if (!mounted) return;
+            
+            try {
+              console.log('Auth Context - State change:', { 
+                event, 
+                hasSession: !!newSession,
+                userId: newSession?.user?.id,
+                userEmail: newSession?.user?.email
+              });
+              
+              setSession(newSession);
+              setUser(newSession?.user || null);
+              
+              // Only set loading to false after we have processed the auth state
+              if (event !== 'INITIAL_SESSION') {
+                setLoading(false);
+              }
+            } catch (error) {
+              console.error('Auth Context - Error processing auth state change:', error);
+            }
+          }
+        );
+
+        // Then check for existing session
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error('Error getting auth session:', error);
+        if (sessionError) {
+          console.error('Auth Context - Error getting session:', sessionError);
+          
+          // Retry logic for session retrieval
+          if (retryCount < maxRetries) {
+            retryCount++;
+            console.log(`Auth Context - Retrying session retrieval (${retryCount}/${maxRetries})...`);
+            setTimeout(() => initializeAuth(), 1000 * retryCount);
+            return;
+          }
         }
         
         if (mounted) {
-          setSession(data.session);
-          setUser(data.session?.user || null);
-          console.log('Auth session check complete:', { 
-            hasSession: !!data.session 
+          console.log('Auth Context - Session retrieved:', { 
+            hasSession: !!sessionData.session,
+            userId: sessionData.session?.user?.id,
+            userEmail: sessionData.session?.user?.email
           });
+          
+          setSession(sessionData.session);
+          setUser(sessionData.session?.user || null);
+          setLoading(false);
         }
-      } catch (error: any) {
-        console.error('Unexpected error during auth check:', error);
-      } finally {
-        if (mounted) {
+
+        return () => {
+          if (authListener?.subscription) {
+            authListener.subscription.unsubscribe();
+          }
+        };
+        
+      } catch (error) {
+        console.error('Auth Context - Unexpected error during initialization:', error);
+        
+        if (mounted && retryCount < maxRetries) {
+          retryCount++;
+          console.log(`Auth Context - Retrying initialization (${retryCount}/${maxRetries})...`);
+          setTimeout(() => initializeAuth(), 1000 * retryCount);
+        } else if (mounted) {
           setLoading(false);
         }
       }
     };
 
-    getSession();
-
-    // Subscribe to auth changes with enhanced error handling
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        try {
-          console.log('Auth state change:', event, !!newSession);
-          
-          if (mounted) {
-            setSession(newSession);
-            setUser(newSession?.user || null);
-            setLoading(false);
-            
-            console.log('Auth state change processed:', { 
-              event, 
-              hasSession: !!newSession 
-            });
-          }
-        } catch (error: any) {
-          console.error('Error in auth state change handler:', error);
-        }
-      }
-    );
+    initializeAuth();
 
     return () => {
       mounted = false;
-      authListener.subscription.unsubscribe();
     };
   }, []);
 

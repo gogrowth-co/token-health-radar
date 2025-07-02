@@ -7,7 +7,19 @@ import { Loader2 } from "lucide-react";
 
 export function AuthButton() {
   const { user, loading, isAuthenticated } = useAuth();
-  const { isAdmin, loading: roleLoading } = useUserRole();
+  const { isAdmin, role, loading: roleLoading } = useUserRole();
+
+  // Enhanced debug logging for AuthButton
+  console.log('AuthButton Debug - Component state:', {
+    isAuthenticated,
+    loading,
+    roleLoading,
+    isAdmin,
+    role,
+    userId: user?.id,
+    userEmail: user?.email,
+    timestamp: new Date().toISOString()
+  });
 
   if (loading || roleLoading) {
     return <Loader2 className="h-4 w-4 animate-spin" />;
@@ -21,8 +33,18 @@ export function AuthButton() {
         </Button>
         {isAdmin && (
           <Button variant="outline" size="sm" asChild>
-            <Link to="/admin/users">Admin</Link>
+            <Link to="/admin/users">
+              Admin Panel
+              {process.env.NODE_ENV === 'development' && (
+                <span className="ml-1 text-xs">({role})</span>
+              )}
+            </Link>
           </Button>
+        )}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="text-xs text-muted-foreground">
+            {user?.email} | {role || 'user'}
+          </div>
         )}
       </div>
     );
