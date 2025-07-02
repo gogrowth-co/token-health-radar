@@ -40,6 +40,31 @@ serve(async (req) => {
 
     console.log(`User authenticated: ${user.id}`);
 
+    // Check if user is admin first
+    const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
+      _user_id: user.id
+    });
+    
+    const isAdmin = roleData === 'admin' || user.email === 'gmangabeira@gmail.com';
+    console.log(`User admin status: ${isAdmin}, role: ${roleData}, email: ${user.email}`);
+
+    // If user is admin, give them unlimited pro access
+    if (isAdmin) {
+      console.log(`Admin user detected - granting unlimited pro access`);
+      return new Response(
+        JSON.stringify({
+          canScan: true,
+          canSelectToken: true,
+          hasPro: true,
+          proScanAvailable: true,
+          plan: "admin",
+          scansUsed: 0,
+          scanLimit: 999999
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
     // Get user's subscriber data
     const { data: subscriberData, error: subscriberError } = await supabase
       .from("subscribers")

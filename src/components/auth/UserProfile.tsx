@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Crown } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -150,33 +150,46 @@ export function UserProfile() {
 
                 <div className="space-y-1">
                   <p className="text-sm font-medium">
-                    {subscriberData.plan === "lifetime" ? "Scans Used" : 
+                    {isAdmin ? "Admin Pro Scans" :
+                     subscriberData.plan === "lifetime" ? "Scans Used" : 
                      subscriberData.plan === "pro" ? "Pro Scans (Monthly)" : "Pro Scans"}
                   </p>
                   <div className="flex items-center gap-2">
                     <p className="text-sm text-muted-foreground">
-                      {subscriberData.plan === "lifetime" ? 
+                      {isAdmin ? "∞ / ∞ used" :
+                       subscriberData.plan === "lifetime" ? 
                         `${subscriberData.scans_used} scans used` :
                         `${subscriberData.scans_used} / ${subscriberData.pro_scan_limit} used`
                       }
                     </p>
-                    {subscriberData.plan !== "lifetime" && subscriberData.scans_used >= subscriberData.pro_scan_limit && subscriberData.plan !== "pro" && (
+                    {!isAdmin && subscriberData.plan !== "lifetime" && subscriberData.scans_used >= subscriberData.pro_scan_limit && subscriberData.plan !== "pro" && (
                       <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                         Limit Reached
                       </Badge>
                     )}
+                    {isAdmin && (
+                      <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                        <Crown className="w-3 h-3 mr-1" />
+                        Admin
+                      </Badge>
+                    )}
                   </div>
-                  {subscriberData.plan === "lifetime" && (
+                  {isAdmin && (
+                    <p className="text-xs text-muted-foreground">
+                      Unlimited high-quality scans with full admin access
+                    </p>
+                  )}
+                  {!isAdmin && subscriberData.plan === "lifetime" && (
                     <p className="text-xs text-muted-foreground">
                       Unlimited high-quality scans forever
                     </p>
                   )}
-                  {subscriberData.plan !== "lifetime" && subscriberData.plan !== "pro" && subscriberData.scans_used < subscriberData.pro_scan_limit && (
+                  {!isAdmin && subscriberData.plan !== "lifetime" && subscriberData.plan !== "pro" && subscriberData.scans_used < subscriberData.pro_scan_limit && (
                     <p className="text-xs text-muted-foreground">
                       Full-quality scans with detailed analysis
                     </p>
                   )}
-                  {subscriberData.plan !== "lifetime" && subscriberData.plan !== "pro" && subscriberData.scans_used >= subscriberData.pro_scan_limit && (
+                  {!isAdmin && subscriberData.plan !== "lifetime" && subscriberData.plan !== "pro" && subscriberData.scans_used >= subscriberData.pro_scan_limit && (
                     <p className="text-xs text-muted-foreground">
                       Unlimited basic scans available. Upgrade for full analysis.
                     </p>
