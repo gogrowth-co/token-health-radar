@@ -150,9 +150,7 @@ export default function AdminUsers() {
           callerRole: roleData
         });
         
-        const { data, error } = await supabase.rpc('get_admin_user_data', {
-          _caller_user_id: user.id
-        });
+        const { data, error } = await supabase.rpc('get_admin_user_data');
         
         console.log('AdminUsers Debug - RPC Response:', {
           hasData: !!data,
