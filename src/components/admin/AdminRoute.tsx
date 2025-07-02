@@ -70,15 +70,6 @@ export default function AdminRoute({ children }: AdminRouteProps) {
   const hasValidUser = isAuthenticated && user?.id;
   const hasAdminAccess = isAdmin && role === 'admin';
   
-  // Force refresh user role if we have a valid user but no admin access
-  useEffect(() => {
-    if (hasValidUser && !hasAdminAccess && !roleLoading) {
-      console.log('AdminRoute Debug - Forcing role refresh for user:', user?.email);
-      // Force a hard refresh of the page to clear any cached role data
-      window.location.reload();
-    }
-  }, [hasValidUser, hasAdminAccess, roleLoading, user?.email]);
-  
   if (!hasValidUser || !hasAdminAccess) {
     const reason = !isAuthenticated 
       ? 'Not authenticated' 
