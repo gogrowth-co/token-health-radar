@@ -185,6 +185,108 @@ export async function fetchMoralisMetadata(tokenAddress: string, chainId: string
   }
 }
 
+// Webacy Security API client for contract risk analysis
+export async function fetchWebacySecurity(tokenAddress: string, chainId: string) {
+  try {
+    const chainConfig = getChainConfigByMoralisId(chainId);
+    if (!chainConfig) {
+      console.log(`[WEBACY] Unsupported chain: ${chainId}`);
+      return null;
+    }
+
+    // Map Moralis chain IDs to Webacy chain names
+    const webacyChainMap: { [key: string]: string } = {
+      '0x1': 'ethereum',
+      '0x38': 'bsc', 
+      '0xa4b1': 'arbitrum',
+      '0xa': 'optimism',
+      '0x2105': 'base',
+      '0x89': 'polygon'
+    };
+
+    const webacyChain = webacyChainMap[chainId];
+    if (!webacyChain) {
+      console.log(`[WEBACY] Chain ${chainId} not supported by Webacy`);
+      return null;
+    }
+
+    // Get API key from environment
+    const apiKey = Deno.env.get('WEBACY_API_KEY');
+    if (!apiKey) {
+      console.log(`[WEBACY] No API key configured`);
+      return null;
+    }
+
+    const url = `https://api.webacy.com/risk/${webacyChain}/${tokenAddress.toLowerCase()}`;
+    console.log(`[WEBACY] Fetching contract risk data: ${url}`);
+    
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        console.log(`[WEBACY] No risk data found for token: ${tokenAddress}`);
+        return null;
+      }
+      throw new Error(`Webacy API error: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log(`[WEBACY] Raw API response:`, JSON.stringify(data, null, 2));
+    
+    if (!data || !data.address) {
+      console.log(`[WEBACY] Invalid response structure for token: ${tokenAddress}`);
+      return null;
+    }
+
+    // Extract risk flags and categorize by severity
+    const riskFlags = data.flags || [];
+    const riskScore = data.riskScore || 0;
+    const severity = data.severity || 'unknown';
+
+    // Categorize flags by severity
+    const criticalFlags = riskFlags.filter((flag: any) => flag.severity === 'critical');
+    const warningFlags = riskFlags.filter((flag: any) => flag.severity === 'warning');
+    const infoFlags = riskFlags.filter((flag: any) => flag.severity === 'info');
+
+    console.log(`[WEBACY] Contract risk analysis for ${tokenAddress}:`, {
+      riskScore,
+      severity,
+      totalFlags: riskFlags.length,
+      criticalFlags: criticalFlags.length,
+      warningFlags: warningFlags.length,
+      infoFlags: infoFlags.length
+    });
+    
+    return {
+      address: data.address,
+      riskScore,
+      severity,
+      flags: riskFlags,
+      criticalFlags,
+      warningFlags,
+      infoFlags,
+      // Map to existing security data structure for compatibility
+      ownership_renounced: !riskFlags.some((flag: any) => flag.flag === 'not-renounced'),
+      can_mint: riskFlags.some((flag: any) => flag.flag === 'mintable'),
+      honeypot_detected: riskFlags.some((flag: any) => ['is_honeypot', 'honeypot_with_same_creator'].includes(flag.flag)),
+      freeze_authority: riskFlags.some((flag: any) => flag.flag === 'freezeable'),
+      audit_status: riskFlags.some((flag: any) => flag.flag === 'is_closed_source') ? 'unverified' : 'unknown',
+      is_proxy: riskFlags.some((flag: any) => flag.flag === 'is_proxy'),
+      is_blacklisted: riskFlags.some((flag: any) => flag.flag === 'is_blacklisted'),
+      access_control: riskFlags.some((flag: any) => flag.flag === 'access_control'),
+      contract_verified: !riskFlags.some((flag: any) => flag.flag === 'is_closed_source')
+    };
+  } catch (error) {
+    console.error(`[WEBACY] Error fetching contract risk data:`, error);
+    return null;
+  }
+}
+
 // GitHub API client for development metrics
 export async function fetchGitHubRepoData(githubUrl: string) {
   try {
@@ -271,20 +373,44 @@ export async function fetchGitHubRepoData(githubUrl: string) {
   }
 }
 
-// Calculate security score based on real data
-export function calculateSecurityScore(securityData: any): number {
-  if (!securityData) return 0;
+// Enhanced security score calculation with Webacy integration
+export function calculateSecurityScore(securityData: any, webacyData: any = null): number {
+  if (!securityData && !webacyData) return 0;
   
   let score = 50; // Base score
   
-  // Positive factors
-  if (securityData.ownership_renounced) score += 20;
-  if (securityData.audit_status === 'verified') score += 15;
-  if (!securityData.can_mint) score += 10;
-  
-  // Negative factors
-  if (securityData.honeypot_detected) score -= 30;
-  if (securityData.freeze_authority) score -= 15;
+  // If we have Webacy data, use it for enhanced scoring
+  if (webacyData) {
+    // Start with inverse of Webacy risk score (0-100, where 0 is safest)
+    const webacyBaseScore = Math.max(0, 100 - (webacyData.riskScore || 100));
+    score = webacyBaseScore;
+    
+    // Apply severity-based adjustments
+    const criticalCount = webacyData.criticalFlags?.length || 0;
+    const warningCount = webacyData.warningFlags?.length || 0;
+    
+    // Severe penalties for critical flags
+    score -= criticalCount * 15;
+    // Moderate penalties for warning flags  
+    score -= warningCount * 5;
+    
+    // Bonus for clean contracts
+    if (criticalCount === 0 && warningCount === 0) {
+      score += 10;
+    }
+    
+    console.log(`[WEBACY] Security score calculated: ${score} (base: ${webacyBaseScore}, critical: ${criticalCount}, warnings: ${warningCount})`);
+  } else {
+    // Fallback to original GoPlus-based scoring
+    // Positive factors
+    if (securityData?.ownership_renounced) score += 20;
+    if (securityData?.audit_status === 'verified') score += 15;
+    if (!securityData?.can_mint) score += 10;
+    
+    // Negative factors
+    if (securityData?.honeypot_detected) score -= 30;
+    if (securityData?.freeze_authority) score -= 15;
+  }
   
   return Math.max(0, Math.min(100, score));
 }

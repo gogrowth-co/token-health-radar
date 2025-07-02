@@ -6,6 +6,7 @@ import {
 } from '../_shared/chainConfig.ts'
 import {
   fetchGoPlusSecurity,
+  fetchWebacySecurity,
   fetchGeckoTerminalData,
   fetchMoralisMetadata,
   fetchGitHubRepoData,
@@ -31,18 +32,25 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
   }
 
   try {
-    // Fetch data from all APIs in parallel
-    const [securityData, marketData, metadataData] = await Promise.allSettled([
+    // Fetch data from all APIs in parallel - prioritize Webacy for security
+    const [webacySecurityData, goplusSecurityData, marketData, metadataData] = await Promise.allSettled([
+      fetchWebacySecurity(tokenAddress, chainId),
       fetchGoPlusSecurity(tokenAddress, chainId),
       fetchGeckoTerminalData(tokenAddress, chainId),
       fetchMoralisMetadata(tokenAddress, chainId)
     ]);
 
-    const security = securityData.status === 'fulfilled' ? securityData.value : null;
+    const webacySecurity = webacySecurityData.status === 'fulfilled' ? webacySecurityData.value : null;
+    const goplusSecurity = goplusSecurityData.status === 'fulfilled' ? goplusSecurityData.value : null;
     const market = marketData.status === 'fulfilled' ? marketData.value : null;
     const metadata = metadataData.status === 'fulfilled' ? metadataData.value : null;
 
+    // Merge security data with Webacy taking priority
+    const security = webacySecurity || goplusSecurity;
+
     console.log(`[SCAN] API Data Summary:`, {
+      webacySecurity: webacySecurity ? 'available' : 'unavailable',
+      goplusSecurity: goplusSecurity ? 'available' : 'unavailable',
       security: security ? 'available' : 'unavailable',
       market: market ? 'available' : 'unavailable', 
       metadata: metadata ? 'available' : 'unavailable'
@@ -108,6 +116,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     return {
       tokenData: combinedData,
       securityData: security,
+      webacyData: webacySecurity,
+      goplusData: goplusSecurity,
       marketData: market,
       metadataData: metadata,
       githubData: githubData
@@ -120,7 +130,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
 
 // Generate category data with real API integration
 function generateCategoryData(apiData: any) {
-  const securityScore = calculateSecurityScore(apiData.securityData);
+  const securityScore = calculateSecurityScore(apiData.securityData, apiData.webacyData);
   const liquidityScore = calculateLiquidityScore(apiData.marketData);
   const tokenomicsScore = calculateTokenomicsScore(apiData.metadataData, apiData.marketData);
   const developmentScore = calculateDevelopmentScore(apiData.githubData);
@@ -136,7 +146,15 @@ function generateCategoryData(apiData: any) {
       freeze_authority: apiData.securityData?.freeze_authority || null,
       audit_status: apiData.securityData?.audit_status || 'unverified',
       multisig_status: 'unknown',
-      score: securityScore
+      score: securityScore,
+      // Webacy-specific fields for enhanced security analysis
+      webacy_risk_score: apiData.webacyData?.riskScore || null,
+      webacy_severity: apiData.webacyData?.severity || null,
+      webacy_flags: apiData.webacyData?.flags || [],
+      is_proxy: apiData.securityData?.is_proxy || null,
+      is_blacklisted: apiData.securityData?.is_blacklisted || null,
+      access_control: apiData.securityData?.access_control || null,
+      contract_verified: apiData.securityData?.contract_verified || null
     },
     tokenomics: {
       supply_cap: apiData.metadataData?.total_supply || null,
@@ -416,7 +434,7 @@ Deno.serve(async (req) => {
         chain_id: normalizedChainId,
         overall_score: overallScore,
         data_sources: {
-          security: apiData.securityData ? 'GoPlus API' : 'unavailable',
+          security: apiData.webacyData ? 'Webacy API (primary)' : (apiData.goplusData ? 'GoPlus API (fallback)' : 'unavailable'),
           market: apiData.marketData ? 'GeckoTerminal API' : 'unavailable',
           metadata: apiData.metadataData ? 'Moralis API' : 'unavailable',
           development: apiData.githubData ? 'GitHub API' : 'unavailable'
