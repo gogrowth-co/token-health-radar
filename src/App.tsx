@@ -23,6 +23,8 @@ import TokenScanGuide from "./pages/TokenScanGuide";
 import TokenSnifferComparison from "./pages/TokenSnifferComparison";
 import SolanaLaunchpads from "./pages/SolanaLaunchpads";
 import NotFound from "./pages/NotFound";
+import AdminUsers from "./pages/AdminUsers";
+import AdminRoute from "./components/admin/AdminRoute";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient({
@@ -87,6 +89,11 @@ const App = () => {
                     <Route path="/token-scan-guide" element={<TokenScanGuide />} />
                     <Route path="/token-sniffer-vs-tokenhealthscan" element={<TokenSnifferComparison />} />
                     <Route path="/solana-launchpads" element={<SolanaLaunchpads />} />
+                    <Route path="/admin/users" element={
+                      <AdminRoute>
+                        <AdminUsers />
+                      </AdminRoute>
+                    } />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </ErrorBoundary>
