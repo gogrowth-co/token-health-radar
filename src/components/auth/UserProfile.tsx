@@ -19,7 +19,7 @@ type SubscriberData = {
 
 export function UserProfile() {
   const { user, signOut } = useAuth();
-  const { isAdmin } = useUserRole();
+  const { isAdmin, role, loading: roleLoading } = useUserRole();
   const [subscriberData, setSubscriberData] = useState<SubscriberData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
@@ -28,6 +28,15 @@ export function UserProfile() {
   useEffect(() => {
     const fetchSubscriberData = async () => {
       if (!user) return;
+
+      // Debug logging for admin role investigation
+      console.log('UserProfile Debug - Current user:', {
+        userId: user.id,
+        email: user.email,
+        isAdmin,
+        role,
+        roleLoading
+      });
 
       try {
         const { data, error } = await supabase
@@ -55,7 +64,7 @@ export function UserProfile() {
     };
 
     fetchSubscriberData();
-  }, [user]);
+  }, [user, isAdmin, role, roleLoading]);
 
   const handleManageSubscription = async () => {
     if (!user) return;
