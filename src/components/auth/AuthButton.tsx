@@ -15,9 +15,16 @@ export function AuthButton() {
 
   if (isAuthenticated) {
     return (
-      <Button variant="outline" size="sm" asChild>
-        <Link to="/dashboard">My Dashboard</Link>
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/dashboard">My Dashboard</Link>
+        </Button>
+        {isAdmin && (
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/admin/users">Admin</Link>
+          </Button>
+        )}
+      </div>
     );
   }
 

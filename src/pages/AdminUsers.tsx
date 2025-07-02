@@ -45,62 +45,128 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      console.log('AdminUsers Debug - Fetching user data...');
+      console.log('AdminUsers Debug - Starting fetch process...');
       
-      // Check current user's authentication status
+      // Check current user's authentication status first
       const { data: { user }, error: authError } = await supabase.auth.getUser();
-      console.log('AdminUsers Debug - Current auth user:', {
-        user: user?.id,
+      console.log('AdminUsers Debug - Auth check:', {
+        userId: user?.id,
         email: user?.email,
-        authError
+        hasUser: !!user,
+        authError: authError?.message
       });
       
+      if (!user) {
+        console.error('AdminUsers Error - No authenticated user found');
+        toast({
+          title: "Authentication Error",
+          description: "Please log in to access the admin dashboard",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Check user role first
+      console.log('AdminUsers Debug - Checking user role...');
+      const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
+        _user_id: user.id
+      });
+      
+      console.log('AdminUsers Debug - User role check:', {
+        roleData,
+        roleError: roleError?.message,
+        isAdmin: roleData === 'admin'
+      });
+      
+      if (roleError || roleData !== 'admin') {
+        console.error('AdminUsers Error - User is not admin:', { roleData, roleError });
+        toast({
+          title: "Access Denied",
+          description: "Admin privileges required to access user data",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Now try to fetch admin user data
+      console.log('AdminUsers Debug - Fetching admin user data...');
       const { data, error } = await supabase.rpc('get_admin_user_data');
       
-      console.log('AdminUsers Debug - Database response:', {
-        data,
-        error,
-        dataLength: data?.length,
+      console.log('AdminUsers Debug - RPC Response:', {
+        hasData: !!data,
+        dataLength: data?.length || 0,
+        error: error ? {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        } : null,
         timestamp: new Date().toISOString()
       });
       
       if (error) {
-        console.error('AdminUsers Error - Failed to fetch users:', {
-          error,
-          errorCode: error.code,
-          errorMessage: error.message,
-          errorDetails: error.details,
-          errorHint: error.hint
+        console.error('AdminUsers Error - RPC call failed:', error);
+        
+        // Try alternative approach if RPC fails
+        console.log('AdminUsers Debug - Trying fallback query...');
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('user_roles')
+          .select('*')
+          .eq('role', 'admin');
+          
+        console.log('AdminUsers Debug - Fallback query result:', {
+          fallbackData,
+          fallbackError: fallbackError?.message
         });
         
         toast({
-          title: "Error",
-          description: error.message.includes('permission') 
-            ? "Admin access required to view user data"
-            : `Failed to load user data: ${error.message}`,
+          title: "Database Error",
+          description: `Failed to load user data: ${error.message}. Please check the console for details.`,
           variant: "destructive",
         });
         return;
       }
 
-      const userData = (data || []) as AdminUser[];
-      console.log('AdminUsers Debug - Processed user data:', {
+      if (!data || data.length === 0) {
+        console.log('AdminUsers Debug - No data returned from function');
+        toast({
+          title: "No Data",
+          description: "No user data found. This might be a permissions issue.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const userData = data as AdminUser[];
+      console.log('AdminUsers Debug - Successfully processed user data:', {
         userCount: userData.length,
-        adminUsers: userData.filter(u => u.is_admin).map(u => ({ id: u.id, email: u.email })),
-        currentUserData: userData.find(u => u.id === 'a97608f8-5df3-4780-9832-d15cbe8414ac')
+        adminCount: userData.filter(u => u.is_admin).length,
+        sampleUsers: userData.slice(0, 3).map(u => ({ 
+          id: u.id, 
+          email: u.email, 
+          isAdmin: u.is_admin 
+        }))
       });
       
       setUsers(userData);
+      
+      toast({
+        title: "Success",
+        description: `Loaded ${userData.length} users`,
+        variant: "default",
+      });
+      
     } catch (error) {
       console.error('AdminUsers Exception - Unexpected error:', {
         error,
         errorStack: error instanceof Error ? error.stack : 'No stack trace',
-        errorMessage: error instanceof Error ? error.message : String(error)
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorName: error instanceof Error ? error.name : 'Unknown'
       });
       
       toast({
-        title: "Error",
-        description: "Failed to load user data",
+        title: "Unexpected Error",
+        description: `An unexpected error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {
