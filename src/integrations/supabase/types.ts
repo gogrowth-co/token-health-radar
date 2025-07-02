@@ -313,40 +313,61 @@ export type Database = {
       }
       token_security_cache: {
         Row: {
+          access_control: boolean | null
           audit_status: string | null
           can_mint: boolean | null
           chain_id: string
+          contract_verified: boolean | null
           freeze_authority: boolean | null
           honeypot_detected: boolean | null
+          is_blacklisted: boolean | null
+          is_proxy: boolean | null
           multisig_status: string | null
           ownership_renounced: boolean | null
           score: number | null
           token_address: string
           updated_at: string | null
+          webacy_flags: Json | null
+          webacy_risk_score: number | null
+          webacy_severity: string | null
         }
         Insert: {
+          access_control?: boolean | null
           audit_status?: string | null
           can_mint?: boolean | null
           chain_id?: string
+          contract_verified?: boolean | null
           freeze_authority?: boolean | null
           honeypot_detected?: boolean | null
+          is_blacklisted?: boolean | null
+          is_proxy?: boolean | null
           multisig_status?: string | null
           ownership_renounced?: boolean | null
           score?: number | null
           token_address: string
           updated_at?: string | null
+          webacy_flags?: Json | null
+          webacy_risk_score?: number | null
+          webacy_severity?: string | null
         }
         Update: {
+          access_control?: boolean | null
           audit_status?: string | null
           can_mint?: boolean | null
           chain_id?: string
+          contract_verified?: boolean | null
           freeze_authority?: boolean | null
           honeypot_detected?: boolean | null
+          is_blacklisted?: boolean | null
+          is_proxy?: boolean | null
           multisig_status?: string | null
           ownership_renounced?: boolean | null
           score?: number | null
           token_address?: string
           updated_at?: string | null
+          webacy_flags?: Json | null
+          webacy_risk_score?: number | null
+          webacy_severity?: string | null
         }
         Relationships: [
           {

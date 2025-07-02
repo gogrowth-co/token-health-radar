@@ -304,7 +304,15 @@ Deno.serve(async (req) => {
             honeypot_detected: categoryData.security.honeypot_detected,
             freeze_authority: categoryData.security.freeze_authority,
             audit_status: categoryData.security.audit_status,
-            multisig_status: categoryData.security.multisig_status
+            multisig_status: categoryData.security.multisig_status,
+            // Webacy-specific fields
+            webacy_risk_score: categoryData.security.webacy_risk_score,
+            webacy_severity: categoryData.security.webacy_severity,
+            webacy_flags: categoryData.security.webacy_flags,
+            is_proxy: categoryData.security.is_proxy,
+            is_blacklisted: categoryData.security.is_blacklisted,
+            access_control: categoryData.security.access_control,
+            contract_verified: categoryData.security.contract_verified
           }
         },
         {

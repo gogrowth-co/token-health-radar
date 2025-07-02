@@ -21,7 +21,7 @@ export interface CategoryFeature {
   title: string;
   description: string;
   badgeLabel: string;
-  badgeVariant: "gray" | "blue" | "green" | "red" | "orange";
+  badgeVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow";
 }
 
 export interface SecurityData {
@@ -33,6 +33,14 @@ export interface SecurityData {
   audit_status: string | null;
   multisig_status: string | null;
   score: number | null;
+  // Webacy-specific fields
+  webacy_risk_score?: number | null;
+  webacy_severity?: string | null;
+  webacy_flags?: any[] | null;
+  is_proxy?: boolean | null;
+  is_blacklisted?: boolean | null;
+  access_control?: boolean | null;
+  contract_verified?: boolean | null;
 }
 
 export interface TokenomicsData {
@@ -118,57 +126,93 @@ export const transformSecurityData = (data: SecurityData | null): CategoryFeatur
     ];
   }
 
-  const ownershipRenounced = safeBooleanAccess(data, 'ownership_renounced');
-  const canMint = safeBooleanAccess(data, 'can_mint');
-  const honeypotDetected = safeBooleanAccess(data, 'honeypot_detected');
-  const freezeAuthority = safeBooleanAccess(data, 'freeze_authority');
-  const auditStatus = safeAccess(data, 'audit_status', 'Unknown');
-  const multisigStatus = safeAccess(data, 'multisig_status', 'Unknown');
-
-  return [
-    { 
-      icon: Shield, 
-      title: "Ownership Renounced", 
+  const features: CategoryFeature[] = [
+    {
+      icon: Shield,
+      title: "Ownership Renounced",
       description: "Contract ownership has been renounced (more secure)",
-      badgeLabel: getBooleanBadgeLabel(ownershipRenounced),
-      badgeVariant: getBooleanBadgeVariant(ownershipRenounced, true)
+      badgeLabel: safeBooleanAccess(data, 'ownership_renounced') ? "Yes" : "No",
+      badgeVariant: getBooleanBadgeVariant(safeBooleanAccess(data, 'ownership_renounced'), true)
     },
-    { 
-      icon: Lock, 
-      title: "Can Mint", 
+    {
+      icon: Lock,
+      title: "Can Mint",
       description: "Ability to create new tokens",
-      badgeLabel: getBooleanBadgeLabel(canMint),
-      badgeVariant: getBooleanBadgeVariant(canMint, false)
+      badgeLabel: safeBooleanAccess(data, 'can_mint') ? "Yes" : "No",
+      badgeVariant: getBooleanBadgeVariant(safeBooleanAccess(data, 'can_mint'), false)
     },
-    { 
-      icon: AlertCircle, 
-      title: "Honeypot Detection", 
+    {
+      icon: AlertCircle,
+      title: "Honeypot Detection",
       description: "Checks if token can be sold after purchase",
-      badgeLabel: honeypotDetected ? "Detected" : "Not Detected",
-      badgeVariant: honeypotDetected ? "red" : "green"
+      badgeLabel: safeBooleanAccess(data, 'honeypot_detected') ? "Detected" : "Clean",
+      badgeVariant: getBooleanBadgeVariant(safeBooleanAccess(data, 'honeypot_detected'), false)
     },
-    { 
-      icon: Activity, 
-      title: "Freeze Authority", 
+    {
+      icon: Activity,
+      title: "Freeze Authority",
       description: "Ability to freeze token transfers",
-      badgeLabel: getBooleanBadgeLabel(freezeAuthority),
-      badgeVariant: getBooleanBadgeVariant(freezeAuthority, false)
+      badgeLabel: safeBooleanAccess(data, 'freeze_authority') ? "Yes" : "No",
+      badgeVariant: getBooleanBadgeVariant(safeBooleanAccess(data, 'freeze_authority'), false)
     },
-    { 
-      icon: Shield, 
-      title: "Audit Status", 
+    {
+      icon: Shield,
+      title: "Audit Status",
       description: "Security audit verification by third-party firm",
-      badgeLabel: auditStatus,
-      badgeVariant: auditStatus === "Unknown" ? "gray" : auditStatus === "Verified" ? "green" : auditStatus === "Failed" ? "red" : "gray"
+      badgeLabel: safeAccess(data, 'audit_status', 'Unknown'),
+      badgeVariant: data.audit_status === 'verified' ? 'green' : data.audit_status === 'unverified' ? 'red' : 'gray'
     },
-    { 
-      icon: Lock, 
-      title: "Multisig Status", 
+    {
+      icon: Lock,
+      title: "Multisig Status",
       description: "Multiple signatures required for critical actions",
-      badgeLabel: multisigStatus,
-      badgeVariant: multisigStatus === "Unknown" ? "gray" : multisigStatus === "Active" ? "green" : multisigStatus === "Inactive" ? "red" : "gray"
+      badgeLabel: safeAccess(data, 'multisig_status', 'Unknown'),
+      badgeVariant: data.multisig_status === 'enabled' ? 'green' : data.multisig_status === 'disabled' ? 'red' : 'gray'
     }
   ];
+
+  // Add Webacy-enhanced features if available
+  if (data.is_proxy !== null && data.is_proxy !== undefined) {
+    features.push({
+      icon: Shield,
+      title: "Proxy Contract",
+      description: "Contract is upgradeable through proxy pattern",
+      badgeLabel: data.is_proxy ? "Yes" : "No",
+      badgeVariant: data.is_proxy ? "yellow" : "green"
+    });
+  }
+
+  if (data.is_blacklisted !== null && data.is_blacklisted !== undefined) {
+    features.push({
+      icon: AlertCircle,
+      title: "Blacklist Function",
+      description: "Contract can blacklist specific addresses",
+      badgeLabel: data.is_blacklisted ? "Present" : "None",
+      badgeVariant: data.is_blacklisted ? "red" : "green"
+    });
+  }
+
+  if (data.access_control !== null && data.access_control !== undefined) {
+    features.push({
+      icon: Lock,
+      title: "Access Control",
+      description: "Special privileges for certain addresses",
+      badgeLabel: data.access_control ? "Present" : "None",
+      badgeVariant: data.access_control ? "yellow" : "green"
+    });
+  }
+
+  if (data.contract_verified !== null && data.contract_verified !== undefined) {
+    features.push({
+      icon: Shield,
+      title: "Contract Verified",
+      description: "Source code is public and verified",
+      badgeLabel: data.contract_verified ? "Yes" : "No",
+      badgeVariant: data.contract_verified ? "green" : "red"
+    });
+  }
+
+  return features;
 };
 
 // Transform tokenomics data into feature format

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import CategoryFeatureGrid from "./CategoryFeatureGrid";
+import WebacyRiskFlags from "./WebacyRiskFlags";
 import BlurredCategoryOverlay from "./BlurredCategoryOverlay";
 import { 
   transformSecurityData, 
@@ -167,10 +168,17 @@ export default function CategoryTabs({
       
       {/* Security Tab Content */}
       {renderTabContent(securityData, (
-        <CategoryFeatureGrid 
-          features={transformSecurityData(securityData)}
-          description="Key security indicators for this token's smart contract"
-        />
+        <div>
+          <CategoryFeatureGrid 
+            features={transformSecurityData(securityData)}
+            description="Key security indicators for this token's smart contract"
+          />
+          <WebacyRiskFlags 
+            webacyFlags={securityData?.webacy_flags || []}
+            webacyRiskScore={securityData?.webacy_risk_score}
+            webacySeverity={securityData?.webacy_severity}
+          />
+        </div>
       ), ScanCategory.Security)}
       
       {/* Tokenomics Tab Content */}
