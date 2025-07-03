@@ -346,15 +346,25 @@ export default function ScanResult() {
             />
           )}
 
-          {/* Debug: Test scan button */}
+          {/* Debug: Test scan button and API health */}
           <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
             <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
-              🔧 Debug Mode: Test Token Scan Function
+              🔧 Debug Mode: Token Scan & API Health Testing
             </h3>
-            <TestScanButton 
-              tokenAddress={tokenAddress}
-              chainId={chainId}
-            />
+            <div className="flex flex-col sm:flex-row gap-3">
+              <TestScanButton 
+                tokenAddress={tokenAddress}
+                chainId={chainId}
+                className="flex-1"
+              />
+              <Button
+                variant="outline"
+                onClick={() => window.open('/api-health', '_blank')}
+                className="flex-1"
+              >
+                Open API Health Dashboard
+              </Button>
+            </div>
           </div>
 
           <TokenProfile

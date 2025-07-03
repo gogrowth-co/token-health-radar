@@ -51,3 +51,6 @@ verify_jwt = true
 
 [functions.test-scan]
 verify_jwt = false
+
+[functions.debug-api-health]
+verify_jwt = false
