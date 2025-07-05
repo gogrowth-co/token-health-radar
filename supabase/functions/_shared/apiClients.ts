@@ -76,83 +76,111 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
   }
 }
 
-// GeckoTerminal API client for price and liquidity data
+// Moralis Price API client for price and liquidity data
 export async function fetchGeckoTerminalData(tokenAddress: string, chainId: string) {
+  console.log(`[MORALIS-PRICE] === STARTING MORALIS PRICE API CALL ===`);
+  console.log(`[MORALIS-PRICE] Token: ${tokenAddress}, Chain: ${chainId}`);
+  
   try {
     const chainConfig = getChainConfigByMoralisId(chainId);
     if (!chainConfig) {
-      console.log(`[GECKO] Unsupported chain: ${chainId}`);
+      console.error(`[MORALIS-PRICE] FAILED - Unsupported chain: ${chainId}`);
       return null;
     }
 
-    const url = `https://api.geckoterminal.com/api/v2/networks/${chainConfig.gecko}/tokens/${tokenAddress.toLowerCase()}`;
-    console.log(`[GECKO] Fetching market data: ${url}`);
+    // Get API key from environment
+    const apiKey = Deno.env.get('MORALIS_API_KEY');
+    if (!apiKey) {
+      console.error(`[MORALIS-PRICE] FAILED - MORALIS_API_KEY not configured in environment`);
+      return null;
+    }
+
+    console.log(`[MORALIS-PRICE] API Key: ${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)} (${apiKey.length} chars)`);
+    console.log(`[MORALIS-PRICE] Chain: ${chainConfig.name} (${chainConfig.id})`);
+    console.log(`[MORALIS-PRICE] Target token: ${tokenAddress.toLowerCase()}`);
     
-    const response = await fetch(url);
+    const url = `https://deep-index.moralis.io/api/v2.2/erc20/${tokenAddress.toLowerCase()}/price?chain=${chainConfig.id}&include=percent_change`;
+    console.log(`[MORALIS-PRICE] Request URL: ${url}`);
+    
+    const response = await fetch(url, {
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log(`[MORALIS-PRICE] Response status: ${response.status}`);
+    console.log(`[MORALIS-PRICE] Response headers:`, Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
-      throw new Error(`GeckoTerminal API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`[MORALIS-PRICE] FAILED - API error: ${response.status} ${response.statusText}`);
+      console.error(`[MORALIS-PRICE] Error response body:`, errorText);
+      throw new Error(`Moralis Price API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
     
-    const data = await response.json();
+    const responseText = await response.text();
+    console.log(`[MORALIS-PRICE] Raw response text:`, responseText);
     
-    // Add comprehensive logging to debug the API response structure
-    console.log(`[GECKO] Raw API response structure:`, JSON.stringify(data, null, 2));
+    let data;
+    try {
+      data = JSON.parse(responseText);
+      console.log(`[MORALIS-PRICE] Parsed JSON response:`, JSON.stringify(data, null, 2));
+    } catch (jsonError) {
+      console.error(`[MORALIS-PRICE] FAILED - Invalid JSON response:`, jsonError);
+      console.error(`[MORALIS-PRICE] Response text was:`, responseText);
+      return null;
+    }
     
-    const tokenData = data.data?.attributes;
-    
-    if (!tokenData) {
-      console.log(`[GECKO] No market data found for token: ${tokenAddress}`);
-      console.log(`[GECKO] Response structure:`, JSON.stringify(data, null, 2));
+    if (!data) {
+      console.error(`[MORALIS-PRICE] FAILED - Empty response data for token: ${tokenAddress}`);
       return null;
     }
 
     // Log the specific price change data for debugging
-    console.log(`[GECKO] Price change data path check:`, {
-      'tokenData.price_change_percentage': tokenData.price_change_percentage,
-      'tokenData.price_change_percentage?.h24': tokenData.price_change_percentage?.h24,
-      'Full price_change_percentage object': JSON.stringify(tokenData.price_change_percentage, null, 2)
+    console.log(`[MORALIS-PRICE] Price change data extraction:`, {
+      'data.percent_change': data.percent_change,
+      'data.percent_change?.usd_price_24h_percent_change': data.percent_change?.usd_price_24h_percent_change,
+      'Full percent_change object': JSON.stringify(data.percent_change, null, 2)
     });
 
-    // Extract price change with proper error handling
-    const priceChange24h = tokenData.price_change_percentage?.h24;
+    // Extract price change with proper null handling - DO NOT use ?? 0 fallback
+    const priceChange24h = data.percent_change?.usd_price_24h_percent_change;
     const parsedPriceChange = priceChange24h !== null && priceChange24h !== undefined 
       ? parseFloat(priceChange24h) 
-      : null;
+      : null; // Preserve null for missing data
 
     // Extract other market data
-    const currentPriceUsd = parseFloat(tokenData.price_usd) ?? 0;
-    const marketCapUsd = parseFloat(tokenData.market_cap_usd) ?? 0;
-    const tradingVolume24hUsd = parseFloat(tokenData.volume_usd?.h24) ?? 0;
+    const currentPriceUsd = parseFloat(data.usdPrice) || 0;
+    const marketCapUsd = parseFloat(data.usdPriceFormatted) || 0; // May not be available in price endpoint
+    const tradingVolume24hUsd = 0; // Not available in Moralis price endpoint
 
     // Data validation - warn about potential issues
-    if (parsedPriceChange === 0 && tradingVolume24hUsd > 0) {
-      console.warn(`[GECKO] Potential data anomaly: 24h price change is exactly 0% but trading volume is ${tradingVolume24hUsd} USD`);
-    }
-
     if (parsedPriceChange === null) {
-      console.warn(`[GECKO] No valid 24h price change data found for token: ${tokenAddress}`);
+      console.warn(`[MORALIS-PRICE] No valid 24h price change data found for token: ${tokenAddress}`);
+    } else {
+      console.log(`[MORALIS-PRICE] Successfully extracted 24h price change: ${parsedPriceChange}%`);
     }
 
     const result = {
       current_price_usd: currentPriceUsd,
-      price_change_24h: parsedPriceChange ?? 0, // Use 0 as fallback only when data is truly missing
+      price_change_24h: parsedPriceChange, // Keep null when data is missing - no fallback to 0
       market_cap_usd: marketCapUsd,
       trading_volume_24h_usd: tradingVolume24hUsd,
-      name: tokenData.name || '',
-      symbol: tokenData.symbol || ''
+      name: '', // Not available in price endpoint
+      symbol: '' // Not available in price endpoint
     };
 
-    console.log(`[GECKO] Processed market data:`, {
-      token: `${result.name} (${result.symbol})`,
+    console.log(`[MORALIS-PRICE] SUCCESS - Processed price data:`, {
+      token: tokenAddress,
       price_usd: result.current_price_usd,
       price_change_24h: result.price_change_24h,
-      volume_24h_usd: result.trading_volume_24h_usd,
-      market_cap_usd: result.market_cap_usd
+      has_price_change: result.price_change_24h !== null
     });
     
     return result;
   } catch (error) {
-    console.error(`[GECKO] Error fetching market data:`, error);
+    console.error(`[MORALIS-PRICE] Error fetching price data:`, error);
     return null;
   }
 }
