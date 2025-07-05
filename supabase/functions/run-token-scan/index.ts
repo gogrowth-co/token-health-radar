@@ -373,12 +373,22 @@ Deno.serve(async (req) => {
 
     try {
       // UPSERT token data to main cache table
-      console.log(`[SCAN] Upserting token data to database: ${token_address}, chain: ${normalizedChainId}`);
+      console.log(`[SCAN] === UPSERTING TOKEN DATA TO DATABASE ===`);
+      console.log(`[SCAN] Token: ${token_address}, Chain: ${normalizedChainId}`);
+      console.log(`[SCAN] Data to save:`, {
+        name: apiData.tokenData.name,
+        symbol: apiData.tokenData.symbol,
+        current_price_usd: apiData.tokenData.current_price_usd,
+        price_change_24h: apiData.tokenData.price_change_24h,
+        market_cap_usd: apiData.tokenData.market_cap_usd,
+        logo_url: apiData.tokenData.logo_url ? 'present' : 'missing',
+        description_length: apiData.tokenData.description?.length || 0
+      });
       
       const { error: upsertError } = await supabase
         .from('token_data_cache')
         .upsert({
-          token_address,
+          token_address: token_address.toLowerCase(),
           chain_id: normalizedChainId,
           name: apiData.tokenData.name,
           symbol: apiData.tokenData.symbol,
@@ -400,6 +410,20 @@ Deno.serve(async (req) => {
       }
 
       console.log(`[SCAN] Successfully upserted token data for: ${token_address} on ${chainConfig.name}`);
+      
+      // Verify the data was saved correctly
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('token_data_cache')
+        .select('name, symbol, current_price_usd, price_change_24h, market_cap_usd')
+        .eq('token_address', token_address.toLowerCase())
+        .eq('chain_id', normalizedChainId)
+        .single();
+      
+      if (verifyError) {
+        console.error(`[SCAN] Error verifying saved data:`, verifyError);
+      } else {
+        console.log(`[SCAN] Verified saved data:`, verifyData);
+      }
 
       // UPSERT category data to cache tables using individual operations
       const cacheOperations = [
@@ -504,29 +528,53 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Record the scan with proper chain_id validation
-      if (user_id) {
-        try {
-          const { error: scanError } = await supabase
-            .from('token_scans')
-            .insert({
-              user_id,
-              token_address,
-              chain_id: normalizedChainId, // Ensure chain_id is always set
-              score_total: overallScore,
-              pro_scan: proScan,
-              is_anonymous: false
-            });
-          
-          if (scanError) {
-            console.error(`[SCAN] Error recording scan:`, scanError);
-          } else {
-            console.log(`[SCAN] Successfully recorded scan for user ${user_id}`);
-          }
-        } catch (error) {
-          console.error(`[SCAN] Exception recording scan:`, error);
+    // Record the scan with proper chain_id validation
+    if (user_id) {
+      try {
+        console.log(`[SCAN] Recording scan for user ${user_id} with chain_id: ${normalizedChainId}`);
+        const { error: scanError } = await supabase
+          .from('token_scans')
+          .insert({
+            user_id,
+            token_address: token_address.toLowerCase(),
+            chain_id: normalizedChainId,
+            score_total: overallScore,
+            pro_scan: proScan,
+            is_anonymous: false
+          });
+        
+        if (scanError) {
+          console.error(`[SCAN] Error recording scan:`, scanError);
+        } else {
+          console.log(`[SCAN] Successfully recorded scan for user ${user_id}`);
         }
+      } catch (error) {
+        console.error(`[SCAN] Exception recording scan:`, error);
       }
+    } else {
+      // Also record anonymous scans for tracking
+      try {
+        console.log(`[SCAN] Recording anonymous scan with chain_id: ${normalizedChainId}`);
+        const { error: scanError } = await supabase
+          .from('token_scans')
+          .insert({
+            user_id: null,
+            token_address: token_address.toLowerCase(),
+            chain_id: normalizedChainId,
+            score_total: overallScore,
+            pro_scan: false,
+            is_anonymous: true
+          });
+        
+        if (scanError) {
+          console.error(`[SCAN] Error recording anonymous scan:`, scanError);
+        } else {
+          console.log(`[SCAN] Successfully recorded anonymous scan`);
+        }
+      } catch (error) {
+        console.error(`[SCAN] Exception recording anonymous scan:`, error);
+      }
+    }
 
       // Commit transaction
       const { error: commitError } = await supabase.rpc('commit');
