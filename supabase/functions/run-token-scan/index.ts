@@ -109,13 +109,17 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
 
     // Combine data from all sources, prioritizing Moralis for richer data
     const combinedData = {
-      name,
-      symbol,
-      description,
-      logo_url,
-      website_url,
-      twitter_handle,
-      github_url,
+      name: metadata?.name || market?.name || `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`,
+      symbol: metadata?.symbol || market?.symbol || 'UNKNOWN',
+      description: metadata?.description && metadata.description.trim() 
+        ? metadata.description
+        : metadata?.name 
+          ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
+          : `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)} on ${chainConfig.name}`,
+      logo_url: metadata?.logo || metadata?.thumbnail || '',
+      website_url: metadata?.links?.website || '',
+      twitter_handle: metadata?.links?.twitter ? metadata.links.twitter.replace('https://twitter.com/', '').replace('@', '') : '',
+      github_url: metadata?.links?.github || '',
       current_price_usd: market?.current_price_usd || 0,
       price_change_24h: market?.price_change_24h, // Keep null if no data
       market_cap_usd: metadata?.market_cap ? parseFloat(metadata.market_cap) : (market?.market_cap_usd || 0),

@@ -12,8 +12,8 @@ export async function fetchMoralisPriceData(tokenAddress: string, chainId: strin
       return null;
     }
 
-    // Get API key from environment
-    const apiKey = Deno.env.get('MORALIS_API_KEY');
+    // Get API key from environment (with fallback for testing)
+    const apiKey = Deno.env.get('MORALIS_API_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjI2YWE1NWViLTEyNmItNGU4MC05OTY2LTgxNzAzOTUzZmU4YyIsIm9yZ0lkIjoiNDU1ODE1IiwidXNlcklkIjoiNDY4OTczIiwidHlwZUlkIjoiNzA2ZDc3NTYtZDlhNS00NmFkLTgwNGEtN2UyYzI5ZGUxMzc1IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NTA5MDUwNDAsImV4cCI6NDkwNjY2NTA0MH0.dhtovO-cPljwR_O5WJrTRoyfv6rGnPplERZpd7iT9Uw';
     if (!apiKey) {
       console.error(`[MORALIS-PRICE] FAILED - MORALIS_API_KEY not configured in environment`);
       return null;
@@ -125,8 +125,8 @@ export async function fetchMoralisMetadata(tokenAddress: string, chainId: string
       return null;
     }
 
-    // Get API key from environment
-    const apiKey = Deno.env.get('MORALIS_API_KEY');
+    // Get API key from environment (with fallback for testing)
+    const apiKey = Deno.env.get('MORALIS_API_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjI2YWE1NWViLTEyNmItNGU4MC05OTY2LTgxNzAzOTUzZmU4YyIsIm9yZ0lkIjoiNDU1ODE1IiwidXNlcklkIjoiNDY4OTczIiwidHlwZUlkIjoiNzA2ZDc3NTYtZDlhNS00NmFkLTgwNGEtN2UyYzI5ZGUxMzc1IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NTA5MDUwNDAsImV4cCI6NDkwNjY2NTA0MH0.dhtovO-cPljwR_O5WJrTRoyfv6rGnPplERZpd7iT9Uw';
     if (!apiKey) {
       console.error(`[MORALIS] FAILED - MORALIS_API_KEY not configured in environment`);
       return null;
