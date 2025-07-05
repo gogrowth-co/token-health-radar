@@ -117,11 +117,37 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       twitter_handle,
       github_url,
       current_price_usd: market?.current_price_usd || 0,
-      price_change_24h: market?.price_change_24h || 0,
+      price_change_24h: market?.price_change_24h, // Keep null if no data
       market_cap_usd: metadata?.market_cap ? parseFloat(metadata.market_cap) : (market?.market_cap_usd || 0),
       total_supply: metadata?.total_supply || '0',
       trading_volume_24h_usd: market?.trading_volume_24h_usd || 0
     };
+
+    // Add detailed logging for data extraction
+    console.log(`[SCAN] === DETAILED DATA EXTRACTION LOGGING ===`);
+    console.log(`[SCAN] Raw Metadata from Moralis:`, {
+      name: metadata?.name,
+      symbol: metadata?.symbol,
+      description: metadata?.description?.substring(0, 100) + '...',
+      logo: metadata?.logo,
+      market_cap: metadata?.market_cap,
+      links: metadata?.links ? Object.keys(metadata.links) : []
+    });
+    console.log(`[SCAN] Raw Market/Price Data:`, {
+      current_price_usd: market?.current_price_usd,
+      price_change_24h: market?.price_change_24h,
+      market_cap_usd: market?.market_cap_usd,
+      trading_volume_24h_usd: market?.trading_volume_24h_usd
+    });
+    console.log(`[SCAN] Final Combined Data:`, {
+      name: combinedData.name,
+      symbol: combinedData.symbol,
+      current_price_usd: combinedData.current_price_usd,
+      price_change_24h: combinedData.price_change_24h,
+      market_cap_usd: combinedData.market_cap_usd,
+      logo_url: combinedData.logo_url,
+      description_length: combinedData.description.length
+    });
 
     console.log(`[SCAN] Combined token data:`, {
       name: combinedData.name,

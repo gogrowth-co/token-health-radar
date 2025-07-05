@@ -61,23 +61,27 @@ export async function fetchMoralisPriceData(tokenAddress: string, chainId: strin
       return null;
     }
 
-    // Log the specific price change data for debugging
-    console.log(`[MORALIS-PRICE] Price change data extraction:`, {
-      'data.percent_change': data.percent_change,
-      'data.percent_change?.usd_price_24h_percent_change': data.percent_change?.usd_price_24h_percent_change,
-      'Full percent_change object': JSON.stringify(data.percent_change, null, 2)
+    // Log the raw response structure for debugging
+    console.log(`[MORALIS-PRICE] Price data structure:`, {
+      'data.usdPrice': data.usdPrice,
+      'data.24hrPercentChange': data['24hrPercentChange'],
+      'data.usdPrice24hrPercentChange': data.usdPrice24hrPercentChange,
+      'data.pairTotalLiquidityUsd': data.pairTotalLiquidityUsd,
+      'Full response keys': Object.keys(data)
     });
 
-    // Extract price change with proper null handling - DO NOT use ?? 0 fallback
-    const priceChange24h = data.percent_change?.usd_price_24h_percent_change;
+    // Extract price data using correct field names from Moralis Price API
+    const currentPriceUsd = parseFloat(data.usdPrice) || 0;
+    
+    // Extract 24h price change - handle both possible field names
+    const priceChange24h = data['24hrPercentChange'] || data.usdPrice24hrPercentChange;
     const parsedPriceChange = priceChange24h !== null && priceChange24h !== undefined 
       ? parseFloat(priceChange24h) 
       : null; // Preserve null for missing data
 
-    // Extract other market data
-    const currentPriceUsd = parseFloat(data.usdPrice) || 0;
-    const marketCapUsd = parseFloat(data.usdPriceFormatted) || 0; // May not be available in price endpoint
-    const tradingVolume24hUsd = 0; // Not available in Moralis price endpoint
+    // Extract market data
+    const marketCapUsd = 0; // Market cap not available in price endpoint
+    const tradingVolume24hUsd = parseFloat(data.pairTotalLiquidityUsd) || 0;
 
     // Data validation - warn about potential issues
     if (parsedPriceChange === null) {

@@ -10,6 +10,7 @@ import CategoryTabs from "@/components/CategoryTabs";
 import CategoryScoresGrid from "@/components/CategoryScoresGrid";
 import ScanLimitIndicator from "@/components/ScanLimitIndicator";
 import UpgradeModal from "@/components/UpgradeModal";
+import RefreshScanButton from "@/components/RefreshScanButton";
 import TestScanButton from "@/components/TestScanButton";
 import { toast } from "sonner";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -352,6 +353,11 @@ export default function ScanResult() {
               🔧 Debug Mode: Token Scan & API Health Testing
             </h3>
             <div className="flex flex-col sm:flex-row gap-3">
+              <RefreshScanButton 
+                tokenAddress={tokenAddress}
+                chainId={chainId}
+                className="flex-1"
+              />
               <TestScanButton 
                 tokenAddress={tokenAddress}
                 chainId={chainId}
