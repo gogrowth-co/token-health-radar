@@ -200,8 +200,8 @@ export async function fetchMoralisMetadata(tokenAddress: string, chainId: string
       return null;
     }
 
-    // Now make the actual request
-    const metadataUrl = `https://deep-index.moralis.io/api/v2.2/erc20/metadata?chain=${chainConfig.id}&addresses%5B0%5D=${tokenAddress.toLowerCase()}`;
+    // Now make the actual request with correct endpoint format
+    const metadataUrl = `https://deep-index.moralis.io/api/v2.2/erc20/metadata?chain=${chainConfig.id}&addresses=${tokenAddress.toLowerCase()}`;
     console.log(`[MORALIS] Making actual request: ${metadataUrl}`);
     
     const response = await fetch(metadataUrl, {
