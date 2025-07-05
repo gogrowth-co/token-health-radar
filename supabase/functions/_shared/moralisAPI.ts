@@ -1,8 +1,9 @@
 import { getChainConfigByMoralisId } from './chainConfig.ts';
+import Moralis from 'https://esm.sh/moralis@2.27.2';
 
-// Moralis Price API client for price and liquidity data
+// Moralis Price API client using SDK
 export async function fetchMoralisPriceData(tokenAddress: string, chainId: string) {
-  console.log(`[MORALIS-PRICE] === STARTING MORALIS PRICE API CALL ===`);
+  console.log(`[MORALIS-PRICE] === STARTING MORALIS PRICE SDK CALL ===`);
   console.log(`[MORALIS-PRICE] Token: ${tokenAddress}, Chain: ${chainId}`);
   
   try {
@@ -20,90 +21,53 @@ export async function fetchMoralisPriceData(tokenAddress: string, chainId: strin
     }
 
     console.log(`[MORALIS-PRICE] API Key: ${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)} (${apiKey.length} chars)`);
-    console.log(`[MORALIS-PRICE] Chain: ${chainConfig.name} (${chainConfig.id})`);
+    console.log(`[MORALIS-PRICE] Chain: ${chainConfig.name} (${chainId})`);
     console.log(`[MORALIS-PRICE] Target token: ${tokenAddress.toLowerCase()}`);
     
-    const url = `https://deep-index.moralis.io/api/v2.2/erc20/${tokenAddress.toLowerCase()}/price?chain=${chainConfig.id}&include=percent_change`;
-    console.log(`[MORALIS-PRICE] Request URL: ${url}`);
-    
-    const response = await fetch(url, {
-      headers: {
-        'X-API-Key': apiKey,
-        'Content-Type': 'application/json'
-      }
+    // Initialize Moralis SDK
+    if (!Moralis.Core.isStarted) {
+      await Moralis.start({ apiKey });
+      console.log(`[MORALIS-PRICE] Moralis SDK initialized`);
+    }
+
+    // Get token price using SDK
+    const response = await Moralis.EvmApi.token.getTokenPrice({
+      chain: chainId,
+      include: "percent_change",
+      address: tokenAddress.toLowerCase()
     });
 
-    console.log(`[MORALIS-PRICE] Response status: ${response.status}`);
-    console.log(`[MORALIS-PRICE] Response headers:`, Object.fromEntries(response.headers.entries()));
+    console.log(`[MORALIS-PRICE] SDK Response received`);
+    const data = response.raw;
+    console.log(`[MORALIS-PRICE] Raw response data:`, JSON.stringify(data, null, 2));
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[MORALIS-PRICE] FAILED - API error: ${response.status} ${response.statusText}`);
-      console.error(`[MORALIS-PRICE] Error response body:`, errorText);
-      throw new Error(`Moralis Price API error: ${response.status} ${response.statusText} - ${errorText}`);
-    }
-    
-    const responseText = await response.text();
-    console.log(`[MORALIS-PRICE] Raw response text:`, responseText);
-    
-    let data;
-    try {
-      data = JSON.parse(responseText);
-      console.log(`[MORALIS-PRICE] Parsed JSON response:`, JSON.stringify(data, null, 2));
-    } catch (jsonError) {
-      console.error(`[MORALIS-PRICE] FAILED - Invalid JSON response:`, jsonError);
-      console.error(`[MORALIS-PRICE] Response text was:`, responseText);
-      return null;
-    }
-    
     if (!data) {
       console.error(`[MORALIS-PRICE] FAILED - Empty response data for token: ${tokenAddress}`);
       return null;
     }
 
-    // Log the raw response structure for debugging
-    console.log(`[MORALIS-PRICE] Price data structure:`, {
-      'data.usdPrice': data.usdPrice,
-      'data.24hrPercentChange': data['24hrPercentChange'],
-      'data.usdPrice24hrPercentChange': data.usdPrice24hrPercentChange,
-      'data.pairTotalLiquidityUsd': data.pairTotalLiquidityUsd,
-      'Full response keys': Object.keys(data)
-    });
-
-    // Extract price data using correct field names from Moralis Price API
+    // Extract price data using SDK response format
     const currentPriceUsd = parseFloat(data.usdPrice) || 0;
-    
-    // Extract 24h price change - handle both possible field names
     const priceChange24h = data['24hrPercentChange'] || data.usdPrice24hrPercentChange;
     const parsedPriceChange = priceChange24h !== null && priceChange24h !== undefined 
       ? parseFloat(priceChange24h) 
-      : null; // Preserve null for missing data
-
-    // Extract market data
-    const marketCapUsd = 0; // Market cap not available in price endpoint
-    const tradingVolume24hUsd = parseFloat(data.pairTotalLiquidityUsd) || 0;
-
-    // Data validation - warn about potential issues
-    if (parsedPriceChange === null) {
-      console.warn(`[MORALIS-PRICE] No valid 24h price change data found for token: ${tokenAddress}`);
-    } else {
-      console.log(`[MORALIS-PRICE] Successfully extracted 24h price change: ${parsedPriceChange}%`);
-    }
+      : null;
 
     const result = {
       current_price_usd: currentPriceUsd,
-      price_change_24h: parsedPriceChange, // Keep null when data is missing - no fallback to 0
-      market_cap_usd: marketCapUsd,
-      trading_volume_24h_usd: tradingVolume24hUsd,
-      name: '', // Not available in price endpoint
-      symbol: '' // Not available in price endpoint
+      price_change_24h: parsedPriceChange,
+      market_cap_usd: 0, // Not available in price endpoint
+      trading_volume_24h_usd: parseFloat(data.pairTotalLiquidityUsd) || 0,
+      name: data.tokenName || '',
+      symbol: data.tokenSymbol || ''
     };
 
     console.log(`[MORALIS-PRICE] SUCCESS - Processed price data:`, {
       token: tokenAddress,
       price_usd: result.current_price_usd,
       price_change_24h: result.price_change_24h,
-      has_price_change: result.price_change_24h !== null
+      name: result.name,
+      symbol: result.symbol
     });
     
     return result;
@@ -113,9 +77,9 @@ export async function fetchMoralisPriceData(tokenAddress: string, chainId: strin
   }
 }
 
-// Moralis API client for comprehensive token metadata
+// Moralis API client using SDK for comprehensive token metadata
 export async function fetchMoralisMetadata(tokenAddress: string, chainId: string) {
-  console.log(`[MORALIS] === STARTING MORALIS API CALL ===`);
+  console.log(`[MORALIS] === STARTING MORALIS SDK METADATA CALL ===`);
   console.log(`[MORALIS] Token: ${tokenAddress}, Chain: ${chainId}`);
   
   try {
@@ -126,69 +90,31 @@ export async function fetchMoralisMetadata(tokenAddress: string, chainId: string
     }
 
     // Get API key from environment (with fallback for testing)
-    const apiKey = Deno.env.get('MORALIS_API_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjI2YWE1NWViLTEyNmItNGU4MC05OTY2LTgxNzAzOTUzZmU4YyIsIm9yZ0lkIjoiNDU1ODE1IiwidXNlcklkIjoiNDY4OTczIiwidHlwZUlkIjoiNzA2ZDc3NTYtZDlhNS00NmFkLTgwNGEtN2UyYzI5ZGUxMzc1IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NTA5MDUwNDAsImV4cCI6NDkwNjY2NTA0MH0.dhtovO-cPljwR_O5WJrTRoyfv6rGnPplERZpd7iT9Uw';
+    const apiKey = Deno.env.get('MORALIS_API_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjI2YWE1NWViLTEyNmItNGU4MC05OTY2LTgxNzAzOTUzZmU4YyIsIW9yZ0lkIjoiNDU1ODE1IiwidXNlcklkIjoiNDY4OTczIiwidHlwZUlkIjoiNzA2ZDc3NTYtZDlhNS00NmFkLTgwNGEtN2UyYzI5ZGUxMzc1IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NTA5MDUwNDAsImV4cCI6NDkwNjY2NTA0MH0.dhtovO-cPljwR_O5WJrTRoyfv6rGnPplERZpd7iT9Uw';
     if (!apiKey) {
       console.error(`[MORALIS] FAILED - MORALIS_API_KEY not configured in environment`);
       return null;
     }
 
     console.log(`[MORALIS] API Key: ${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)} (${apiKey.length} chars)`);
-    console.log(`[MORALIS] Chain: ${chainConfig.name} (${chainConfig.id})`);
+    console.log(`[MORALIS] Chain: ${chainConfig.name} (${chainId})`);
     console.log(`[MORALIS] Target token: ${tokenAddress.toLowerCase()}`);
     
-    const url = `https://deep-index.moralis.io/api/v2.2/erc20/${tokenAddress.toLowerCase()}?chain=${chainConfig.id}&include=percent_change`;
-    console.log(`[MORALIS] Request URL: ${url}`);
-    
-    // Test API key with a simple request first
-    console.log(`[MORALIS] Testing API authentication...`);
-    const testResponse = await fetch(`https://deep-index.moralis.io/api/v2.2/erc20/metadata?chain=${chainConfig.id}&addresses=${tokenAddress.toLowerCase()}`, {
-      headers: {
-        'X-API-Key': apiKey,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    console.log(`[MORALIS] Auth test response status: ${testResponse.status}`);
-    if (testResponse.status === 401 || testResponse.status === 403) {
-      console.error(`[MORALIS] FAILED - API authentication failed. Status: ${testResponse.status}`);
-      const errorText = await testResponse.text();
-      console.error(`[MORALIS] Auth error response:`, errorText);
-      return null;
+    // Initialize Moralis SDK
+    if (!Moralis.Core.isStarted) {
+      await Moralis.start({ apiKey });
+      console.log(`[MORALIS] Moralis SDK initialized`);
     }
 
-    // Now make the actual request with correct endpoint format
-    const metadataUrl = `https://deep-index.moralis.io/api/v2.2/erc20/metadata?chain=${chainConfig.id}&addresses=${tokenAddress.toLowerCase()}`;
-    console.log(`[MORALIS] Making actual request: ${metadataUrl}`);
-    
-    const response = await fetch(metadataUrl, {
-      headers: {
-        'X-API-Key': apiKey,
-        'Content-Type': 'application/json'
-      }
+    // Get token metadata using SDK
+    const response = await Moralis.EvmApi.token.getTokenMetadata({
+      chain: chainId,
+      addresses: [tokenAddress.toLowerCase()]
     });
 
-    console.log(`[MORALIS] Response status: ${response.status}`);
-    console.log(`[MORALIS] Response headers:`, Object.fromEntries(response.headers.entries()));
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[MORALIS] FAILED - API error: ${response.status} ${response.statusText}`);
-      console.error(`[MORALIS] Error response body:`, errorText);
-      throw new Error(`Moralis API error: ${response.status} ${response.statusText} - ${errorText}`);
-    }
-    
-    const responseText = await response.text();
-    console.log(`[MORALIS] Raw response text:`, responseText.substring(0, 500) + '...');
-    
-    let data;
-    try {
-      data = JSON.parse(responseText);
-      console.log(`[MORALIS] Parsed JSON response (first token):`, JSON.stringify(data[0], null, 2));
-    } catch (jsonError) {
-      console.error(`[MORALIS] FAILED - Invalid JSON response:`, jsonError);
-      console.error(`[MORALIS] Response text was:`, responseText);
-      return null;
-    }
+    console.log(`[MORALIS] SDK Response received`);
+    const data = response.raw;
+    console.log(`[MORALIS] Raw response data:`, JSON.stringify(data, null, 2));
     
     const tokenData = data[0];
     

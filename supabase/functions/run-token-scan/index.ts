@@ -7,8 +7,8 @@ import {
 import {
   fetchGoPlusSecurity,
   fetchWebacySecurity,
-  fetchGeckoTerminalData,
   fetchMoralisMetadata,
+  fetchMoralisPriceData,
   fetchGitHubRepoData,
   calculateSecurityScore,
   calculateLiquidityScore,
@@ -36,10 +36,10 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     console.log(`[SCAN] Calling external APIs for fresh data...`);
     const apiStartTime = Date.now();
     
-    const [webacySecurityData, goplusSecurityData, marketData, metadataData] = await Promise.allSettled([
+    const [webacySecurityData, goplusSecurityData, priceData, metadataData] = await Promise.allSettled([
       fetchWebacySecurity(tokenAddress, chainId),
       fetchGoPlusSecurity(tokenAddress, chainId),
-      fetchGeckoTerminalData(tokenAddress, chainId),
+      fetchMoralisPriceData(tokenAddress, chainId),
       fetchMoralisMetadata(tokenAddress, chainId)
     ]);
 
@@ -49,7 +49,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     // Log detailed API results for debugging
     const webacySecurity = webacySecurityData.status === 'fulfilled' ? webacySecurityData.value : null;
     const goplusSecurity = goplusSecurityData.status === 'fulfilled' ? goplusSecurityData.value : null;
-    const market = marketData.status === 'fulfilled' ? marketData.value : null;
+    const priceDataResult = priceData.status === 'fulfilled' ? priceData.value : null;
     const metadata = metadataData.status === 'fulfilled' ? metadataData.value : null;
 
     // Log API failures for debugging
@@ -59,11 +59,11 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     if (goplusSecurityData.status === 'rejected') {
       console.error(`[SCAN] GoPlus API failed:`, goplusSecurityData.reason);
     }
-    if (marketData.status === 'rejected') {
-      console.error(`[SCAN] GeckoTerminal API failed:`, marketData.reason);
+    if (priceData.status === 'rejected') {
+      console.error(`[SCAN] Moralis Price API failed:`, priceData.reason);
     }
     if (metadataData.status === 'rejected') {
-      console.error(`[SCAN] Moralis API failed:`, metadataData.reason);
+      console.error(`[SCAN] Moralis Metadata API failed:`, metadataData.reason);
     }
 
     // Merge security data with Webacy taking priority
@@ -73,7 +73,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       webacySecurity: webacySecurity ? 'available' : 'unavailable',
       goplusSecurity: goplusSecurity ? 'available' : 'unavailable',
       security: security ? 'available' : 'unavailable',
-      market: market ? 'available' : 'unavailable', 
+      priceData: priceDataResult ? 'available' : 'unavailable', 
       metadata: metadata ? 'available' : 'unavailable',
       totalApiTime: `${apiEndTime - apiStartTime}ms`
     });
@@ -89,9 +89,9 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       console.log(`[SCAN] No GitHub URL found in metadata`);
     }
 
-    // Prioritize Moralis metadata, with market data as fallback
-    const name = metadata?.name || market?.name || `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
-    const symbol = metadata?.symbol || market?.symbol || 'UNKNOWN';
+    // Prioritize Moralis metadata and price data
+    const name = metadata?.name || priceDataResult?.name || `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
+    const symbol = metadata?.symbol || priceDataResult?.symbol || 'UNKNOWN';
     const logo_url = metadata?.logo || metadata?.thumbnail || '';
     
     // Use rich description from Moralis if available, otherwise create a basic one
@@ -109,8 +109,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
 
     // Combine data from all sources, prioritizing Moralis for richer data
     const combinedData = {
-      name: metadata?.name || market?.name || `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`,
-      symbol: metadata?.symbol || market?.symbol || 'UNKNOWN',
+      name: metadata?.name || priceDataResult?.name || `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`,
+      symbol: metadata?.symbol || priceDataResult?.symbol || 'UNKNOWN',
       description: metadata?.description && metadata.description.trim() 
         ? metadata.description
         : metadata?.name 
@@ -120,11 +120,11 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       website_url: metadata?.links?.website || '',
       twitter_handle: metadata?.links?.twitter ? metadata.links.twitter.replace('https://twitter.com/', '').replace('@', '') : '',
       github_url: metadata?.links?.github || '',
-      current_price_usd: market?.current_price_usd || 0,
-      price_change_24h: market?.price_change_24h, // Keep null if no data
-      market_cap_usd: metadata?.market_cap ? parseFloat(metadata.market_cap) : (market?.market_cap_usd || 0),
+      current_price_usd: priceDataResult?.current_price_usd || 0,
+      price_change_24h: priceDataResult?.price_change_24h, // Keep null if no data
+      market_cap_usd: metadata?.market_cap ? parseFloat(metadata.market_cap) : 0,
       total_supply: metadata?.total_supply || '0',
-      trading_volume_24h_usd: market?.trading_volume_24h_usd || 0
+      trading_volume_24h_usd: priceDataResult?.trading_volume_24h_usd || 0
     };
 
     // Add detailed logging for data extraction
@@ -137,11 +137,12 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       market_cap: metadata?.market_cap,
       links: metadata?.links ? Object.keys(metadata.links) : []
     });
-    console.log(`[SCAN] Raw Market/Price Data:`, {
-      current_price_usd: market?.current_price_usd,
-      price_change_24h: market?.price_change_24h,
-      market_cap_usd: market?.market_cap_usd,
-      trading_volume_24h_usd: market?.trading_volume_24h_usd
+    console.log(`[SCAN] Raw Price Data from Moralis:`, {
+      current_price_usd: priceDataResult?.current_price_usd,
+      price_change_24h: priceDataResult?.price_change_24h,
+      trading_volume_24h_usd: priceDataResult?.trading_volume_24h_usd,
+      name: priceDataResult?.name,
+      symbol: priceDataResult?.symbol
     });
     console.log(`[SCAN] Final Combined Data:`, {
       name: combinedData.name,
@@ -170,7 +171,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       securityData: security,
       webacyData: webacySecurity,
       goplusData: goplusSecurity,
-      marketData: market,
+      priceData: priceDataResult,
       metadataData: metadata,
       githubData: githubData
     };
@@ -183,8 +184,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
 // Generate category data with real API integration
 function generateCategoryData(apiData: any) {
   const securityScore = calculateSecurityScore(apiData.securityData, apiData.webacyData);
-  const liquidityScore = calculateLiquidityScore(apiData.marketData);
-  const tokenomicsScore = calculateTokenomicsScore(apiData.metadataData, apiData.marketData);
+  const liquidityScore = calculateLiquidityScore(apiData.priceData);
+  const tokenomicsScore = calculateTokenomicsScore(apiData.metadataData, apiData.priceData);
   const developmentScore = calculateDevelopmentScore(apiData.githubData);
   
   // Community score - this would need additional APIs (Twitter, Discord, etc.)
@@ -219,9 +220,9 @@ function generateCategoryData(apiData: any) {
       score: tokenomicsScore
     },
     liquidity: {
-      trading_volume_24h_usd: apiData.marketData?.trading_volume_24h_usd || 0,
+      trading_volume_24h_usd: apiData.priceData?.trading_volume_24h_usd || 0,
       liquidity_locked_days: 0,
-      dex_depth_status: apiData.marketData?.trading_volume_24h_usd > 10000 ? 'good' : 'limited',
+      dex_depth_status: apiData.priceData?.trading_volume_24h_usd > 10000 ? 'good' : 'limited',
       holder_distribution: 'unknown',
       cex_listings: 0,
       score: liquidityScore
@@ -605,8 +606,8 @@ Deno.serve(async (req) => {
         overall_score: overallScore,
         data_sources: {
           security: apiData.webacyData ? 'Webacy API (primary)' : (apiData.goplusData ? 'GoPlus API (fallback)' : 'unavailable'),
-          market: apiData.marketData ? 'GeckoTerminal API' : 'unavailable',
-          metadata: apiData.metadataData ? 'Moralis API' : 'unavailable',
+          price: apiData.priceData ? 'Moralis Price API' : 'unavailable',
+          metadata: apiData.metadataData ? 'Moralis Metadata API' : 'unavailable',
           development: apiData.githubData ? 'GitHub API' : 'unavailable'
         },
         category_scores: {
