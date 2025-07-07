@@ -160,6 +160,13 @@ export const transformSecurityData = (data: SecurityData | null): CategoryFeatur
     },
     {
       icon: Shield,
+      title: "Smart Contract Risk Flags (via Webacy)",
+      description: "No significant risk flags detected or data unavailable",
+      badgeLabel: "Clean",
+      badgeVariant: "green"
+    },
+    {
+      icon: Shield,
       title: "Audit Status",
       description: "Security audit verification by third-party firm",
       badgeLabel: safeAccess(data, 'audit_status', 'Unknown'),

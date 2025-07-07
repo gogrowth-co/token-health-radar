@@ -169,26 +169,10 @@ export default function CategoryTabs({
       {/* Security Tab Content */}
       {renderTabContent(securityData, (
         <div>
-          {/* First 4 features: Ownership, Can Mint, Honeypot, Freeze Authority */}
           <CategoryFeatureGrid 
-            features={transformSecurityData(securityData).slice(0, 4)}
+            features={transformSecurityData(securityData)}
             description="Key security indicators for this token's smart contract"
           />
-          
-          {/* WebacyRiskFlags after Freeze Authority */}
-          <WebacyRiskFlags 
-            webacyFlags={securityData?.webacy_flags || []}
-            webacyRiskScore={securityData?.webacy_risk_score}
-            webacySeverity={securityData?.webacy_severity}
-          />
-          
-          {/* Remaining features: Audit Status and any additional ones */}
-          {transformSecurityData(securityData).length > 4 && (
-            <CategoryFeatureGrid 
-              features={transformSecurityData(securityData).slice(4)}
-              description=""
-            />
-          )}
         </div>
       ), ScanCategory.Security)}
       
