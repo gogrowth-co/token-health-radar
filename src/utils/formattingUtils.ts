@@ -4,10 +4,18 @@
 export const formatNumber = (value: number | null | undefined): string => {
   if (value === null || value === undefined || isNaN(value)) return "N/A";
   
-  // For very large numbers (billions)
-  if (value >= 1000000000) {
+  // For extremely large numbers, use scientific notation
+  if (value >= 1000000000000000) { // 1 quadrillion
+    return value.toExponential(2);
+  }
+  // For trillions
+  else if (value >= 1000000000000) {
+    const trillions = value / 1000000000000;
+    return trillions >= 100 ? `${Math.round(trillions)}T` : `${trillions.toFixed(1)}T`;
+  }
+  // For billions
+  else if (value >= 1000000000) {
     const billions = value / 1000000000;
-    // Round to whole number if it's a very large number, otherwise 1 decimal place
     return billions >= 100 ? `${Math.round(billions)}B` : `${billions.toFixed(1)}B`;
   } 
   // For millions
