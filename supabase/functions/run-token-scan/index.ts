@@ -66,17 +66,29 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       console.error(`[SCAN] Moralis Metadata API failed:`, metadataData.reason);
     }
 
-    // Merge security data with Webacy taking priority
-    const security = webacySecurity || goplusSecurity;
+    // Merge security data from both sources instead of fallback logic
+    const security = {};
+    if (webacySecurity) {
+      Object.assign(security, webacySecurity);
+    }
+    if (goplusSecurity) {
+      Object.assign(security, goplusSecurity);
+    }
 
     console.log(`[SCAN] API Data Summary:`, {
       webacySecurity: webacySecurity ? 'available' : 'unavailable',
       goplusSecurity: goplusSecurity ? 'available' : 'unavailable',
-      security: security ? 'available' : 'unavailable',
+      mergedSecurity: Object.keys(security).length > 0 ? 'available' : 'unavailable',
       priceData: priceDataResult ? 'available' : 'unavailable', 
       metadata: metadata ? 'available' : 'unavailable',
       totalApiTime: `${apiEndTime - apiStartTime}ms`
     });
+
+    // Enhanced logging for debugging
+    console.log(`[SCAN] === SECURITY DATA MERGE ANALYSIS ===`);
+    console.log(`[SCAN] Webacy data:`, webacySecurity ? JSON.stringify(webacySecurity, null, 2) : 'null');
+    console.log(`[SCAN] GoPlus data:`, goplusSecurity ? JSON.stringify(goplusSecurity, null, 2) : 'null');
+    console.log(`[SCAN] Merged security data:`, JSON.stringify(security, null, 2));
 
     // Fetch GitHub data if GitHub URL is available in metadata
     let githubData = null;
@@ -183,7 +195,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
 
 // Generate category data with real API integration
 function generateCategoryData(apiData: any) {
-  const securityScore = calculateSecurityScore(apiData.securityData, apiData.webacyData);
+  const securityScore = calculateSecurityScore(apiData.securityData, apiData.webacyData, apiData.goplusData);
   const liquidityScore = calculateLiquidityScore(apiData.priceData);
   const tokenomicsScore = calculateTokenomicsScore(apiData.metadataData, apiData.priceData);
   const developmentScore = calculateDevelopmentScore(apiData.githubData);
