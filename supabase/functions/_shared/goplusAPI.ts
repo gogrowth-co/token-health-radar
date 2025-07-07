@@ -1,5 +1,30 @@
 import { getChainConfigByMoralisId } from './chainConfig.ts';
 
+// API Health Tracking
+const goplusApiHealthStats = {
+  totalRequests: 0,
+  successfulRequests: 0,
+  failedRequests: 0,
+  authFailures: 0,
+  lastSuccessTime: 0,
+  lastFailureTime: 0,
+  errors: [] as string[]
+};
+
+// Retry configuration
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  baseDelay: 1000, // 1 second
+  maxDelay: 10000, // 10 seconds
+  backoffMultiplier: 2
+};
+
+// Helper function for exponential backoff delay
+function calculateDelay(attempt: number): number {
+  const delay = RETRY_CONFIG.baseDelay * Math.pow(RETRY_CONFIG.backoffMultiplier, attempt);
+  return Math.min(delay, RETRY_CONFIG.maxDelay);
+}
+
 // Access token cache for GoPlus API
 let goplusAccessToken: string | null = null;
 let tokenExpiration: number = 0;
@@ -59,12 +84,21 @@ async function getGoPlusAccessToken(): Promise<string | null> {
   }
 }
 
-// GoPlus Security API client with enhanced debugging and authentication
+// GoPlus Security API client with enhanced debugging and authentication, retry logic and health monitoring
 export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string) {
   console.log(`[GOPLUS] === STARTING GOPLUS API CALL ===`);
   console.log(`[GOPLUS] Token: ${tokenAddress}, Chain: ${chainId}`);
+  console.log(`[GOPLUS] API Health Stats:`, goplusApiHealthStats);
   
-  try {
+  goplusApiHealthStats.totalRequests++;
+  
+  for (let attempt = 0; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
+    try {
+      if (attempt > 0) {
+        const delay = calculateDelay(attempt - 1);
+        console.log(`[GOPLUS] Retry attempt ${attempt}/${RETRY_CONFIG.maxRetries} after ${delay}ms delay`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     // Get access token first
     const accessToken = await getGoPlusAccessToken();
     if (!accessToken) {
@@ -192,11 +226,43 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
       mapped_data: securityData
     });
     
-    console.log(`[GOPLUS] SUCCESS - Extracted security data:`, securityData);
-    return securityData;
-    
-  } catch (error) {
-    console.error(`[GOPLUS] Error fetching security data:`, error);
-    return null;
+      console.log(`[GOPLUS] SUCCESS - Extracted security data:`, securityData);
+      
+      // Update success stats
+      goplusApiHealthStats.successfulRequests++;
+      goplusApiHealthStats.lastSuccessTime = Date.now();
+      console.log(`[GOPLUS] API Health - Success rate: ${((goplusApiHealthStats.successfulRequests / goplusApiHealthStats.totalRequests) * 100).toFixed(1)}%`);
+      
+      return securityData;
+      
+    } catch (error) {
+      console.error(`[GOPLUS] Attempt ${attempt + 1} failed:`, error);
+      
+      // Update failure stats
+      goplusApiHealthStats.failedRequests++;
+      goplusApiHealthStats.lastFailureTime = Date.now();
+      goplusApiHealthStats.errors.push(`${new Date().toISOString()}: ${error.message}`);
+      
+      // Track auth failures specifically
+      if (error.message?.includes('authorization') || error.message?.includes('401')) {
+        goplusApiHealthStats.authFailures++;
+      }
+      
+      // Keep only last 10 errors
+      if (goplusApiHealthStats.errors.length > 10) {
+        goplusApiHealthStats.errors = goplusApiHealthStats.errors.slice(-10);
+      }
+      
+      // If this was the last attempt, log comprehensive failure details
+      if (attempt === RETRY_CONFIG.maxRetries) {
+        console.error(`[GOPLUS] FINAL FAILURE after ${RETRY_CONFIG.maxRetries + 1} attempts`);
+        console.error(`[GOPLUS] API Health Stats:`, goplusApiHealthStats);
+        console.error(`[GOPLUS] Final error:`, error);
+        return null;
+      }
+    }
   }
+  
+  // This should never be reached due to the return statements above
+  return null;
 }

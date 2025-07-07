@@ -1,51 +1,128 @@
-// Simplified security score calculation using additive scoring
+// Enhanced security score calculation with fallback scoring for missing data
 export function calculateSecurityScore(securityData: any, webacyData: any = null, goplusData: any = null): number {
-  if (!securityData && !webacyData && !goplusData) return 0;
+  console.log(`[SECURITY-SCORE] === CALCULATING ENHANCED SECURITY SCORE ===`);
+  console.log(`[SECURITY-SCORE] Input data availability:`);
+  console.log(`[SECURITY-SCORE] - securityData:`, securityData ? 'available' : 'null', securityData ? Object.keys(securityData) : []);
+  console.log(`[SECURITY-SCORE] - webacyData:`, webacyData ? 'available' : 'null', webacyData ? Object.keys(webacyData) : []);
+  console.log(`[SECURITY-SCORE] - goplusData:`, goplusData ? 'available' : 'null', goplusData ? Object.keys(goplusData) : []);
+
+  // If no data at all, return conservative score
+  if (!securityData && !webacyData && !goplusData) {
+    console.log(`[SECURITY-SCORE] No security data available - returning conservative score of 30`);
+    return 30;
+  }
   
-  let score = 0; // Start from 0
-  const dataToUse = goplusData || securityData;
+  let score = 20; // Base score for having some data
+  let dataPoints = 0; // Track how many data points we have
+  let totalPossiblePoints = 0;
   
-  console.log(`[SECURITY-SCORE] === CALCULATING SIMPLIFIED SECURITY SCORE ===`);
-  console.log(`[SECURITY-SCORE] Input data - securityData:`, !!securityData, 'webacyData:', !!webacyData, 'goplusData:', !!goplusData);
+  // Use combined data from all sources
+  const combinedData = { ...securityData, ...webacyData, ...goplusData };
+  console.log(`[SECURITY-SCORE] Combined data:`, combinedData);
   
-  // Core security indicators (additive scoring)
-  if (dataToUse?.ownership_renounced === true) {
+  // Core security indicators with fallback scoring
+  totalPossiblePoints += 25;
+  if (combinedData?.ownership_renounced === true) {
     score += 25;
-    console.log(`[SECURITY-SCORE] +25 for ownership renounced`);
+    dataPoints++;
+    console.log(`[SECURITY-SCORE] +25 for ownership renounced (confirmed)`);
+  } else if (combinedData?.ownership_renounced === false) {
+    score += 0;
+    dataPoints++;
+    console.log(`[SECURITY-SCORE] +0 for ownership NOT renounced (confirmed)`);
+  } else {
+    score += 8; // Conservative fallback
+    console.log(`[SECURITY-SCORE] +8 for ownership status unknown (fallback)`);
   }
   
-  if (dataToUse?.can_mint === false) {
+  totalPossiblePoints += 20;
+  if (combinedData?.can_mint === false) {
     score += 20;
-    console.log(`[SECURITY-SCORE] +20 for cannot mint`);
+    dataPoints++;
+    console.log(`[SECURITY-SCORE] +20 for cannot mint (confirmed)`);
+  } else if (combinedData?.can_mint === true) {
+    score += 0;
+    dataPoints++;
+    console.log(`[SECURITY-SCORE] +0 for CAN mint (confirmed risk)`);
+  } else {
+    score += 6; // Conservative fallback
+    console.log(`[SECURITY-SCORE] +6 for mint capability unknown (fallback)`);
   }
   
-  if (dataToUse?.honeypot_detected === false) {
+  totalPossiblePoints += 20;
+  if (combinedData?.honeypot_detected === false) {
     score += 20;
-    console.log(`[SECURITY-SCORE] +20 for no honeypot detected`);
+    dataPoints++;
+    console.log(`[SECURITY-SCORE] +20 for no honeypot detected (confirmed)`);
+  } else if (combinedData?.honeypot_detected === true) {
+    score += 0;
+    dataPoints++;
+    console.log(`[SECURITY-SCORE] +0 for honeypot detected (confirmed risk)`);
+  } else {
+    score += 6; // Conservative fallback
+    console.log(`[SECURITY-SCORE] +6 for honeypot status unknown (fallback)`);
   }
   
-  if (dataToUse?.freeze_authority === false) {
+  totalPossiblePoints += 15;
+  if (combinedData?.freeze_authority === false) {
     score += 15;
-    console.log(`[SECURITY-SCORE] +15 for no freeze authority`);
+    dataPoints++;
+    console.log(`[SECURITY-SCORE] +15 for no freeze authority (confirmed)`);
+  } else if (combinedData?.freeze_authority === true) {
+    score += 0;
+    dataPoints++;
+    console.log(`[SECURITY-SCORE] +0 for freeze authority present (confirmed risk)`);
+  } else {
+    score += 5; // Conservative fallback
+    console.log(`[SECURITY-SCORE] +5 for freeze authority unknown (fallback)`);
   }
   
-  if (dataToUse?.audit_status === 'verified') {
+  totalPossiblePoints += 10;
+  if (combinedData?.audit_status === 'verified') {
     score += 10;
+    dataPoints++;
     console.log(`[SECURITY-SCORE] +10 for verified audit`);
+  } else if (combinedData?.audit_status === 'unverified') {
+    score += 0;
+    dataPoints++;
+    console.log(`[SECURITY-SCORE] +0 for unverified audit`);
+  } else {
+    score += 3; // Conservative fallback
+    console.log(`[SECURITY-SCORE] +3 for audit status unknown (fallback)`);
   }
   
   // Webacy severity bonus
-  if (webacyData?.webacy_severity === 'Low') {
+  totalPossiblePoints += 10;
+  if (combinedData?.webacy_severity === 'Low' || combinedData?.severity === 'low') {
     score += 10;
+    dataPoints++;
     console.log(`[SECURITY-SCORE] +10 for Webacy Low severity`);
-  } else if (webacyData?.webacy_severity === 'Medium') {
+  } else if (combinedData?.webacy_severity === 'Medium' || combinedData?.severity === 'medium') {
     score += 5;
+    dataPoints++;
     console.log(`[SECURITY-SCORE] +5 for Webacy Medium severity`);
+  } else if (combinedData?.webacy_severity === 'High' || combinedData?.severity === 'high') {
+    score += 0;
+    dataPoints++;
+    console.log(`[SECURITY-SCORE] +0 for Webacy High severity`);
+  } else {
+    score += 3; // Conservative fallback
+    console.log(`[SECURITY-SCORE] +3 for Webacy severity unknown (fallback)`);
   }
   
-  // Clamp final score between 0-100
+  // Calculate data confidence and adjust score if needed
+  const dataConfidence = dataPoints / 6; // We check 6 main indicators
+  console.log(`[SECURITY-SCORE] Data confidence: ${(dataConfidence * 100).toFixed(1)}% (${dataPoints}/6 indicators available)`);
+  
+  // Final score calculation
   const finalScore = Math.max(0, Math.min(100, score));
-  console.log(`[SECURITY-SCORE] Final simplified security score: ${finalScore} (raw: ${score})`);
+  
+  console.log(`[SECURITY-SCORE] === SCORING SUMMARY ===`);
+  console.log(`[SECURITY-SCORE] Base score: 20`);
+  console.log(`[SECURITY-SCORE] Total added: ${score - 20}`);
+  console.log(`[SECURITY-SCORE] Data confidence: ${(dataConfidence * 100).toFixed(1)}%`);
+  console.log(`[SECURITY-SCORE] Final score: ${finalScore}/100`);
+  
   return finalScore;
 }
 
