@@ -41,6 +41,10 @@ export interface SecurityData {
   is_blacklisted?: boolean | null;
   access_control?: boolean | null;
   contract_verified?: boolean | null;
+  // GoPlus tax information
+  buy_tax?: number | null;
+  sell_tax?: number | null;
+  transfer_tax?: number | null;
 }
 
 export interface TokenomicsData {
@@ -209,6 +213,27 @@ export const transformSecurityData = (data: SecurityData | null): CategoryFeatur
       description: "Source code is public and verified",
       badgeLabel: data.contract_verified ? "Yes" : "No",
       badgeVariant: data.contract_verified ? "green" : "red"
+    });
+  }
+
+  // Add transaction tax information from GoPlus if available
+  if (data.buy_tax !== null && data.buy_tax !== undefined && data.buy_tax > 0) {
+    features.push({
+      icon: DollarSign,
+      title: "Buy Tax",
+      description: "Transaction fee when purchasing tokens",
+      badgeLabel: `${(data.buy_tax * 100).toFixed(1)}%`,
+      badgeVariant: data.buy_tax > 0.1 ? "red" : data.buy_tax > 0.05 ? "yellow" : "blue"
+    });
+  }
+
+  if (data.sell_tax !== null && data.sell_tax !== undefined && data.sell_tax > 0) {
+    features.push({
+      icon: DollarSign,
+      title: "Sell Tax", 
+      description: "Transaction fee when selling tokens",
+      badgeLabel: `${(data.sell_tax * 100).toFixed(1)}%`,
+      badgeVariant: data.sell_tax > 0.1 ? "red" : data.sell_tax > 0.05 ? "yellow" : "blue"
     });
   }
 

@@ -32,25 +32,36 @@ export function calculateSecurityScore(securityData: any, webacyData: any = null
     console.log(`[SECURITY-SCORE] Webacy component: ${webacyScore} (base: ${100 - (webacyData.riskScore || 100)}, critical: ${criticalCount}, warnings: ${warningCount})`);
   }
   
-  // Calculate GoPlus score component (0-100)
+  // Calculate GoPlus score component (0-100) with enhanced scoring
   if (goplusData || securityData) {
     const dataToUse = goplusData || securityData;
-    goplusScore = 50; // Base GoPlus score
+    goplusScore = 40; // Base GoPlus score (lowered to account for more factors)
     
-    // Positive factors
-    if (dataToUse.ownership_renounced === true) goplusScore += 20;
-    if (dataToUse.audit_status === 'verified') goplusScore += 15;
-    if (dataToUse.can_mint === false) goplusScore += 10;
-    if (dataToUse.contract_verified === true) goplusScore += 5;
+    // Major positive factors (higher security)
+    if (dataToUse.ownership_renounced === true) goplusScore += 25; // Very important
+    if (dataToUse.contract_verified === true) goplusScore += 15; // Open source verification
+    if (dataToUse.audit_status === 'verified') goplusScore += 20; // Professional audit
     
-    // Negative factors
-    if (dataToUse.honeypot_detected === true) goplusScore -= 30;
-    if (dataToUse.freeze_authority === true) goplusScore -= 15;
-    if (dataToUse.is_proxy === true) goplusScore -= 10;
-    if (dataToUse.is_blacklisted === true) goplusScore -= 25;
+    // Minor positive factors
+    if (dataToUse.can_mint === false) goplusScore += 10; // No minting capability
+    if (dataToUse.multisig_status === 'enabled') goplusScore += 5; // Multi-signature security
+    
+    // Major negative factors (security risks)
+    if (dataToUse.honeypot_detected === true) goplusScore -= 40; // Critical risk
+    if (dataToUse.is_blacklisted === true) goplusScore -= 30; // High risk
+    if (dataToUse.freeze_authority === true) goplusScore -= 20; // Significant risk
+    
+    // Minor negative factors
+    if (dataToUse.is_proxy === true) goplusScore -= 8; // Upgradeable contracts have risks
+    if (dataToUse.access_control === true) goplusScore -= 5; // Special privileges
+    
+    // Tax-related penalties (from GoPlus data)
+    if (dataToUse.buy_tax && dataToUse.buy_tax > 0) goplusScore -= Math.min(dataToUse.buy_tax * 10, 15);
+    if (dataToUse.sell_tax && dataToUse.sell_tax > 0) goplusScore -= Math.min(dataToUse.sell_tax * 10, 15);
+    if (dataToUse.transfer_tax && dataToUse.transfer_tax > 0) goplusScore -= Math.min(dataToUse.transfer_tax * 10, 10);
     
     goplusScore = Math.max(0, Math.min(100, goplusScore));
-    console.log(`[SECURITY-SCORE] GoPlus component: ${goplusScore} (ownership: ${dataToUse.ownership_renounced}, honeypot: ${dataToUse.honeypot_detected}, verified: ${dataToUse.contract_verified})`);
+    console.log(`[SECURITY-SCORE] GoPlus component: ${goplusScore} (ownership: ${dataToUse.ownership_renounced}, honeypot: ${dataToUse.honeypot_detected}, verified: ${dataToUse.contract_verified}, proxy: ${dataToUse.is_proxy})`);
   }
   
   // Combine scores with weighted average

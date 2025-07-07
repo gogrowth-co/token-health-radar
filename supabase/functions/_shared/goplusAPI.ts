@@ -156,18 +156,28 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
     
     console.log(`[GOPLUS] Raw token data:`, JSON.stringify(tokenData, null, 2));
     
-    // Enhanced data mapping based on GoPlus API documentation
+    // Enhanced data mapping based on GoPlus API documentation with proper null handling
     const securityData = {
-      ownership_renounced: tokenData.owner_address === '0x0000000000000000000000000000000000000000',
-      can_mint: tokenData.is_mintable === '1',
-      honeypot_detected: tokenData.is_honeypot === '1',
-      freeze_authority: tokenData.can_take_back_ownership === '1',
-      audit_status: tokenData.trust_list === '1' ? 'verified' : 'unverified',
-      // Additional Webacy-compatible fields
-      is_proxy: tokenData.is_proxy === '1',
-      is_blacklisted: tokenData.is_blacklisted === '1',
-      access_control: tokenData.can_take_back_ownership === '1',
-      contract_verified: tokenData.is_open_source === '1'
+      // Core security indicators
+      ownership_renounced: tokenData.owner_address ? tokenData.owner_address === '0x0000000000000000000000000000000000000000' : null,
+      can_mint: tokenData.is_mintable !== undefined ? tokenData.is_mintable === '1' : null,
+      honeypot_detected: tokenData.is_honeypot !== undefined ? tokenData.is_honeypot === '1' : null,
+      freeze_authority: tokenData.can_take_back_ownership !== undefined ? tokenData.can_take_back_ownership === '1' : null,
+      audit_status: tokenData.trust_list !== undefined ? (tokenData.trust_list === '1' ? 'verified' : 'unverified') : 'unknown',
+      
+      // Additional Webacy-compatible fields with proper mapping
+      is_proxy: tokenData.is_proxy !== undefined ? tokenData.is_proxy === '1' : null,
+      is_blacklisted: tokenData.is_blacklisted !== undefined ? tokenData.is_blacklisted === '1' : null,
+      access_control: tokenData.can_take_back_ownership !== undefined ? tokenData.can_take_back_ownership === '1' : null,
+      contract_verified: tokenData.is_open_source !== undefined ? tokenData.is_open_source === '1' : null,
+      
+      // Tax information (used for scoring)
+      buy_tax: tokenData.buy_tax !== undefined ? parseFloat(tokenData.buy_tax) : null,
+      sell_tax: tokenData.sell_tax !== undefined ? parseFloat(tokenData.sell_tax) : null,
+      transfer_tax: tokenData.transfer_tax !== undefined ? parseFloat(tokenData.transfer_tax) : null,
+      
+      // Multisig status (derived from governance indicators)
+      multisig_status: tokenData.owner_address && tokenData.owner_address !== '0x0000000000000000000000000000000000000000' ? 'unknown' : 'renounced'
     };
 
     console.log(`[GOPLUS] Data field mapping:`, {
