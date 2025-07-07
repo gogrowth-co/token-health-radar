@@ -1,86 +1,51 @@
-// Enhanced security score calculation combining both Webacy and GoPlus data
+// Simplified security score calculation using additive scoring
 export function calculateSecurityScore(securityData: any, webacyData: any = null, goplusData: any = null): number {
   if (!securityData && !webacyData && !goplusData) return 0;
   
-  let score = 50; // Base score
-  let webacyScore = 0;
-  let goplusScore = 0;
+  let score = 0; // Start from 0
+  const dataToUse = goplusData || securityData;
   
-  console.log(`[SECURITY-SCORE] === CALCULATING COMBINED SECURITY SCORE ===`);
+  console.log(`[SECURITY-SCORE] === CALCULATING SIMPLIFIED SECURITY SCORE ===`);
   console.log(`[SECURITY-SCORE] Input data - securityData:`, !!securityData, 'webacyData:', !!webacyData, 'goplusData:', !!goplusData);
   
-  // Calculate Webacy score component (0-100)
-  if (webacyData && webacyData.riskScore !== undefined) {
-    // Start with inverse of Webacy risk score (0-100, where 0 is safest)
-    webacyScore = Math.max(0, 100 - (webacyData.riskScore || 100));
-    
-    // Apply severity-based adjustments
-    const criticalCount = webacyData.criticalFlags?.length || 0;
-    const warningCount = webacyData.warningFlags?.length || 0;
-    
-    // Severe penalties for critical flags
-    webacyScore -= criticalCount * 15;
-    // Moderate penalties for warning flags  
-    webacyScore -= warningCount * 5;
-    
-    // Bonus for clean contracts
-    if (criticalCount === 0 && warningCount === 0) {
-      webacyScore += 10;
-    }
-    
-    webacyScore = Math.max(0, Math.min(100, webacyScore));
-    console.log(`[SECURITY-SCORE] Webacy component: ${webacyScore} (base: ${100 - (webacyData.riskScore || 100)}, critical: ${criticalCount}, warnings: ${warningCount})`);
+  // Core security indicators (additive scoring)
+  if (dataToUse?.ownership_renounced === true) {
+    score += 25;
+    console.log(`[SECURITY-SCORE] +25 for ownership renounced`);
   }
   
-  // Calculate GoPlus score component (0-100) with enhanced scoring
-  if (goplusData || securityData) {
-    const dataToUse = goplusData || securityData;
-    goplusScore = 40; // Base GoPlus score (lowered to account for more factors)
-    
-    // Major positive factors (higher security)
-    if (dataToUse.ownership_renounced === true) goplusScore += 25; // Very important
-    if (dataToUse.contract_verified === true) goplusScore += 15; // Open source verification
-    if (dataToUse.audit_status === 'verified') goplusScore += 20; // Professional audit
-    
-    // Minor positive factors
-    if (dataToUse.can_mint === false) goplusScore += 10; // No minting capability
-    if (dataToUse.multisig_status === 'enabled') goplusScore += 5; // Multi-signature security
-    
-    // Major negative factors (security risks)
-    if (dataToUse.honeypot_detected === true) goplusScore -= 40; // Critical risk
-    if (dataToUse.is_blacklisted === true) goplusScore -= 30; // High risk
-    if (dataToUse.freeze_authority === true) goplusScore -= 20; // Significant risk
-    
-    // Minor negative factors
-    if (dataToUse.is_proxy === true) goplusScore -= 8; // Upgradeable contracts have risks
-    if (dataToUse.access_control === true) goplusScore -= 5; // Special privileges
-    
-    // Tax-related penalties (from GoPlus data)
-    if (dataToUse.buy_tax && dataToUse.buy_tax > 0) goplusScore -= Math.min(dataToUse.buy_tax * 10, 15);
-    if (dataToUse.sell_tax && dataToUse.sell_tax > 0) goplusScore -= Math.min(dataToUse.sell_tax * 10, 15);
-    if (dataToUse.transfer_tax && dataToUse.transfer_tax > 0) goplusScore -= Math.min(dataToUse.transfer_tax * 10, 10);
-    
-    goplusScore = Math.max(0, Math.min(100, goplusScore));
-    console.log(`[SECURITY-SCORE] GoPlus component: ${goplusScore} (ownership: ${dataToUse.ownership_renounced}, honeypot: ${dataToUse.honeypot_detected}, verified: ${dataToUse.contract_verified}, proxy: ${dataToUse.is_proxy})`);
+  if (dataToUse?.can_mint === false) {
+    score += 20;
+    console.log(`[SECURITY-SCORE] +20 for cannot mint`);
   }
   
-  // Combine scores with weighted average
-  if (webacyScore > 0 && goplusScore > 0) {
-    // Both sources available - weight Webacy 60%, GoPlus 40%
-    score = Math.round(webacyScore * 0.6 + goplusScore * 0.4);
-    console.log(`[SECURITY-SCORE] Combined score: ${score} (Webacy 60%: ${webacyScore * 0.6}, GoPlus 40%: ${goplusScore * 0.4})`);
-  } else if (webacyScore > 0) {
-    // Only Webacy available
-    score = webacyScore;
-    console.log(`[SECURITY-SCORE] Webacy-only score: ${score}`);
-  } else if (goplusScore > 0) {
-    // Only GoPlus available
-    score = goplusScore;
-    console.log(`[SECURITY-SCORE] GoPlus-only score: ${score}`);
+  if (dataToUse?.honeypot_detected === false) {
+    score += 20;
+    console.log(`[SECURITY-SCORE] +20 for no honeypot detected`);
   }
   
+  if (dataToUse?.freeze_authority === false) {
+    score += 15;
+    console.log(`[SECURITY-SCORE] +15 for no freeze authority`);
+  }
+  
+  if (dataToUse?.audit_status === 'verified') {
+    score += 10;
+    console.log(`[SECURITY-SCORE] +10 for verified audit`);
+  }
+  
+  // Webacy severity bonus
+  if (webacyData?.webacy_severity === 'Low') {
+    score += 10;
+    console.log(`[SECURITY-SCORE] +10 for Webacy Low severity`);
+  } else if (webacyData?.webacy_severity === 'Medium') {
+    score += 5;
+    console.log(`[SECURITY-SCORE] +5 for Webacy Medium severity`);
+  }
+  
+  // Clamp final score between 0-100
   const finalScore = Math.max(0, Math.min(100, score));
-  console.log(`[SECURITY-SCORE] Final security score: ${finalScore}`);
+  console.log(`[SECURITY-SCORE] Final simplified security score: ${finalScore} (raw: ${score})`);
   return finalScore;
 }
 

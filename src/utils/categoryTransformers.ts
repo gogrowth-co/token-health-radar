@@ -125,8 +125,7 @@ export const transformSecurityData = (data: SecurityData | null): CategoryFeatur
       { icon: Lock, title: "Can Mint", description: "Ability to create new tokens", badgeLabel: "Unknown", badgeVariant: "gray" },
       { icon: AlertCircle, title: "Honeypot Detection", description: "Checks if token can be sold after purchase", badgeLabel: "Unknown", badgeVariant: "gray" },
       { icon: Activity, title: "Freeze Authority", description: "Ability to freeze token transfers", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Shield, title: "Audit Status", description: "Security audit verification by third-party firm", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Lock, title: "Multisig Status", description: "Multiple signatures required for critical actions", badgeLabel: "Unknown", badgeVariant: "gray" }
+      { icon: Shield, title: "Audit Status", description: "Security audit verification by third-party firm", badgeLabel: "Unknown", badgeVariant: "gray" }
     ];
   }
 
@@ -165,13 +164,6 @@ export const transformSecurityData = (data: SecurityData | null): CategoryFeatur
       description: "Security audit verification by third-party firm",
       badgeLabel: safeAccess(data, 'audit_status', 'Unknown'),
       badgeVariant: data.audit_status === 'verified' ? 'green' : data.audit_status === 'unverified' ? 'red' : 'gray'
-    },
-    {
-      icon: Lock,
-      title: "Multisig Status",
-      description: "Multiple signatures required for critical actions",
-      badgeLabel: safeAccess(data, 'multisig_status', 'Unknown'),
-      badgeVariant: data.multisig_status === 'enabled' ? 'green' : data.multisig_status === 'disabled' ? 'red' : 'gray'
     }
   ];
 
