@@ -9,6 +9,9 @@ import {
   fetchWebacySecurity,
   fetchMoralisMetadata,
   fetchMoralisPriceData,
+  fetchMoralisTokenStats,
+  fetchMoralisTokenPairs,
+  fetchMoralisTokenOwners,
   fetchGitHubRepoData,
   calculateSecurityScore,
   calculateLiquidityScore,
@@ -50,11 +53,20 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       console.log(`[SCAN] GOPLUS_API_KEY length: ${key.length}, starts with: ${key.substring(0, 8)}...`);
     }
     
+    // Phase 1: Core data APIs (always needed)
     const [webacySecurityData, goplusSecurityData, priceData, metadataData] = await Promise.allSettled([
       fetchWebacySecurity(tokenAddress, chainId),
       fetchGoPlusSecurity(tokenAddress, chainId),
       fetchMoralisPriceData(tokenAddress, chainId),
       fetchMoralisMetadata(tokenAddress, chainId)
+    ]);
+
+    // Phase 2: Enhanced tokenomics APIs (new features)
+    console.log(`[SCAN] Fetching enhanced tokenomics data...`);
+    const [statsData, pairsData, ownersData] = await Promise.allSettled([
+      fetchMoralisTokenStats(tokenAddress, chainId),
+      fetchMoralisTokenPairs(tokenAddress, chainId),
+      fetchMoralisTokenOwners(tokenAddress, chainId)
     ]);
 
     const apiEndTime = Date.now();
@@ -65,6 +77,11 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     const goplusSecurity = goplusSecurityData.status === 'fulfilled' ? goplusSecurityData.value : null;
     const priceDataResult = priceData.status === 'fulfilled' ? priceData.value : null;
     const metadata = metadataData.status === 'fulfilled' ? metadataData.value : null;
+    
+    // Enhanced tokenomics data
+    const stats = statsData.status === 'fulfilled' ? statsData.value : null;
+    const pairs = pairsData.status === 'fulfilled' ? pairsData.value : null;
+    const owners = ownersData.status === 'fulfilled' ? ownersData.value : null;
 
     // Log API failures for debugging
     if (webacySecurityData.status === 'rejected') {
@@ -78,6 +95,15 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     }
     if (metadataData.status === 'rejected') {
       console.error(`[SCAN] Moralis Metadata API failed:`, metadataData.reason);
+    }
+    if (statsData.status === 'rejected') {
+      console.error(`[SCAN] Moralis Stats API failed:`, statsData.reason);
+    }
+    if (pairsData.status === 'rejected') {
+      console.error(`[SCAN] Moralis Pairs API failed:`, pairsData.reason);
+    }
+    if (ownersData.status === 'rejected') {
+      console.error(`[SCAN] Moralis Owners API failed:`, ownersData.reason);
     }
 
     // Merge security data from both sources instead of fallback logic
@@ -95,6 +121,11 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       mergedSecurity: Object.keys(security).length > 0 ? 'available' : 'unavailable',
       priceData: priceDataResult ? 'available' : 'unavailable', 
       metadata: metadata ? 'available' : 'unavailable',
+      enhancedTokenomics: {
+        stats: stats ? 'available' : 'unavailable',
+        pairs: pairs ? 'available' : 'unavailable',
+        owners: owners ? 'available' : 'unavailable'
+      },
       totalApiTime: `${apiEndTime - apiStartTime}ms`
     });
 
@@ -199,6 +230,9 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       goplusData: goplusSecurity,
       priceData: priceDataResult,
       metadataData: metadata,
+      statsData: stats,
+      pairsData: pairs,
+      ownersData: owners,
       githubData: githubData
     };
   } catch (error) {
@@ -207,11 +241,20 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
   }
 }
 
-// Generate category data with real API integration
+// Generate category data with real API integration and enhanced tokenomics
 function generateCategoryData(apiData: any) {
   const securityScore = calculateSecurityScore(apiData.securityData, apiData.webacyData, apiData.goplusData);
   const liquidityScore = calculateLiquidityScore(apiData.priceData);
-  const tokenomicsScore = calculateTokenomicsScore(apiData.metadataData, apiData.priceData);
+  
+  // Enhanced tokenomics scoring with new data sources
+  const tokenomicsScore = calculateTokenomicsScore(
+    apiData.metadataData, 
+    apiData.priceData,
+    apiData.statsData,
+    apiData.ownersData,
+    apiData.pairsData
+  );
+  
   const developmentScore = calculateDevelopmentScore(apiData.githubData);
   
   // Community score - this would need additional APIs (Twitter, Discord, etc.)
@@ -236,13 +279,32 @@ function generateCategoryData(apiData: any) {
       contract_verified: apiData.securityData?.contract_verified || null
     },
     tokenomics: {
-      supply_cap: apiData.metadataData?.total_supply || null,
-      circulating_supply: apiData.metadataData?.total_supply || null,
-      burn_mechanism: null,
+      // Enhanced supply data using stats API
+      supply_cap: apiData.statsData?.total_supply || apiData.metadataData?.total_supply || null,
+      circulating_supply: apiData.statsData?.total_supply || apiData.metadataData?.total_supply || null,
+      actual_circulating_supply: apiData.statsData?.total_supply || null,
+      total_supply: apiData.statsData?.total_supply || apiData.metadataData?.total_supply || null,
+      
+      // Enhanced liquidity data using pairs API
+      dex_liquidity_usd: apiData.pairsData?.total_liquidity_usd || 0,
+      major_dex_pairs: apiData.pairsData?.major_pairs || [],
+      
+      // Enhanced distribution data using owners API
+      distribution_score: getDistributionScoreText(apiData.ownersData?.concentration_risk),
+      distribution_gini_coefficient: apiData.ownersData?.gini_coefficient || null,
+      holder_concentration_risk: apiData.ownersData?.concentration_risk || 'Unknown',
+      top_holders_count: apiData.ownersData?.total_holders || null,
+      
+      // Traditional fields (enhanced with better detection later)
+      burn_mechanism: null, // TODO: Add burn detection logic
       vesting_schedule: 'unknown',
-      distribution_score: 'unknown',
-      tvl_usd: 0,
-      treasury_usd: 0,
+      tvl_usd: apiData.pairsData?.total_liquidity_usd || 0, // Use DEX liquidity as TVL proxy
+      treasury_usd: 0, // TODO: Add treasury detection
+      
+      // Data quality indicators
+      data_confidence_score: calculateTokenomicsConfidence(apiData),
+      last_holder_analysis: apiData.ownersData ? new Date().toISOString() : null,
+      
       score: tokenomicsScore
     },
     liquidity: {
@@ -273,6 +335,53 @@ function generateCategoryData(apiData: any) {
       score: developmentScore
     }
   };
+}
+
+// Helper function to convert concentration risk to distribution score text
+function getDistributionScoreText(concentrationRisk: string | undefined): string {
+  if (!concentrationRisk) return 'Unknown';
+  
+  switch (concentrationRisk) {
+    case 'Low': return 'Excellent';
+    case 'Medium': return 'Good';
+    case 'High': return 'Fair';
+    case 'Very High': return 'Poor';
+    default: return 'Unknown';
+  }
+}
+
+// Calculate confidence score for tokenomics data quality
+function calculateTokenomicsConfidence(apiData: any): number {
+  let confidence = 0;
+  let totalChecks = 0;
+  
+  // Check data availability and quality
+  if (apiData.statsData?.total_supply) {
+    confidence += 20;
+    totalChecks += 20;
+  }
+  
+  if (apiData.pairsData?.total_liquidity_usd !== undefined) {
+    confidence += 25;
+    totalChecks += 25;
+  }
+  
+  if (apiData.ownersData?.gini_coefficient !== undefined) {
+    confidence += 30;
+    totalChecks += 30;
+  }
+  
+  if (apiData.metadataData?.verified_contract !== undefined) {
+    confidence += 15;
+    totalChecks += 15;
+  }
+  
+  if (apiData.priceData?.current_price_usd !== undefined) {
+    confidence += 10;
+    totalChecks += 10;
+  }
+  
+  return totalChecks > 0 ? Math.round((confidence / totalChecks) * 100) : 0;
 }
 
 // Calculate overall score from category scores
@@ -551,7 +660,17 @@ Deno.serve(async (req) => {
             vesting_schedule: categoryData.tokenomics.vesting_schedule,
             distribution_score: categoryData.tokenomics.distribution_score,
             tvl_usd: categoryData.tokenomics.tvl_usd,
-            treasury_usd: categoryData.tokenomics.treasury_usd
+            treasury_usd: categoryData.tokenomics.treasury_usd,
+            // Enhanced tokenomics fields
+            actual_circulating_supply: categoryData.tokenomics.actual_circulating_supply,
+            total_supply: categoryData.tokenomics.total_supply,
+            dex_liquidity_usd: categoryData.tokenomics.dex_liquidity_usd,
+            major_dex_pairs: categoryData.tokenomics.major_dex_pairs,
+            distribution_gini_coefficient: categoryData.tokenomics.distribution_gini_coefficient,
+            holder_concentration_risk: categoryData.tokenomics.holder_concentration_risk,
+            top_holders_count: categoryData.tokenomics.top_holders_count,
+            data_confidence_score: categoryData.tokenomics.data_confidence_score,
+            last_holder_analysis: categoryData.tokenomics.last_holder_analysis
           }
         },
         {

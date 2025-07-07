@@ -78,6 +78,213 @@ export async function fetchMoralisPriceData(tokenAddress: string, chainId: strin
   }
 }
 
+// Moralis ERC20 Stats API for enhanced tokenomics data
+export async function fetchMoralisTokenStats(tokenAddress: string, chainId: string) {
+  console.log(`[MORALIS-STATS] === STARTING MORALIS TOKEN STATS API CALL ===`);
+  console.log(`[MORALIS-STATS] Token: ${tokenAddress}, Chain: ${chainId}`);
+  
+  try {
+    const chainConfig = getChainConfigByMoralisId(chainId);
+    if (!chainConfig) {
+      console.error(`[MORALIS-STATS] FAILED - Unsupported chain: ${chainId}`);
+      return null;
+    }
+
+    const apiKey = Deno.env.get('MORALIS_API_KEY');
+    if (!apiKey) {
+      console.error(`[MORALIS-STATS] FAILED - MORALIS_API_KEY not configured`);
+      return null;
+    }
+
+    const url = `https://deep-index.moralis.io/api/v2.2/erc20/${tokenAddress.toLowerCase()}/stats?chain=${chainId}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      console.error(`[MORALIS-STATS] API error: ${response.status} ${response.statusText}`);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log(`[MORALIS-STATS] Token stats received:`, JSON.stringify(data, null, 2));
+    
+    return {
+      total_supply: data.total_supply || '0',
+      holders: data.holders || 0,
+      transfers: data.transfers || 0,
+      total_supply_formatted: data.total_supply_formatted || '0'
+    };
+  } catch (error) {
+    console.error(`[MORALIS-STATS] Error fetching token stats:`, error);
+    return null;
+  }
+}
+
+// Moralis ERC20 Pairs API for DEX liquidity analysis
+export async function fetchMoralisTokenPairs(tokenAddress: string, chainId: string) {
+  console.log(`[MORALIS-PAIRS] === STARTING MORALIS TOKEN PAIRS API CALL ===`);
+  console.log(`[MORALIS-PAIRS] Token: ${tokenAddress}, Chain: ${chainId}`);
+  
+  try {
+    const chainConfig = getChainConfigByMoralisId(chainId);
+    if (!chainConfig) {
+      console.error(`[MORALIS-PAIRS] FAILED - Unsupported chain: ${chainId}`);
+      return null;
+    }
+
+    const apiKey = Deno.env.get('MORALIS_API_KEY');
+    if (!apiKey) {
+      console.error(`[MORALIS-PAIRS] FAILED - MORALIS_API_KEY not configured`);
+      return null;
+    }
+
+    const url = `https://deep-index.moralis.io/api/v2.2/erc20/${tokenAddress.toLowerCase()}/pairs?chain=${chainId}&limit=20`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      console.error(`[MORALIS-PAIRS] API error: ${response.status} ${response.statusText}`);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log(`[MORALIS-PAIRS] Found ${data.result?.length || 0} pairs`);
+    
+    // Calculate total DEX liquidity
+    let totalLiquidityUsd = 0;
+    const majorPairs = [];
+    
+    if (data.result && Array.isArray(data.result)) {
+      for (const pair of data.result) {
+        const liquidityUsd = parseFloat(pair.liquidity_usd || 0);
+        totalLiquidityUsd += liquidityUsd;
+        
+        if (liquidityUsd > 1000) { // Only include pairs with > $1000 liquidity
+          majorPairs.push({
+            dex: pair.exchange_name || 'Unknown',
+            pair_address: pair.pair_address,
+            liquidity_usd: liquidityUsd,
+            token0_symbol: pair.token0_symbol,
+            token1_symbol: pair.token1_symbol
+          });
+        }
+      }
+    }
+    
+    console.log(`[MORALIS-PAIRS] Total DEX liquidity: $${totalLiquidityUsd}, Major pairs: ${majorPairs.length}`);
+    
+    return {
+      total_pairs: data.result?.length || 0,
+      total_liquidity_usd: totalLiquidityUsd,
+      major_pairs: majorPairs
+    };
+  } catch (error) {
+    console.error(`[MORALIS-PAIRS] Error fetching token pairs:`, error);
+    return null;
+  }
+}
+
+// Moralis ERC20 Owners API for holder distribution analysis
+export async function fetchMoralisTokenOwners(tokenAddress: string, chainId: string) {
+  console.log(`[MORALIS-OWNERS] === STARTING MORALIS TOKEN OWNERS API CALL ===`);
+  console.log(`[MORALIS-OWNERS] Token: ${tokenAddress}, Chain: ${chainId}`);
+  
+  try {
+    const chainConfig = getChainConfigByMoralisId(chainId);
+    if (!chainConfig) {
+      console.error(`[MORALIS-OWNERS] FAILED - Unsupported chain: ${chainId}`);
+      return null;
+    }
+
+    const apiKey = Deno.env.get('MORALIS_API_KEY');
+    if (!apiKey) {
+      console.error(`[MORALIS-OWNERS] FAILED - MORALIS_API_KEY not configured`);
+      return null;
+    }
+
+    const url = `https://deep-index.moralis.io/api/v2.2/erc20/${tokenAddress.toLowerCase()}/owners?chain=${chainId}&limit=100&order=DESC`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      console.error(`[MORALIS-OWNERS] API error: ${response.status} ${response.statusText}`);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log(`[MORALIS-OWNERS] Found ${data.result?.length || 0} top holders`);
+    
+    if (!data.result || !Array.isArray(data.result)) {
+      return null;
+    }
+
+    // Calculate distribution metrics
+    const holders = data.result.map(holder => ({
+      address: holder.owner_address,
+      balance: parseFloat(holder.balance_formatted || 0),
+      percentage: parseFloat(holder.percentage_relative_to_total_supply || 0)
+    }));
+
+    // Calculate Gini coefficient for wealth distribution
+    const balances = holders.map(h => h.percentage).sort((a, b) => a - b);
+    const giniCoefficient = calculateGiniCoefficient(balances);
+    
+    // Determine concentration risk
+    const top10Percentage = holders.slice(0, 10).reduce((sum, h) => sum + h.percentage, 0);
+    let concentrationRisk = 'Low';
+    if (top10Percentage > 80) concentrationRisk = 'Very High';
+    else if (top10Percentage > 60) concentrationRisk = 'High';
+    else if (top10Percentage > 40) concentrationRisk = 'Medium';
+
+    console.log(`[MORALIS-OWNERS] Distribution analysis: Gini: ${giniCoefficient.toFixed(3)}, Top 10: ${top10Percentage.toFixed(1)}%, Risk: ${concentrationRisk}`);
+    
+    return {
+      total_holders: data.total || holders.length,
+      top_holders: holders.slice(0, 20),
+      gini_coefficient: giniCoefficient,
+      concentration_risk: concentrationRisk,
+      top_10_percentage: top10Percentage
+    };
+  } catch (error) {
+    console.error(`[MORALIS-OWNERS] Error fetching token owners:`, error);
+    return null;
+  }
+}
+
+// Calculate Gini coefficient for wealth inequality measurement
+function calculateGiniCoefficient(values: number[]): number {
+  if (!values || values.length === 0) return 0;
+  
+  const n = values.length;
+  const sortedValues = values.sort((a, b) => a - b);
+  
+  let sum = 0;
+  for (let i = 0; i < n; i++) {
+    sum += (2 * i - n + 1) * sortedValues[i];
+  }
+  
+  const mean = sortedValues.reduce((a, b) => a + b) / n;
+  return sum / (n * n * mean);
+}
+
 // Moralis API client using REST API for comprehensive token metadata
 export async function fetchMoralisMetadata(tokenAddress: string, chainId: string) {
   console.log(`[MORALIS] === STARTING MORALIS METADATA REST API CALL ===`);

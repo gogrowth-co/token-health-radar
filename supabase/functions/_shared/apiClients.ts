@@ -3,7 +3,13 @@
 // This file is kept for backward compatibility
 
 import { fetchGoPlusSecurity } from './goplusAPI.ts';
-import { fetchMoralisPriceData, fetchMoralisMetadata } from './moralisAPI.ts';
+import { 
+  fetchMoralisPriceData, 
+  fetchMoralisMetadata,
+  fetchMoralisTokenStats,
+  fetchMoralisTokenPairs,
+  fetchMoralisTokenOwners
+} from './moralisAPI.ts';
 import { fetchWebacySecurity } from './webacyAPI.ts';
 import { fetchGitHubRepoData } from './githubAPI.ts';
 import { 
@@ -19,6 +25,9 @@ export {
   fetchWebacySecurity,
   fetchMoralisMetadata,
   fetchMoralisPriceData,
+  fetchMoralisTokenStats,
+  fetchMoralisTokenPairs,
+  fetchMoralisTokenOwners,
   fetchGitHubRepoData,
   calculateSecurityScore,
   calculateLiquidityScore,

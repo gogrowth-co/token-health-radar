@@ -57,6 +57,20 @@ export interface TokenomicsData {
   distribution_score: string | null;
   vesting_schedule: string | null;
   score: number | null;
+  // Enhanced tokenomics fields
+  actual_circulating_supply?: number | null;
+  total_supply?: number | null;
+  inflation_rate?: number | null;
+  dex_liquidity_usd?: number | null;
+  major_dex_pairs?: any[] | null;
+  burn_events_detected?: boolean | null;
+  burn_addresses_found?: string[] | null;
+  top_holders_count?: number | null;
+  distribution_gini_coefficient?: number | null;
+  holder_concentration_risk?: string | null;
+  treasury_addresses?: string[] | null;
+  data_confidence_score?: number | null;
+  last_holder_analysis?: string | null;
 }
 
 export interface LiquidityData {
@@ -245,65 +259,104 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
     return [
       { icon: Coins, title: "Circulating Supply", description: "Number of tokens currently in circulation", badgeLabel: "Unknown", badgeVariant: "gray" },
       { icon: BarChart3, title: "Supply Cap", description: "Maximum number of tokens that can exist", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: DollarSign, title: "TVL (USD)", description: "Total value locked in the protocol", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: DollarSign, title: "DEX Liquidity (USD)", description: "Total liquidity across decentralized exchanges", badgeLabel: "Unknown", badgeVariant: "gray" },
       { icon: TrendingUp, title: "Treasury (USD)", description: "Value held in project treasury", badgeLabel: "Unknown", badgeVariant: "gray" },
       { icon: Activity, title: "Burn Mechanism", description: "Tokens are permanently removed from supply", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Users, title: "Distribution Score", description: "How well distributed the token supply is", badgeLabel: "Unknown", badgeVariant: "gray" }
+      { icon: Users, title: "Distribution Quality", description: "How well distributed the token supply is among holders", badgeLabel: "Unknown", badgeVariant: "gray" }
     ];
   }
 
-  const circulatingSupply = safeNumberAccess(data, 'circulating_supply');
+  // Enhanced supply analysis with real vs total supply
+  const totalSupply = safeNumberAccess(data, 'total_supply');
+  const circulatingSupply = safeNumberAccess(data, 'actual_circulating_supply') || safeNumberAccess(data, 'circulating_supply');
   const supplyCap = safeNumberAccess(data, 'supply_cap');
-  const tvlUsd = safeNumberAccess(data, 'tvl_usd');
+  
+  // Enhanced liquidity from DEX pairs
+  const dexLiquidityUsd = safeNumberAccess(data, 'dex_liquidity_usd');
   const treasuryUsd = safeNumberAccess(data, 'treasury_usd');
   const burnMechanism = safeBooleanAccess(data, 'burn_mechanism');
+  
+  // Enhanced distribution metrics
   const distributionScore = safeAccess(data, 'distribution_score', 'Unknown');
+  const concentrationRisk = safeAccess(data, 'holder_concentration_risk', 'Unknown');
+  const giniCoefficient = safeNumberAccess(data, 'distribution_gini_coefficient');
+  const topHoldersCount = safeNumberAccess(data, 'top_holders_count');
+  
+  // Data quality indicators
+  const confidenceScore = safeNumberAccess(data, 'data_confidence_score');
 
   return [
     { 
       icon: Coins, 
       title: "Circulating Supply", 
-      description: "Number of tokens currently in circulation",
-      badgeLabel: formatNumber(circulatingSupply),
+      description: totalSupply > 0 ? "Tokens currently in circulation from total supply" : "Number of tokens currently in circulation",
+      badgeLabel: totalSupply > 0 ? formatNumber(totalSupply) : formatNumber(circulatingSupply),
       badgeVariant: "blue"
     },
     { 
       icon: BarChart3, 
       title: "Supply Cap", 
       description: "Maximum number of tokens that can exist",
-      badgeLabel: supplyCap > 0 ? formatNumber(supplyCap) : "No Cap",
-      badgeVariant: supplyCap > 0 ? "blue" : "orange"
+      badgeLabel: supplyCap > 0 ? formatNumber(supplyCap) : totalSupply > 0 ? formatNumber(totalSupply) : "No Cap",
+      badgeVariant: supplyCap > 0 ? "blue" : totalSupply > 0 ? "blue" : "orange"
     },
     { 
       icon: DollarSign, 
-      title: "TVL (USD)", 
-      description: "Total value locked in the protocol",
-      badgeLabel: formatCurrency(tvlUsd),
-      badgeVariant: tvlUsd > 1000000 ? "green" : tvlUsd > 100000 ? "blue" : "gray"
+      title: "DEX Liquidity (USD)", 
+      description: "Total liquidity across decentralized exchanges",
+      badgeLabel: formatCurrency(dexLiquidityUsd),
+      badgeVariant: dexLiquidityUsd > 10000000 ? "green" : dexLiquidityUsd > 1000000 ? "blue" : dexLiquidityUsd > 100000 ? "orange" : "gray"
     },
     { 
       icon: TrendingUp, 
       title: "Treasury (USD)", 
       description: "Value held in project treasury",
-      badgeLabel: formatCurrency(treasuryUsd),
-      badgeVariant: treasuryUsd > 500000 ? "green" : treasuryUsd > 50000 ? "blue" : "gray"
+      badgeLabel: treasuryUsd > 0 ? formatCurrency(treasuryUsd) : "Not Available",
+      badgeVariant: treasuryUsd > 500000 ? "green" : treasuryUsd > 50000 ? "blue" : treasuryUsd > 0 ? "orange" : "gray"
     },
     { 
       icon: Activity, 
       title: "Burn Mechanism", 
       description: "Tokens are permanently removed from supply",
-      badgeLabel: getBooleanBadgeLabel(burnMechanism),
-      badgeVariant: getBooleanBadgeVariant(burnMechanism, true)
+      badgeLabel: burnMechanism !== null ? getBooleanBadgeLabel(burnMechanism) : "Not Detected",
+      badgeVariant: burnMechanism !== null ? getBooleanBadgeVariant(burnMechanism, true) : "gray"
     },
     { 
       icon: Users, 
-      title: "Distribution Score", 
-      description: "How well distributed the token supply is",
-      badgeLabel: distributionScore,
-      badgeVariant: distributionScore === "Unknown" ? "gray" : distributionScore === "Good" ? "green" : distributionScore === "Fair" ? "blue" : distributionScore === "Poor" ? "red" : "gray"
+      title: "Distribution Quality", 
+      description: giniCoefficient !== null ? 
+        `Token distribution among ${topHoldersCount || 'N/A'} holders (Gini: ${giniCoefficient.toFixed(3)})` :
+        "How well distributed the token supply is among holders",
+      badgeLabel: distributionScore !== "Unknown" ? distributionScore : concentrationRisk !== "Unknown" ? `${concentrationRisk} Risk` : "Unknown",
+      badgeVariant: getDistributionVariant(distributionScore, concentrationRisk)
     }
   ];
 };
+
+// Helper function to determine distribution badge variant
+function getDistributionVariant(distributionScore: string, concentrationRisk: string): "gray" | "blue" | "green" | "red" | "orange" | "yellow" {
+  if (distributionScore !== "Unknown") {
+    switch (distributionScore) {
+      case "Excellent": return "green";
+      case "Good": return "blue";
+      case "Fair": return "orange";
+      case "Poor": return "red";
+      default: return "gray";
+    }
+  }
+  
+  if (concentrationRisk !== "Unknown") {
+    switch (concentrationRisk) {
+      case "Low": return "green";
+      case "Medium": return "blue";
+      case "High": return "orange";
+      case "Very High": return "red";
+      default: return "gray";
+    }
+  }
+  
+  return "gray";
+}
 
 // Transform liquidity data into feature format
 export const transformLiquidityData = (data: LiquidityData | null): CategoryFeature[] => {

@@ -69,32 +69,112 @@ export function calculateLiquidityScore(marketData: any): number {
   return Math.max(0, Math.min(100, score));
 }
 
-export function calculateTokenomicsScore(moralisData: any, marketData: any): number {
-  if (!moralisData && !marketData) return 0;
+export function calculateTokenomicsScore(
+  moralisData: any, 
+  marketData: any, 
+  statsData: any = null, 
+  ownersData: any = null, 
+  pairsData: any = null
+): number {
+  if (!moralisData && !marketData && !statsData) return 0;
   
-  let score = 40; // Base score
+  let score = 20; // Lower base score, build up with real metrics
+  let totalWeight = 0;
   
-  // Supply analysis
-  if (moralisData?.total_supply) {
-    const supply = parseFloat(moralisData.total_supply);
-    if (supply < 1000000000) score += 15; // Low supply is good
-    else if (supply > 1000000000000) score -= 10; // Very high supply is concerning
+  console.log(`[TOKENOMICS-SCORE] === CALCULATING ENHANCED TOKENOMICS SCORE ===`);
+  
+  // 1. Supply Health Analysis (25% weight)
+  if (moralisData?.total_supply || statsData?.total_supply) {
+    const supply = parseFloat(moralisData?.total_supply || statsData?.total_supply || '0');
+    let supplyScore = 0;
+    
+    if (supply > 0) {
+      // Reasonable supply ranges get better scores
+      if (supply < 1000000) supplyScore = 25; // Very low supply (scarce)
+      else if (supply < 100000000) supplyScore = 20; // Low supply (good)
+      else if (supply < 10000000000) supplyScore = 15; // Moderate supply (ok)
+      else if (supply < 1000000000000) supplyScore = 10; // High supply (concerning)
+      else supplyScore = 0; // Extremely high supply (bad)
+      
+      score += supplyScore;
+      totalWeight += 25;
+      console.log(`[TOKENOMICS-SCORE] Supply analysis: ${supply.toExponential(2)} tokens = +${supplyScore} points`);
+    }
   }
   
-  // Contract verification
-  if (moralisData?.verified_contract) score += 10;
+  // 2. Holder Distribution Quality (25% weight)
+  if (ownersData?.gini_coefficient !== undefined) {
+    let distributionScore = 0;
+    const gini = ownersData.gini_coefficient;
+    
+    // Gini coefficient: 0 = perfect equality, 1 = perfect inequality
+    if (gini < 0.4) distributionScore = 25; // Excellent distribution
+    else if (gini < 0.6) distributionScore = 20; // Good distribution
+    else if (gini < 0.75) distributionScore = 15; // Fair distribution
+    else if (gini < 0.9) distributionScore = 10; // Poor distribution
+    else distributionScore = 0; // Terrible distribution
+    
+    score += distributionScore;
+    totalWeight += 25;
+    console.log(`[TOKENOMICS-SCORE] Distribution (Gini: ${gini.toFixed(3)}): +${distributionScore} points`);
+  }
   
-  // Spam detection (negative factor)
-  if (moralisData?.possible_spam) score -= 20;
+  // 3. Liquidity Strength (20% weight)
+  if (pairsData?.total_liquidity_usd !== undefined) {
+    let liquidityScore = 0;
+    const liquidityUsd = pairsData.total_liquidity_usd;
+    
+    if (liquidityUsd > 10000000) liquidityScore = 20; // Excellent liquidity
+    else if (liquidityUsd > 1000000) liquidityScore = 16; // Good liquidity
+    else if (liquidityUsd > 100000) liquidityScore = 12; // Fair liquidity
+    else if (liquidityUsd > 10000) liquidityScore = 8; // Limited liquidity
+    else liquidityScore = 4; // Very limited liquidity
+    
+    score += liquidityScore;
+    totalWeight += 20;
+    console.log(`[TOKENOMICS-SCORE] DEX liquidity $${liquidityUsd.toLocaleString()}: +${liquidityScore} points`);
+  }
   
-  // Price stability (less volatility is better for tokenomics)
+  // 4. Contract Quality (15% weight)
+  if (moralisData?.verified_contract !== undefined) {
+    const verificationScore = moralisData.verified_contract ? 15 : 0;
+    score += verificationScore;
+    totalWeight += 15;
+    console.log(`[TOKENOMICS-SCORE] Contract verified: +${verificationScore} points`);
+  }
+  
+  // 5. Price Stability (10% weight)
   if (marketData?.price_change_24h !== undefined) {
+    let stabilityScore = 0;
     const change = Math.abs(marketData.price_change_24h);
-    if (change < 5) score += 10; // Stable price
-    else if (change > 20) score -= 5; // High volatility
+    
+    if (change < 5) stabilityScore = 10; // Very stable
+    else if (change < 15) stabilityScore = 7; // Stable
+    else if (change < 30) stabilityScore = 4; // Moderate volatility
+    else stabilityScore = 0; // High volatility
+    
+    score += stabilityScore;
+    totalWeight += 10;
+    console.log(`[TOKENOMICS-SCORE] Price stability (${change.toFixed(1)}% change): +${stabilityScore} points`);
   }
   
-  return Math.max(0, Math.min(100, score));
+  // 6. Spam/Security Penalties (5% weight)
+  if (moralisData?.possible_spam) {
+    score -= 10;
+    console.log(`[TOKENOMICS-SCORE] Spam detected: -10 points`);
+  }
+  
+  // Normalize score if we have less than full data
+  if (totalWeight > 0 && totalWeight < 95) {
+    const normalizedScore = (score / totalWeight) * 95;
+    console.log(`[TOKENOMICS-SCORE] Normalizing score: ${score}/${totalWeight} -> ${normalizedScore.toFixed(1)}`);
+    score = normalizedScore;
+  }
+  
+  const finalScore = Math.max(0, Math.min(100, Math.round(score)));
+  console.log(`[TOKENOMICS-SCORE] Final enhanced tokenomics score: ${finalScore}`);
+  
+  return finalScore;
 }
 
 export function calculateDevelopmentScore(githubData: any): number {

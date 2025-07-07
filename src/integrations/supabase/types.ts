@@ -386,39 +386,78 @@ export type Database = {
       }
       token_tokenomics_cache: {
         Row: {
+          actual_circulating_supply: number | null
+          burn_addresses_found: string[] | null
+          burn_events_detected: boolean | null
           burn_mechanism: boolean | null
           chain_id: string
           circulating_supply: number | null
+          data_confidence_score: number | null
+          dex_liquidity_usd: number | null
+          distribution_gini_coefficient: number | null
           distribution_score: string | null
+          holder_concentration_risk: string | null
+          inflation_rate: number | null
+          last_holder_analysis: string | null
+          major_dex_pairs: Json | null
           score: number | null
           supply_cap: number | null
           token_address: string
+          top_holders_count: number | null
+          total_supply: number | null
+          treasury_addresses: string[] | null
           treasury_usd: number | null
           tvl_usd: number | null
           updated_at: string | null
           vesting_schedule: string | null
         }
         Insert: {
+          actual_circulating_supply?: number | null
+          burn_addresses_found?: string[] | null
+          burn_events_detected?: boolean | null
           burn_mechanism?: boolean | null
           chain_id?: string
           circulating_supply?: number | null
+          data_confidence_score?: number | null
+          dex_liquidity_usd?: number | null
+          distribution_gini_coefficient?: number | null
           distribution_score?: string | null
+          holder_concentration_risk?: string | null
+          inflation_rate?: number | null
+          last_holder_analysis?: string | null
+          major_dex_pairs?: Json | null
           score?: number | null
           supply_cap?: number | null
           token_address: string
+          top_holders_count?: number | null
+          total_supply?: number | null
+          treasury_addresses?: string[] | null
           treasury_usd?: number | null
           tvl_usd?: number | null
           updated_at?: string | null
           vesting_schedule?: string | null
         }
         Update: {
+          actual_circulating_supply?: number | null
+          burn_addresses_found?: string[] | null
+          burn_events_detected?: boolean | null
           burn_mechanism?: boolean | null
           chain_id?: string
           circulating_supply?: number | null
+          data_confidence_score?: number | null
+          dex_liquidity_usd?: number | null
+          distribution_gini_coefficient?: number | null
           distribution_score?: string | null
+          holder_concentration_risk?: string | null
+          inflation_rate?: number | null
+          last_holder_analysis?: string | null
+          major_dex_pairs?: Json | null
           score?: number | null
           supply_cap?: number | null
           token_address?: string
+          top_holders_count?: number | null
+          total_supply?: number | null
+          treasury_addresses?: string[] | null
           treasury_usd?: number | null
           tvl_usd?: number | null
           updated_at?: string | null
