@@ -305,6 +305,20 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // HEALTH CHECK ENDPOINT - Add this for testing deployment
+  if (req.method === 'GET') {
+    console.log(`[SCAN-STARTUP] Health check requested`);
+    return new Response(JSON.stringify({ 
+      success: true, 
+      message: 'Edge function is deployed and running',
+      timestamp: new Date().toISOString(),
+      deployment_status: 'active'
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+
   // Test deployment by checking environment variables immediately
   console.log(`[SCAN-STARTUP] === ENVIRONMENT CHECK ===`);
   const envCheck = {
