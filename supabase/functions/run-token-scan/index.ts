@@ -36,6 +36,20 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     console.log(`[SCAN] Calling external APIs for fresh data...`);
     const apiStartTime = Date.now();
     
+    // Add detailed API key debugging BEFORE making calls
+    console.log(`[SCAN] === API KEY STATUS CHECK ===`);
+    console.log(`[SCAN] WEBACY_API_KEY configured: ${!!Deno.env.get('WEBACY_API_KEY')}`);
+    console.log(`[SCAN] GOPLUS_API_KEY configured: ${!!Deno.env.get('GOPLUS_API_KEY')}`);
+    console.log(`[SCAN] MORALIS_API_KEY configured: ${!!Deno.env.get('MORALIS_API_KEY')}`);
+    if (Deno.env.get('WEBACY_API_KEY')) {
+      const key = Deno.env.get('WEBACY_API_KEY')!;
+      console.log(`[SCAN] WEBACY_API_KEY length: ${key.length}, starts with: ${key.substring(0, 8)}...`);
+    }
+    if (Deno.env.get('GOPLUS_API_KEY')) {
+      const key = Deno.env.get('GOPLUS_API_KEY')!;
+      console.log(`[SCAN] GOPLUS_API_KEY length: ${key.length}, starts with: ${key.substring(0, 8)}...`);
+    }
+    
     const [webacySecurityData, goplusSecurityData, priceData, metadataData] = await Promise.allSettled([
       fetchWebacySecurity(tokenAddress, chainId),
       fetchGoPlusSecurity(tokenAddress, chainId),
