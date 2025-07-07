@@ -370,12 +370,6 @@ Deno.serve(async (req) => {
 
     console.log(`[SCAN] Calculated overall score: ${overallScore}`);
 
-    // Use database transaction for data consistency
-    const { error: transactionError } = await supabase.rpc('begin');
-    if (transactionError) {
-      console.error(`[SCAN] Failed to start transaction:`, transactionError);
-    }
-
     try {
       // UPSERT token data to main cache table
       console.log(`[SCAN] === UPSERTING TOKEN DATA TO DATABASE ===`);
@@ -581,18 +575,8 @@ Deno.serve(async (req) => {
       }
     }
 
-      // Commit transaction
-      const { error: commitError } = await supabase.rpc('commit');
-      if (commitError) {
-        console.error(`[SCAN] Failed to commit transaction:`, commitError);
-      }
-
     } catch (error) {
-      // Rollback transaction on error
-      const { error: rollbackError } = await supabase.rpc('rollback');
-      if (rollbackError) {
-        console.error(`[SCAN] Failed to rollback transaction:`, rollbackError);
-      }
+      console.error(`[SCAN] Error during database operations:`, error);
       throw error;
     }
 
