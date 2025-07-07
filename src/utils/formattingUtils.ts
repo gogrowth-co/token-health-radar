@@ -4,13 +4,14 @@
 export const formatNumber = (value: number | null | undefined): string => {
   if (value === null || value === undefined || isNaN(value)) return "N/A";
   
-  // For trillions (including very large numbers that would be quadrillions+)
-  if (value >= 1000000000000) {
+  // For quadrillions (1000+ trillions)
+  if (value >= 1000000000000000) {
+    const quadrillions = value / 1000000000000000;
+    return quadrillions >= 100 ? `${Math.round(quadrillions)}Q` : `${quadrillions.toFixed(1)}Q`;
+  }
+  // For trillions
+  else if (value >= 1000000000000) {
     const trillions = value / 1000000000000;
-    if (trillions >= 1000) {
-      // For thousands of trillions, use comma formatting
-      return `${Math.round(trillions).toLocaleString()}T`;
-    }
     return trillions >= 100 ? `${Math.round(trillions)}T` : `${trillions.toFixed(1)}T`;
   }
   // For billions
