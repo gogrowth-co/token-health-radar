@@ -18,6 +18,7 @@ export {
   fetchGoPlusSecurity,
   fetchWebacySecurity,
   fetchMoralisMetadata,
+  fetchMoralisPriceData,
   fetchGitHubRepoData,
   calculateSecurityScore,
   calculateLiquidityScore,
