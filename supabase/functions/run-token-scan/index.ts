@@ -344,8 +344,15 @@ function generateCategoryData(apiData: any) {
     hasLiquidityData: !!apiData.pairsData?.total_liquidity_usd,
     hasDistributionData: !!apiData.ownersData?.gini_coefficient,
     hasPairsData: !!apiData.pairsData?.major_pairs?.length,
-    confidenceScore: rawTokenomicsData.data_confidence_score
+    confidenceScore: rawTokenomicsData.data_confidence_score,
+    tvlData: apiData.tvlData
   });
+
+  console.log(`[TOKENOMICS] === DETAILED SUPPLY DATA ANALYSIS ===`);
+  console.log(`[TOKENOMICS] Moralis Stats API response:`, apiData.statsData);
+  console.log(`[TOKENOMICS] Moralis Metadata API response supply:`, apiData.metadataData?.total_supply);
+  console.log(`[TOKENOMICS] DeFiLlama TVL response:`, apiData.tvlData);
+  console.log(`[TOKENOMICS] Pairs liquidity response:`, apiData.pairsData?.total_liquidity_usd);
 
   return {
     security: {
@@ -366,11 +373,11 @@ function generateCategoryData(apiData: any) {
       contract_verified: apiData.securityData?.contract_verified || null
     },
     tokenomics: {
-      // Enhanced supply data using stats API
-      supply_cap: apiData.statsData?.total_supply || apiData.metadataData?.total_supply || null,
-      circulating_supply: apiData.statsData?.total_supply || apiData.metadataData?.total_supply || null,
-      actual_circulating_supply: apiData.statsData?.total_supply || null,
-      total_supply: apiData.statsData?.total_supply || apiData.metadataData?.total_supply || null,
+      // Enhanced supply data with better zero handling
+      supply_cap: getValidSupplyValue(apiData.statsData?.total_supply) || getValidSupplyValue(apiData.metadataData?.total_supply) || null,
+      circulating_supply: getValidSupplyValue(apiData.statsData?.total_supply) || getValidSupplyValue(apiData.metadataData?.total_supply) || null,
+      actual_circulating_supply: getValidSupplyValue(apiData.statsData?.total_supply) || null,
+      total_supply: getValidSupplyValue(apiData.statsData?.total_supply) || getValidSupplyValue(apiData.metadataData?.total_supply) || null,
       
       // Enhanced liquidity data using pairs API
       dex_liquidity_usd: apiData.pairsData?.total_liquidity_usd || 0,
@@ -382,10 +389,11 @@ function generateCategoryData(apiData: any) {
       holder_concentration_risk: apiData.ownersData?.concentration_risk || 'Unknown',
       top_holders_count: apiData.ownersData?.total_holders || null,
       
-      // Traditional fields (enhanced with better detection later)
+      // Traditional fields (enhanced with better detection)
+      burn_mechanism: null, // TODO: Add burn detection
       vesting_schedule: 'unknown',
-      tvl_usd: apiData.tvlData || 0, // Use DeFiLlama TVL data
-      treasury_usd: 0, // TODO: Add treasury detection
+      tvl_usd: apiData.tvlData, // Use DeFiLlama TVL data (null if not available)
+      treasury_usd: null, // TODO: Add treasury detection
       
       // Data quality indicators
       data_confidence_score: calculateTokenomicsConfidence(apiData),
@@ -434,6 +442,19 @@ function getDistributionScoreText(concentrationRisk: string | undefined): string
     case 'Very High': return 'Poor';
     default: return 'Unknown';
   }
+}
+
+// Helper function to validate supply values and distinguish actual zero from missing data
+function getValidSupplyValue(value: any): number | null {
+  if (value === null || value === undefined) return null;
+  
+  // Convert to number if it's a string
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  
+  // Return null for invalid numbers or actual zeros (which may indicate missing data)
+  if (isNaN(numValue) || numValue === 0) return null;
+  
+  return numValue;
 }
 
 // Calculate confidence score for tokenomics data quality

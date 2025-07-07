@@ -288,8 +288,8 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
       icon: Coins, 
       title: "Circulating Supply", 
       description: totalSupply > 0 ? "Tokens currently in circulation from total supply" : "Number of tokens currently in circulation",
-      badgeLabel: totalSupply > 0 ? formatNumber(totalSupply) : formatNumber(circulatingSupply),
-      badgeVariant: "blue"
+      badgeLabel: totalSupply > 0 ? formatNumber(totalSupply) : circulatingSupply > 0 ? formatNumber(circulatingSupply) : "Not Available",
+      badgeVariant: totalSupply > 0 || circulatingSupply > 0 ? "blue" : "gray"
     },
     { 
       icon: DollarSign, 
@@ -302,8 +302,8 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
       icon: TrendingUp, 
       title: "Treasury (USD)", 
       description: "Value held in project treasury",
-      badgeLabel: treasuryUsd > 0 ? formatCurrency(treasuryUsd) : "Not Available",
-      badgeVariant: treasuryUsd > 500000 ? "green" : treasuryUsd > 50000 ? "blue" : treasuryUsd > 0 ? "orange" : "gray"
+      badgeLabel: data.treasury_usd && data.treasury_usd > 0 ? formatCurrency(data.treasury_usd) : "Not Available",
+      badgeVariant: data.treasury_usd && data.treasury_usd > 500000 ? "green" : data.treasury_usd && data.treasury_usd > 50000 ? "blue" : data.treasury_usd && data.treasury_usd > 0 ? "orange" : "gray"
     },
     { 
       icon: Users, 

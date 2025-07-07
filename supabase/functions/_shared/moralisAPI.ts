@@ -133,19 +133,41 @@ export async function fetchMoralisTokenStats(tokenAddress: string, chainId: stri
     console.log(`[MORALIS-STATS] === FULL RAW API RESPONSE ===`);
     console.log(`[MORALIS-STATS] Parsed data:`, JSON.stringify(data, null, 2));
     
-    // Enhanced data extraction with detailed logging
+    // Enhanced data extraction with comprehensive field analysis
+    console.log(`[MORALIS-STATS] === COMPREHENSIVE FIELD ANALYSIS ===`);
+    console.log(`[MORALIS-STATS] Available fields in response:`, Object.keys(data));
+    console.log(`[MORALIS-STATS] Field value analysis:`);
+    
+    // Log all available fields to identify correct ones
+    Object.keys(data).forEach(key => {
+      console.log(`[MORALIS-STATS]   ${key}:`, data[key], `(type: ${typeof data[key]})`);
+    });
+    
+    // Try multiple possible field names for total supply
+    const possibleSupplyFields = ['total_supply', 'totalSupply', 'total_supply_formatted', 'supply', 'max_supply', 'circulating_supply'];
+    let totalSupply = null;
+    
+    for (const field of possibleSupplyFields) {
+      if (data[field] !== undefined && data[field] !== null && data[field] !== '0' && data[field] !== 0) {
+        totalSupply = data[field];
+        console.log(`[MORALIS-STATS] Found supply data in field '${field}':`, totalSupply);
+        break;
+      }
+    }
+    
     const extractedData = {
-      total_supply: data.total_supply || '0',
-      holders: data.holders || 0,
-      transfers: data.transfers || 0,
-      total_supply_formatted: data.total_supply_formatted || '0'
+      total_supply: totalSupply || data.total_supply || '0',
+      holders: data.holders || data.total_holders || 0,
+      transfers: data.transfers || data.total_transfers || 0,
+      total_supply_formatted: data.total_supply_formatted || data.totalSupplyFormatted || '0',
+      // Add more fields for analysis
+      decimals: data.decimals || null,
+      name: data.name || null,
+      symbol: data.symbol || null
     };
 
-    console.log(`[MORALIS-STATS] === DATA EXTRACTION ANALYSIS ===`);
-    console.log(`[MORALIS-STATS] Raw total_supply:`, data.total_supply, `(type: ${typeof data.total_supply})`);
-    console.log(`[MORALIS-STATS] Raw holders:`, data.holders, `(type: ${typeof data.holders})`);
-    console.log(`[MORALIS-STATS] Raw transfers:`, data.transfers, `(type: ${typeof data.transfers})`);
-    console.log(`[MORALIS-STATS] Raw total_supply_formatted:`, data.total_supply_formatted, `(type: ${typeof data.total_supply_formatted})`);
+    console.log(`[MORALIS-STATS] === FINAL DATA EXTRACTION RESULTS ===`);
+    console.log(`[MORALIS-STATS] Total supply found:`, totalSupply ? 'YES' : 'NO');
     console.log(`[MORALIS-STATS] Final extracted data:`, extractedData);
     
     return extractedData;
