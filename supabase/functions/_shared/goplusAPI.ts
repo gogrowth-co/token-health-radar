@@ -101,29 +101,56 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
     }
     
     const responseText = await response.text();
-    console.log(`[GOPLUS] Raw response text:`, responseText);
+    console.log(`[GOPLUS] Raw response text (first 500 chars):`, responseText.substring(0, 500));
     
     let data;
     try {
       data = JSON.parse(responseText);
-      console.log(`[GOPLUS] Parsed JSON response:`, JSON.stringify(data, null, 2));
+      console.log(`[GOPLUS] === FULL RAW API RESPONSE ===`);
+      console.log(`[GOPLUS] Response JSON:`, JSON.stringify(data, null, 2));
     } catch (jsonError) {
       console.error(`[GOPLUS] FAILED - Invalid JSON response:`, jsonError);
       console.error(`[GOPLUS] Response text was:`, responseText);
       return null;
     }
     
-    console.log(`[GOPLUS] Response structure:`, {
+    // Check response structure
+    console.log(`[GOPLUS] Response analysis:`, {
+      code: data.code,
+      message: data.message,
       hasResult: !!data.result,
       resultKeys: data.result ? Object.keys(data.result) : [],
       searchingFor: tokenAddress.toLowerCase()
     });
     
-    const tokenData = data.result?.[tokenAddress.toLowerCase()];
+    if (!data.result) {
+      console.error(`[GOPLUS] FAILED - No result object in response`);
+      return null;
+    }
+    
+    // Try different case variations to find the token data
+    const resultKeys = Object.keys(data.result);
+    console.log(`[GOPLUS] Available result keys:`, resultKeys);
+    
+    let tokenData = null;
+    const searchAddresses = [
+      tokenAddress.toLowerCase(),
+      tokenAddress.toUpperCase(), 
+      tokenAddress // original case
+    ];
+    
+    for (const addr of searchAddresses) {
+      if (data.result[addr]) {
+        tokenData = data.result[addr];
+        console.log(`[GOPLUS] Found token data using address: ${addr}`);
+        break;
+      }
+    }
     
     if (!tokenData) {
       console.error(`[GOPLUS] FAILED - No security data found for token: ${tokenAddress}`);
-      console.log(`[GOPLUS] Available tokens in response:`, data.result ? Object.keys(data.result) : 'No result object');
+      console.error(`[GOPLUS] Searched for addresses:`, searchAddresses);
+      console.error(`[GOPLUS] Available addresses in response:`, resultKeys);
       return null;
     }
     
