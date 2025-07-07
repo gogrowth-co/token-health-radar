@@ -258,10 +258,8 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
   if (!data) {
     return [
       { icon: Coins, title: "Circulating Supply", description: "Number of tokens currently in circulation", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: BarChart3, title: "Supply Cap", description: "Maximum number of tokens that can exist", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: DollarSign, title: "DEX Liquidity (USD)", description: "Total liquidity across decentralized exchanges", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: DollarSign, title: "TVL (USD)", description: "Total Value Locked from DeFiLlama", badgeLabel: "Unknown", badgeVariant: "gray" },
       { icon: TrendingUp, title: "Treasury (USD)", description: "Value held in project treasury", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Activity, title: "Burn Mechanism", description: "Tokens are permanently removed from supply", badgeLabel: "Unknown", badgeVariant: "gray" },
       { icon: Users, title: "Distribution Quality", description: "How well distributed the token supply is among holders", badgeLabel: "Unknown", badgeVariant: "gray" }
     ];
   }
@@ -294,18 +292,11 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
       badgeVariant: "blue"
     },
     { 
-      icon: BarChart3, 
-      title: "Supply Cap", 
-      description: "Maximum number of tokens that can exist",
-      badgeLabel: supplyCap > 0 ? formatNumber(supplyCap) : totalSupply > 0 ? formatNumber(totalSupply) : "No Cap",
-      badgeVariant: supplyCap > 0 ? "blue" : totalSupply > 0 ? "blue" : "orange"
-    },
-    { 
       icon: DollarSign, 
-      title: "DEX Liquidity (USD)", 
-      description: "Total liquidity across decentralized exchanges",
-      badgeLabel: formatCurrency(dexLiquidityUsd),
-      badgeVariant: dexLiquidityUsd > 10000000 ? "green" : dexLiquidityUsd > 1000000 ? "blue" : dexLiquidityUsd > 100000 ? "orange" : "gray"
+      title: "TVL (USD)", 
+      description: "Total Value Locked from DeFiLlama",
+      badgeLabel: data.tvl_usd && data.tvl_usd > 0 ? formatCurrency(data.tvl_usd) : "Not Available",
+      badgeVariant: data.tvl_usd && data.tvl_usd > 10000000 ? "green" : data.tvl_usd && data.tvl_usd > 1000000 ? "blue" : data.tvl_usd && data.tvl_usd > 100000 ? "orange" : "gray"
     },
     { 
       icon: TrendingUp, 
@@ -313,13 +304,6 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
       description: "Value held in project treasury",
       badgeLabel: treasuryUsd > 0 ? formatCurrency(treasuryUsd) : "Not Available",
       badgeVariant: treasuryUsd > 500000 ? "green" : treasuryUsd > 50000 ? "blue" : treasuryUsd > 0 ? "orange" : "gray"
-    },
-    { 
-      icon: Activity, 
-      title: "Burn Mechanism", 
-      description: "Tokens are permanently removed from supply",
-      badgeLabel: burnMechanism !== null ? getBooleanBadgeLabel(burnMechanism) : "Not Detected",
-      badgeVariant: burnMechanism !== null ? getBooleanBadgeVariant(burnMechanism, true) : "gray"
     },
     { 
       icon: Users, 

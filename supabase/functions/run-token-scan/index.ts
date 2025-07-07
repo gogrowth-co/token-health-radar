@@ -18,6 +18,7 @@ import {
   calculateTokenomicsScore,
   calculateDevelopmentScore
 } from '../_shared/apiClients.ts'
+import { fetchDeFiLlamaTVL } from '../_shared/defillama.ts'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -63,10 +64,11 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
 
     // Phase 2: Enhanced tokenomics APIs (new features)
     console.log(`[SCAN] Fetching enhanced tokenomics data...`);
-    const [statsData, pairsData, ownersData] = await Promise.allSettled([
+    const [statsData, pairsData, ownersData, tvlData] = await Promise.allSettled([
       fetchMoralisTokenStats(tokenAddress, chainId),
       fetchMoralisTokenPairs(tokenAddress, chainId),
-      fetchMoralisTokenOwners(tokenAddress, chainId)
+      fetchMoralisTokenOwners(tokenAddress, chainId),
+      fetchDeFiLlamaTVL(tokenAddress)
     ]);
 
     const apiEndTime = Date.now();
@@ -82,6 +84,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     const stats = statsData.status === 'fulfilled' ? statsData.value : null;
     const pairs = pairsData.status === 'fulfilled' ? pairsData.value : null;
     const owners = ownersData.status === 'fulfilled' ? ownersData.value : null;
+    const tvl = tvlData.status === 'fulfilled' ? tvlData.value : null;
 
     // Log API failures for debugging
     if (webacySecurityData.status === 'rejected') {
@@ -105,6 +108,9 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     if (ownersData.status === 'rejected') {
       console.error(`[SCAN] Moralis Owners API failed:`, ownersData.reason);
     }
+    if (tvlData.status === 'rejected') {
+      console.error(`[SCAN] DeFiLlama TVL API failed:`, tvlData.reason);
+    }
 
     // Merge security data from both sources instead of fallback logic
     const security = {};
@@ -124,7 +130,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       enhancedTokenomics: {
         stats: stats ? 'available' : 'unavailable',
         pairs: pairs ? 'available' : 'unavailable',
-        owners: owners ? 'available' : 'unavailable'
+        owners: owners ? 'available' : 'unavailable',
+        tvl: tvl ? 'available' : 'unavailable'
       },
       totalApiTime: `${apiEndTime - apiStartTime}ms`
     });
@@ -233,7 +240,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       statsData: stats,
       pairsData: pairs,
       ownersData: owners,
-      githubData: githubData
+      githubData: githubData,
+      tvlData: tvl
     };
   } catch (error) {
     console.error(`[SCAN] Error fetching token data from APIs:`, error);
@@ -253,7 +261,8 @@ function generateCategoryData(apiData: any) {
     statsData: !!apiData.statsData,
     pairsData: !!apiData.pairsData,
     ownersData: !!apiData.ownersData,
-    githubData: !!apiData.githubData
+    githubData: !!apiData.githubData,
+    tvlData: !!apiData.tvlData
   });
 
   const securityScore = calculateSecurityScore(apiData.securityData, apiData.webacyData, apiData.goplusData);
@@ -374,9 +383,8 @@ function generateCategoryData(apiData: any) {
       top_holders_count: apiData.ownersData?.total_holders || null,
       
       // Traditional fields (enhanced with better detection later)
-      burn_mechanism: null, // TODO: Add burn detection logic
       vesting_schedule: 'unknown',
-      tvl_usd: apiData.pairsData?.total_liquidity_usd || 0, // Use DEX liquidity as TVL proxy
+      tvl_usd: apiData.tvlData || 0, // Use DeFiLlama TVL data
       treasury_usd: 0, // TODO: Add treasury detection
       
       // Data quality indicators
