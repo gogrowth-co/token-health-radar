@@ -293,13 +293,64 @@ async function invalidateTokenCache(tokenAddress: string, chainId: string) {
 }
 
 Deno.serve(async (req) => {
+  // IMMEDIATE STARTUP LOGGING
+  console.log(`[SCAN-STARTUP] === EDGE FUNCTION STARTED ===`);
+  console.log(`[SCAN-STARTUP] Method: ${req.method}`);
+  console.log(`[SCAN-STARTUP] URL: ${req.url}`);
+  console.log(`[SCAN-STARTUP] Timestamp: ${new Date().toISOString()}`);
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log(`[SCAN-STARTUP] Handling CORS preflight request`);
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Test deployment by checking environment variables immediately
+  console.log(`[SCAN-STARTUP] === ENVIRONMENT CHECK ===`);
+  const envCheck = {
+    SUPABASE_URL: !!Deno.env.get('SUPABASE_URL'),
+    SUPABASE_SERVICE_ROLE_KEY: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+    WEBACY_API_KEY: !!Deno.env.get('WEBACY_API_KEY'),
+    MORALIS_API_KEY: !!Deno.env.get('MORALIS_API_KEY'),
+    GITHUB_API_KEY: !!Deno.env.get('GITHUB_API_KEY')
+  };
+  
+  console.log(`[SCAN-STARTUP] Environment variables:`, envCheck);
+
+  // Critical environment variables check
+  if (!envCheck.SUPABASE_URL || !envCheck.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error(`[SCAN-STARTUP] CRITICAL: Missing Supabase configuration`);
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: 'Function misconfigured - missing Supabase credentials',
+      envCheck 
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+
+  console.log(`[SCAN-STARTUP] Function deployment successful - processing request`);
+
   try {
-    const { token_address, chain_id, user_id, force_refresh = true } = await req.json();
+    // Parse request body with error handling
+    console.log(`[SCAN-STARTUP] Parsing request body...`);
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (parseError) {
+      console.error(`[SCAN-STARTUP] Failed to parse request body:`, parseError);
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Invalid JSON in request body' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { token_address, chain_id, user_id, force_refresh = true } = requestBody;
+    console.log(`[SCAN-STARTUP] Request parameters:`, { token_address, chain_id, user_id, force_refresh });
     
     // ALWAYS force fresh scans - ignore any cached data
     const alwaysRefresh = true;
