@@ -96,7 +96,9 @@ export async function fetchMoralisTokenStats(tokenAddress: string, chainId: stri
       return null;
     }
 
+    console.log(`[MORALIS-STATS] API Key configured: ${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)}`);
     const url = `https://deep-index.moralis.io/api/v2.2/erc20/${tokenAddress.toLowerCase()}/stats?chain=${chainId}`;
+    console.log(`[MORALIS-STATS] Request URL: ${url}`);
     
     const response = await fetch(url, {
       method: 'GET',
@@ -106,22 +108,50 @@ export async function fetchMoralisTokenStats(tokenAddress: string, chainId: stri
       }
     });
 
+    console.log(`[MORALIS-STATS] Response status: ${response.status} ${response.statusText}`);
+    console.log(`[MORALIS-STATS] Response headers:`, Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
+      const errorText = await response.text();
       console.error(`[MORALIS-STATS] API error: ${response.status} ${response.statusText}`);
+      console.error(`[MORALIS-STATS] Error response body:`, errorText);
       return null;
     }
 
-    const data = await response.json();
-    console.log(`[MORALIS-STATS] Token stats received:`, JSON.stringify(data, null, 2));
+    const responseText = await response.text();
+    console.log(`[MORALIS-STATS] Raw response text:`, responseText);
     
-    return {
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error(`[MORALIS-STATS] Failed to parse JSON:`, parseError);
+      console.error(`[MORALIS-STATS] Raw response was:`, responseText);
+      return null;
+    }
+
+    console.log(`[MORALIS-STATS] === FULL RAW API RESPONSE ===`);
+    console.log(`[MORALIS-STATS] Parsed data:`, JSON.stringify(data, null, 2));
+    
+    // Enhanced data extraction with detailed logging
+    const extractedData = {
       total_supply: data.total_supply || '0',
       holders: data.holders || 0,
       transfers: data.transfers || 0,
       total_supply_formatted: data.total_supply_formatted || '0'
     };
+
+    console.log(`[MORALIS-STATS] === DATA EXTRACTION ANALYSIS ===`);
+    console.log(`[MORALIS-STATS] Raw total_supply:`, data.total_supply, `(type: ${typeof data.total_supply})`);
+    console.log(`[MORALIS-STATS] Raw holders:`, data.holders, `(type: ${typeof data.holders})`);
+    console.log(`[MORALIS-STATS] Raw transfers:`, data.transfers, `(type: ${typeof data.transfers})`);
+    console.log(`[MORALIS-STATS] Raw total_supply_formatted:`, data.total_supply_formatted, `(type: ${typeof data.total_supply_formatted})`);
+    console.log(`[MORALIS-STATS] Final extracted data:`, extractedData);
+    
+    return extractedData;
   } catch (error) {
     console.error(`[MORALIS-STATS] Error fetching token stats:`, error);
+    console.error(`[MORALIS-STATS] Error stack:`, error.stack);
     return null;
   }
 }
@@ -144,7 +174,9 @@ export async function fetchMoralisTokenPairs(tokenAddress: string, chainId: stri
       return null;
     }
 
+    console.log(`[MORALIS-PAIRS] API Key configured: ${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)}`);
     const url = `https://deep-index.moralis.io/api/v2.2/erc20/${tokenAddress.toLowerCase()}/pairs?chain=${chainId}&limit=20`;
+    console.log(`[MORALIS-PAIRS] Request URL: ${url}`);
     
     const response = await fetch(url, {
       method: 'GET',
@@ -154,20 +186,46 @@ export async function fetchMoralisTokenPairs(tokenAddress: string, chainId: stri
       }
     });
 
+    console.log(`[MORALIS-PAIRS] Response status: ${response.status} ${response.statusText}`);
+    console.log(`[MORALIS-PAIRS] Response headers:`, Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
+      const errorText = await response.text();
       console.error(`[MORALIS-PAIRS] API error: ${response.status} ${response.statusText}`);
+      console.error(`[MORALIS-PAIRS] Error response body:`, errorText);
       return null;
     }
 
-    const data = await response.json();
+    const responseText = await response.text();
+    console.log(`[MORALIS-PAIRS] Raw response text:`, responseText);
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error(`[MORALIS-PAIRS] Failed to parse JSON:`, parseError);
+      console.error(`[MORALIS-PAIRS] Raw response was:`, responseText);
+      return null;
+    }
+
+    console.log(`[MORALIS-PAIRS] === FULL RAW API RESPONSE ===`);
+    console.log(`[MORALIS-PAIRS] Parsed data:`, JSON.stringify(data, null, 2));
     console.log(`[MORALIS-PAIRS] Found ${data.result?.length || 0} pairs`);
     
-    // Calculate total DEX liquidity
+    // Calculate total DEX liquidity with detailed logging
     let totalLiquidityUsd = 0;
     const majorPairs = [];
     
     if (data.result && Array.isArray(data.result)) {
+      console.log(`[MORALIS-PAIRS] Processing ${data.result.length} pairs...`);
       for (const pair of data.result) {
+        console.log(`[MORALIS-PAIRS] Pair data:`, {
+          exchange: pair.exchange_name,
+          liquidity_usd: pair.liquidity_usd,
+          token0: pair.token0_symbol,
+          token1: pair.token1_symbol
+        });
+        
         const liquidityUsd = parseFloat(pair.liquidity_usd || 0);
         totalLiquidityUsd += liquidityUsd;
         
@@ -181,17 +239,28 @@ export async function fetchMoralisTokenPairs(tokenAddress: string, chainId: stri
           });
         }
       }
+    } else {
+      console.log(`[MORALIS-PAIRS] No pairs found or invalid result structure`);
+      console.log(`[MORALIS-PAIRS] data.result type:`, typeof data.result);
+      console.log(`[MORALIS-PAIRS] data.result:`, data.result);
     }
     
-    console.log(`[MORALIS-PAIRS] Total DEX liquidity: $${totalLiquidityUsd}, Major pairs: ${majorPairs.length}`);
+    console.log(`[MORALIS-PAIRS] === LIQUIDITY ANALYSIS ===`);
+    console.log(`[MORALIS-PAIRS] Total DEX liquidity: $${totalLiquidityUsd}`);
+    console.log(`[MORALIS-PAIRS] Major pairs (>$1000): ${majorPairs.length}`);
+    console.log(`[MORALIS-PAIRS] Major pairs details:`, majorPairs);
     
-    return {
+    const result = {
       total_pairs: data.result?.length || 0,
       total_liquidity_usd: totalLiquidityUsd,
       major_pairs: majorPairs
     };
+    
+    console.log(`[MORALIS-PAIRS] Final result:`, result);
+    return result;
   } catch (error) {
     console.error(`[MORALIS-PAIRS] Error fetching token pairs:`, error);
+    console.error(`[MORALIS-PAIRS] Error stack:`, error.stack);
     return null;
   }
 }
@@ -214,7 +283,9 @@ export async function fetchMoralisTokenOwners(tokenAddress: string, chainId: str
       return null;
     }
 
+    console.log(`[MORALIS-OWNERS] API Key configured: ${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)}`);
     const url = `https://deep-index.moralis.io/api/v2.2/erc20/${tokenAddress.toLowerCase()}/owners?chain=${chainId}&limit=100&order=DESC`;
+    console.log(`[MORALIS-OWNERS] Request URL: ${url}`);
     
     const response = await fetch(url, {
       method: 'GET',
@@ -224,24 +295,60 @@ export async function fetchMoralisTokenOwners(tokenAddress: string, chainId: str
       }
     });
 
+    console.log(`[MORALIS-OWNERS] Response status: ${response.status} ${response.statusText}`);
+    console.log(`[MORALIS-OWNERS] Response headers:`, Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
+      const errorText = await response.text();
       console.error(`[MORALIS-OWNERS] API error: ${response.status} ${response.statusText}`);
+      console.error(`[MORALIS-OWNERS] Error response body:`, errorText);
       return null;
     }
 
-    const data = await response.json();
+    const responseText = await response.text();
+    console.log(`[MORALIS-OWNERS] Raw response text:`, responseText);
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error(`[MORALIS-OWNERS] Failed to parse JSON:`, parseError);
+      console.error(`[MORALIS-OWNERS] Raw response was:`, responseText);
+      return null;
+    }
+
+    console.log(`[MORALIS-OWNERS] === FULL RAW API RESPONSE ===`);
+    console.log(`[MORALIS-OWNERS] Parsed data:`, JSON.stringify(data, null, 2));
     console.log(`[MORALIS-OWNERS] Found ${data.result?.length || 0} top holders`);
     
     if (!data.result || !Array.isArray(data.result)) {
+      console.log(`[MORALIS-OWNERS] No holders found or invalid result structure`);
+      console.log(`[MORALIS-OWNERS] data.result type:`, typeof data.result);
+      console.log(`[MORALIS-OWNERS] data.result:`, data.result);
       return null;
     }
 
-    // Calculate distribution metrics
-    const holders = data.result.map(holder => ({
-      address: holder.owner_address,
-      balance: parseFloat(holder.balance_formatted || 0),
-      percentage: parseFloat(holder.percentage_relative_to_total_supply || 0)
-    }));
+    // Calculate distribution metrics with detailed logging
+    console.log(`[MORALIS-OWNERS] Processing ${data.result.length} holders...`);
+    const holders = data.result.map((holder, index) => {
+      const holderData = {
+        address: holder.owner_address,
+        balance: parseFloat(holder.balance_formatted || 0),
+        percentage: parseFloat(holder.percentage_relative_to_total_supply || 0)
+      };
+      
+      if (index < 5) { // Log first 5 holders for debugging
+        console.log(`[MORALIS-OWNERS] Holder ${index + 1}:`, {
+          address: holder.owner_address,
+          balance_raw: holder.balance,
+          balance_formatted: holder.balance_formatted,
+          percentage_raw: holder.percentage_relative_to_total_supply,
+          processed: holderData
+        });
+      }
+      
+      return holderData;
+    });
 
     // Calculate Gini coefficient for wealth distribution
     const balances = holders.map(h => h.percentage).sort((a, b) => a - b);
@@ -254,17 +361,25 @@ export async function fetchMoralisTokenOwners(tokenAddress: string, chainId: str
     else if (top10Percentage > 60) concentrationRisk = 'High';
     else if (top10Percentage > 40) concentrationRisk = 'Medium';
 
-    console.log(`[MORALIS-OWNERS] Distribution analysis: Gini: ${giniCoefficient.toFixed(3)}, Top 10: ${top10Percentage.toFixed(1)}%, Risk: ${concentrationRisk}`);
+    console.log(`[MORALIS-OWNERS] === DISTRIBUTION ANALYSIS ===`);
+    console.log(`[MORALIS-OWNERS] Total holders: ${data.total || holders.length}`);
+    console.log(`[MORALIS-OWNERS] Gini coefficient: ${giniCoefficient.toFixed(3)}`);
+    console.log(`[MORALIS-OWNERS] Top 10 percentage: ${top10Percentage.toFixed(1)}%`);
+    console.log(`[MORALIS-OWNERS] Concentration risk: ${concentrationRisk}`);
     
-    return {
+    const result = {
       total_holders: data.total || holders.length,
       top_holders: holders.slice(0, 20),
       gini_coefficient: giniCoefficient,
       concentration_risk: concentrationRisk,
       top_10_percentage: top10Percentage
     };
+    
+    console.log(`[MORALIS-OWNERS] Final result:`, result);
+    return result;
   } catch (error) {
     console.error(`[MORALIS-OWNERS] Error fetching token owners:`, error);
+    console.error(`[MORALIS-OWNERS] Error stack:`, error.stack);
     return null;
   }
 }

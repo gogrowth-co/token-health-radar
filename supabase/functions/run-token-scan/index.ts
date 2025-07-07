@@ -243,10 +243,50 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
 
 // Generate category data with real API integration and enhanced tokenomics
 function generateCategoryData(apiData: any) {
+  console.log(`[TOKENOMICS] === STARTING CATEGORY DATA GENERATION ===`);
+  console.log(`[TOKENOMICS] Input API data available:`, {
+    securityData: !!apiData.securityData,
+    webacyData: !!apiData.webacyData,
+    goplusData: !!apiData.goplusData,
+    priceData: !!apiData.priceData,
+    metadataData: !!apiData.metadataData,
+    statsData: !!apiData.statsData,
+    pairsData: !!apiData.pairsData,
+    ownersData: !!apiData.ownersData,
+    githubData: !!apiData.githubData
+  });
+
   const securityScore = calculateSecurityScore(apiData.securityData, apiData.webacyData, apiData.goplusData);
   const liquidityScore = calculateLiquidityScore(apiData.priceData);
   
   // Enhanced tokenomics scoring with new data sources
+  console.log(`[TOKENOMICS] Preparing tokenomics score calculation...`);
+  console.log(`[TOKENOMICS] metadataData:`, apiData.metadataData ? {
+    total_supply: apiData.metadataData.total_supply,
+    verified_contract: apiData.metadataData.verified_contract,
+    possible_spam: apiData.metadataData.possible_spam
+  } : 'null');
+  console.log(`[TOKENOMICS] priceData:`, apiData.priceData ? {
+    current_price_usd: apiData.priceData.current_price_usd,
+    price_change_24h: apiData.priceData.price_change_24h,
+    trading_volume_24h_usd: apiData.priceData.trading_volume_24h_usd
+  } : 'null');
+  console.log(`[TOKENOMICS] statsData:`, apiData.statsData ? {
+    total_supply: apiData.statsData.total_supply,
+    holders: apiData.statsData.holders,
+    transfers: apiData.statsData.transfers
+  } : 'null');
+  console.log(`[TOKENOMICS] ownersData:`, apiData.ownersData ? {
+    gini_coefficient: apiData.ownersData.gini_coefficient,
+    concentration_risk: apiData.ownersData.concentration_risk,
+    total_holders: apiData.ownersData.total_holders
+  } : 'null');
+  console.log(`[TOKENOMICS] pairsData:`, apiData.pairsData ? {
+    total_liquidity_usd: apiData.pairsData.total_liquidity_usd,
+    total_pairs: apiData.pairsData.total_pairs,
+    major_pairs_count: apiData.pairsData.major_pairs?.length
+  } : 'null');
+  
   const tokenomicsScore = calculateTokenomicsScore(
     apiData.metadataData, 
     apiData.priceData,
@@ -255,10 +295,48 @@ function generateCategoryData(apiData: any) {
     apiData.pairsData
   );
   
+  console.log(`[TOKENOMICS] Calculated scores:`, {
+    tokenomicsScore,
+    securityScore,
+    liquidityScore
+  });
+  
   const developmentScore = calculateDevelopmentScore(apiData.githubData);
   
   // Community score - this would need additional APIs (Twitter, Discord, etc.)
   const communityScore = 30; // Conservative score
+
+  console.log(`[TOKENOMICS] === FINAL TOKENOMICS DATA EXTRACTION ===`);
+  
+  // Log raw data before processing
+  const rawTokenomicsData = {
+    supply_cap: apiData.statsData?.total_supply || apiData.metadataData?.total_supply || null,
+    circulating_supply: apiData.statsData?.total_supply || apiData.metadataData?.total_supply || null,
+    actual_circulating_supply: apiData.statsData?.total_supply || null,
+    total_supply: apiData.statsData?.total_supply || apiData.metadataData?.total_supply || null,
+    dex_liquidity_usd: apiData.pairsData?.total_liquidity_usd || 0,
+    major_dex_pairs: apiData.pairsData?.major_pairs || [],
+    distribution_score: getDistributionScoreText(apiData.ownersData?.concentration_risk),
+    distribution_gini_coefficient: apiData.ownersData?.gini_coefficient || null,
+    holder_concentration_risk: apiData.ownersData?.concentration_risk || 'Unknown',
+    top_holders_count: apiData.ownersData?.total_holders || null,
+    burn_mechanism: null,
+    vesting_schedule: 'unknown',
+    tvl_usd: apiData.pairsData?.total_liquidity_usd || 0,
+    treasury_usd: 0,
+    data_confidence_score: calculateTokenomicsConfidence(apiData),
+    last_holder_analysis: apiData.ownersData ? new Date().toISOString() : null,
+    score: tokenomicsScore
+  };
+  
+  console.log(`[TOKENOMICS] Final processed tokenomics data:`, rawTokenomicsData);
+  console.log(`[TOKENOMICS] Data availability summary:`, {
+    hasSupplyData: !!(apiData.statsData?.total_supply || apiData.metadataData?.total_supply),
+    hasLiquidityData: !!apiData.pairsData?.total_liquidity_usd,
+    hasDistributionData: !!apiData.ownersData?.gini_coefficient,
+    hasPairsData: !!apiData.pairsData?.major_pairs?.length,
+    confidenceScore: rawTokenomicsData.data_confidence_score
+  });
 
   return {
     security: {
