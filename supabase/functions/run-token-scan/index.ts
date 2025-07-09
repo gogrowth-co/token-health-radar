@@ -689,7 +689,14 @@ async function invalidateTokenCache(tokenAddress: string, chainId: string) {
     if (result.status === 'fulfilled' && !result.value.error) {
       deletedCount++;
     } else if (result.status === 'rejected' || result.value.error) {
-      console.warn(`[CACHE-INVALIDATION] Failed to delete from cache table ${index}:`, result.status === 'rejected' ? result.reason : result.value.error);
+      const error = result.status === 'rejected' ? result.reason : result.value.error;
+      console.error(`[CACHE-INVALIDATION] Failed to delete from cache table ${index}:`, error);
+      
+      // If this is a constraint violation, it might indicate a larger issue
+      if (error?.code === '23502') {
+        console.error(`[CACHE-INVALIDATION] CRITICAL: NULL constraint violation during cache deletion`);
+        console.error(`[CACHE-INVALIDATION] This suggests database integrity issues`);
+      }
     }
   });
 
@@ -1025,6 +1032,13 @@ Deno.serve(async (req) => {
     // Record the scan with proper chain_id validation
     if (user_id) {
       try {
+        // Validate chain_id is not null before inserting
+        if (!normalizedChainId) {
+          console.error(`[SCAN] ERROR: normalizedChainId is null/undefined for user scan`);
+          console.error(`[SCAN] Original chain_id: ${chain_id}, normalized: ${normalizedChainId}`);
+          throw new Error('Chain ID cannot be null for token scan record');
+        }
+        
         console.log(`[SCAN] Recording scan for user ${user_id} with chain_id: ${normalizedChainId}`);
         const { error: scanError } = await supabase
           .from('token_scans')
@@ -1048,6 +1062,13 @@ Deno.serve(async (req) => {
     } else {
       // Also record anonymous scans for tracking
       try {
+        // Validate chain_id is not null before inserting
+        if (!normalizedChainId) {
+          console.error(`[SCAN] ERROR: normalizedChainId is null/undefined for anonymous scan`);
+          console.error(`[SCAN] Original chain_id: ${chain_id}, normalized: ${normalizedChainId}`);
+          throw new Error('Chain ID cannot be null for anonymous token scan record');
+        }
+        
         console.log(`[SCAN] Recording anonymous scan with chain_id: ${normalizedChainId}`);
         const { error: scanError } = await supabase
           .from('token_scans')

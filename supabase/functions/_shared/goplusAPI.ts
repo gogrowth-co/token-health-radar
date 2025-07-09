@@ -54,7 +54,13 @@ async function getGoPlusAccessToken(): Promise<string> {
     throw new Error('[GOPLUS-AUTH] Missing GOPLUS_APP_KEY or GOPLUS_APP_SECRET');
   }
 
-  const sign = await sha1Hex(`${APP_KEY}${now}${APP_SECRET}`);
+  // Debug signature generation step by step
+  const signatureInput = `${APP_KEY}${now}${APP_SECRET}`;
+  console.log(`[GOPLUS-AUTH] Signature input: ${APP_KEY}${now}${APP_SECRET.substring(0, 4)}...`);
+  console.log(`[GOPLUS-AUTH] Signature input length: ${signatureInput.length}`);
+  
+  const sign = await sha1Hex(signatureInput);
+  console.log(`[GOPLUS-AUTH] Generated signature: ${sign}`);
 
   console.log(`[GOPLUS-AUTH] Auth request:`, {
     app_key: APP_KEY,
