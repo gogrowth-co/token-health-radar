@@ -54,40 +54,66 @@ async function getGoPlusAccessToken(): Promise<string> {
     throw new Error('[GOPLUS-AUTH] Missing GOPLUS_APP_KEY or GOPLUS_APP_SECRET');
   }
 
-  // Debug signature generation step by step
-  const signatureInput = `${APP_KEY}${now}${APP_SECRET}`;
-  console.log(`[GOPLUS-AUTH] Signature input: ${APP_KEY}${now}${APP_SECRET.substring(0, 4)}...`);
-  console.log(`[GOPLUS-AUTH] Signature input length: ${signatureInput.length}`);
+  // Try multiple signature variations systematically
+  const variations = [
+    `${APP_KEY}${now}${APP_SECRET}`,  // Current approach
+    `${APP_SECRET}${APP_KEY}${now}`,  // Secret first
+    `${now}${APP_KEY}${APP_SECRET}`,  // Timestamp first
+    `${APP_KEY}&${now}&${APP_SECRET}`, // With separators
+    `app_key=${APP_KEY}&time=${now}&app_secret=${APP_SECRET}`, // URL style
+    `${APP_KEY}${now * 1000}${APP_SECRET}`, // Milliseconds
+    `${APP_SECRET}${now}${APP_KEY}`,  // Secret-timestamp-key
+    `${now}${APP_SECRET}${APP_KEY}`,  // Time-secret-key
+    `appKey=${APP_KEY}&timestamp=${now}&secret=${APP_SECRET}`, // CamelCase
+    encodeURIComponent(`${APP_KEY}${now}${APP_SECRET}`), // URL encoded
+  ];
+
+  console.log(`[GOPLUS-AUTH] Testing ${variations.length} signature variations for timestamp: ${now}`);
   
-  const sign = await sha1Hex(signatureInput);
-  console.log(`[GOPLUS-AUTH] Generated signature: ${sign}`);
+  let lastError = null;
+  
+  // Try each variation until one works
+  for (let i = 0; i < variations.length; i++) {
+    try {
+      const signatureInput = variations[i];
+      const sign = await sha1Hex(signatureInput);
+      const signForLog = signatureInput.replace(APP_SECRET, '[SECRET]');
+      
+      console.log(`[GOPLUS-AUTH] Trying variation ${i + 1}/${variations.length}: ${signForLog}`);
+      console.log(`[GOPLUS-AUTH] Generated signature: ${sign}`);
 
-  console.log(`[GOPLUS-AUTH] Auth request:`, {
-    app_key: APP_KEY,
-    time: now,
-    sign: sign.substring(0, 8) + '...'
-  });
+      const res = await fetch('https://api.gopluslabs.io/api/v1/token', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ app_key: APP_KEY, time: now, sign })
+      });
 
-  const res = await fetch('https://api.gopluslabs.io/api/v1/token', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ app_key: APP_KEY, time: now, sign })
-  });
+      const json = await res.json();
+      console.log(`[GOPLUS-AUTH] Variation ${i + 1} response:`, json);
 
-  const json = await res.json();
-  console.log(`[GOPLUS-AUTH] Response:`, json);
+      if (json.code === 1) {
+        console.log(`[GOPLUS-AUTH] SUCCESS! Variation ${i + 1} worked: ${signForLog}`);
+        
+        cachedToken = {
+          value: json.result.access_token,
+          exp: now + json.result.expire
+        };
 
-  if (json.code !== 1) {
-    throw new Error(`GoPlus token error: ${JSON.stringify(json)}`);
+        console.log(`[GOPLUS-AUTH] Successfully obtained access token (expires in ${json.result.expire}s)`);
+        return cachedToken.value;
+      } else {
+        console.warn(`[GOPLUS-AUTH] Variation ${i + 1} failed: ${json.message || json.code}`);
+        lastError = json;
+      }
+    } catch (error) {
+      console.error(`[GOPLUS-AUTH] Variation ${i + 1} threw error:`, error);
+      lastError = error;
+    }
   }
-
-  cachedToken = {
-    value: json.result.access_token,
-    exp: now + json.result.expire
-  };
-
-  console.log(`[GOPLUS-AUTH] Successfully obtained access token (expires in ${json.result.expire}s)`);
-  return cachedToken.value;
+  
+  // If all variations failed
+  console.error(`[GOPLUS-AUTH] All ${variations.length} signature variations failed!`);
+  throw new Error(`GoPlus authentication failed with all signature variations. Last error: ${JSON.stringify(lastError)}`);
 }
 
 // Helper functions to extract liquidity lock data from LP holders
