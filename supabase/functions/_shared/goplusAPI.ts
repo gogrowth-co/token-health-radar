@@ -29,6 +29,16 @@ function calculateDelay(attempt: number): number {
 let goplusAccessToken: string | null = null;
 let tokenExpiration: number = 0;
 
+// Helper function to generate SHA1 hash
+async function sha1(data: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const dataBuffer = encoder.encode(data);
+  const hashBuffer = await crypto.subtle.digest('SHA-1', dataBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+}
+
 // Get or refresh GoPlus access token
 async function getGoPlusAccessToken(): Promise<string | null> {
   console.log(`[GOPLUS-AUTH] Checking access token status`);
@@ -39,22 +49,40 @@ async function getGoPlusAccessToken(): Promise<string | null> {
     return goplusAccessToken;
   }
 
-  // Get API key from environment
-  const apiKey = Deno.env.get('GOPLUS_API_KEY');
-  if (!apiKey) {
-    console.error(`[GOPLUS-AUTH] GOPLUS_API_KEY not configured`);
+  // Get app key and secret from environment
+  const appKey = Deno.env.get('GOPLUS_APP_KEY');
+  const appSecret = Deno.env.get('GOPLUS_APP_SECRET');
+  
+  if (!appKey || !appSecret) {
+    console.error(`[GOPLUS-AUTH] GOPLUS_APP_KEY or GOPLUS_APP_SECRET not configured`);
     return null;
   }
 
   try {
     console.log(`[GOPLUS-AUTH] Requesting new access token...`);
-    const response = await fetch('https://api.gopluslabs.io/api/v1/authorization', {
+    
+    // Generate timestamp (current time in seconds)
+    const timestamp = Math.floor(Date.now() / 1000);
+    
+    // Generate sign: SHA1(app_key + timestamp + app_secret)
+    const signString = `${appKey}${timestamp}${appSecret}`;
+    const sign = await sha1(signString);
+    
+    console.log(`[GOPLUS-AUTH] Auth params:`, {
+      app_key: appKey,
+      timestamp: timestamp,
+      sign: sign
+    });
+    
+    const response = await fetch('https://api.gopluslabs.io/api/v1/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        api_key: apiKey
+        app_key: appKey,
+        sign: sign,
+        time: timestamp
       })
     });
 
@@ -68,11 +96,11 @@ async function getGoPlusAccessToken(): Promise<string | null> {
     const authData = await response.json();
     console.log(`[GOPLUS-AUTH] Auth response:`, authData);
 
-    if (authData.code === 1 && authData.data?.access_token) {
-      goplusAccessToken = authData.data.access_token;
+    if (authData.code === 1 && authData.result?.access_token) {
+      goplusAccessToken = authData.result.access_token;
       // Set expiration to 23 hours from now (tokens expire in 24 hours)
       tokenExpiration = Date.now() + (23 * 60 * 60 * 1000);
-      console.log(`[GOPLUS-AUTH] Successfully obtained access token (expires in ${authData.data.expires_in || 86400}s)`);
+      console.log(`[GOPLUS-AUTH] Successfully obtained access token (expires in ${authData.result.expires_in || 86400}s)`);
       return goplusAccessToken;
     } else {
       console.error(`[GOPLUS-AUTH] Invalid auth response:`, authData);
