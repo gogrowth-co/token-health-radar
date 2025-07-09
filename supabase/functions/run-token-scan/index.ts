@@ -143,16 +143,17 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     // Add detailed API key debugging BEFORE making calls
     console.log(`[SCAN] === API KEY STATUS CHECK ===`);
     console.log(`[SCAN] WEBACY_API_KEY configured: ${!!Deno.env.get('WEBACY_API_KEY')}`);
-    console.log(`[SCAN] GOPLUS_API_KEY configured: ${!!Deno.env.get('GOPLUS_API_KEY')}`);
+    console.log(`[SCAN] GOPLUS_APP_KEY configured: ${!!Deno.env.get('GOPLUS_APP_KEY')}`);
+    console.log(`[SCAN] GOPLUS_APP_SECRET configured: ${!!Deno.env.get('GOPLUS_APP_SECRET')}`);
     console.log(`[SCAN] MORALIS_API_KEY configured: ${!!Deno.env.get('MORALIS_API_KEY')}`);
     console.log(`[SCAN] COINGECKO_API_KEY configured: ${!!Deno.env.get('COINGECKO_API_KEY')}`);
     if (Deno.env.get('WEBACY_API_KEY')) {
       const key = Deno.env.get('WEBACY_API_KEY')!;
       console.log(`[SCAN] WEBACY_API_KEY length: ${key.length}, starts with: ${key.substring(0, 8)}...`);
     }
-    if (Deno.env.get('GOPLUS_API_KEY')) {
-      const key = Deno.env.get('GOPLUS_API_KEY')!;
-      console.log(`[SCAN] GOPLUS_API_KEY length: ${key.length}, starts with: ${key.substring(0, 8)}...`);
+    if (Deno.env.get('GOPLUS_APP_KEY')) {
+      const key = Deno.env.get('GOPLUS_APP_KEY')!;
+      console.log(`[SCAN] GOPLUS_APP_KEY length: ${key.length}, starts with: ${key.substring(0, 8)}...`);
     }
     
     // Phase 1: Core data APIs (always needed)
