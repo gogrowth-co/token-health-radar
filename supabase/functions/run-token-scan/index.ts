@@ -481,7 +481,11 @@ function generateCategoryData(apiData: any) {
       is_proxy: apiData.securityData?.is_proxy || null,
       is_blacklisted: apiData.securityData?.is_blacklisted || null,
       access_control: apiData.securityData?.access_control || null,
-      contract_verified: apiData.securityData?.contract_verified || null
+      contract_verified: apiData.securityData?.contract_verified || null,
+      // CRITICAL: Include liquidity lock fields from GoPlus API
+      is_liquidity_locked: apiData.securityData?.is_liquidity_locked || null,
+      liquidity_lock_info: apiData.securityData?.liquidity_lock_info || null,
+      liquidity_percentage: apiData.securityData?.liquidity_percentage || null
     },
     tokenomics: {
       // Enhanced supply data with better zero handling

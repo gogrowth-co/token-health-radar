@@ -156,9 +156,11 @@ export function calculateLiquidityScore(marketData: any, liquidityData?: any): n
   
   console.log(`[LIQUIDITY-SCORE] Market cap bonus (${marketCap.toLocaleString()}): +${score - marketCapBonus} points`);
   
-  // Liquidity lock bonus (security factor)
+  // Liquidity lock bonus (security factor) - check both liquidity and security data
   const lockBonus = score;
-  if (liquidityData?.is_liquidity_locked) {
+  const isLocked = liquidityData?.is_liquidity_locked || (liquidityData?.liquidity_locked_days && liquidityData.liquidity_locked_days > 0);
+  
+  if (isLocked) {
     const lockDays = liquidityData.liquidity_locked_days || 0;
     if (lockDays > 365) score += 15; // > 1 year
     else if (lockDays > 180) score += 10; // > 6 months  
