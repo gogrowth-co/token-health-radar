@@ -84,6 +84,50 @@ async function getGoPlusAccessToken(): Promise<string | null> {
   }
 }
 
+// Helper functions to extract liquidity lock data from LP holders
+function extractLiquidityLockStatus(lpHolders: any[]): boolean | null {
+  if (!Array.isArray(lpHolders) || lpHolders.length === 0) return null;
+  
+  // Check if any LP holder has locked tokens
+  const hasLockedLP = lpHolders.some(holder => holder.is_locked === '1');
+  return hasLockedLP;
+}
+
+function extractLiquidityLockInfo(lpHolders: any[]): string | null {
+  if (!Array.isArray(lpHolders) || lpHolders.length === 0) return null;
+  
+  const lockedHolders = lpHolders.filter(holder => holder.is_locked === '1' && holder.locked_detail);
+  if (lockedHolders.length === 0) return null;
+  
+  // Combine lock info from all locked holders
+  const lockInfos = lockedHolders.map(holder => {
+    if (!holder.locked_detail || !Array.isArray(holder.locked_detail)) return null;
+    
+    return holder.locked_detail.map((lock: any) => {
+      const endTime = lock.end_time ? new Date(lock.end_time * 1000).toISOString() : 'Unknown';
+      const amount = lock.amount || 'Unknown';
+      return `Amount: ${amount}, Unlock: ${endTime}`;
+    }).join('; ');
+  }).filter(Boolean);
+  
+  return lockInfos.length > 0 ? lockInfos.join(' | ') : null;
+}
+
+function extractLiquidityLockPercentage(lpHolders: any[]): number | null {
+  if (!Array.isArray(lpHolders) || lpHolders.length === 0) return null;
+  
+  // Calculate total percentage of locked LP tokens
+  const totalLockedPercentage = lpHolders.reduce((sum, holder) => {
+    if (holder.is_locked === '1' && holder.percent) {
+      // holder.percent is already in 0-1 format where 1 = 100%
+      return sum + (parseFloat(holder.percent) * 100);
+    }
+    return sum;
+  }, 0);
+  
+  return totalLockedPercentage > 0 ? totalLockedPercentage : null;
+}
+
 // GoPlus Security API client with enhanced debugging and authentication, retry logic and health monitoring
 export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string) {
   console.log(`[GOPLUS] === STARTING GOPLUS API CALL ===`);
@@ -190,11 +234,10 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
     
     console.log(`[GOPLUS] Raw token data:`, JSON.stringify(tokenData, null, 2));
     
-    // CRITICAL DEBUGGING: Log specific liquidity lock fields from raw response
+    // CRITICAL DEBUGGING: Log LP holders data for liquidity lock analysis
     console.log(`[GOPLUS] === LIQUIDITY LOCK DEBUGGING ===`);
-    console.log(`[GOPLUS] tokenData.is_liquidity_locked:`, tokenData.is_liquidity_locked);
-    console.log(`[GOPLUS] tokenData.liquidity_lock_info:`, tokenData.liquidity_lock_info);
-    console.log(`[GOPLUS] tokenData.liquidity_percentage:`, tokenData.liquidity_percentage);
+    console.log(`[GOPLUS] tokenData.lp_holders:`, JSON.stringify(tokenData.lp_holders, null, 2));
+    console.log(`[GOPLUS] LP holders count:`, Array.isArray(tokenData.lp_holders) ? tokenData.lp_holders.length : 'Not an array');
     console.log(`[GOPLUS] Raw tokenData keys:`, Object.keys(tokenData));
     console.log(`[GOPLUS] === END LIQUIDITY LOCK DEBUGGING ===`);
     
@@ -218,10 +261,10 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
       sell_tax: tokenData.sell_tax !== undefined ? parseFloat(tokenData.sell_tax) : null,
       transfer_tax: tokenData.transfer_tax !== undefined ? parseFloat(tokenData.transfer_tax) : null,
       
-      // Liquidity lock information (NEW)
-      is_liquidity_locked: tokenData.is_liquidity_locked !== undefined ? tokenData.is_liquidity_locked === '1' : null,
-      liquidity_lock_info: tokenData.liquidity_lock_info || null,
-      liquidity_percentage: tokenData.liquidity_percentage !== undefined ? parseFloat(tokenData.liquidity_percentage) : null,
+      // FIXED: Liquidity lock information from LP holders data
+      is_liquidity_locked: extractLiquidityLockStatus(tokenData.lp_holders),
+      liquidity_lock_info: extractLiquidityLockInfo(tokenData.lp_holders),
+      liquidity_percentage: extractLiquidityLockPercentage(tokenData.lp_holders),
       
       // Multisig status (derived from governance indicators)
       multisig_status: tokenData.owner_address && tokenData.owner_address !== '0x0000000000000000000000000000000000000000' ? 'unknown' : 'renounced'
