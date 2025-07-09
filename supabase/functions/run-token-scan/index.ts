@@ -25,6 +25,106 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
+// Fetch CEX count from CoinGecko API
+async function fetchCoinGeckoCexCount(tokenAddress: string, chainId: string): Promise<number> {
+  console.log(`[CEX] Fetching CEX count for ${tokenAddress} on chain ${chainId}`);
+  
+  const chainConfig = getChainConfigByMoralisId(chainId);
+  if (!chainConfig || !chainConfig.gecko) {
+    console.log(`[CEX] No CoinGecko platform mapping for chain: ${chainId}`);
+    return 0;
+  }
+
+  // Map chain to CoinGecko platform
+  const platformMap: Record<string, string> = {
+    'eth': 'ethereum',
+    'bsc': 'binance-smart-chain', 
+    'polygon_pos': 'polygon-pos',
+    'arbitrum': 'arbitrum-one',
+    'optimism': 'optimistic-ethereum',
+    'base': 'base'
+  };
+  
+  const coinGeckoPlatform = platformMap[chainConfig.gecko] || chainConfig.gecko;
+  console.log(`[CEX] Using CoinGecko platform: ${coinGeckoPlatform}`);
+
+  const cexAllowlist = [
+    "Binance", "Coinbase", "OKX", "KuCoin", "Gate.io", "Kraken", 
+    "Bitfinex", "MEXC", "Bitget", "Huobi", "Bybit", "Crypto.com"
+  ];
+
+  try {
+    // Step 1: Get CoinGecko ID for the token
+    console.log(`[CEX] Step 1: Getting CoinGecko ID...`);
+    const idResponse = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coinGeckoPlatform}/contract/${tokenAddress.toLowerCase()}`,
+      {
+        headers: {
+          'accept': 'application/json',
+          ...(Deno.env.get('COINGECKO_API_KEY') && {
+            'x-cg-demo-api-key': Deno.env.get('COINGECKO_API_KEY')
+          })
+        }
+      }
+    );
+
+    if (!idResponse.ok) {
+      if (idResponse.status === 404) {
+        console.log(`[CEX] Token not found on CoinGecko`);
+        return 0;
+      }
+      throw new Error(`CoinGecko API error: ${idResponse.status}`);
+    }
+
+    const tokenData = await idResponse.json();
+    const coinGeckoId = tokenData.id;
+    console.log(`[CEX] Found CoinGecko ID: ${coinGeckoId}`);
+
+    // Step 2: Get token tickers/exchanges
+    console.log(`[CEX] Step 2: Getting exchange listings...`);
+    const tickersResponse = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coinGeckoId}/tickers`,
+      {
+        headers: {
+          'accept': 'application/json',
+          ...(Deno.env.get('COINGECKO_API_KEY') && {
+            'x-cg-demo-api-key': Deno.env.get('COINGECKO_API_KEY')
+          })
+        }
+      }
+    );
+
+    if (!tickersResponse.ok) {
+      throw new Error(`CoinGecko tickers API error: ${tickersResponse.status}`);
+    }
+
+    const tickersData = await tickersResponse.json();
+    const tickers = tickersData.tickers || [];
+    
+    console.log(`[CEX] Found ${tickers.length} total tickers`);
+
+    // Step 3: Count unique CEX exchanges
+    const cexExchanges = new Set<string>();
+    
+    for (const ticker of tickers) {
+      const marketName = ticker.market?.name;
+      if (marketName && cexAllowlist.includes(marketName)) {
+        cexExchanges.add(marketName);
+        console.log(`[CEX] Found CEX: ${marketName}`);
+      }
+    }
+
+    const cexCount = cexExchanges.size;
+    console.log(`[CEX] Total unique CEX exchanges: ${cexCount}`);
+    
+    return cexCount;
+
+  } catch (error) {
+    console.error(`[CEX] Error fetching CEX count:`, error);
+    return 0; // Default to 0 on error
+  }
+}
+
 // Fetch comprehensive token data from multiple APIs using Moralis as primary metadata source
 async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
   console.log(`[SCAN] Fetching token data from multiple APIs for: ${tokenAddress} on chain: ${chainId}`);
@@ -45,6 +145,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     console.log(`[SCAN] WEBACY_API_KEY configured: ${!!Deno.env.get('WEBACY_API_KEY')}`);
     console.log(`[SCAN] GOPLUS_API_KEY configured: ${!!Deno.env.get('GOPLUS_API_KEY')}`);
     console.log(`[SCAN] MORALIS_API_KEY configured: ${!!Deno.env.get('MORALIS_API_KEY')}`);
+    console.log(`[SCAN] COINGECKO_API_KEY configured: ${!!Deno.env.get('COINGECKO_API_KEY')}`);
     if (Deno.env.get('WEBACY_API_KEY')) {
       const key = Deno.env.get('WEBACY_API_KEY')!;
       console.log(`[SCAN] WEBACY_API_KEY length: ${key.length}, starts with: ${key.substring(0, 8)}...`);
@@ -71,6 +172,12 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       fetchDeFiLlamaTVL(tokenAddress)
     ]);
 
+    // Phase 3: CEX listings data
+    console.log(`[SCAN] Fetching CEX listings data...`);
+    const [cexData] = await Promise.allSettled([
+      fetchCoinGeckoCexCount(tokenAddress, chainId)
+    ]);
+
     const apiEndTime = Date.now();
     console.log(`[SCAN] API calls completed in ${apiEndTime - apiStartTime}ms`);
 
@@ -85,6 +192,9 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     const pairs = pairsData.status === 'fulfilled' ? pairsData.value : null;
     const owners = ownersData.status === 'fulfilled' ? ownersData.value : null;
     const tvl = tvlData.status === 'fulfilled' ? tvlData.value : null;
+    
+    // CEX listings data
+    const cexCount = cexData.status === 'fulfilled' ? cexData.value : 0;
 
     // Log API failures for debugging
     if (webacySecurityData.status === 'rejected') {
@@ -241,7 +351,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       pairsData: pairs,
       ownersData: owners,
       githubData: githubData,
-      tvlData: tvl
+      tvlData: tvl,
+      cexData: cexCount
     };
   } catch (error) {
     console.error(`[SCAN] Error fetching token data from APIs:`, error);
@@ -405,8 +516,8 @@ function generateCategoryData(apiData: any) {
       trading_volume_24h_usd: apiData.priceData?.trading_volume_24h_usd || 0,
       liquidity_locked_days: 0,
       dex_depth_status: apiData.priceData?.trading_volume_24h_usd > 10000 ? 'good' : 'limited',
-      holder_distribution: 'unknown',
-      cex_listings: 0,
+      holder_distribution: apiData.ownersData?.concentration_risk || 'unknown',
+      cex_listings: apiData.cexData || 0,
       score: liquidityScore
     },
     community: {
