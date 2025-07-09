@@ -68,42 +68,87 @@ async function getGoPlusAccessToken(): Promise<string | null> {
     const signString = `${appKey}${timestamp}${appSecret}`;
     const sign = await sha1(signString);
     
-    console.log(`[GOPLUS-AUTH] Auth params:`, {
+    console.log(`[GOPLUS-AUTH] Detailed auth debug:`, {
       app_key: appKey,
+      app_secret_first_chars: appSecret.substring(0, 4) + '...',
+      app_secret_length: appSecret.length,
       timestamp: timestamp,
-      sign: sign
+      sign_string: signString,
+      sign: sign,
+      current_time: new Date().toISOString()
     });
     
-    const response = await fetch('https://api.gopluslabs.io/api/v1/token', {
+    // Try form-encoded data first (as per GoPlus docs)
+    const formData = new FormData();
+    formData.append('app_key', appKey);
+    formData.append('sign', sign);
+    formData.append('time', timestamp.toString());
+    
+    console.log(`[GOPLUS-AUTH] Making request to GoPlus API with form data...`);
+    
+    let response = await fetch('https://api.gopluslabs.io/api/v1/token', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        app_key: appKey,
-        sign: sign,
-        time: timestamp
-      })
+      body: formData
     });
 
+    console.log(`[GOPLUS-AUTH] Form request - Response status: ${response.status}`);
+    
+    // If form data doesn't work, try JSON
+    if (!response.ok) {
+      console.log(`[GOPLUS-AUTH] Form data failed, trying JSON...`);
+      
+      response = await fetch('https://api.gopluslabs.io/api/v1/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          app_key: appKey,
+          sign: sign,
+          time: timestamp
+        })
+      });
+      
+      console.log(`[GOPLUS-AUTH] JSON request - Response status: ${response.status}`);
+    }
+    
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`[GOPLUS-AUTH] Failed to get access token: ${response.status} ${response.statusText}`);
-      console.error(`[GOPLUS-AUTH] Error response:`, errorText);
+      console.error(`[GOPLUS-AUTH] Both form and JSON failed - HTTP error: ${response.status} ${response.statusText}`);
+      console.error(`[GOPLUS-AUTH] Error response body:`, errorText);
       return null;
     }
 
     const authData = await response.json();
-    console.log(`[GOPLUS-AUTH] Auth response:`, authData);
+    console.log(`[GOPLUS-AUTH] Full auth response:`, JSON.stringify(authData, null, 2));
 
-    if (authData.code === 1 && authData.result?.access_token) {
-      goplusAccessToken = authData.result.access_token;
-      // Set expiration to 23 hours from now (tokens expire in 24 hours)
-      tokenExpiration = Date.now() + (23 * 60 * 60 * 1000);
-      console.log(`[GOPLUS-AUTH] Successfully obtained access token (expires in ${authData.result.expires_in || 86400}s)`);
-      return goplusAccessToken;
+    // Check for success - GoPlus API uses code 1 for success
+    if (authData.code === 1) {
+      const accessToken = authData.result?.access_token;
+      
+      if (accessToken) {
+        goplusAccessToken = accessToken;
+        // Set expiration to 23 hours from now (tokens expire in 24 hours)
+        tokenExpiration = Date.now() + (23 * 60 * 60 * 1000);
+        console.log(`[GOPLUS-AUTH] Successfully obtained access token: ${accessToken.substring(0, 20)}...`);
+        return goplusAccessToken;
+      } else {
+        console.error(`[GOPLUS-AUTH] Success response but no access token:`, authData);
+        return null;
+      }
     } else {
-      console.error(`[GOPLUS-AUTH] Invalid auth response:`, authData);
+      console.error(`[GOPLUS-AUTH] API authentication failed:`);
+      console.error(`[GOPLUS-AUTH] Code: ${authData.code}`);
+      console.error(`[GOPLUS-AUTH] Message: ${authData.message || 'No message'}`);
+      console.error(`[GOPLUS-AUTH] Full response:`, authData);
+      
+      // Log common error codes for debugging
+      if (authData.code === 4010) {
+        console.error(`[GOPLUS-AUTH] Error 4010: This usually indicates invalid signature or parameters`);
+        console.error(`[GOPLUS-AUTH] Check that app_key and app_secret are correct`);
+        console.error(`[GOPLUS-AUTH] Verify sign generation: SHA1(${appKey}${timestamp}${appSecret.substring(0, 4)}...)`);
+      }
+      
       return null;
     }
   } catch (error) {
