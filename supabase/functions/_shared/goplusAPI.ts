@@ -210,6 +210,11 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
       sell_tax: tokenData.sell_tax !== undefined ? parseFloat(tokenData.sell_tax) : null,
       transfer_tax: tokenData.transfer_tax !== undefined ? parseFloat(tokenData.transfer_tax) : null,
       
+      // Liquidity lock information (NEW)
+      is_liquidity_locked: tokenData.is_liquidity_locked !== undefined ? tokenData.is_liquidity_locked === '1' : null,
+      liquidity_lock_info: tokenData.liquidity_lock_info || null,
+      liquidity_percentage: tokenData.liquidity_percentage !== undefined ? parseFloat(tokenData.liquidity_percentage) : null,
+      
       // Multisig status (derived from governance indicators)
       multisig_status: tokenData.owner_address && tokenData.owner_address !== '0x0000000000000000000000000000000000000000' ? 'unknown' : 'renounced'
     };
@@ -223,7 +228,19 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
       raw_is_proxy: tokenData.is_proxy,
       raw_is_blacklisted: tokenData.is_blacklisted,
       raw_is_open_source: tokenData.is_open_source,
+      raw_is_liquidity_locked: tokenData.is_liquidity_locked,
+      raw_liquidity_lock_info: tokenData.liquidity_lock_info,
+      raw_liquidity_percentage: tokenData.liquidity_percentage,
       mapped_data: securityData
+    });
+    
+    console.log(`[GOPLUS] Liquidity Lock Data:`, {
+      raw_is_liquidity_locked: tokenData.is_liquidity_locked,
+      raw_liquidity_lock_info: tokenData.liquidity_lock_info,
+      raw_liquidity_percentage: tokenData.liquidity_percentage,
+      mapped_is_locked: securityData.is_liquidity_locked,
+      mapped_lock_info: securityData.liquidity_lock_info,
+      mapped_percentage: securityData.liquidity_percentage
     });
     
       console.log(`[GOPLUS] SUCCESS - Extracted security data:`, securityData);

@@ -126,10 +126,18 @@ export function calculateSecurityScore(securityData: any, webacyData: any = null
   return finalScore;
 }
 
-export function calculateLiquidityScore(marketData: any): number {
+export function calculateLiquidityScore(marketData: any, liquidityData?: any): number {
   if (!marketData) return 0;
   
   let score = 30; // Base score
+  
+  console.log(`[LIQUIDITY-SCORE] === CALCULATING ENHANCED LIQUIDITY SCORE ===`);
+  console.log(`[LIQUIDITY-SCORE] Input data:`, {
+    volume24h: marketData.trading_volume_24h_usd,
+    marketCap: marketData.market_cap_usd,
+    liquidityLockedDays: liquidityData?.liquidity_locked_days,
+    isLocked: liquidityData?.is_liquidity_locked
+  });
   
   // Volume-based scoring
   const volume24h = marketData.trading_volume_24h_usd || 0;
@@ -137,13 +145,35 @@ export function calculateLiquidityScore(marketData: any): number {
   else if (volume24h > 100000) score += 15; // > $100K
   else if (volume24h > 10000) score += 5; // > $10K
   
+  console.log(`[LIQUIDITY-SCORE] Volume bonus (${volume24h.toLocaleString()}): +${score - 30} points`);
+  
   // Market cap based scoring
   const marketCap = marketData.market_cap_usd || 0;
+  const marketCapBonus = score;
   if (marketCap > 100000000) score += 20; // > $100M
   else if (marketCap > 10000000) score += 10; // > $10M
   else if (marketCap > 1000000) score += 5; // > $1M
   
-  return Math.max(0, Math.min(100, score));
+  console.log(`[LIQUIDITY-SCORE] Market cap bonus (${marketCap.toLocaleString()}): +${score - marketCapBonus} points`);
+  
+  // Liquidity lock bonus (security factor)
+  const lockBonus = score;
+  if (liquidityData?.is_liquidity_locked) {
+    const lockDays = liquidityData.liquidity_locked_days || 0;
+    if (lockDays > 365) score += 15; // > 1 year
+    else if (lockDays > 180) score += 10; // > 6 months  
+    else if (lockDays > 30) score += 5; // > 1 month
+    else if (lockDays > 0) score += 2; // Any lock
+    
+    console.log(`[LIQUIDITY-SCORE] Liquidity lock bonus (${lockDays} days): +${score - lockBonus} points`);
+  } else {
+    console.log(`[LIQUIDITY-SCORE] No liquidity lock detected: +0 bonus`);
+  }
+  
+  const finalScore = Math.max(0, Math.min(100, score));
+  console.log(`[LIQUIDITY-SCORE] Final score: ${finalScore}/100`);
+  
+  return finalScore;
 }
 
 export function calculateTokenomicsScore(

@@ -377,7 +377,7 @@ function generateCategoryData(apiData: any) {
   });
 
   const securityScore = calculateSecurityScore(apiData.securityData, apiData.webacyData, apiData.goplusData);
-  const liquidityScore = calculateLiquidityScore(apiData.priceData);
+  const liquidityScore = calculateLiquidityScore(apiData.priceData, apiData.securityData);
   
   // Enhanced tokenomics scoring with new data sources
   console.log(`[TOKENOMICS] Preparing tokenomics score calculation...`);
@@ -514,7 +514,7 @@ function generateCategoryData(apiData: any) {
     },
     liquidity: {
       trading_volume_24h_usd: apiData.priceData?.trading_volume_24h_usd || 0,
-      liquidity_locked_days: 0,
+      liquidity_locked_days: calculateLiquidityLockedDays(apiData.securityData),
       dex_depth_status: apiData.priceData?.trading_volume_24h_usd > 10000 ? 'good' : 'limited',
       holder_distribution: apiData.ownersData?.concentration_risk || 'unknown',
       cex_listings: apiData.cexData || 0,
@@ -566,6 +566,53 @@ function getValidSupplyValue(value: any): number | null {
   if (isNaN(numValue) || numValue === 0) return null;
   
   return numValue;
+}
+
+// Helper function to calculate liquidity locked days from security data
+function calculateLiquidityLockedDays(securityData: any): number {
+  console.log(`[LIQUIDITY-LOCK] Calculating lock days from security data:`, {
+    is_liquidity_locked: securityData?.is_liquidity_locked,
+    liquidity_lock_info: securityData?.liquidity_lock_info,
+    liquidity_percentage: securityData?.liquidity_percentage
+  });
+  
+  if (!securityData?.is_liquidity_locked) {
+    console.log(`[LIQUIDITY-LOCK] No liquidity lock detected, returning 0 days`);
+    return 0;
+  }
+  
+  const lockInfo = securityData.liquidity_lock_info;
+  if (!lockInfo || lockInfo === 'Not Locked') {
+    console.log(`[LIQUIDITY-LOCK] Lock info indicates not locked: ${lockInfo}`);
+    return 0;
+  }
+  
+  // Parse different formats: "180 days", "6 months", "1 year", etc.
+  const dayMatch = lockInfo.match(/(\d+)\s*days?/i);
+  if (dayMatch) {
+    const days = parseInt(dayMatch[1]);
+    console.log(`[LIQUIDITY-LOCK] Parsed ${days} days from: ${lockInfo}`);
+    return days;
+  }
+  
+  const monthMatch = lockInfo.match(/(\d+)\s*months?/i);
+  if (monthMatch) {
+    const days = parseInt(monthMatch[1]) * 30;
+    console.log(`[LIQUIDITY-LOCK] Parsed ${days} days (${monthMatch[1]} months) from: ${lockInfo}`);
+    return days;
+  }
+  
+  const yearMatch = lockInfo.match(/(\d+)\s*years?/i);
+  if (yearMatch) {
+    const days = parseInt(yearMatch[1]) * 365;
+    console.log(`[LIQUIDITY-LOCK] Parsed ${days} days (${yearMatch[1]} years) from: ${lockInfo}`);
+    return days;
+  }
+  
+  // If locked but can't parse duration, assume some lock exists
+  const fallbackDays = securityData.is_liquidity_locked ? 1 : 0;
+  console.log(`[LIQUIDITY-LOCK] Could not parse lock duration from "${lockInfo}", using fallback: ${fallbackDays} days`);
+  return fallbackDays;
 }
 
 // Calculate confidence score for tokenomics data quality
@@ -874,7 +921,11 @@ Deno.serve(async (req) => {
             is_proxy: categoryData.security.is_proxy,
             is_blacklisted: categoryData.security.is_blacklisted,
             access_control: categoryData.security.access_control,
-            contract_verified: categoryData.security.contract_verified
+            contract_verified: categoryData.security.contract_verified,
+            // Liquidity lock fields (NEW)
+            is_liquidity_locked: categoryData.security.is_liquidity_locked,
+            liquidity_lock_info: categoryData.security.liquidity_lock_info,
+            liquidity_percentage: categoryData.security.liquidity_percentage
           }
         },
         {

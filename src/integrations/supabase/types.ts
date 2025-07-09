@@ -329,7 +329,10 @@ export type Database = {
           freeze_authority: boolean | null
           honeypot_detected: boolean | null
           is_blacklisted: boolean | null
+          is_liquidity_locked: boolean | null
           is_proxy: boolean | null
+          liquidity_lock_info: string | null
+          liquidity_percentage: number | null
           multisig_status: string | null
           ownership_renounced: boolean | null
           score: number | null
@@ -348,7 +351,10 @@ export type Database = {
           freeze_authority?: boolean | null
           honeypot_detected?: boolean | null
           is_blacklisted?: boolean | null
+          is_liquidity_locked?: boolean | null
           is_proxy?: boolean | null
+          liquidity_lock_info?: string | null
+          liquidity_percentage?: number | null
           multisig_status?: string | null
           ownership_renounced?: boolean | null
           score?: number | null
@@ -367,7 +373,10 @@ export type Database = {
           freeze_authority?: boolean | null
           honeypot_detected?: boolean | null
           is_blacklisted?: boolean | null
+          is_liquidity_locked?: boolean | null
           is_proxy?: boolean | null
+          liquidity_lock_info?: string | null
+          liquidity_percentage?: number | null
           multisig_status?: string | null
           ownership_renounced?: boolean | null
           score?: number | null
