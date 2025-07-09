@@ -705,7 +705,8 @@ Deno.serve(async (req) => {
           github_url: apiData.tokenData.github_url,
           current_price_usd: apiData.tokenData.current_price_usd,
           price_change_24h: apiData.tokenData.price_change_24h,
-          market_cap_usd: apiData.tokenData.market_cap_usd
+          market_cap_usd: apiData.tokenData.market_cap_usd,
+          circulating_supply: apiData.metadataData?.circulating_supply || apiData.statsData?.total_supply || null
         }, {
           onConflict: 'token_address,chain_id'
         });

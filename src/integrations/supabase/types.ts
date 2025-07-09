@@ -130,6 +130,7 @@ export type Database = {
       token_data_cache: {
         Row: {
           chain_id: string
+          circulating_supply: number | null
           coingecko_id: string | null
           created_at: string | null
           current_price_usd: number | null
@@ -148,6 +149,7 @@ export type Database = {
         }
         Insert: {
           chain_id?: string
+          circulating_supply?: number | null
           coingecko_id?: string | null
           created_at?: string | null
           current_price_usd?: number | null
@@ -166,6 +168,7 @@ export type Database = {
         }
         Update: {
           chain_id?: string
+          circulating_supply?: number | null
           coingecko_id?: string | null
           created_at?: string | null
           current_price_usd?: number | null

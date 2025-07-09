@@ -1,5 +1,5 @@
 
-import { formatCurrency, formatNumber } from "./formattingUtils";
+import { formatCurrency, formatNumber, formatTokensCompact } from "./formattingUtils";
 import { 
   Shield, 
   Lock, 
@@ -287,9 +287,9 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
     { 
       icon: Coins, 
       title: "Circulating Supply", 
-      description: totalSupply > 0 ? "Tokens currently in circulation from total supply" : "Number of tokens currently in circulation",
-      badgeLabel: totalSupply > 0 ? formatNumber(totalSupply) : circulatingSupply > 0 ? formatNumber(circulatingSupply) : "Not Available",
-      badgeVariant: totalSupply > 0 || circulatingSupply > 0 ? "blue" : "gray"
+      description: circulatingSupply > 0 ? "Tokens currently in circulation" : "Number of tokens currently in circulation",
+      badgeLabel: circulatingSupply > 0 ? formatTokensCompact(circulatingSupply) : "Not Available",
+      badgeVariant: circulatingSupply > 0 ? "blue" : "gray"
     },
     { 
       icon: DollarSign, 

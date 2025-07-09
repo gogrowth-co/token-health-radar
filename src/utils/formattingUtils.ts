@@ -44,3 +44,14 @@ export const formatPercentage = (value: number | null | undefined): string => {
   if (value === null || value === undefined || isNaN(value)) return "N/A";
   return `${value.toFixed(2)}%`;
 };
+
+export const formatTokensCompact = (value: number | string): string => {
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num)) return 'N/A';
+  const abs = Math.abs(num);
+  if (abs >= 1_000_000_000_000) return `${(num / 1_000_000_000_000).toFixed(1)}T Tokens`;
+  if (abs >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(1)}B Tokens`;
+  if (abs >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M Tokens`;
+  if (abs >= 1_000) return `${(num / 1_000).toFixed(1)}K Tokens`;
+  return `${num.toFixed(1)} Tokens`;
+};
