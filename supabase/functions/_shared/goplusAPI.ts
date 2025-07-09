@@ -190,6 +190,14 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
     
     console.log(`[GOPLUS] Raw token data:`, JSON.stringify(tokenData, null, 2));
     
+    // CRITICAL DEBUGGING: Log specific liquidity lock fields from raw response
+    console.log(`[GOPLUS] === LIQUIDITY LOCK DEBUGGING ===`);
+    console.log(`[GOPLUS] tokenData.is_liquidity_locked:`, tokenData.is_liquidity_locked);
+    console.log(`[GOPLUS] tokenData.liquidity_lock_info:`, tokenData.liquidity_lock_info);
+    console.log(`[GOPLUS] tokenData.liquidity_percentage:`, tokenData.liquidity_percentage);
+    console.log(`[GOPLUS] Raw tokenData keys:`, Object.keys(tokenData));
+    console.log(`[GOPLUS] === END LIQUIDITY LOCK DEBUGGING ===`);
+    
     // Enhanced data mapping based on GoPlus API documentation with proper null handling
     const securityData = {
       // Core security indicators
