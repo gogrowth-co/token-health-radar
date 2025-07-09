@@ -254,7 +254,7 @@ export const transformSecurityData = (data: SecurityData | null): CategoryFeatur
 };
 
 // Transform tokenomics data into feature format
-export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFeature[] => {
+export const transformTokenomicsData = (data: TokenomicsData | null, tokenDataCache?: any): CategoryFeature[] => {
   if (!data) {
     return [
       { icon: Coins, title: "Circulating Supply", description: "Number of tokens currently in circulation", badgeLabel: "Unknown", badgeVariant: "gray" },
@@ -264,10 +264,19 @@ export const transformTokenomicsData = (data: TokenomicsData | null): CategoryFe
     ];
   }
 
-  // Enhanced supply analysis with real vs total supply
+  // Enhanced supply analysis with real vs total supply - prioritize token_data_cache
   const totalSupply = safeNumberAccess(data, 'total_supply');
-  const circulatingSupply = safeNumberAccess(data, 'actual_circulating_supply') || safeNumberAccess(data, 'circulating_supply');
+  const circulatingSupply = safeNumberAccess(tokenDataCache, 'circulating_supply') || 
+                          safeNumberAccess(data, 'actual_circulating_supply') || 
+                          safeNumberAccess(data, 'circulating_supply');
   const supplyCap = safeNumberAccess(data, 'supply_cap');
+  
+  console.log('[TRANSFORM-TOKENOMICS] Circulating supply sources:', {
+    fromTokenDataCache: safeNumberAccess(tokenDataCache, 'circulating_supply'),
+    fromActualCirculating: safeNumberAccess(data, 'actual_circulating_supply'),
+    fromRegularCirculating: safeNumberAccess(data, 'circulating_supply'),
+    finalValue: circulatingSupply
+  });
   
   // Enhanced liquidity from DEX pairs
   const dexLiquidityUsd = safeNumberAccess(data, 'dex_liquidity_usd');

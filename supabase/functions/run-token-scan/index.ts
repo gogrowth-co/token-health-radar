@@ -706,7 +706,17 @@ Deno.serve(async (req) => {
           current_price_usd: apiData.tokenData.current_price_usd,
           price_change_24h: apiData.tokenData.price_change_24h,
           market_cap_usd: apiData.tokenData.market_cap_usd,
-          circulating_supply: apiData.metadataData?.circulating_supply || apiData.statsData?.total_supply || null
+          circulating_supply: (() => {
+            const circulatingFromMetadata = apiData.metadataData?.circulating_supply;
+            const totalFromStats = apiData.statsData?.total_supply;
+            const finalValue = circulatingFromMetadata || totalFromStats || null;
+            console.log(`[SCAN] Circulating supply extraction:`, {
+              fromMetadata: circulatingFromMetadata,
+              fromStats: totalFromStats,
+              finalStored: finalValue
+            });
+            return finalValue;
+          })()
         }, {
           onConflict: 'token_address,chain_id'
         });

@@ -404,6 +404,7 @@ export default function ScanResult() {
             securityData={scanData.security}
             liquidityData={scanData.liquidity}
             tokenomicsData={scanData.tokenomics}
+            tokenDataCache={scanData.tokenData}
             communityData={scanData.community}
             developmentData={scanData.development}
             isPro={isPro()}

@@ -32,6 +32,7 @@ interface CategoryTabsProps {
   activeTab: ScanCategory;
   securityData: SecurityData | null;
   tokenomicsData: TokenomicsData | null;
+  tokenDataCache?: any;
   liquidityData: LiquidityData | null;
   communityData: CommunityData | null;
   developmentData: DevelopmentData | null;
@@ -39,15 +40,16 @@ interface CategoryTabsProps {
   onCategoryChange: (value: ScanCategory) => void;
 }
 
-export default function CategoryTabs({
-  activeTab,
-  securityData,
-  tokenomicsData,
-  liquidityData,
-  communityData,
-  developmentData,
+export default function CategoryTabs({ 
+  activeTab, 
+  securityData, 
+  tokenomicsData, 
+  tokenDataCache,
+  liquidityData, 
+  communityData, 
+  developmentData, 
   isPro,
-  onCategoryChange
+  onCategoryChange 
 }: CategoryTabsProps) {
   
   // Define category descriptions with explanations for tooltips
@@ -179,7 +181,7 @@ export default function CategoryTabs({
       {/* Tokenomics Tab Content */}
       {renderTabContent(tokenomicsData, (
         <CategoryFeatureGrid
-          features={transformTokenomicsData(tokenomicsData)}
+          features={transformTokenomicsData(tokenomicsData, tokenDataCache)}
           description="Economic metrics and token supply analysis"
         />
       ), ScanCategory.Tokenomics)}
