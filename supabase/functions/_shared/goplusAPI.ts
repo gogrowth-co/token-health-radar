@@ -41,9 +41,15 @@ async function getGoPlusAccessToken(): Promise<string> {
   const now = Math.floor(Date.now() / 1000).toString();
   
   // Check if we have a valid cached token (with 60s buffer)
-  if (cachedToken && Number(now) - cachedToken.exp < 60) {
+  if (cachedToken && cachedToken.exp - Number(now) > 60) {
     console.log(`[GOPLUS-AUTH] Using cached token (expires in ${cachedToken.exp - Number(now)}s)`);
     return cachedToken.value;
+  }
+  
+  // Clear expired token
+  if (cachedToken) {
+    console.log(`[GOPLUS-AUTH] Token expired, fetching new one`);
+    cachedToken = null;
   }
 
   console.log(`[GOPLUS-AUTH] Token expired or missing, fetching new token...`);
