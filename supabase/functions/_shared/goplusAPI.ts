@@ -35,11 +35,14 @@ async function sha1Hex(input: string): Promise<string> {
 // Cache for GoPlus access token
 let cachedToken: { value: string; exp: number } | null = null;
 
-// Get GoPlus access token
+// Get GoPlus access token with comprehensive error handling and debugging
 async function getGoPlusAccessToken(): Promise<string> {
   // Use UNIX timestamp in seconds as NUMBER for API call, but STRING for signature
   const nowTimestamp = Math.floor(Date.now() / 1000);
   const nowString = nowTimestamp.toString();
+  
+  console.log(`[GOPLUS-AUTH] Starting authentication process at ${new Date().toISOString()}`);
+  console.log(`[GOPLUS-AUTH] Current timestamp: ${nowTimestamp} (${nowString})`);
   
   // Check if we have a valid cached token (with 60s buffer)
   if (cachedToken && cachedToken.exp - nowTimestamp > 60) {
@@ -53,79 +56,161 @@ async function getGoPlusAccessToken(): Promise<string> {
     cachedToken = null;
   }
 
-  console.log(`[GOPLUS-AUTH] Token expired or missing, fetching new token...`);
+  console.log(`[GOPLUS-AUTH] Fetching new access token...`);
   
   const APP_KEY = Deno.env.get('GOPLUS_APP_KEY');
   const APP_SECRET = Deno.env.get('GOPLUS_APP_SECRET');
   
   if (!APP_KEY || !APP_SECRET) {
+    console.error('[GOPLUS-AUTH] CRITICAL: Missing environment variables');
+    console.error('[GOPLUS-AUTH] APP_KEY available:', !!APP_KEY);
+    console.error('[GOPLUS-AUTH] APP_SECRET available:', !!APP_SECRET);
     throw new Error('[GOPLUS-AUTH] Missing GOPLUS_APP_KEY or GOPLUS_APP_SECRET');
   }
 
-  console.log(`[GOPLUS-AUTH] Using timestamp: ${nowTimestamp} (${nowString})`);
-  console.log(`[GOPLUS-AUTH] APP_KEY length: ${APP_KEY.length}, first 8 chars: ${APP_KEY.substring(0, 8)}...`);
-  console.log(`[GOPLUS-AUTH] APP_SECRET length: ${APP_SECRET.length}`);
+  console.log(`[GOPLUS-AUTH] Environment check passed:`);
+  console.log(`[GOPLUS-AUTH] - APP_KEY length: ${APP_KEY.length}, first 8 chars: ${APP_KEY.substring(0, 8)}...`);
+  console.log(`[GOPLUS-AUTH] - APP_SECRET length: ${APP_SECRET.length}`);
 
-  // Generate signature: SHA1(app_key + time + app_secret) - CRITICAL: time must be string for signature
+  // Generate signature: SHA1(app_key + time + app_secret)
+  // CRITICAL: According to GoPlus docs, signature uses string timestamp
   const signatureInput = `${APP_KEY}${nowString}${APP_SECRET}`;
   const sign = await sha1Hex(signatureInput);
   
-  // Debug logs for signature generation process
-  console.log(`[GOPLUS-AUTH] Signature input components:`);
-  console.log(`[GOPLUS-AUTH] - APP_KEY: ${APP_KEY.substring(0, 8)}... (length: ${APP_KEY.length})`);
-  console.log(`[GOPLUS-AUTH] - timestamp: ${nowString} (length: ${nowString.length})`);
-  console.log(`[GOPLUS-AUTH] - APP_SECRET: [HIDDEN] (length: ${APP_SECRET.length})`);
-  console.log(`[GOPLUS-AUTH] - Full signature input: ${APP_KEY.substring(0, 8)}...${nowString}[SECRET_HIDDEN] (total length: ${signatureInput.length})`);
-  console.log(`[GOPLUS-AUTH] - Generated SHA1 signature: ${sign}`);
+  console.log(`[GOPLUS-AUTH] Signature generation:`);
+  console.log(`[GOPLUS-AUTH] - Pattern: app_key + timestamp + app_secret`);
+  console.log(`[GOPLUS-AUTH] - APP_KEY: ${APP_KEY.substring(0, 8)}... (${APP_KEY.length} chars)`);
+  console.log(`[GOPLUS-AUTH] - Timestamp: ${nowString} (${nowString.length} chars)`);
+  console.log(`[GOPLUS-AUTH] - APP_SECRET: [HIDDEN] (${APP_SECRET.length} chars)`);
+  console.log(`[GOPLUS-AUTH] - Input length: ${signatureInput.length} chars`);
+  console.log(`[GOPLUS-AUTH] - SHA1 signature: ${sign}`);
   
-  // CRITICAL: Use NUMBER for time in request body as per GoPlus API spec
+  // Prepare request body - use NUMBER for time field as per API spec
   const requestBody = { 
     app_key: APP_KEY, 
-    time: nowTimestamp, // NUMBER, not string
+    time: nowTimestamp, // NUMBER for API request
     sign 
   };
   
-  console.log(`[GOPLUS-AUTH] Final request body:`, {
+  console.log(`[GOPLUS-AUTH] Request preparation:`);
+  console.log(`[GOPLUS-AUTH] - URL: https://api.gopluslabs.io/api/v1/token`);
+  console.log(`[GOPLUS-AUTH] - Method: POST`);
+  console.log(`[GOPLUS-AUTH] - Body:`, {
     app_key: APP_KEY.substring(0, 8) + '...',
     time: nowTimestamp,
     sign: sign
   });
 
-  const res = await fetch('https://api.gopluslabs.io/api/v1/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(requestBody)
-  });
+  try {
+    const res = await fetch('https://api.gopluslabs.io/api/v1/token', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'User-Agent': 'TokenHealthScan/1.0'
+      },
+      body: JSON.stringify(requestBody)
+    });
 
-  const json = await res.json();
-  console.log(`[GOPLUS-AUTH] Response status: ${res.status}`);
-  console.log(`[GOPLUS-AUTH] Response body:`, JSON.stringify(json, null, 2));
+    console.log(`[GOPLUS-AUTH] HTTP Response received:`);
+    console.log(`[GOPLUS-AUTH] - Status: ${res.status} ${res.statusText}`);
+    console.log(`[GOPLUS-AUTH] - Headers:`, Object.fromEntries(res.headers.entries()));
+    
+    // Get response text first for better error handling
+    const responseText = await res.text();
+    console.log(`[GOPLUS-AUTH] - Raw response: ${responseText}`);
+    
+    let json;
+    try {
+      json = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error(`[GOPLUS-AUTH] JSON parse error:`, parseError);
+      console.error(`[GOPLUS-AUTH] Raw response was:`, responseText);
+      throw new Error(`Invalid JSON response: ${responseText.substring(0, 200)}`);
+    }
 
-  if (json.code !== 1) {
-    console.error(`[GOPLUS-AUTH] Authentication failed - Code: ${json.code}, Message: ${json.message}`);
-    console.error(`[GOPLUS-AUTH] Full error response:`, JSON.stringify(json, null, 2));
-    throw new Error(`GoPlus authentication failed: ${json.message || JSON.stringify(json)}`);
+    console.log(`[GOPLUS-AUTH] Parsed response:`, JSON.stringify(json, null, 2));
+
+    // Handle HTTP errors
+    if (!res.ok) {
+      console.error(`[GOPLUS-AUTH] HTTP error: ${res.status} ${res.statusText}`);
+      console.error(`[GOPLUS-AUTH] Error response:`, json);
+      throw new Error(`HTTP ${res.status}: ${json.message || res.statusText}`);
+    }
+
+    // Handle API-level errors
+    if (!json.code) {
+      console.error(`[GOPLUS-AUTH] Response missing 'code' field`);
+      console.error(`[GOPLUS-AUTH] Full response:`, json);
+      throw new Error(`Invalid API response structure: ${JSON.stringify(json)}`);
+    }
+
+    if (json.code !== 1) {
+      console.error(`[GOPLUS-AUTH] API error - Code: ${json.code}`);
+      console.error(`[GOPLUS-AUTH] API error - Message: ${json.message}`);
+      console.error(`[GOPLUS-AUTH] Full error response:`, json);
+      
+      // Provide specific error context for common failures
+      if (json.code === 4012) {
+        console.error(`[GOPLUS-AUTH] SIGNATURE VERIFICATION FAILED`);
+        console.error(`[GOPLUS-AUTH] This usually means:`);
+        console.error(`[GOPLUS-AUTH] 1. Incorrect app_key or app_secret`);
+        console.error(`[GOPLUS-AUTH] 2. Wrong signature format or timestamp`);
+        console.error(`[GOPLUS-AUTH] 3. System time synchronization issues`);
+      }
+      
+      throw new Error(`GoPlus API error ${json.code}: ${json.message || 'Unknown error'}`);
+    }
+
+    // Validate successful response structure
+    if (!json.result) {
+      console.error(`[GOPLUS-AUTH] Success response missing 'result' field`);
+      console.error(`[GOPLUS-AUTH] Response structure:`, Object.keys(json));
+      throw new Error(`Authentication response missing result field`);
+    }
+
+    if (!json.result.access_token) {
+      console.error(`[GOPLUS-AUTH] Result missing 'access_token' field`);
+      console.error(`[GOPLUS-AUTH] Result fields:`, Object.keys(json.result));
+      throw new Error(`Authentication response missing access_token`);
+    }
+
+    if (!json.result.expire) {
+      console.error(`[GOPLUS-AUTH] Result missing 'expire' field`);
+      console.error(`[GOPLUS-AUTH] Result fields:`, Object.keys(json.result));
+      throw new Error(`Authentication response missing expire time`);
+    }
+
+    // Validate expire value
+    const expireSeconds = parseInt(json.result.expire);
+    if (isNaN(expireSeconds) || expireSeconds <= 0) {
+      console.error(`[GOPLUS-AUTH] Invalid expire value: ${json.result.expire} (type: ${typeof json.result.expire})`);
+      throw new Error(`Invalid expire time: ${json.result.expire}`);
+    }
+
+    // Cache the token
+    cachedToken = {
+      value: json.result.access_token,
+      exp: nowTimestamp + expireSeconds
+    };
+
+    const expiryDate = new Date((nowTimestamp + expireSeconds) * 1000);
+    console.log(`[GOPLUS-AUTH] ✅ Authentication successful!`);
+    console.log(`[GOPLUS-AUTH] - Token received: ${json.result.access_token.substring(0, 16)}...`);
+    console.log(`[GOPLUS-AUTH] - Expires in: ${expireSeconds} seconds`);
+    console.log(`[GOPLUS-AUTH] - Expiry time: ${expiryDate.toISOString()}`);
+    
+    return cachedToken.value;
+
+  } catch (error) {
+    console.error(`[GOPLUS-AUTH] Authentication failed:`, error);
+    
+    // Add more context to network errors
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.error(`[GOPLUS-AUTH] Network error - check internet connection and API endpoint`);
+    }
+    
+    throw error;
   }
-
-  if (!json.result || !json.result.access_token || !json.result.expire) {
-    console.error(`[GOPLUS-AUTH] Invalid response structure:`, JSON.stringify(json, null, 2));
-    throw new Error(`GoPlus authentication response missing required fields`);
-  }
-
-  const expireSeconds = parseInt(json.result.expire);
-  if (isNaN(expireSeconds) || expireSeconds <= 0) {
-    console.error(`[GOPLUS-AUTH] Invalid expire value:`, json.result.expire);
-    throw new Error(`GoPlus authentication returned invalid expire time`);
-  }
-
-  cachedToken = {
-    value: json.result.access_token,
-    exp: nowTimestamp + expireSeconds
-  };
-
-  console.log(`[GOPLUS-AUTH] Successfully obtained access token (expires in ${expireSeconds}s)`);
-  console.log(`[GOPLUS-AUTH] Token cached until: ${new Date((nowTimestamp + expireSeconds) * 1000).toISOString()}`);
-  return cachedToken.value;
 }
 
 // Helper functions to extract liquidity lock data from LP holders
