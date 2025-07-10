@@ -82,14 +82,17 @@ async function getGoPlusAccessToken(): Promise<string> {
 
   const res = await fetch('https://api.gopluslabs.io/api/v1/token', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(requestBody)
   });
 
   const json = await res.json();
-  console.log(`[GOPLUS-AUTH] Response:`, json);
+  console.log(`[GOPLUS-AUTH] Response status: ${res.status}`);
+  console.log(`[GOPLUS-AUTH] Response body:`, JSON.stringify(json, null, 2));
 
   if (json.code !== 1) {
+    console.error(`[GOPLUS-AUTH] Authentication failed - Code: ${json.code}, Message: ${json.message}`);
+    console.error(`[GOPLUS-AUTH] Full error response:`, JSON.stringify(json, null, 2));
     throw new Error(`GoPlus authentication failed: ${json.message || JSON.stringify(json)}`);
   }
 
@@ -202,7 +205,24 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
         const errorText = await response.text();
         console.error(`[GOPLUS] API error: ${response.status} ${response.statusText}`);
         console.error(`[GOPLUS] Error response body:`, errorText);
-        throw new Error(`GoPlus API error: ${response.status} ${response.statusText} - ${errorText}`);
+        
+        // Parse error response if it's JSON to get error codes
+        let errorDetails = errorText;
+        try {
+          const errorJson = JSON.parse(errorText);
+          console.error(`[GOPLUS] Parsed error JSON:`, JSON.stringify(errorJson, null, 2));
+          errorDetails = `Code: ${errorJson.code || 'unknown'}, Message: ${errorJson.message || errorText}`;
+          
+          // Special handling for signature verification failure
+          if (errorJson.code === 4012) {
+            console.error(`[GOPLUS] SIGNATURE VERIFICATION FAILURE - This is likely due to incorrect signature generation`);
+            console.error(`[GOPLUS] Please check: 1) App key/secret are correct, 2) Timestamp format, 3) Signature concatenation order`);
+          }
+        } catch (parseError) {
+          console.error(`[GOPLUS] Could not parse error response as JSON:`, parseError);
+        }
+        
+        throw new Error(`GoPlus API error: ${errorDetails}`);
       }
 
       const responseText = await response.text();
@@ -231,6 +251,14 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
       // Check if GoPlus returned an error
       if (data.code !== 1) {
         console.error(`[GOPLUS] API returned error code: ${data.code}, message: ${data.message}`);
+        console.error(`[GOPLUS] Full error response:`, JSON.stringify(data, null, 2));
+        
+        // Special handling for different error codes
+        if (data.code === 4012) {
+          console.error(`[GOPLUS] SIGNATURE VERIFICATION FAILURE - Auth token generation failed`);
+          console.error(`[GOPLUS] This indicates an issue with the signature generation process`);
+        }
+        
         throw new Error(`GoPlus API error: ${data.message || 'Unknown error'}`);
       }
       
