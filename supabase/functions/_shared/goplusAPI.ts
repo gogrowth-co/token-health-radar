@@ -37,11 +37,12 @@ let cachedToken: { value: string; exp: number } | null = null;
 
 // Get GoPlus access token
 async function getGoPlusAccessToken(): Promise<string> {
-  const now = Math.floor(Date.now() / 1000);
+  // Use stringified UNIX timestamp for SHA1 signature generation
+  const now = Math.floor(Date.now() / 1000).toString();
   
   // Check if we have a valid cached token (with 60s buffer)
-  if (cachedToken && cachedToken.exp - now > 60) {
-    console.log(`[GOPLUS-AUTH] Using cached token (expires in ${cachedToken.exp - now}s)`);
+  if (cachedToken && Number(now) - cachedToken.exp < 60) {
+    console.log(`[GOPLUS-AUTH] Using cached token (expires in ${cachedToken.exp - Number(now)}s)`);
     return cachedToken.value;
   }
 
@@ -54,24 +55,29 @@ async function getGoPlusAccessToken(): Promise<string> {
     throw new Error('[GOPLUS-AUTH] Missing GOPLUS_APP_KEY or GOPLUS_APP_SECRET');
   }
 
-  // Generate signature: SHA1(app_key + time + app_secret) - no separators
+  // Generate signature: SHA1(app_key + time + app_secret) - no separators, no whitespace
   const signatureInput = `${APP_KEY}${now}${APP_SECRET}`;
   const sign = await sha1Hex(signatureInput);
   
-  console.log(`[GOPLUS-AUTH] Request details:`, {
-    app_key: APP_KEY,
-    time: now,
-    signature_preview: sign.substring(0, 8) + '...'
+  // Debug logs for signature generation process
+  console.log(`[GOPLUS-AUTH] Debug - signatureInput:`, signatureInput.replace(APP_SECRET, '[SECRET_HIDDEN]'));
+  console.log(`[GOPLUS-AUTH] Debug - sign:`, sign);
+  
+  const requestBody = { 
+    app_key: APP_KEY, 
+    time: now, 
+    sign 
+  };
+  
+  console.log(`[GOPLUS-AUTH] Debug - final request body:`, {
+    ...requestBody,
+    app_key: APP_KEY.substring(0, 8) + '...',
   });
 
   const res = await fetch('https://api.gopluslabs.io/api/v1/token', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ 
-      app_key: APP_KEY, 
-      time: now, 
-      sign 
-    })
+    body: JSON.stringify(requestBody)
   });
 
   const json = await res.json();
@@ -83,7 +89,7 @@ async function getGoPlusAccessToken(): Promise<string> {
 
   cachedToken = {
     value: json.result.access_token,
-    exp: now + json.result.expire
+    exp: Number(now) + json.result.expire
   };
 
   console.log(`[GOPLUS-AUTH] Successfully obtained access token (expires in ${json.result.expire}s)`);
