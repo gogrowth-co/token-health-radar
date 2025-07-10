@@ -37,12 +37,13 @@ let cachedToken: { value: string; exp: number } | null = null;
 
 // Get GoPlus access token
 async function getGoPlusAccessToken(): Promise<string> {
-  // Use stringified UNIX timestamp for SHA1 signature generation
-  const now = Math.floor(Date.now() / 1000).toString();
+  // Use UNIX timestamp in seconds as NUMBER for API call, but STRING for signature
+  const nowTimestamp = Math.floor(Date.now() / 1000);
+  const nowString = nowTimestamp.toString();
   
   // Check if we have a valid cached token (with 60s buffer)
-  if (cachedToken && cachedToken.exp - Number(now) > 60) {
-    console.log(`[GOPLUS-AUTH] Using cached token (expires in ${cachedToken.exp - Number(now)}s)`);
+  if (cachedToken && cachedToken.exp - nowTimestamp > 60) {
+    console.log(`[GOPLUS-AUTH] Using cached token (expires in ${cachedToken.exp - nowTimestamp}s)`);
     return cachedToken.value;
   }
   
@@ -61,23 +62,33 @@ async function getGoPlusAccessToken(): Promise<string> {
     throw new Error('[GOPLUS-AUTH] Missing GOPLUS_APP_KEY or GOPLUS_APP_SECRET');
   }
 
-  // Generate signature: SHA1(app_key + time + app_secret) - no separators, no whitespace
-  const signatureInput = `${APP_KEY}${now}${APP_SECRET}`;
+  console.log(`[GOPLUS-AUTH] Using timestamp: ${nowTimestamp} (${nowString})`);
+  console.log(`[GOPLUS-AUTH] APP_KEY length: ${APP_KEY.length}, first 8 chars: ${APP_KEY.substring(0, 8)}...`);
+  console.log(`[GOPLUS-AUTH] APP_SECRET length: ${APP_SECRET.length}`);
+
+  // Generate signature: SHA1(app_key + time + app_secret) - CRITICAL: time must be string for signature
+  const signatureInput = `${APP_KEY}${nowString}${APP_SECRET}`;
   const sign = await sha1Hex(signatureInput);
   
   // Debug logs for signature generation process
-  console.log(`[GOPLUS-AUTH] Debug - signatureInput:`, signatureInput.replace(APP_SECRET, '[SECRET_HIDDEN]'));
-  console.log(`[GOPLUS-AUTH] Debug - sign:`, sign);
+  console.log(`[GOPLUS-AUTH] Signature input components:`);
+  console.log(`[GOPLUS-AUTH] - APP_KEY: ${APP_KEY.substring(0, 8)}... (length: ${APP_KEY.length})`);
+  console.log(`[GOPLUS-AUTH] - timestamp: ${nowString} (length: ${nowString.length})`);
+  console.log(`[GOPLUS-AUTH] - APP_SECRET: [HIDDEN] (length: ${APP_SECRET.length})`);
+  console.log(`[GOPLUS-AUTH] - Full signature input: ${APP_KEY.substring(0, 8)}...${nowString}[SECRET_HIDDEN] (total length: ${signatureInput.length})`);
+  console.log(`[GOPLUS-AUTH] - Generated SHA1 signature: ${sign}`);
   
+  // CRITICAL: Use NUMBER for time in request body as per GoPlus API spec
   const requestBody = { 
     app_key: APP_KEY, 
-    time: now, 
+    time: nowTimestamp, // NUMBER, not string
     sign 
   };
   
-  console.log(`[GOPLUS-AUTH] Debug - final request body:`, {
-    ...requestBody,
+  console.log(`[GOPLUS-AUTH] Final request body:`, {
     app_key: APP_KEY.substring(0, 8) + '...',
+    time: nowTimestamp,
+    sign: sign
   });
 
   const res = await fetch('https://api.gopluslabs.io/api/v1/token', {
@@ -98,10 +109,11 @@ async function getGoPlusAccessToken(): Promise<string> {
 
   cachedToken = {
     value: json.result.access_token,
-    exp: Number(now) + json.result.expire
+    exp: nowTimestamp + json.result.expire
   };
 
   console.log(`[GOPLUS-AUTH] Successfully obtained access token (expires in ${json.result.expire}s)`);
+  console.log(`[GOPLUS-AUTH] Token cached until: ${new Date((nowTimestamp + json.result.expire) * 1000).toISOString()}`);
   return cachedToken.value;
 }
 
