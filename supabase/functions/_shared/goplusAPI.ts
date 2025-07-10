@@ -174,17 +174,17 @@ async function getGoPlusAccessToken(): Promise<string> {
       throw new Error(`Authentication response missing access_token`);
     }
 
-    if (!json.result.expire) {
-      console.error(`[GOPLUS-AUTH] Result missing 'expire' field`);
+    if (!json.result.expires_in) {
+      console.error(`[GOPLUS-AUTH] Result missing 'expires_in' field`);
       console.error(`[GOPLUS-AUTH] Result fields:`, Object.keys(json.result));
-      throw new Error(`Authentication response missing expire time`);
+      throw new Error(`Authentication response missing expires_in time`);
     }
 
-    // Validate expire value
-    const expireSeconds = parseInt(json.result.expire);
+    // Validate expires_in value
+    const expireSeconds = parseInt(json.result.expires_in);
     if (isNaN(expireSeconds) || expireSeconds <= 0) {
-      console.error(`[GOPLUS-AUTH] Invalid expire value: ${json.result.expire} (type: ${typeof json.result.expire})`);
-      throw new Error(`Invalid expire time: ${json.result.expire}`);
+      console.error(`[GOPLUS-AUTH] Invalid expires_in value: ${json.result.expires_in} (type: ${typeof json.result.expires_in})`);
+      throw new Error(`Invalid expires_in time: ${json.result.expires_in}`);
     }
 
     // Cache the token
@@ -297,7 +297,7 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${accessToken}`
+          'Authorization': accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`
         }
       });
       
