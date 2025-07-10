@@ -107,13 +107,24 @@ async function getGoPlusAccessToken(): Promise<string> {
     throw new Error(`GoPlus authentication failed: ${json.message || JSON.stringify(json)}`);
   }
 
+  if (!json.result || !json.result.access_token || !json.result.expire) {
+    console.error(`[GOPLUS-AUTH] Invalid response structure:`, JSON.stringify(json, null, 2));
+    throw new Error(`GoPlus authentication response missing required fields`);
+  }
+
+  const expireSeconds = parseInt(json.result.expire);
+  if (isNaN(expireSeconds) || expireSeconds <= 0) {
+    console.error(`[GOPLUS-AUTH] Invalid expire value:`, json.result.expire);
+    throw new Error(`GoPlus authentication returned invalid expire time`);
+  }
+
   cachedToken = {
     value: json.result.access_token,
-    exp: nowTimestamp + json.result.expire
+    exp: nowTimestamp + expireSeconds
   };
 
-  console.log(`[GOPLUS-AUTH] Successfully obtained access token (expires in ${json.result.expire}s)`);
-  console.log(`[GOPLUS-AUTH] Token cached until: ${new Date((nowTimestamp + json.result.expire) * 1000).toISOString()}`);
+  console.log(`[GOPLUS-AUTH] Successfully obtained access token (expires in ${expireSeconds}s)`);
+  console.log(`[GOPLUS-AUTH] Token cached until: ${new Date((nowTimestamp + expireSeconds) * 1000).toISOString()}`);
   return cachedToken.value;
 }
 
