@@ -17,6 +17,7 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { checkUserHasProAccess } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useUserRole } from "@/hooks/useUserRole";
 
 enum ScanCategory {
   Security = "security",
@@ -31,6 +32,7 @@ export default function ScanResult() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const isMobile = useIsMobile();
+  const { isAdmin } = useUserRole();
   const [scanData, setScanData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -347,31 +349,33 @@ export default function ScanResult() {
             />
           )}
 
-          {/* Debug: Test scan button and API health */}
-          <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-            <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
-              🔧 Debug Mode: Token Scan & API Health Testing
-            </h3>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <RefreshScanButton 
-                tokenAddress={tokenAddress}
-                chainId={chainId}
-                className="flex-1"
-              />
-              <TestScanButton 
-                tokenAddress={tokenAddress}
-                chainId={chainId}
-                className="flex-1"
-              />
-              <Button
-                variant="outline"
-                onClick={() => window.open('/api-health', '_blank')}
-                className="flex-1"
-              >
-                Open API Health Dashboard
-              </Button>
+          {/* Debug: Test scan button and API health - Admin only */}
+          {isAdmin && (
+            <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                🔧 Debug Mode: Token Scan & API Health Testing
+              </h3>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <RefreshScanButton 
+                  tokenAddress={tokenAddress}
+                  chainId={chainId}
+                  className="flex-1"
+                />
+                <TestScanButton 
+                  tokenAddress={tokenAddress}
+                  chainId={chainId}
+                  className="flex-1"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => window.open('/api-health', '_blank')}
+                  className="flex-1"
+                >
+                  Open API Health Dashboard
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
 
           <TokenProfile
             name={properName}
