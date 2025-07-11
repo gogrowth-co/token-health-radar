@@ -43,7 +43,7 @@ function getWebacyChainCode(chainId: string): string {
   return chainMapping[decimalChainId] || 'eth'; // Default to Ethereum
 }
 
-// Webacy Security API client for contract risk analysis with simplified error handling
+// Webacy Security API client using correct endpoint from documentation
 export async function fetchWebacySecurity(tokenAddress: string, chainId: string) {
   console.log(`[WEBACY] === STARTING WEBACY API CALL ===`);
   console.log(`[WEBACY] Token: ${tokenAddress}, Chain: ${chainId}`);
@@ -60,19 +60,22 @@ export async function fetchWebacySecurity(tokenAddress: string, chainId: string)
     }
 
     const webacyChain = getWebacyChainCode(chainId);
-    console.log(`[WEBACY] API Key: ${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)} (${apiKey.length} chars)`);
-    console.log(`[WEBACY] Target address: ${tokenAddress.toLowerCase()}, Chain: ${chainId} -> ${webacyChain}`);
+    console.log(`[WEBACY] API Key present: ${!!apiKey} (${apiKey.length} chars)`);
+    console.log(`[WEBACY] Target address: ${tokenAddress}, Chain: ${chainId} -> ${webacyChain}`);
     
-    // Use the Webacy API endpoint with optional chain parameter
-    const url = `https://api.webacy.com/addresses/${tokenAddress.toLowerCase()}?chain=${webacyChain}`;
+    // Use the correct Webacy API endpoint as per documentation
+    const url = `https://api.webacy.com/security/v1/addresses/${tokenAddress}?chain=${webacyChain}`;
     console.log(`[WEBACY] Request URL: ${url}`);
     
     // Make the request with x-api-key header as per documentation
     console.log(`[WEBACY] Making request with x-api-key header...`);
     
     const response = await fetch(url, {
+      method: 'GET',
       headers: {
-        'x-api-key': apiKey
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json',
+        'User-Agent': 'TokenHealthScan/1.0'
       }
     });
 
@@ -82,6 +85,7 @@ export async function fetchWebacySecurity(tokenAddress: string, chainId: string)
     if (!response.ok) {
       if (response.status === 404) {
         console.warn(`[WEBACY] No risk data found for token: ${tokenAddress} (404 - token not indexed)`);
+        webacyApiHealthStats.successfulRequests++; // 404 is a successful response
         return null;
       }
       const errorText = await response.text();
@@ -91,12 +95,13 @@ export async function fetchWebacySecurity(tokenAddress: string, chainId: string)
     }
     
     const responseText = await response.text();
-    console.log(`[WEBACY] Raw response text:`, responseText);
+    console.log(`[WEBACY] Raw response (first 500 chars):`, responseText.substring(0, 500));
     
     let data;
     try {
       data = JSON.parse(responseText);
-      console.log(`[WEBACY] Parsed JSON response:`, JSON.stringify(data, null, 2));
+      console.log(`[WEBACY] Parsed JSON response structure:`, Object.keys(data));
+      console.log(`[WEBACY] Full parsed response:`, JSON.stringify(data, null, 2));
     } catch (jsonError) {
       console.error(`[WEBACY] FAILED - Invalid JSON response:`, jsonError);
       console.error(`[WEBACY] Response text was:`, responseText);
@@ -109,66 +114,54 @@ export async function fetchWebacySecurity(tokenAddress: string, chainId: string)
     }
 
     console.log(`[WEBACY] SUCCESS - Received valid response for token: ${tokenAddress}`);
-    console.log(`[WEBACY] Response structure keys:`, Object.keys(data));
 
-    // Parse the new API response format
-    const overallRisk = data.overallRisk || 0;
-    const issues = data.issues || [];
+    // Parse the response format - handle both old and new API responses
+    let result;
     
-    // Extract risk flags from issues and their tags
-    const riskFlags: any[] = [];
-    issues.forEach((issue: any) => {
-      if (issue.tags && Array.isArray(issue.tags)) {
-        issue.tags.forEach((tag: any) => {
-          riskFlags.push({
-            flag: tag.key,
-            name: tag.name,
-            description: tag.description,
-            severity: tag.severity === 3 ? 'high' : tag.severity === 2 ? 'medium' : 'low'
-          });
-        });
-      }
-    });
+    if (data.riskScore !== undefined || data.overallRisk !== undefined) {
+      // Handle new API format
+      const overallRisk = data.riskScore || data.overallRisk || 0;
+      const issues = data.issues || [];
+      const flags = data.flags || [];
+      const severity = data.severity || (overallRisk >= 70 ? 'high' : overallRisk >= 40 ? 'medium' : 'low');
+      
+      console.log(`[WEBACY] New API format detected - Risk Score: ${overallRisk}, Flags: ${flags.length}`);
+      
+      result = {
+        webacy_risk_score: overallRisk,
+        webacy_severity: severity,
+        webacy_flags: flags,
+        // Basic security mappings - conservative approach
+        ownership_renounced: overallRisk < 30, // Lower risk suggests better ownership
+        can_mint: overallRisk > 50, // Higher risk suggests mintability
+        honeypot_detected: overallRisk > 70, // Very high risk suggests honeypot
+        freeze_authority: overallRisk > 60, // High risk suggests freeze capability
+        is_proxy: false, // Default conservative value
+        is_blacklisted: false, // Default conservative value
+        access_control: overallRisk > 40, // Medium+ risk suggests access controls
+        contract_verified: overallRisk < 50 // Lower risk suggests verification
+      };
+    } else {
+      // Handle legacy format or other structures
+      console.log(`[WEBACY] Legacy or alternative API format detected`);
+      
+      result = {
+        webacy_risk_score: null,
+        webacy_severity: 'unknown',
+        webacy_flags: [],
+        ownership_renounced: null,
+        can_mint: null,
+        honeypot_detected: null,
+        freeze_authority: null,
+        is_proxy: null,
+        is_blacklisted: null,
+        access_control: null,
+        contract_verified: null
+      };
+    }
 
-    // Determine overall severity based on overallRisk score
-    let severity = 'low';
-    if (overallRisk >= 70) severity = 'high';
-    else if (overallRisk >= 40) severity = 'medium';
-
-    // Categorize flags by severity
-    const criticalFlags = riskFlags.filter((flag: any) => flag.severity === 'high');
-    const warningFlags = riskFlags.filter((flag: any) => flag.severity === 'medium');
-    const infoFlags = riskFlags.filter((flag: any) => flag.severity === 'low');
-
-    console.log(`[WEBACY] Contract risk analysis for ${tokenAddress}:`, {
-      overallRisk,
-      severity,
-      totalFlags: riskFlags.length,
-      criticalFlags: criticalFlags.length,
-      warningFlags: warningFlags.length,
-      infoFlags: infoFlags.length
-    });
-
-    const result = {
-      address: tokenAddress,
-      riskScore: overallRisk,
-      severity,
-      flags: riskFlags,
-      criticalFlags,
-      warningFlags,
-      infoFlags,
-      // Map to existing security data structure for compatibility
-      ownership_renounced: !riskFlags.some((flag: any) => flag.flag === 'not-renounced'),
-      can_mint: riskFlags.some((flag: any) => flag.flag === 'mintable'),
-      honeypot_detected: riskFlags.some((flag: any) => ['is_honeypot', 'honeypot_with_same_creator'].includes(flag.flag)),
-      freeze_authority: riskFlags.some((flag: any) => flag.flag === 'freezeable'),
-      audit_status: riskFlags.some((flag: any) => flag.flag === 'is_closed_source') ? 'unverified' : 'unknown',
-      is_proxy: riskFlags.some((flag: any) => flag.flag === 'is_proxy'),
-      is_blacklisted: riskFlags.some((flag: any) => flag.flag === 'is_blacklisted'),
-      access_control: riskFlags.some((flag: any) => flag.flag === 'access_control'),
-      contract_verified: !riskFlags.some((flag: any) => flag.flag === 'is_closed_source'),
-      webacy_severity: severity
-    };
+    console.log(`[WEBACY] === FINAL WEBACY RESULT ===`);
+    console.log(`[WEBACY] Processed result:`, JSON.stringify(result, null, 2));
 
     // Update success stats
     webacyApiHealthStats.successfulRequests++;

@@ -223,14 +223,26 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       console.error(`[SCAN] DeFiLlama TVL API failed:`, tvlData.reason);
     }
 
-    // Merge security data from both sources instead of fallback logic
+    // Enhanced security data merging with detailed logging
     const security = {};
+    console.log(`[SCAN] === SECURITY DATA MERGING ===`);
+    
     if (webacySecurity) {
+      console.log(`[SCAN] Adding Webacy security data:`, JSON.stringify(webacySecurity, null, 2));
       Object.assign(security, webacySecurity);
+    } else {
+      console.log(`[SCAN] No Webacy security data available`);
     }
+    
     if (goplusSecurity) {
+      console.log(`[SCAN] Adding GoPlus security data:`, JSON.stringify(goplusSecurity, null, 2));
       Object.assign(security, goplusSecurity);
+    } else {
+      console.log(`[SCAN] No GoPlus security data available`);
     }
+    
+    console.log(`[SCAN] Final merged security data:`, JSON.stringify(security, null, 2));
+    console.log(`[SCAN] Merged security has ${Object.keys(security).length} properties`);
 
     console.log(`[SCAN] API Data Summary:`, {
       webacySecurity: webacySecurity ? 'available' : 'unavailable',
@@ -377,7 +389,14 @@ function generateCategoryData(apiData: any) {
     tvlData: !!apiData.tvlData
   });
 
+  console.log(`[TOKENOMICS] About to calculate security score with data:`, {
+    securityDataKeys: apiData.securityData ? Object.keys(apiData.securityData) : 'null',
+    webacyDataKeys: apiData.webacyData ? Object.keys(apiData.webacyData) : 'null', 
+    goplusDataKeys: apiData.goplusData ? Object.keys(apiData.goplusData) : 'null'
+  });
+  
   const securityScore = calculateSecurityScore(apiData.securityData, apiData.webacyData, apiData.goplusData);
+  console.log(`[TOKENOMICS] Security score calculated: ${securityScore}`);
   const liquidityScore = calculateLiquidityScore(apiData.priceData, apiData.securityData);
   
   // Enhanced tokenomics scoring with new data sources
@@ -926,10 +945,10 @@ Deno.serve(async (req) => {
             freeze_authority: categoryData.security.freeze_authority,
             audit_status: categoryData.security.audit_status,
             multisig_status: categoryData.security.multisig_status,
-            // Webacy-specific fields
-            webacy_risk_score: categoryData.security.webacy_risk_score,
-            webacy_severity: categoryData.security.webacy_severity,
-            webacy_flags: categoryData.security.webacy_flags,
+            // Webacy-specific fields - ensure proper extraction from API data
+            webacy_risk_score: apiData.webacyData?.webacy_risk_score || apiData.webacyData?.riskScore || null,
+            webacy_severity: apiData.webacyData?.webacy_severity || apiData.webacyData?.severity || null,
+            webacy_flags: apiData.webacyData?.webacy_flags || apiData.webacyData?.flags || null,
             is_proxy: categoryData.security.is_proxy,
             is_blacklisted: categoryData.security.is_blacklisted,
             access_control: categoryData.security.access_control,

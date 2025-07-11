@@ -1,14 +1,28 @@
-// Enhanced security score calculation with fallback scoring for missing data
+// Enhanced security score calculation with comprehensive debugging and fallback scoring
 export function calculateSecurityScore(securityData: any, webacyData: any = null, goplusData: any = null): number {
   console.log(`[SECURITY-SCORE] === CALCULATING ENHANCED SECURITY SCORE ===`);
-  console.log(`[SECURITY-SCORE] Input data availability:`);
-  console.log(`[SECURITY-SCORE] - securityData:`, securityData ? 'available' : 'null', securityData ? Object.keys(securityData) : []);
-  console.log(`[SECURITY-SCORE] - webacyData:`, webacyData ? 'available' : 'null', webacyData ? Object.keys(webacyData) : []);
-  console.log(`[SECURITY-SCORE] - goplusData:`, goplusData ? 'available' : 'null', goplusData ? Object.keys(goplusData) : []);
+  console.log(`[SECURITY-SCORE] Input data availability and content:`);
+  console.log(`[SECURITY-SCORE] - securityData:`, securityData ? 'available' : 'null');
+  if (securityData) console.log(`[SECURITY-SCORE] - securityData keys:`, Object.keys(securityData));
+  console.log(`[SECURITY-SCORE] - webacyData:`, webacyData ? 'available' : 'null');
+  if (webacyData) console.log(`[SECURITY-SCORE] - webacyData keys:`, Object.keys(webacyData));
+  console.log(`[SECURITY-SCORE] - goplusData:`, goplusData ? 'available' : 'null');
+  if (goplusData) console.log(`[SECURITY-SCORE] - goplusData keys:`, Object.keys(goplusData));
 
-  // If no data at all, return conservative score
-  if (!securityData && !webacyData && !goplusData) {
+  // Check if we have any data at all
+  const hasAnyData = securityData || webacyData || goplusData;
+  if (!hasAnyData) {
     console.log(`[SECURITY-SCORE] No security data available - returning conservative score of 30`);
+    return 30;
+  }
+
+  // If we have an empty securityData object but no other data, also return conservative score
+  const hasActualData = (securityData && Object.keys(securityData).length > 0) || 
+                       (webacyData && Object.keys(webacyData).length > 0) || 
+                       (goplusData && Object.keys(goplusData).length > 0);
+  
+  if (!hasActualData) {
+    console.log(`[SECURITY-SCORE] Only empty data objects - returning conservative score of 30`);
     return 30;
   }
   
