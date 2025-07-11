@@ -73,13 +73,13 @@ export default function TokenSearchInput({
         </div>
         {textPosition === "below" && (
           <p className="text-xs text-muted-foreground mt-2 text-center">
-            Multi-chain EVM token search powered by Moralis
+            Multi-chain EVM token search Powered by DD.xyz
           </p>
         )}
       </div>
       {textPosition === "right" && (
         <p className="text-xs text-muted-foreground mt-2 text-center">
-          Multi-chain EVM token search powered by Moralis
+          Multi-chain EVM token search Powered by DD.xyz
         </p>
       )}
     </>
