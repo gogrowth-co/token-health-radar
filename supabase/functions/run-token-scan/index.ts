@@ -556,7 +556,7 @@ function generateCategoryData(apiData: any) {
     },
     development: {
       github_repo: apiData.githubData ? `${apiData.githubData.owner}/${apiData.githubData.repo}` : '',
-      contributors_count: 0, // Could be enhanced later
+      contributors_count: apiData.githubData?.contributors_count || 0,
       commits_30d: apiData.githubData?.commits_30d || 0,
       last_commit: apiData.githubData?.last_push || null,
       is_open_source: !!apiData.githubData,

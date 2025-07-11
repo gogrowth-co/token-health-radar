@@ -332,16 +332,25 @@ export function calculateDevelopmentScore(githubData: any): number {
     score += 15; // Moderate score for no issues (could be good or bad)
   }
   
-  // 3. Community Engagement (20% weight) - Stars and forks indicate community interest
+  // 3. Community Engagement (15% weight) - Stars and forks indicate community interest
   const stars = githubData.stars || 0;
   const forks = githubData.forks || 0;
   
-  if (stars > 1000 || forks > 100) score += 20; // High community interest
-  else if (stars > 100 || forks > 20) score += 15; // Moderate community interest
-  else if (stars > 10 || forks > 5) score += 10; // Some community interest
-  else if (stars > 0 || forks > 0) score += 5; // Minimal community interest
+  if (stars > 1000 || forks > 100) score += 15; // High community interest
+  else if (stars > 100 || forks > 20) score += 12; // Moderate community interest
+  else if (stars > 10 || forks > 5) score += 8; // Some community interest
+  else if (stars > 0 || forks > 0) score += 4; // Minimal community interest
+
+  // 4. Contributors (10% weight) - Number of contributors indicates development team size
+  const contributors = githubData.contributors_count || 0;
   
-  // 4. Code Freshness (15% weight) - How recent the last push was
+  if (contributors > 50) score += 10; // Large development team
+  else if (contributors > 20) score += 8; // Medium development team
+  else if (contributors > 10) score += 6; // Small development team
+  else if (contributors > 5) score += 4; // Very small team
+  else if (contributors > 0) score += 2; // Solo or minimal team
+  
+  // 5. Code Freshness (15% weight) - How recent the last push was
   if (githubData.last_push) {
     const lastPushDate = new Date(githubData.last_push);
     const daysSinceLastPush = (Date.now() - lastPushDate.getTime()) / (1000 * 60 * 60 * 24);
@@ -360,7 +369,7 @@ export function calculateDevelopmentScore(githubData: any): number {
   const finalScore = Math.max(0, Math.min(100, score));
   
   console.log(`[GITHUB] Development score calculated: ${finalScore}`);
-  console.log(`[GITHUB] - Base: 20, Commits: ${commits30d}, Issues: ${openIssues}/${closedIssues}, Stars: ${stars}, Forks: ${forks}`);
+  console.log(`[GITHUB] - Base: 20, Commits: ${commits30d}, Contributors: ${contributors}, Issues: ${openIssues}/${closedIssues}, Stars: ${stars}, Forks: ${forks}`);
   
   return finalScore;
 }

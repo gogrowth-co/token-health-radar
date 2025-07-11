@@ -49,15 +49,22 @@ export async function fetchGitHubRepoData(githubUrl: string) {
     const issuesResponse = await fetch(issuesUrl, { headers });
     const issuesData = issuesResponse.ok ? await issuesResponse.json() : [];
     
+    // Fetch contributors
+    const contributorsUrl = `https://api.github.com/repos/${owner}/${cleanRepo}/contributors?per_page=100`;
+    const contributorsResponse = await fetch(contributorsUrl, { headers });
+    const contributorsData = contributorsResponse.ok ? await contributorsResponse.json() : [];
+    
     // Calculate metrics
     const openIssues = issuesData.filter((issue: any) => issue.state === 'open' && !issue.pull_request).length;
     const closedIssues = issuesData.filter((issue: any) => issue.state === 'closed' && !issue.pull_request).length;
     const totalIssues = openIssues + closedIssues;
+    const contributorsCount = contributorsData.length || 0;
     
     console.log(`[GITHUB] Repository metrics for ${owner}/${cleanRepo}:`);
     console.log(`[GITHUB] - Stars: ${repoData.stargazers_count}`);
     console.log(`[GITHUB] - Forks: ${repoData.forks_count}`);
     console.log(`[GITHUB] - Commits (30d): ${commitsData.length}`);
+    console.log(`[GITHUB] - Contributors: ${contributorsCount}`);
     console.log(`[GITHUB] - Open Issues: ${openIssues}`);
     console.log(`[GITHUB] - Closed Issues: ${closedIssues}`);
     console.log(`[GITHUB] - Last Push: ${repoData.pushed_at}`);
@@ -68,6 +75,7 @@ export async function fetchGitHubRepoData(githubUrl: string) {
       stars: repoData.stargazers_count || 0,
       forks: repoData.forks_count || 0,
       commits_30d: commitsData.length || 0,
+      contributors_count: contributorsCount,
       open_issues: openIssues,
       closed_issues: closedIssues,
       total_issues: totalIssues,
