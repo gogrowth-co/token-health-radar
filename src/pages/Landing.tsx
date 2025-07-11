@@ -22,9 +22,11 @@ export default function Landing() {
         <HeroSection />
         <BenefitsSection />
         
+        {/* Report preview moved here */}
+        <LazyReportPreview />
+        
         {/* Lazy-loaded below-the-fold content */}
         <LazyHowItWorks />
-        <LazyReportPreview />
         <LazyFeatureGrid />
         <LazySocialProof />
         <LazyPricingTeaser />
