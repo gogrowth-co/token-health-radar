@@ -24,6 +24,22 @@ function calculateDelay(attempt: number): number {
   return Math.min(delay, RETRY_CONFIG.maxDelay);
 }
 
+// Chain mapping for Webacy API
+function getWebacyChainCode(chainId: string): string {
+  const chainMapping: { [key: string]: string } = {
+    '1': 'eth',      // Ethereum
+    '137': 'pol',    // Polygon
+    '56': 'bsc',     // BSC
+    '42161': 'arb',  // Arbitrum
+    '8453': 'base',  // Base
+    '10': 'opt',     // Optimism
+    '7565164': 'sol', // Solana (if supported)
+    // Add more chain mappings as needed
+  };
+  
+  return chainMapping[chainId] || 'eth'; // Default to Ethereum
+}
+
 // Webacy Security API client for contract risk analysis with simplified error handling
 export async function fetchWebacySecurity(tokenAddress: string, chainId: string) {
   console.log(`[WEBACY] === STARTING WEBACY API CALL ===`);
@@ -40,11 +56,12 @@ export async function fetchWebacySecurity(tokenAddress: string, chainId: string)
       return null;
     }
 
+    const webacyChain = getWebacyChainCode(chainId);
     console.log(`[WEBACY] API Key: ${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)} (${apiKey.length} chars)`);
-    console.log(`[WEBACY] Target address: ${tokenAddress.toLowerCase()}`);
+    console.log(`[WEBACY] Target address: ${tokenAddress.toLowerCase()}, Chain: ${chainId} -> ${webacyChain}`);
     
-    // Use the new Webacy API endpoint that doesn't require chain mapping
-    const url = `https://api.webacy.com/addresses/${tokenAddress.toLowerCase()}`;
+    // Use the Webacy API endpoint with optional chain parameter
+    const url = `https://api.webacy.com/addresses/${tokenAddress.toLowerCase()}?chain=${webacyChain}`;
     console.log(`[WEBACY] Request URL: ${url}`);
     
     // Make the request with x-api-key header as per documentation
