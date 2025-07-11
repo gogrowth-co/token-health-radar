@@ -217,15 +217,24 @@ async function getGoPlusAccessToken(): Promise<string> {
 function extractLiquidityLockStatus(lpHolders: any[]): boolean | null {
   if (!Array.isArray(lpHolders) || lpHolders.length === 0) return null;
   
-  // Check if any LP holder has locked tokens
-  const hasLockedLP = lpHolders.some(holder => holder.is_locked === '1');
+  // Check if any LP holder has locked tokens (handle both string and numeric values)
+  const hasLockedLP = lpHolders.some(holder => {
+    console.log(`[GOPLUS-LOCK] Checking holder ${holder.address}: is_locked = ${holder.is_locked} (type: ${typeof holder.is_locked})`);
+    return holder.is_locked === 1 || holder.is_locked === '1';
+  });
+  console.log(`[GOPLUS-LOCK] Has locked LP: ${hasLockedLP}`);
   return hasLockedLP;
 }
 
 function extractLiquidityLockInfo(lpHolders: any[]): string | null {
   if (!Array.isArray(lpHolders) || lpHolders.length === 0) return null;
   
-  const lockedHolders = lpHolders.filter(holder => holder.is_locked === '1' && holder.locked_detail);
+  const lockedHolders = lpHolders.filter(holder => {
+    const isLocked = holder.is_locked === 1 || holder.is_locked === '1';
+    return isLocked && holder.locked_detail;
+  });
+  console.log(`[GOPLUS-LOCK] Found ${lockedHolders.length} locked holders with detail`);
+  
   if (lockedHolders.length === 0) return null;
   
   // Combine lock info from all locked holders
@@ -247,13 +256,17 @@ function extractLiquidityLockPercentage(lpHolders: any[]): number | null {
   
   // Calculate total percentage of locked LP tokens
   const totalLockedPercentage = lpHolders.reduce((sum, holder) => {
-    if (holder.is_locked === '1' && holder.percent) {
+    const isLocked = holder.is_locked === 1 || holder.is_locked === '1';
+    if (isLocked && holder.percent) {
       // holder.percent is already in 0-1 format where 1 = 100%
-      return sum + (parseFloat(holder.percent) * 100);
+      const percentage = parseFloat(holder.percent) * 100;
+      console.log(`[GOPLUS-LOCK] Adding locked percentage: ${percentage}% from holder ${holder.address}`);
+      return sum + percentage;
     }
     return sum;
   }, 0);
   
+  console.log(`[GOPLUS-LOCK] Total locked percentage: ${totalLockedPercentage}%`);
   return totalLockedPercentage > 0 ? totalLockedPercentage : null;
 }
 
