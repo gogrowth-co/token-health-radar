@@ -26,6 +26,9 @@ function calculateDelay(attempt: number): number {
 
 // Chain mapping for Webacy API
 function getWebacyChainCode(chainId: string): string {
+  // Convert hex chain IDs to decimal
+  const decimalChainId = chainId.startsWith('0x') ? parseInt(chainId, 16).toString() : chainId;
+  
   const chainMapping: { [key: string]: string } = {
     '1': 'eth',      // Ethereum
     '137': 'pol',    // Polygon
@@ -37,7 +40,7 @@ function getWebacyChainCode(chainId: string): string {
     // Add more chain mappings as needed
   };
   
-  return chainMapping[chainId] || 'eth'; // Default to Ethereum
+  return chainMapping[decimalChainId] || 'eth'; // Default to Ethereum
 }
 
 // Webacy Security API client for contract risk analysis with simplified error handling
