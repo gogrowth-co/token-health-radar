@@ -41,7 +41,7 @@ export function AuthButton() {
             </Link>
           </Button>
         )}
-        {process.env.NODE_ENV === 'development' && (
+        {process.env.NODE_ENV === 'development' && isAdmin && (
           <div className="text-xs text-muted-foreground">
             {user?.email} | {role || 'user'} | ID: {user?.id?.slice(0, 8)}
           </div>
