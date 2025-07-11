@@ -75,28 +75,13 @@ export async function fetchWebacySecurity(tokenAddress: string, chainId: string)
     const url = `https://api.webacy.com/risk/${webacyChain}/${tokenAddress.toLowerCase()}`;
     console.log(`[WEBACY] Request URL: ${url}`);
     
-    // Test API key first with a simple validation request
-    console.log(`[WEBACY] Testing API authentication...`);
-    const testResponse = await fetch(`https://api.webacy.com/risk/ethereum/0x0000000000000000000000000000000000000000`, {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    // Make the request with key=value format as required by Webacy API
+    console.log(`[WEBACY] Making request with key=value authorization format...`);
+    console.log(`[WEBACY] Authorization header will be: key=${apiKey.substring(0, 8)}...`);
     
-    console.log(`[WEBACY] Auth test response status: ${testResponse.status}`);
-    if (testResponse.status === 401 || testResponse.status === 403) {
-      console.error(`[WEBACY] FAILED - API authentication failed. Status: ${testResponse.status}`);
-      const errorText = await testResponse.text();
-      console.error(`[WEBACY] Auth error response:`, errorText);
-      return null;
-    }
-
-    // Now make the actual request  
-    console.log(`[WEBACY] Making actual request for token data...`);
     const response = await fetch(url, {
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `key=${apiKey}`,
         'Content-Type': 'application/json'
       }
     });
