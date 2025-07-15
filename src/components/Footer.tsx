@@ -20,6 +20,9 @@ export default function Footer() {
             <Link to="/solana-launchpads" className="text-sm text-muted-foreground hover:underline underline-offset-4">
               Solana Launchpads
             </Link>
+            <Link to="/ethereum-launchpads" className="text-sm text-muted-foreground hover:underline underline-offset-4">
+              Ethereum Launchpads
+            </Link>
             <Link to="/pricing" className="text-sm text-muted-foreground hover:underline underline-offset-4">
               Pricing
             </Link>
