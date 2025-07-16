@@ -8,6 +8,7 @@ import { EthereumPlatformTypes } from "@/components/ethereum/EthereumPlatformTyp
 import { EthereumSocialEngagement } from "@/components/ethereum/EthereumSocialEngagement";
 import { EthereumFounderEvaluation } from "@/components/ethereum/EthereumFounderEvaluation";
 import { EthereumEmergingGapsSection } from "@/components/ethereum/EthereumEmergingGapsSection";
+import { EthereumHowToSection } from "@/components/ethereum/EthereumHowToSection";
 import { EthereumFAQ } from "@/components/ethereum/EthereumFAQ";
 
 export default function EthereumLaunchpads(): JSX.Element {
@@ -264,6 +265,7 @@ export default function EthereumLaunchpads(): JSX.Element {
           <EthereumSocialEngagement />
           <EthereumFounderEvaluation />
           <EthereumEmergingGapsSection />
+          <EthereumHowToSection />
           <EthereumFAQ />
         </main>
 
