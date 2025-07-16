@@ -30,7 +30,7 @@ export function EthereumPlatformTypes() {
                   <img
                     src="/lovable-uploads/dao_maker.png"
                     alt="DAO Maker launchpad"
-                    className="w-full h-32 object-contain bg-white rounded"
+                    className="w-full h-48 object-contain rounded-lg shadow-sm border border-border/50"
                   />
                 </div>
                 <p className="text-muted-foreground">
@@ -47,7 +47,7 @@ export function EthereumPlatformTypes() {
                   <img
                     src="/lovable-uploads/poolz_finance.png"
                     alt="Poolz Finance Launchpad"
-                    className="w-full h-32 object-contain bg-white rounded"
+                    className="w-full h-48 object-contain rounded-lg shadow-sm border border-border/50"
                   />
                 </div>
                 <p className="text-muted-foreground">
@@ -75,7 +75,7 @@ export function EthereumPlatformTypes() {
                 <img
                   src="/lovable-uploads/chaingpt_pad.png"
                   alt="ChainGPT Pad"
-                  className="w-full h-32 object-contain bg-white rounded"
+                  className="w-full h-48 object-contain rounded-lg shadow-sm border border-border/50"
                 />
               </div>
               <p className="text-muted-foreground">
@@ -104,7 +104,7 @@ export function EthereumPlatformTypes() {
                   <img
                     src="/lovable-uploads/seedify.png"
                     alt="Seedify Launchpad"
-                    className="w-full h-32 object-contain bg-white rounded"
+                    className="w-full h-48 object-contain rounded-lg shadow-sm border border-border/50"
                   />
                 </div>
                 <p className="text-muted-foreground">
@@ -122,7 +122,7 @@ export function EthereumPlatformTypes() {
                   <img
                     src="/lovable-uploads/Enjinstarter.png"
                     alt="Enjinstarter Launchpad"
-                    className="w-full h-32 object-contain bg-white rounded"
+                    className="w-full h-48 object-contain rounded-lg shadow-sm border border-border/50"
                   />
                 </div>
                 <p className="text-muted-foreground">
@@ -151,7 +151,7 @@ export function EthereumPlatformTypes() {
                   <img
                     src="/lovable-uploads/kommunitas.png"
                     alt="Kommunitas Launchpad"
-                    className="w-full h-32 object-contain bg-white rounded"
+                    className="w-full h-48 object-contain rounded-lg shadow-sm border border-border/50"
                   />
                 </div>
                 <p className="text-muted-foreground">
@@ -169,7 +169,7 @@ export function EthereumPlatformTypes() {
                   <img
                     src="/lovable-uploads/trustpad.png"
                     alt="Trustpad Launchpad"
-                    className="w-full h-32 object-contain bg-white rounded"
+                    className="w-full h-48 object-contain rounded-lg shadow-sm border border-border/50"
                   />
                 </div>
                 <p className="text-muted-foreground">
@@ -197,7 +197,7 @@ export function EthereumPlatformTypes() {
                 <img
                   src="/lovable-uploads/spores.png"
                   alt="Spores Launchpad"
-                  className="w-full h-32 object-contain bg-white rounded"
+                  className="w-full h-48 object-contain rounded-lg shadow-sm border border-border/50"
                 />
               </div>
               <p className="text-muted-foreground">
