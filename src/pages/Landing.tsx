@@ -2,15 +2,14 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/landing/HeroSection";
-import TrustBadgeStrip from "@/components/landing/TrustBadgeStrip";
-import WhoThisIsForSection from "@/components/landing/WhoThisIsForSection";
-import SupportedChainsSection from "@/components/landing/SupportedChainsSection";
-import FAQSection from "@/components/landing/FAQSection";
-import FinalCTASection from "@/components/landing/FinalCTASection";
+import BenefitsSection from "@/components/landing/BenefitsSection";
 import { 
   LazyHowItWorks, 
   LazyReportPreview, 
-  LazyPricingTeaser
+  LazyFeatureGrid, 
+  LazySocialProof, 
+  LazyPricingTeaser, 
+  LazyFinalCTA 
 } from "@/components/landing/LazySection";
 
 export default function Landing() {
@@ -22,29 +21,16 @@ export default function Landing() {
         {/* Critical above-the-fold content */}
         <HeroSection />
         
-        {/* Trust badge strip */}
-        <TrustBadgeStrip />
-        
-        {/* Report preview */}
+        {/* Report preview moved here */}
         <LazyReportPreview />
         
-        {/* How it works */}
+        {/* Lazy-loaded below-the-fold content */}
         <LazyHowItWorks />
-        
-        {/* Who this is for */}
-        <WhoThisIsForSection />
-        
-        {/* Supported chains */}
-        <SupportedChainsSection />
-        
-        {/* Pricing */}
+        <BenefitsSection />
+        <LazyFeatureGrid />
+        <LazySocialProof />
         <LazyPricingTeaser />
-        
-        {/* FAQ */}
-        <FAQSection />
-        
-        {/* Final CTA */}
-        <FinalCTASection />
+        <LazyFinalCTA />
       </main>
       
       <Footer />
