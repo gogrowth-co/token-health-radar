@@ -8,6 +8,12 @@ const HeroSection = memo(() => {
       <div className="absolute inset-0 bg-gradient-radial from-primary/10 to-transparent -z-10"></div>
       
       <div className="container px-4 md:px-6 space-y-6 md:space-y-8 text-center">
+        {/* Notification Banner */}
+        <div className="flex justify-center mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium">
+            🔥 New TokenHealthScan now supports Multi-chain scans!
+          </div>
+        </div>
         <div className="space-y-3 md:space-y-4 max-w-4xl mx-auto">
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
             Find Hidden Risks Before You Dive In
