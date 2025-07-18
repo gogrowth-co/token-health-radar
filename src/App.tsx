@@ -7,14 +7,14 @@ import {
 } from "react-router-dom";
 import Landing from "./pages/Landing";
 import ScanResult from "./pages/ScanResult";
+import ScanLoading from "./pages/ScanLoading";
+import ScanChain from "./pages/ScanChain";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Pricing from "./pages/Pricing";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Admin from "./pages/AdminUsers";
-import { useAuth } from "./contexts/AuthContext";
-import { useEffect } from "react";
 import TokenRiskReport from "@/pages/TokenRiskReport";
 import AdminRoute from "@/components/admin/AdminRoute";
 
@@ -23,7 +23,9 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/scan" element={<ScanResult />} />
+        <Route path="/scan-result" element={<ScanResult />} />
+        <Route path="/scan-loading" element={<ScanLoading />} />
+        <Route path="/scan/:chain/:address" element={<ScanChain />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/account" element={<Dashboard />} />
         <Route path="/pricing" element={<Pricing />} />
