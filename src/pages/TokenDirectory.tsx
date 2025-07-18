@@ -340,7 +340,7 @@ export default function TokenDirectory() {
                     </div>
                     
                     {/* View Report Button */}
-                    <Link to={`/token/${token.id}`} className="w-full">
+                    <Link to={`/token/${token.symbol.toLowerCase()}`} className="w-full">
                       <Button className="w-full" variant="default">
                         View Report
                       </Button>
