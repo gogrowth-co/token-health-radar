@@ -44,6 +44,13 @@ export default function MobileNav() {
                 Home
               </Link>
               <Link 
+                to="/token" 
+                className="text-base font-medium py-3 px-3 rounded hover:bg-accent min-h-[44px] flex items-center"
+                onClick={closeNav}
+              >
+                Token Reports
+              </Link>
+              <Link 
                 to="/pricing" 
                 className="text-base font-medium py-3 px-3 rounded hover:bg-accent min-h-[44px] flex items-center"
                 onClick={closeNav}
