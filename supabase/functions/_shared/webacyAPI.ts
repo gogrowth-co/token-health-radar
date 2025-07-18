@@ -1,3 +1,4 @@
+
 import { getChainConfigByMoralisId } from './chainConfig.ts';
 
 // API Health Tracking
@@ -52,31 +53,50 @@ export async function fetchWebacySecurity(tokenAddress: string, chainId: string)
   webacyApiHealthStats.totalRequests++;
   
   try {
-    // Get API key from environment
+    // Get API key from environment with enhanced validation
     const apiKey = Deno.env.get('WEBACY_API_KEY');
     if (!apiKey) {
       console.error(`[WEBACY] FAILED - WEBACY_API_KEY not configured in environment`);
       return null;
     }
 
+    // Enhanced API key validation
+    const trimmedApiKey = apiKey.trim();
+    if (trimmedApiKey !== apiKey) {
+      console.warn(`[WEBACY] WARNING - API key had whitespace, trimmed it`);
+    }
+    
+    if (trimmedApiKey.length < 10) {
+      console.error(`[WEBACY] FAILED - API key appears too short: ${trimmedApiKey.length} characters`);
+      return null;
+    }
+
     const webacyChain = getWebacyChainCode(chainId);
-    console.log(`[WEBACY] API Key present: ${!!apiKey} (${apiKey.length} chars)`);
+    console.log(`[WEBACY] API Key validation passed - Length: ${trimmedApiKey.length} chars, Starts with: ${trimmedApiKey.substring(0, 8)}...`);
     console.log(`[WEBACY] Target address: ${tokenAddress}, Chain: ${chainId} -> ${webacyChain}`);
     
     // Use the correct Webacy API endpoint as per documentation
     const url = `https://api.webacy.com/security/v1/addresses/${tokenAddress}?chain=${webacyChain}`;
     console.log(`[WEBACY] Request URL: ${url}`);
     
-    // Make the request with x-api-key header as per documentation
-    console.log(`[WEBACY] Making request with x-api-key header...`);
+    // Make the request with x-api-key header as per Webacy documentation
+    console.log(`[WEBACY] Making request with x-api-key header (Webacy standard)...`);
+    
+    const headers = {
+      'x-api-key': trimmedApiKey,
+      'Content-Type': 'application/json',
+      'User-Agent': 'TokenHealthScan/1.0'
+    };
+    
+    console.log(`[WEBACY] Request headers:`, {
+      'x-api-key': `${trimmedApiKey.substring(0, 8)}...`,
+      'Content-Type': headers['Content-Type'],
+      'User-Agent': headers['User-Agent']
+    });
     
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'x-api-key': apiKey,
-        'Content-Type': 'application/json',
-        'User-Agent': 'TokenHealthScan/1.0'
-      }
+      headers
     });
 
     console.log(`[WEBACY] Response status: ${response.status}`);
@@ -88,9 +108,21 @@ export async function fetchWebacySecurity(tokenAddress: string, chainId: string)
         webacyApiHealthStats.successfulRequests++; // 404 is a successful response
         return null;
       }
+      
       const errorText = await response.text();
       console.error(`[WEBACY] FAILED - API error: ${response.status} ${response.statusText}`);
       console.error(`[WEBACY] Error response body:`, errorText);
+      
+      // Enhanced error handling for common issues
+      if (response.status === 403) {
+        console.error(`[WEBACY] AUTHENTICATION ERROR - Check API key validity and permissions`);
+        console.error(`[WEBACY] API Key format check - Length: ${trimmedApiKey.length}, First 8 chars: ${trimmedApiKey.substring(0, 8)}`);
+      } else if (response.status === 401) {
+        console.error(`[WEBACY] UNAUTHORIZED - API key may be invalid or expired`);
+      } else if (response.status === 429) {
+        console.error(`[WEBACY] RATE LIMITED - Too many requests`);
+      }
+      
       throw new Error(`Webacy API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
     
