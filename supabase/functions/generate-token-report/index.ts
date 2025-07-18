@@ -115,31 +115,100 @@ Development Analysis:
 
 Please generate structured report content in JSON format with the following sections:
 {
-  "whatIsToken": "Brief description of what the token is and its purpose",
-  "riskOverview": "Executive summary of the overall risk assessment",
-  "securityAnalysis": "Detailed security analysis with bullet points",
-  "liquidityAnalysis": "Detailed liquidity analysis with bullet points", 
-  "tokenomicsAnalysis": "Detailed tokenomics analysis with bullet points",
-  "communityAnalysis": "Detailed community analysis with bullet points",
-  "developmentAnalysis": "Detailed development analysis with bullet points",
-  "howToBuy": "Step-by-step guide on how to buy this token",
+  "whatIsToken": "Brief 2-3 sentence description of what the token is and its purpose",
+  "riskOverview": "Executive summary of the overall risk assessment highlighting the main concerns and positives",
+  "securityAnalysis": {
+    "summary": "Brief overview of security findings",
+    "keyPoints": [
+      "Specific security finding 1 with explanation",
+      "Specific security finding 2 with explanation",
+      "Risk assessment point with context"
+    ]
+  },
+  "liquidityAnalysis": {
+    "summary": "Brief overview of liquidity situation", 
+    "keyPoints": [
+      "Trading volume analysis with specific numbers",
+      "Exchange availability assessment",
+      "Market depth evaluation"
+    ]
+  },
+  "tokenomicsAnalysis": {
+    "summary": "Brief overview of token economics",
+    "keyPoints": [
+      "Supply mechanism details",
+      "Holder distribution analysis", 
+      "Economic model assessment"
+    ]
+  },
+  "communityAnalysis": {
+    "summary": "Brief overview of community health",
+    "keyPoints": [
+      "Social media presence analysis",
+      "Community engagement levels",
+      "Growth metrics and trends"
+    ]
+  },
+  "developmentAnalysis": {
+    "summary": "Brief overview of development activity",
+    "keyPoints": [
+      "Code activity assessment",
+      "Developer engagement levels",
+      "Project maintenance status"
+    ]
+  },
+  "howToBuy": [
+    {
+      "step": 1,
+      "title": "Set up a cryptocurrency wallet",
+      "description": "Download and install a compatible wallet like MetaMask, Trust Wallet, or Coinbase Wallet"
+    },
+    {
+      "step": 2,
+      "title": "Purchase ETH or USDC",
+      "description": "Buy Ethereum (ETH) or USDC from a centralized exchange like Coinbase, Binance, or Kraken"
+    },
+    {
+      "step": 3,
+      "title": "Transfer to your wallet",
+      "description": "Send your ETH or USDC from the exchange to your personal wallet address"
+    },
+    {
+      "step": 4,
+      "title": "Connect to a DEX",
+      "description": "Visit Uniswap, SushiSwap, or another decentralized exchange and connect your wallet"
+    },
+    {
+      "step": 5,
+      "title": "Swap for ${token.symbol}",
+      "description": "Enter the token contract address and swap your ETH/USDC for ${token.symbol}"
+    }
+  ],
   "faq": [
     {
       "question": "Is ${token.symbol} a good investment?",
-      "answer": "Risk-based answer"
+      "answer": "Detailed risk-based answer considering the token's scores and analysis"
     },
     {
-      "question": "What are the main risks of ${token.symbol}?", 
-      "answer": "Key risk factors"
+      "question": "What are the main risks of investing in ${token.symbol}?",
+      "answer": "Specific risk factors based on the security, liquidity, and tokenomics analysis"
     },
     {
-      "question": "How secure is ${token.symbol}?",
-      "answer": "Security assessment"
+      "question": "How secure is the ${token.symbol} smart contract?",
+      "answer": "Security assessment based on contract verification, ownership, and audit status"
+    },
+    {
+      "question": "What makes ${token.symbol} different from other tokens?",
+      "answer": "Unique features and value proposition based on the token's characteristics"
+    },
+    {
+      "question": "Where can I track ${token.symbol} price and market data?",
+      "answer": "Recommended resources for monitoring price, volume, and market metrics"
     }
   ]
 }
 
-Make the content informative, balanced, and professional. Include specific data points from the analysis.`;
+Make the content informative, balanced, and professional. Include specific data points from the analysis. For each analysis section, provide a brief summary followed by 3-5 specific key points that reference actual data. Make the how-to-buy steps clear and actionable. Ensure FAQ answers are comprehensive and address real investor concerns.`;
 
     // Generate content with OpenAI
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -153,7 +222,7 @@ Make the content informative, balanced, and professional. Include specific data 
         messages: [
           {
             role: 'system',
-            content: 'You are a professional cryptocurrency analyst. Generate comprehensive, balanced token reports in valid JSON format. Be objective and include both risks and benefits. Always respond with pure JSON without any markdown formatting or code blocks.'
+            content: 'You are a professional cryptocurrency analyst. Generate comprehensive, balanced token reports in valid JSON format. Be objective and include both risks and benefits. Always respond with pure JSON without any markdown formatting or code blocks. Focus on providing educational content that helps users understand both what each metric means and why it matters for their investment decisions.'
           },
           {
             role: 'user',

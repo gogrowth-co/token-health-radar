@@ -8,6 +8,12 @@ import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { 
   Shield, 
   DollarSign, 
   TrendingUp, 
@@ -17,13 +23,23 @@ import {
   ChevronRight,
   CheckCircle,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  Info,
+  Wallet,
+  ArrowRight
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
 
 interface AnalysisSection {
   keyPoints?: string[];
   summary?: string;
+}
+
+interface HowToBuyStep {
+  step: number;
+  title: string;
+  description: string;
+  icon?: string;
 }
 
 interface ReportData {
@@ -34,7 +50,7 @@ interface ReportData {
   tokenomicsAnalysis: string | AnalysisSection;
   communityAnalysis: string | AnalysisSection;
   developmentAnalysis: string | AnalysisSection;
-  howToBuy: string;
+  howToBuy: string | HowToBuyStep[];
   faq: Array<{
     question: string;
     answer: string;
@@ -111,6 +127,12 @@ export default function TokenReport() {
     return <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />;
   };
 
+  const getScoreDescription = (score: number) => {
+    if (score >= 80) return "Excellent";
+    if (score >= 60) return "Moderate";
+    return "High Risk";
+  };
+
   const renderAnalysisContent = (content: string | AnalysisSection) => {
     if (!content) return null;
 
@@ -148,6 +170,81 @@ export default function TokenReport() {
     }
 
     return null;
+  };
+
+  const renderHowToBuy = (content: string | HowToBuyStep[]) => {
+    // Handle array format (new structured format)
+    if (Array.isArray(content)) {
+      return (
+        <div className="space-y-4">
+          {content.map((step, idx) => (
+            <div key={idx} className="flex items-start gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+              <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-semibold text-sm">
+                {step.step}
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold mb-2">{step.title}</h4>
+                <p className="text-muted-foreground leading-relaxed">{step.description}</p>
+              </div>
+              <ArrowRight className="h-5 w-5 text-muted-foreground" />
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // Handle string format (legacy format)
+    if (typeof content === 'string') {
+      const steps = content.split('\n').filter(step => step.trim());
+      return (
+        <div className="space-y-4">
+          {steps.map((step, idx) => (
+            <div key={idx} className="flex items-start gap-4 p-4 border rounded-lg">
+              <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-semibold text-sm">
+                {idx + 1}
+              </div>
+              <div className="flex-1">
+                <p className="text-muted-foreground leading-relaxed">{step}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  const getCategoryInfo = (category: string) => {
+    const categoryMap = {
+      'Security': {
+        description: 'Evaluates smart contract safety, ownership status, and potential security vulnerabilities.',
+        whyMatters: 'Security risks can lead to total loss of funds through exploits, rug pulls, or malicious contract functions.',
+        keyIndicators: ['Contract verification', 'Ownership renouncement', 'Mint functions', 'Honeypot detection', 'Liquidity locks']
+      },
+      'Liquidity': {
+        description: 'Measures trading accessibility, market depth, and how easily tokens can be bought or sold.',
+        whyMatters: 'Poor liquidity can trap investors, cause extreme price volatility, and prevent exit during market downturns.',
+        keyIndicators: ['Trading volume', 'Exchange listings', 'Market depth', 'Liquidity pools', 'Price impact']
+      },
+      'Tokenomics': {
+        description: 'Analyzes token supply mechanics, distribution, and economic incentive structures.',
+        whyMatters: 'Poor tokenomics can lead to inflation, unfair distribution, or economic models that favor insiders over retail investors.',
+        keyIndicators: ['Supply mechanics', 'Holder distribution', 'Burn mechanisms', 'Inflation rate', 'Vesting schedules']
+      },
+      'Community': {
+        description: 'Assesses social media presence, engagement levels, and community growth metrics.',
+        whyMatters: 'Strong communities drive adoption and price stability, while weak communities often indicate pump-and-dump schemes.',
+        keyIndicators: ['Social media followers', 'Engagement rates', 'Community growth', 'Official verification', 'Active discussions']
+      },
+      'Development': {
+        description: 'Evaluates code activity, repository health, and ongoing project maintenance.',
+        whyMatters: 'Active development indicates a committed team and project longevity, while abandoned projects often fail.',
+        keyIndicators: ['Code commits', 'Repository activity', 'Developer count', 'Documentation quality', 'Update frequency']
+      }
+    };
+    
+    return categoryMap[category] || { description: '', whyMatters: '', keyIndicators: [] };
   };
 
   if (loading) {
@@ -341,6 +438,9 @@ export default function TokenReport() {
                     {metadata.scores.security}/100
                   </div>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {getScoreDescription(metadata.scores.security)}
+                </p>
               </CardContent>
             </Card>
 
@@ -356,6 +456,9 @@ export default function TokenReport() {
                     {metadata.scores.tokenomics}/100
                   </div>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {getScoreDescription(metadata.scores.tokenomics)}
+                </p>
               </CardContent>
             </Card>
 
@@ -371,6 +474,9 @@ export default function TokenReport() {
                     {metadata.scores.liquidity}/100
                   </div>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {getScoreDescription(metadata.scores.liquidity)}
+                </p>
               </CardContent>
             </Card>
 
@@ -386,6 +492,9 @@ export default function TokenReport() {
                     {metadata.scores.community}/100
                   </div>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {getScoreDescription(metadata.scores.community)}
+                </p>
               </CardContent>
             </Card>
 
@@ -401,6 +510,9 @@ export default function TokenReport() {
                     {metadata.scores.development}/100
                   </div>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {getScoreDescription(metadata.scores.development)}
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -408,24 +520,81 @@ export default function TokenReport() {
 
         {/* Detailed Analysis Sections */}
         {[
-          { title: "Security Score", content: reportData.securityAnalysis, icon: Shield },
-          { title: "Liquidity Score", content: reportData.liquidityAnalysis, icon: TrendingUp },
-          { title: "Tokenomics Score", content: reportData.tokenomicsAnalysis, icon: DollarSign },
-          { title: "Community Score", content: reportData.communityAnalysis, icon: Users },
-          { title: "Development Score", content: reportData.developmentAnalysis, icon: Code }
-        ].map(({ title, content, icon: Icon }) => (
-          <section key={title} className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 flex items-center">
-              <Icon className="mr-2 h-6 w-6" />
-              {title}
-            </h2>
-            <Card>
-              <CardContent className="pt-6">
-                {renderAnalysisContent(content)}
-              </CardContent>
-            </Card>
-          </section>
-        ))}
+          { 
+            title: "Security Score", 
+            content: reportData.securityAnalysis, 
+            icon: Shield,
+            category: "Security"
+          },
+          { 
+            title: "Liquidity Score", 
+            content: reportData.liquidityAnalysis, 
+            icon: TrendingUp,
+            category: "Liquidity"
+          },
+          { 
+            title: "Tokenomics Score", 
+            content: reportData.tokenomicsAnalysis, 
+            icon: DollarSign,
+            category: "Tokenomics"
+          },
+          { 
+            title: "Community Score", 
+            content: reportData.communityAnalysis, 
+            icon: Users,
+            category: "Community"
+          },
+          { 
+            title: "Development Score", 
+            content: reportData.developmentAnalysis, 
+            icon: Code,
+            category: "Development"
+          }
+        ].map(({ title, content, icon: Icon, category }) => {
+          const categoryInfo = getCategoryInfo(category);
+          return (
+            <section key={title} className="mb-8">
+              <h2 className="text-2xl font-semibold mb-4 flex items-center">
+                <Icon className="mr-2 h-6 w-6" />
+                {title}
+              </h2>
+              
+              {/* Educational Info Card */}
+              <Card className="mb-4 bg-muted/30">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-3 mb-4">
+                    <Info className="h-5 w-5 text-primary mt-0.5" />
+                    <div>
+                      <h4 className="font-semibold mb-2">What is {category}?</h4>
+                      <p className="text-muted-foreground text-sm leading-relaxed mb-3">
+                        {categoryInfo.description}
+                      </p>
+                      <h4 className="font-semibold mb-2">Why it matters</h4>
+                      <p className="text-muted-foreground text-sm leading-relaxed mb-3">
+                        {categoryInfo.whyMatters}
+                      </p>
+                      <h4 className="font-semibold mb-2">Key indicators we evaluate</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {categoryInfo.keyIndicators.map((indicator, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-xs">
+                            {indicator}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Analysis Content */}
+              <Card>
+                <CardContent className="pt-6">
+                  {renderAnalysisContent(content)}
+                </CardContent>
+              </Card>
+            </section>
+          );
+        })}
 
         {/* How We Score */}
         <section className="mb-8">
@@ -450,16 +619,13 @@ export default function TokenReport() {
 
         {/* How to Buy */}
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">How to Buy {metadata.tokenSymbol.toUpperCase()}</h2>
+          <h2 className="text-2xl font-semibold mb-4 flex items-center">
+            <Wallet className="mr-2 h-6 w-6" />
+            How to Buy {metadata.tokenSymbol.toUpperCase()}
+          </h2>
           <Card>
             <CardContent className="pt-6">
-              <div className="prose dark:prose-invert max-w-none">
-                {reportData.howToBuy.split('\n').map((paragraph, idx) => (
-                  <p key={idx} className="mb-4 last:mb-0 text-muted-foreground leading-relaxed">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
+              {renderHowToBuy(reportData.howToBuy)}
             </CardContent>
           </Card>
         </section>
@@ -467,18 +633,24 @@ export default function TokenReport() {
         {/* FAQ */}
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Frequently Asked Questions</h2>
-          <div className="space-y-4">
-            {reportData.faq.map((item, idx) => (
-              <Card key={idx}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{item.question}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground leading-relaxed">{item.answer}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <Card>
+            <CardContent className="pt-6">
+              <Accordion type="single" collapsible className="w-full">
+                {reportData.faq.map((item, idx) => (
+                  <AccordionItem key={idx} value={`item-${idx}`}>
+                    <AccordionTrigger className="text-left">
+                      {item.question}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-muted-foreground leading-relaxed">
+                        {item.answer}
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </CardContent>
+          </Card>
         </section>
 
         {/* More Resources */}
@@ -505,6 +677,29 @@ export default function TokenReport() {
                   <ExternalLink className="mr-2 h-4 w-4" />
                   <span>View Contract</span>
                 </a>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Disclaimer */}
+        <section className="mb-8">
+          <Card className="border-2 border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/50">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-6 w-6 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                    Important Disclaimer
+                  </h3>
+                  <p className="text-yellow-700 dark:text-yellow-300 leading-relaxed">
+                    This analysis is not financial advice and should not be considered as such. 
+                    Cryptocurrency investments carry significant risks, including the potential for 
+                    total loss of capital. Always conduct your own research and consult with 
+                    qualified financial advisors before making investment decisions. Only invest 
+                    what you can afford to lose and ensure you fully understand the risks involved.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
