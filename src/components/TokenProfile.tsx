@@ -225,6 +225,16 @@ export default function TokenProfile({
             <div className="flex flex-col items-center gap-3">
               <MiniHealthScore score={overallScore} />
               
+              {/* Share buttons */}
+              <div>
+                <ShareScanResult
+                  tokenAddress={address}
+                  chainId={chainId}
+                  tokenName={name}
+                  tokenSymbol={symbol}
+                />
+              </div>
+              
               {/* Socials */}
               {(website || twitter || github) && (
                 <div className="flex items-center gap-3">
@@ -266,16 +276,6 @@ export default function TokenProfile({
             </div>
           </div>
 
-          {/* Share Section - Mobile */}
-          <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
-            <ShareScanResult
-              tokenAddress={address}
-              chainId={chainId}
-              tokenName={name}
-              tokenSymbol={symbol}
-              className="w-full"
-            />
-          </div>
         </div>
         {/* CSS variables for theme */}
         <style>{`
@@ -382,15 +382,6 @@ export default function TokenProfile({
             </div>
           </div>
 
-          {/* Add Share Section below existing content */}
-          <div className="mt-4">
-            <ShareScanResult
-              tokenAddress={address}
-              chainId={chainId}
-              tokenName={name}
-              tokenSymbol={symbol}
-            />
-          </div>
         </div>
 
         {/* RIGHT SECTION: Price/Market Cap on left, Health Score on right */}
@@ -429,6 +420,16 @@ export default function TokenProfile({
           <div className="flex flex-col items-center gap-4 ml-16">
             {/* Health Score */}
             <MiniHealthScore score={overallScore} />
+            
+            {/* Share buttons */}
+            <div>
+              <ShareScanResult
+                tokenAddress={address}
+                chainId={chainId}
+                tokenName={name}
+                tokenSymbol={symbol}
+              />
+            </div>
             
             {/* Socials */}
             {(website || twitter || github) && (
