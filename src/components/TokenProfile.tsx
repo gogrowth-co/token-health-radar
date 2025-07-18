@@ -225,16 +225,6 @@ export default function TokenProfile({
             <div className="flex flex-col items-center gap-3">
               <MiniHealthScore score={overallScore} />
               
-              {/* Share buttons */}
-              <div>
-                <ShareScanResult
-                  tokenAddress={address}
-                  chainId={chainId}
-                  tokenName={name}
-                  tokenSymbol={symbol}
-                />
-              </div>
-              
               {/* Socials */}
               {(website || twitter || github) && (
                 <div className="flex items-center gap-3">
@@ -273,6 +263,16 @@ export default function TokenProfile({
                   )}
                 </div>
               )}
+              
+              {/* Share buttons */}
+              <div>
+                <ShareScanResult
+                  tokenAddress={address}
+                  chainId={chainId}
+                  tokenName={name}
+                  tokenSymbol={symbol}
+                />
+              </div>
             </div>
           </div>
 
@@ -421,16 +421,6 @@ export default function TokenProfile({
             {/* Health Score */}
             <MiniHealthScore score={overallScore} />
             
-            {/* Share buttons */}
-            <div>
-              <ShareScanResult
-                tokenAddress={address}
-                chainId={chainId}
-                tokenName={name}
-                tokenSymbol={symbol}
-              />
-            </div>
-            
             {/* Socials */}
             {(website || twitter || github) && (
               <div className="flex items-center gap-4">
@@ -472,6 +462,16 @@ export default function TokenProfile({
                 )}
               </div>
             )}
+            
+            {/* Share buttons */}
+            <div>
+              <ShareScanResult
+                tokenAddress={address}
+                chainId={chainId}
+                tokenName={name}
+                tokenSymbol={symbol}
+              />
+            </div>
           </div>
         </div>
       </div>
