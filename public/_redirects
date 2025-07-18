@@ -1,4 +1,10 @@
 
+# Bot detection and prerendering for guide pages
+/token-scan-guide /token-scan-guide 200! Condition=UserAgent:bot,crawler,spider,googlebot,facebookexternalhit,twitterbot,linkedinbot,slackbot,whatsapp,discordbot
+/token-sniffer-comparison /token-sniffer-comparison 200! Condition=UserAgent:bot,crawler,spider,googlebot,facebookexternalhit,twitterbot,linkedinbot,slackbot,whatsapp,discordbot
+/solana-launchpads /solana-launchpads 200! Condition=UserAgent:bot,crawler,spider,googlebot,facebookexternalhit,twitterbot,linkedinbot,slackbot,whatsapp,discordbot
+/ethereum-launchpads /ethereum-launchpads 200! Condition=UserAgent:bot,crawler,spider,googlebot,facebookexternalhit,twitterbot,linkedinbot,slackbot,whatsapp,discordbot
+
 # Bot detection and prerendering for token pages
 /token/* /token/:splat 200! Condition=UserAgent:bot,crawler,spider,googlebot,facebookexternalhit,twitterbot,linkedinbot,slackbot,whatsapp,discordbot
 

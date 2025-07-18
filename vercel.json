@@ -16,6 +16,42 @@
       }
     },
     {
+      "src": "/token-scan-guide",
+      "dest": "/api/prerender",
+      "headers": {
+        "Content-Type": "text/html"
+      },
+      "continue": true,
+      "check": true
+    },
+    {
+      "src": "/token-sniffer-comparison",
+      "dest": "/api/prerender",
+      "headers": {
+        "Content-Type": "text/html"
+      },
+      "continue": true,
+      "check": true
+    },
+    {
+      "src": "/solana-launchpads",
+      "dest": "/api/prerender",
+      "headers": {
+        "Content-Type": "text/html"
+      },
+      "continue": true,
+      "check": true
+    },
+    {
+      "src": "/ethereum-launchpads",
+      "dest": "/api/prerender",
+      "headers": {
+        "Content-Type": "text/html"
+      },
+      "continue": true,
+      "check": true
+    },
+    {
       "src": "/token/(.*)",
       "dest": "/api/prerender?token=$1",
       "headers": {
