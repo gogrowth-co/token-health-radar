@@ -12,6 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import OptimizedTokenLogo from "@/components/OptimizedTokenLogo";
 import RefreshScanButton from "@/components/RefreshScanButton";
 import DataFreshnessIndicator from "@/components/DataFreshnessIndicator";
+import ShareScanResult from "@/components/ShareScanResult";
 
 // Mini health score widget with better visibility for dark and light themes
 function MiniHealthScore({ score = 0 }: { score: number }) {
@@ -81,6 +82,7 @@ interface TokenProfileProps {
   overallScore?: number;
   description?: string;
   network?: string;
+  chainId?: string;
 }
 
 export default function TokenProfile({
@@ -97,6 +99,7 @@ export default function TokenProfile({
   overallScore = 0,
   description,
   network = "ETH",
+  chainId = "0x1",
 }: TokenProfileProps) {
   const isMobile = useIsMobile();
   
@@ -262,6 +265,17 @@ export default function TokenProfile({
               )}
             </div>
           </div>
+
+          {/* Share Section - Mobile */}
+          <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+            <ShareScanResult
+              tokenAddress={address}
+              chainId={chainId}
+              tokenName={name}
+              tokenSymbol={symbol}
+              className="w-full"
+            />
+          </div>
         </div>
         {/* CSS variables for theme */}
         <style>{`
@@ -278,7 +292,7 @@ export default function TokenProfile({
     );
   }
 
-  // Desktop layout (existing code)
+  // Desktop layout
   return (
     <Card
       className="overflow-visible transition-all"
@@ -366,6 +380,16 @@ export default function TokenProfile({
                 {network.toUpperCase()}
               </span>
             </div>
+          </div>
+
+          {/* Add Share Section below existing content */}
+          <div className="mt-4">
+            <ShareScanResult
+              tokenAddress={address}
+              chainId={chainId}
+              tokenName={name}
+              tokenSymbol={symbol}
+            />
           </div>
         </div>
 

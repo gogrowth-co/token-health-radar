@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -391,8 +390,8 @@ export default function ScanResult() {
             overallScore={overallScore}
             description={properDescription}
             network={networkName}
+            chainId={chainId}
           />
-
 
           <CategoryScoresGrid
             securityScore={scanData.security?.score || 0}
