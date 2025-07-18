@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -100,50 +101,86 @@ export default function TokenDirectory() {
       try {
         setIsLoading(true);
         
-        // Fetch token reports with associated token data
-        const { data: reports, error } = await supabase
+        console.log('Fetching token reports...');
+        
+        // First, fetch all token reports
+        const { data: reports, error: reportsError } = await supabase
           .from('token_reports')
-          .select(`
-            *,
-            token_data_cache (
-              logo_url,
-              description
-            )
-          `)
+          .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('Error fetching token reports:', error);
+        if (reportsError) {
+          console.error('Error fetching token reports:', reportsError);
           return;
         }
 
-        if (reports) {
-          const tokenReports: TokenReport[] = reports.map(report => {
-            const score = extractOverallScore(report.report_content);
-            const tokenData = Array.isArray(report.token_data_cache) 
-              ? report.token_data_cache[0] 
-              : report.token_data_cache;
-            const categories = determineCategories(tokenData, report.report_content);
-            
-            return {
-              id: report.token_symbol.toLowerCase(),
-              name: report.token_name,
-              symbol: report.token_symbol,
-              logo: tokenData?.logo_url || '/placeholder.svg',
-              score,
-              categories,
-              color: getTokenColor(report.token_symbol),
-              description: tokenData?.description,
-              created_at: report.created_at
-            };
-          });
+        console.log('Token reports fetched:', reports);
 
-          setTokens(tokenReports);
-          
-          // Extract unique categories
-          const uniqueCategories = [...new Set(tokenReports.flatMap(token => token.categories))];
-          setAllCategories(uniqueCategories);
+        if (!reports || reports.length === 0) {
+          console.log('No token reports found in database');
+          setTokens([]);
+          setIsLoading(false);
+          return;
         }
+
+        // Extract unique token addresses to fetch their data
+        const tokenAddresses = reports.map(report => report.token_address);
+        console.log('Token addresses to fetch data for:', tokenAddresses);
+
+        // Fetch token data for these addresses
+        const { data: tokenDataList, error: tokenDataError } = await supabase
+          .from('token_data_cache')
+          .select('*')
+          .in('token_address', tokenAddresses);
+
+        if (tokenDataError) {
+          console.error('Error fetching token data:', tokenDataError);
+          // Continue without token data - we'll use fallbacks
+        }
+
+        console.log('Token data fetched:', tokenDataList);
+
+        // Create a map of token address to token data for easier lookup
+        const tokenDataMap = new Map();
+        if (tokenDataList) {
+          tokenDataList.forEach(tokenData => {
+            tokenDataMap.set(tokenData.token_address, tokenData);
+          });
+        }
+
+        // Combine reports with their corresponding token data
+        const tokenReports: TokenReport[] = reports.map(report => {
+          const tokenData = tokenDataMap.get(report.token_address);
+          const score = extractOverallScore(report.report_content);
+          const categories = determineCategories(tokenData, report.report_content);
+          
+          console.log(`Processing token ${report.token_symbol}:`, {
+            hasTokenData: !!tokenData,
+            logo: tokenData?.logo_url,
+            score,
+            categories
+          });
+          
+          return {
+            id: report.token_address.toLowerCase(), // Use address as ID for routing
+            name: report.token_name,
+            symbol: report.token_symbol,
+            logo: tokenData?.logo_url || '/placeholder.svg',
+            score,
+            categories,
+            color: getTokenColor(report.token_symbol),
+            description: tokenData?.description,
+            created_at: report.created_at
+          };
+        });
+
+        console.log('Final token reports processed:', tokenReports);
+        setTokens(tokenReports);
+        
+        // Extract unique categories
+        const uniqueCategories = [...new Set(tokenReports.flatMap(token => token.categories))];
+        setAllCategories(uniqueCategories);
+        
       } catch (error) {
         console.error('Error in fetchTokenReports:', error);
       } finally {
@@ -164,7 +201,7 @@ export default function TokenDirectory() {
   }, [tokens, searchTerm, selectedCategory]);
 
   if (isLoading) {
-  return (
+    return (
       <>
         <Helmet>
           <title>Token Risk Reports Directory - TokenHealthScan</title>
