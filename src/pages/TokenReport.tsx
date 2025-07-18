@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +28,16 @@ import {
   ArrowRight
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import {
+  generateTokenTitle,
+  generateTokenDescription,
+  generateTokenKeywords,
+  getTokenImageUrl,
+  generateCanonicalUrl,
+  generateFinancialProductSchema,
+  generateReviewSchema,
+  generateOrganizationSchema
+} from "@/utils/seoUtils";
 
 interface AnalysisSection {
   keyPoints?: string[];
@@ -74,9 +83,22 @@ interface ReportData {
   };
 }
 
+interface TokenCacheData {
+  name: string;
+  symbol: string;
+  logo_url?: string;
+  description?: string;
+  website_url?: string;
+  twitter_handle?: string;
+  coingecko_id?: string;
+  current_price_usd?: number;
+  market_cap_usd?: number;
+}
+
 export default function TokenReport() {
   const { symbol } = useParams<{ symbol: string }>();
   const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [tokenCacheData, setTokenCacheData] = useState<TokenCacheData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,20 +111,33 @@ export default function TokenReport() {
       }
 
       try {
-        const { data, error } = await supabase
+        // Load report data
+        const { data: reportResult, error: reportError } = await supabase
           .from('token_reports')
           .select('*')
           .eq('token_symbol', symbol.toLowerCase())
           .single();
 
-        if (error) {
-          console.error("Error loading report:", error);
+        if (reportError) {
+          console.error("Error loading report:", reportError);
           setError("Report not found");
           return;
         }
 
-        if (data) {
-          setReportData(data.report_content as unknown as ReportData);
+        if (reportResult) {
+          setReportData(reportResult.report_content as unknown as ReportData);
+
+          // Load additional token cache data for SEO
+          const { data: cacheResult } = await supabase
+            .from('token_data_cache')
+            .select('name, symbol, logo_url, description, website_url, twitter_handle, coingecko_id, current_price_usd, market_cap_usd')
+            .eq('token_address', reportResult.token_address)
+            .eq('chain_id', reportResult.chain_id)
+            .maybeSingle();
+
+          if (cacheResult) {
+            setTokenCacheData(cacheResult);
+          }
         }
       } catch (err) {
         console.error("Error loading report:", err);
@@ -136,7 +171,6 @@ export default function TokenReport() {
   const renderAnalysisContent = (content: string | AnalysisSection) => {
     if (!content) return null;
 
-    // Handle string content (legacy format)
     if (typeof content === 'string') {
       return (
         <div className="prose dark:prose-invert max-w-none">
@@ -149,7 +183,6 @@ export default function TokenReport() {
       );
     }
 
-    // Handle object content (new format)
     if (typeof content === 'object') {
       return (
         <div className="prose dark:prose-invert max-w-none">
@@ -173,7 +206,6 @@ export default function TokenReport() {
   };
 
   const renderHowToBuy = (content: string | HowToBuyStep[]) => {
-    // Handle array format (new structured format)
     if (Array.isArray(content)) {
       return (
         <div className="space-y-4">
@@ -193,7 +225,6 @@ export default function TokenReport() {
       );
     }
 
-    // Handle string format (legacy format)
     if (typeof content === 'string') {
       const steps = content.split('\n').filter(step => step.trim());
       return (
@@ -280,54 +311,72 @@ export default function TokenReport() {
   }
 
   const { metadata } = reportData;
-  const reportUrl = `https://tokenhealthscan.com/token/${symbol}`;
+  const reportUrl = generateCanonicalUrl(symbol!);
+  
+  // Combine report metadata with cache data for comprehensive SEO
+  const seoData = {
+    name: tokenCacheData?.name || metadata.tokenName,
+    symbol: tokenCacheData?.symbol || metadata.tokenSymbol,
+    logo_url: tokenCacheData?.logo_url,
+    description: tokenCacheData?.description,
+    website_url: tokenCacheData?.website_url,
+    twitter_handle: tokenCacheData?.twitter_handle,
+    coingecko_id: tokenCacheData?.coingecko_id,
+    current_price_usd: tokenCacheData?.current_price_usd || metadata.currentPrice,
+    market_cap_usd: tokenCacheData?.market_cap_usd || metadata.marketCap,
+    overall_score: metadata.scores.overall,
+    token_address: metadata.tokenAddress,
+    chain_id: metadata.chainId
+  };
+
+  const pageTitle = generateTokenTitle(seoData);
+  const pageDescription = generateTokenDescription(seoData);
+  const pageKeywords = generateTokenKeywords(seoData);
+  const imageUrl = getTokenImageUrl(seoData);
 
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>{metadata.tokenName} ({metadata.tokenSymbol.toUpperCase()}) Risk Report | Token Health Scan</title>
-        <meta name="description" content={`Comprehensive risk analysis and security report for ${metadata.tokenName} (${metadata.tokenSymbol.toUpperCase()}). Get detailed insights on security, tokenomics, liquidity, and more.`} />
-        <meta name="keywords" content={`${metadata.tokenName}, ${metadata.tokenSymbol}, crypto risk, token analysis, security report, DeFi, cryptocurrency`} />
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta name="keywords" content={pageKeywords} />
+        <meta name="author" content="Token Health Scan" />
         
         {/* Open Graph */}
-        <meta property="og:title" content={`${metadata.tokenName} Risk Report`} />
-        <meta property="og:description" content={`Comprehensive risk analysis for ${metadata.tokenName} (${metadata.tokenSymbol.toUpperCase()})`} />
+        <meta property="og:title" content={`${seoData.name} (${seoData.symbol.toUpperCase()}) Risk Report`} />
+        <meta property="og:description" content={pageDescription} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={reportUrl} />
-        <meta property="og:image" content="https://tokenhealthscan.com/tokenhealthscan-og.png" />
+        <meta property="og:image" content={imageUrl} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:site_name" content="Token Health Scan" />
         
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${metadata.tokenName} Risk Report`} />
-        <meta name="twitter:description" content={`Comprehensive risk analysis for ${metadata.tokenName}`} />
-        <meta name="twitter:image" content="https://tokenhealthscan.com/tokenhealthscan-og.png" />
+        <meta name="twitter:site" content="@tokenhealthscan" />
+        <meta name="twitter:title" content={`${seoData.name} Risk Report`} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={imageUrl} />
         
         {/* Canonical URL */}
         <link rel="canonical" href={reportUrl} />
 
-        {/* Structured Data */}
+        {/* FinancialProduct Schema */}
         <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Article",
-            "headline": `${metadata.tokenName} Risk Report`,
-            "description": `Comprehensive risk analysis for ${metadata.tokenName} (${metadata.tokenSymbol.toUpperCase()})`,
-            "author": {
-              "@type": "Organization",
-              "name": "Token Health Scan"
-            },
-            "publisher": {
-              "@type": "Organization", 
-              "name": "Token Health Scan",
-              "logo": {
-                "@type": "ImageObject",
-                "url": "https://tokenhealthscan.com/tokenhealthscan-og.png"
-              }
-            },
-            "datePublished": metadata.generatedAt,
-            "dateModified": metadata.generatedAt,
-            "url": reportUrl
-          })}
+          {JSON.stringify(generateFinancialProductSchema(seoData, reportUrl))}
+        </script>
+
+        {/* Review Schema (if score available) */}
+        {seoData.overall_score && (
+          <script type="application/ld+json">
+            {JSON.stringify(generateReviewSchema(seoData, reportUrl))}
+          </script>
+        )}
+
+        {/* Organization Schema */}
+        <script type="application/ld+json">
+          {JSON.stringify(generateOrganizationSchema())}
         </script>
 
         {/* Breadcrumb Schema */}
@@ -351,7 +400,7 @@ export default function TokenReport() {
               {
                 "@type": "ListItem",
                 "position": 3,
-                "name": `${metadata.tokenName} Report`,
+                "name": `${seoData.name} Report`,
                 "item": reportUrl
               }
             ]
@@ -384,13 +433,13 @@ export default function TokenReport() {
           <ChevronRight className="h-4 w-4" />
           <span>Token Reports</span>
           <ChevronRight className="h-4 w-4" />
-          <span>{metadata.tokenName}</span>
+          <span>{seoData.name}</span>
         </nav>
 
         {/* Header */}
         <header className="mb-8">
           <h1 className="text-4xl font-bold mb-4">
-            {metadata.tokenName} ({metadata.tokenSymbol.toUpperCase()}) Risk Report
+            {seoData.name} ({seoData.symbol.toUpperCase()}) Risk Report
           </h1>
           <div className="flex flex-wrap items-center gap-4 mb-4">
             <Badge variant="outline">Overall Score: {metadata.scores.overall}/100</Badge>
@@ -404,7 +453,7 @@ export default function TokenReport() {
 
         {/* What is Token */}
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">What is {metadata.tokenName}?</h2>
+          <h2 className="text-2xl font-semibold mb-4">What is {seoData.name}?</h2>
           <Card>
             <CardContent className="pt-6">
               <p className="text-muted-foreground leading-relaxed">{reportData.whatIsToken}</p>
@@ -621,7 +670,7 @@ export default function TokenReport() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4 flex items-center">
             <Wallet className="mr-2 h-6 w-6" />
-            How to Buy {metadata.tokenSymbol.toUpperCase()}
+            How to Buy {seoData.symbol.toUpperCase()}
           </h2>
           <Card>
             <CardContent className="pt-6">
@@ -659,15 +708,17 @@ export default function TokenReport() {
           <Card>
             <CardContent className="pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <a 
-                  href={`https://www.coingecko.com/en/coins/${symbol}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  <span>View on CoinGecko</span>
-                </a>
+                {seoData.coingecko_id && (
+                  <a 
+                    href={`https://www.coingecko.com/en/coins/${seoData.coingecko_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    <span>View on CoinGecko</span>
+                  </a>
+                )}
                 <a 
                   href={`https://etherscan.io/token/${metadata.tokenAddress}`}
                   target="_blank"
@@ -677,6 +728,28 @@ export default function TokenReport() {
                   <ExternalLink className="mr-2 h-4 w-4" />
                   <span>View Contract</span>
                 </a>
+                {seoData.website_url && (
+                  <a 
+                    href={seoData.website_url.startsWith('http') ? seoData.website_url : `https://${seoData.website_url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    <span>Official Website</span>
+                  </a>
+                )}
+                {seoData.twitter_handle && (
+                  <a 
+                    href={`https://twitter.com/${seoData.twitter_handle.replace('@', '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    <span>Twitter/X</span>
+                  </a>
+                )}
               </div>
             </CardContent>
           </Card>
