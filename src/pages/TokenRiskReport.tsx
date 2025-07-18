@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,8 +75,8 @@ export default function TokenRiskReport() {
           throw new Error('Report not found');
         }
 
-        // Properly cast the Json type to ReportContent
-        setReportData(data.report_content as ReportContent);
+        // Properly cast the Json type to ReportContent via unknown
+        setReportData(data.report_content as unknown as ReportContent);
       } catch (err) {
         console.error('Error loading report:', err);
         setError(err instanceof Error ? err.message : 'Failed to load report');
