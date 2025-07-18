@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -152,7 +153,7 @@ Make the content informative, balanced, and professional. Include specific data 
         messages: [
           {
             role: 'system',
-            content: 'You are a professional cryptocurrency analyst. Generate comprehensive, balanced token reports in valid JSON format. Be objective and include both risks and benefits.'
+            content: 'You are a professional cryptocurrency analyst. Generate comprehensive, balanced token reports in valid JSON format. Be objective and include both risks and benefits. Always respond with pure JSON without any markdown formatting or code blocks.'
           },
           {
             role: 'user',
@@ -176,13 +177,60 @@ Make the content informative, balanced, and professional. Include specific data 
     let reportContent;
     
     try {
-      reportContent = JSON.parse(openAIData.choices[0].message.content);
+      let content = openAIData.choices[0].message.content;
+      
+      // Check if content is wrapped in markdown code blocks
+      if (content.includes('```json')) {
+        console.log('Detected markdown-wrapped JSON, extracting...');
+        // Extract JSON from markdown code blocks
+        const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          content = jsonMatch[1].trim();
+        }
+      } else if (content.includes('```')) {
+        // Handle case where it might be wrapped in generic code blocks
+        console.log('Detected generic code blocks, extracting...');
+        const codeMatch = content.match(/```\s*([\s\S]*?)\s*```/);
+        if (codeMatch) {
+          content = codeMatch[1].trim();
+        }
+      }
+      
+      // Clean up any remaining backticks or whitespace
+      content = content.replace(/^`+|`+$/g, '').trim();
+      
+      console.log('Attempting to parse extracted content...');
+      reportContent = JSON.parse(content);
+      
+      // Validate the parsed content has required fields
+      if (!reportContent.whatIsToken || !reportContent.riskOverview) {
+        throw new Error('Generated content missing required fields');
+      }
+      
     } catch (parseError) {
       console.error('Failed to parse OpenAI response as JSON:', parseError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to parse generated content' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.error('Raw OpenAI response:', openAIData.choices[0].message.content);
+      
+      // Try a fallback approach - look for any JSON-like content
+      try {
+        const content = openAIData.choices[0].message.content;
+        const jsonStart = content.indexOf('{');
+        const jsonEnd = content.lastIndexOf('}');
+        
+        if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+          const extractedJson = content.substring(jsonStart, jsonEnd + 1);
+          reportContent = JSON.parse(extractedJson);
+          console.log('Successfully parsed with fallback method');
+        } else {
+          throw new Error('No valid JSON found in response');
+        }
+      } catch (fallbackError) {
+        console.error('Fallback parsing also failed:', fallbackError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to parse generated content' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Add metadata to report content
