@@ -194,11 +194,8 @@ export default function TokenDirectory() {
                 <CardContent className="p-6">
                   <div className="flex flex-col items-center text-center space-y-4">
                     {/* Token Logo */}
-                    <div className="relative">
+                    <div>
                       <TokenLogo logo={token.logo} name={token.name} />
-                      <div className="absolute -top-1 -right-1">
-                        <TokenScore score={token.score} />
-                      </div>
                     </div>
                     
                     {/* Token Info */}
