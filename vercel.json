@@ -16,8 +16,22 @@
       }
     },
     {
+      "src": "/token/(.*)",
+      "dest": "/api/prerender?token=$1",
+      "headers": {
+        "Content-Type": "text/html"
+      },
+      "continue": true,
+      "check": true
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "api/prerender.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }

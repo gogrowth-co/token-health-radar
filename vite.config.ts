@@ -44,4 +44,8 @@ export default defineConfig(({ mode }) => ({
   // Ensure static files are properly served
   publicDir: 'public',
   assetsInclude: ['**/*.xml', '**/*.txt'],
+  // Enable SSR for token pages
+  ssr: {
+    noExternal: ['@supabase/supabase-js']
+  }
 }));

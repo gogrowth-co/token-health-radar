@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ServerSideTokenReport from "@/components/ServerSideTokenReport";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -281,6 +282,7 @@ export default function TokenReport() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
+        <ServerSideTokenReport />
         <Navbar />
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
@@ -296,6 +298,7 @@ export default function TokenReport() {
   if (error || !reportData) {
     return (
       <div className="min-h-screen bg-background">
+        <ServerSideTokenReport />
         <Navbar />
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
@@ -336,6 +339,8 @@ export default function TokenReport() {
 
   return (
     <div className="min-h-screen bg-background">
+      <ServerSideTokenReport />
+      
       <Helmet>
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />

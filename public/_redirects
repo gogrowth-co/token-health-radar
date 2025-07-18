@@ -1,4 +1,7 @@
 
+# Bot detection and prerendering for token pages
+/token/* /token/:splat 200! Condition=UserAgent:bot,crawler,spider,googlebot,facebookexternalhit,twitterbot,linkedinbot,slackbot,whatsapp,discordbot
+
 # Static files should be served directly
 /sitemap.xml /sitemap.xml 200
 /robots.txt /robots.txt 200
