@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { UserProfile } from "@/components/auth/UserProfile";
@@ -108,6 +109,12 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <Helmet>
+        <title>Dashboard - Token Health Scan</title>
+        <meta name="description" content="View your recent token scans, manage your subscription, and access your account settings on your Token Health Scan dashboard." />
+        <link rel="canonical" href="https://tokenhealthscan.com/dashboard" />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <Navbar />
       
       <main className="flex-1 container px-4 py-8">

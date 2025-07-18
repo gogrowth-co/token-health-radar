@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,6 +35,12 @@ export default function LTDThankYou() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-background">
+      <Helmet>
+        <title>Thank You - Lifetime Access Activated | Token Health Scan</title>
+        <meta name="description" content="Thank you for your purchase! Your lifetime access to Token Health Scan has been activated. Start scanning tokens with unlimited Pro access." />
+        <link rel="canonical" href="https://tokenhealthscan.com/ltd-thank-you" />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container px-4 md:px-6 py-4">

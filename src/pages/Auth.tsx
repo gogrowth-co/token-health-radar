@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -185,6 +186,12 @@ export default function Auth() {
   
   return (
     <div className="flex min-h-screen">
+      <Helmet>
+        <title>Sign In | Token Health Scan</title>
+        <meta name="description" content="Sign in to your Token Health Scan account to access advanced token analysis and track your scan history." />
+        <link rel="canonical" href="https://tokenhealthscan.com/auth" />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       {/* Left panel with branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-primary text-primary-foreground p-8 flex-col justify-center">
         <div className="max-w-md mx-auto">

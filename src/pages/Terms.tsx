@@ -1,10 +1,17 @@
 
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export default function Terms() {
   return (
     <div className="flex flex-col min-h-screen">
+      <Helmet>
+        <title>Terms and Conditions - Token Health Scan</title>
+        <meta name="description" content="Read the terms and conditions for using Token Health Scan's crypto token analysis platform and services." />
+        <link rel="canonical" href="https://tokenhealthscan.com/terms" />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <Navbar />
       
       <main className="flex-1">

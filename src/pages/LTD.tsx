@@ -1,4 +1,5 @@
 
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,25 @@ export default function LTD() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <Helmet>
+        <title>Lifetime Deal - 90% OFF | Token Health Scan</title>
+        <meta name="description" content="Get lifetime access to Token Health Scan for only $97! 10 Pro token scans per month forever. No monthly fees, no subscriptions." />
+        <meta name="keywords" content="token scanner lifetime deal, crypto analysis discount, DeFi security lifetime access, token due diligence offer" />
+        <link rel="canonical" href="https://tokenhealthscan.com/ltd" />
+        
+        {/* Open Graph tags */}
+        <meta property="og:title" content="Lifetime Deal - 90% OFF | Token Health Scan" />
+        <meta property="og:description" content="Get lifetime access to Token Health Scan for only $97! 10 Pro token scans per month forever." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://tokenhealthscan.com/ltd" />
+        <meta property="og:image" content="https://tokenhealthscan.com/lovable-uploads/tokenhealthscan-og.png" />
+        
+        {/* Twitter Card tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Lifetime Deal - 90% OFF | Token Health Scan" />
+        <meta name="twitter:description" content="Get lifetime access to Token Health Scan for only $97! 10 Pro token scans per month forever." />
+        <meta name="twitter:image" content="https://tokenhealthscan.com/lovable-uploads/tokenhealthscan-og.png" />
+      </Helmet>
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container px-4 md:px-6 py-4">

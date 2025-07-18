@@ -1,10 +1,17 @@
 
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export default function Privacy() {
   return (
     <div className="flex flex-col min-h-screen">
+      <Helmet>
+        <title>Privacy Policy - Token Health Scan</title>
+        <meta name="description" content="Read how Token Health Scan collects, uses, and protects your personal information when using our token analysis services." />
+        <link rel="canonical" href="https://tokenhealthscan.com/privacy" />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <Navbar />
       
       <main className="flex-1">

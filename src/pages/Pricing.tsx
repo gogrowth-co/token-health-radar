@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PricingCard from "@/components/PricingCard";
@@ -90,6 +91,25 @@ export default function Pricing() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <Helmet>
+        <title>Pricing Plans - Token Health Scan</title>
+        <meta name="description" content="Choose the perfect plan for your crypto research. Free plan includes 3 Pro scans, Pro plans start at $20/month with advanced token analysis." />
+        <meta name="keywords" content="token scanner pricing, crypto analysis plans, DeFi security subscription, token due diligence pricing" />
+        <link rel="canonical" href="https://tokenhealthscan.com/pricing" />
+        
+        {/* Open Graph tags */}
+        <meta property="og:title" content="Pricing Plans - Token Health Scan" />
+        <meta property="og:description" content="Choose the perfect plan for your crypto research. Free plan includes 3 Pro scans, Pro plans start at $20/month." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://tokenhealthscan.com/pricing" />
+        <meta property="og:image" content="https://tokenhealthscan.com/lovable-uploads/tokenhealthscan-og.png" />
+        
+        {/* Twitter Card tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Pricing Plans - Token Health Scan" />
+        <meta name="twitter:description" content="Choose the perfect plan for your crypto research. Free plan includes 3 Pro scans, Pro plans start at $20/month." />
+        <meta name="twitter:image" content="https://tokenhealthscan.com/lovable-uploads/tokenhealthscan-og.png" />
+      </Helmet>
       <Navbar />
       
       <main className="flex-1">
