@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Search, Filter, TrendingUp, Shield, Zap, Users, Code } from "lucide-react";
+import { Search, Filter, TrendingUp, Shield, Zap, Users, Code, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,83 +11,22 @@ import TokenLogo from "@/components/TokenLogo";
 import TokenScore from "@/components/TokenScore";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { supabase } from "@/integrations/supabase/client";
 
-// Enhanced mock data with additional tokens and categories
-const mockTokens = [
-  {
-    id: "bitcoin",
-    name: "Bitcoin",
-    symbol: "BTC",
-    logo: "https://assets.coingecko.com/coins/images/1/large/bitcoin.png",
-    score: 92,
-    categories: ["Store of Value", "Digital Gold"],
-    color: "text-orange-500"
-  },
-  {
-    id: "ethereum",
-    name: "Ethereum",
-    symbol: "ETH", 
-    logo: "https://assets.coingecko.com/coins/images/279/large/ethereum.png",
-    score: 88,
-    categories: ["DeFi", "Smart Contracts"],
-    color: "text-blue-500"
-  },
-  {
-    id: "pendle",
-    name: "Pendle",
-    symbol: "PENDLE",
-    logo: "https://assets.coingecko.com/coins/images/15069/large/pendle_token_logo.png",
-    score: 84,
-    categories: ["DeFi", "RWA", "Yield"],
-    color: "text-purple-500"
-  },
-  {
-    id: "chainlink",
-    name: "Chainlink",
-    symbol: "LINK",
-    logo: "https://assets.coingecko.com/coins/images/877/large/chainlink-new-logo.png",
-    score: 89,
-    categories: ["Oracle", "Infrastructure"],
-    color: "text-blue-600"
-  },
-  {
-    id: "solana",
-    name: "Solana",
-    symbol: "SOL",
-    logo: "https://assets.coingecko.com/coins/images/4128/large/solana.png",
-    score: 81,
-    categories: ["L1", "DeFi"],
-    color: "text-green-500"
-  },
-  {
-    id: "polygon",
-    name: "Polygon",
-    symbol: "MATIC",
-    logo: "https://assets.coingecko.com/coins/images/4713/large/polygon.png",
-    score: 79,
-    categories: ["L2", "Scaling"],
-    color: "text-purple-600"
-  },
-  {
-    id: "uniswap",
-    name: "Uniswap",
-    symbol: "UNI",
-    logo: "https://assets.coingecko.com/coins/images/12504/large/uniswap-uni.png",
-    score: 86,
-    categories: ["DeFi", "DEX"],
-    color: "text-pink-500"
-  },
-  {
-    id: "aave",
-    name: "Aave",
-    symbol: "AAVE",
-    logo: "https://assets.coingecko.com/coins/images/12645/large/AAVE.png",
-    score: 83,
-    categories: ["DeFi", "Lending"],
-    color: "text-indigo-500"
-  }
-];
+// Define interfaces for our token data
+interface TokenReport {
+  id: string;
+  name: string;
+  symbol: string;
+  logo: string;
+  score: number;
+  categories: string[];
+  color: string;
+  description?: string;
+  created_at: string;
+}
 
+// Category to badge mapping (kept for potential future categorization)
 const categoryIcons = {
   "DeFi": <Zap className="w-3 h-3" />,
   "RWA": <TrendingUp className="w-3 h-3" />,
@@ -104,20 +43,155 @@ const categoryIcons = {
   "Scaling": <Shield className="w-3 h-3" />
 };
 
-const allCategories = [...new Set(mockTokens.flatMap(token => token.categories))];
+// Helper function to extract overall score from report content
+const extractOverallScore = (reportContent: any): number => {
+  if (reportContent?.metadata?.overallHealthScore) {
+    return reportContent.metadata.overallHealthScore;
+  }
+  if (reportContent?.metadata?.scores) {
+    const scores = reportContent.metadata.scores;
+    const avgScore = Math.round((scores.security + scores.liquidity + scores.tokenomics + scores.community + scores.development) / 5);
+    return avgScore;
+  }
+  return 75; // Default fallback score
+};
+
+// Helper function to determine categories based on token data
+const determineCategories = (tokenData: any, reportContent: any): string[] => {
+  const categories: string[] = [];
+  
+  // Basic categorization logic - can be expanded
+  if (tokenData?.description?.toLowerCase().includes('defi')) categories.push('DeFi');
+  if (tokenData?.description?.toLowerCase().includes('yield')) categories.push('Yield');
+  if (tokenData?.name?.toLowerCase().includes('ethereum')) categories.push('L1');
+  if (tokenData?.name?.toLowerCase().includes('bitcoin')) categories.push('Store of Value', 'Digital Gold');
+  
+  // Default category if none found
+  if (categories.length === 0) categories.push('DeFi');
+  
+  return categories;
+};
+
+// Helper function to get color based on token symbol
+const getTokenColor = (symbol: string): string => {
+  const colorMap: { [key: string]: string } = {
+    'BTC': 'text-orange-500',
+    'ETH': 'text-blue-500',
+    'PENDLE': 'text-purple-500',
+    'LINK': 'text-blue-600',
+    'SOL': 'text-green-500',
+    'MATIC': 'text-purple-600',
+    'UNI': 'text-pink-500',
+    'AAVE': 'text-indigo-500'
+  };
+  return colorMap[symbol] || 'text-blue-500';
+};
 
 export default function TokenDirectory() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [tokens, setTokens] = useState<TokenReport[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [allCategories, setAllCategories] = useState<string[]>([]);
+
+  // Fetch token reports from database
+  useEffect(() => {
+    const fetchTokenReports = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch token reports with associated token data
+        const { data: reports, error } = await supabase
+          .from('token_reports')
+          .select(`
+            *,
+            token_data_cache (
+              logo_url,
+              description
+            )
+          `)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching token reports:', error);
+          return;
+        }
+
+        if (reports) {
+          const tokenReports: TokenReport[] = reports.map(report => {
+            const score = extractOverallScore(report.report_content);
+            const tokenData = Array.isArray(report.token_data_cache) 
+              ? report.token_data_cache[0] 
+              : report.token_data_cache;
+            const categories = determineCategories(tokenData, report.report_content);
+            
+            return {
+              id: report.token_symbol.toLowerCase(),
+              name: report.token_name,
+              symbol: report.token_symbol,
+              logo: tokenData?.logo_url || '/placeholder.svg',
+              score,
+              categories,
+              color: getTokenColor(report.token_symbol),
+              description: tokenData?.description,
+              created_at: report.created_at
+            };
+          });
+
+          setTokens(tokenReports);
+          
+          // Extract unique categories
+          const uniqueCategories = [...new Set(tokenReports.flatMap(token => token.categories))];
+          setAllCategories(uniqueCategories);
+        }
+      } catch (error) {
+        console.error('Error in fetchTokenReports:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTokenReports();
+  }, []);
 
   const filteredTokens = useMemo(() => {
-    return mockTokens.filter(token => {
+    return tokens.filter(token => {
       const matchesSearch = token.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            token.symbol.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === "all" || token.categories.includes(selectedCategory);
       return matchesSearch && matchesCategory;
     });
-  }, [searchTerm, selectedCategory]);
+  }, [tokens, searchTerm, selectedCategory]);
+
+  if (isLoading) {
+  return (
+      <>
+        <Helmet>
+          <title>Token Risk Reports Directory - TokenHealthScan</title>
+          <meta 
+            name="description" 
+            content="Explore comprehensive crypto token risk analysis across top cryptocurrencies. Real-time security, liquidity, and tokenomics assessments." 
+          />
+          <meta name="keywords" content="crypto token analysis, token risk reports, DeFi security, blockchain analytics" />
+        </Helmet>
+
+        <div className="min-h-screen bg-background">
+          <Navbar />
+          
+          <main className="container mx-auto px-4 py-12">
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+                <p className="text-muted-foreground">Loading token reports...</p>
+              </div>
+            </div>
+          </main>
+
+          <Footer />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -241,24 +315,31 @@ export default function TokenDirectory() {
           </div>
 
           {/* Empty State */}
-          {filteredTokens.length === 0 && (
+          {filteredTokens.length === 0 && !isLoading && (
             <div className="text-center py-12">
               <div className="mb-4">
                 <Search className="w-16 h-16 mx-auto text-muted-foreground opacity-50" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">No tokens found</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">
+                {tokens.length === 0 ? "No token reports yet" : "No tokens found"}
+              </h3>
               <p className="text-muted-foreground mb-4">
-                Try adjusting your search term or category filter
+                {tokens.length === 0 
+                  ? "Token reports will appear here as they are created"
+                  : "Try adjusting your search term or category filter"
+                }
               </p>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setSearchTerm("");
-                  setSelectedCategory("all");
-                }}
-              >
-                Clear Filters
-              </Button>
+              {tokens.length > 0 && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSelectedCategory("all");
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              )}
             </div>
           )}
 
