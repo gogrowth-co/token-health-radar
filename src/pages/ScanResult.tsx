@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { checkUserHasProAccess } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUserRole } from "@/hooks/useUserRole";
+import GenerateReportButton from "@/components/GenerateReportButton";
 
 enum ScanCategory {
   Security = "security",
@@ -361,6 +362,11 @@ export default function ScanResult() {
                   className="flex-1"
                 />
                 <TestScanButton 
+                  tokenAddress={tokenAddress}
+                  chainId={chainId}
+                  className="flex-1"
+                />
+                <GenerateReportButton
                   tokenAddress={tokenAddress}
                   chainId={chainId}
                   className="flex-1"
