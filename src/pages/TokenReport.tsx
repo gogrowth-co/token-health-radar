@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,14 +21,19 @@ import {
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
 
+interface AnalysisSection {
+  keyPoints?: string[];
+  summary?: string;
+}
+
 interface ReportData {
   whatIsToken: string;
   riskOverview: string;
-  securityAnalysis: string;
-  liquidityAnalysis: string;
-  tokenomicsAnalysis: string;
-  communityAnalysis: string;
-  developmentAnalysis: string;
+  securityAnalysis: string | AnalysisSection;
+  liquidityAnalysis: string | AnalysisSection;
+  tokenomicsAnalysis: string | AnalysisSection;
+  communityAnalysis: string | AnalysisSection;
+  developmentAnalysis: string | AnalysisSection;
   howToBuy: string;
   faq: Array<{
     question: string;
@@ -103,6 +109,45 @@ export default function TokenReport() {
     if (score >= 80) return <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />;
     if (score >= 60) return <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />;
     return <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />;
+  };
+
+  const renderAnalysisContent = (content: string | AnalysisSection) => {
+    if (!content) return null;
+
+    // Handle string content (legacy format)
+    if (typeof content === 'string') {
+      return (
+        <div className="prose dark:prose-invert max-w-none">
+          {content.split('\n').map((paragraph, idx) => (
+            <p key={idx} className="mb-4 last:mb-0 text-muted-foreground leading-relaxed">
+              {paragraph}
+            </p>
+          ))}
+        </div>
+      );
+    }
+
+    // Handle object content (new format)
+    if (typeof content === 'object') {
+      return (
+        <div className="prose dark:prose-invert max-w-none">
+          {content.summary && (
+            <p className="mb-4 text-muted-foreground leading-relaxed">
+              {content.summary}
+            </p>
+          )}
+          {content.keyPoints && content.keyPoints.length > 0 && (
+            <ul className="space-y-2 text-muted-foreground">
+              {content.keyPoints.map((point, idx) => (
+                <li key={idx} className="leading-relaxed">{point}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    }
+
+    return null;
   };
 
   if (loading) {
@@ -376,13 +421,7 @@ export default function TokenReport() {
             </h2>
             <Card>
               <CardContent className="pt-6">
-                <div className="prose dark:prose-invert max-w-none">
-                  {content.split('\n').map((paragraph, idx) => (
-                    <p key={idx} className="mb-4 last:mb-0 text-muted-foreground leading-relaxed">
-                      {paragraph}
-                    </p>
-                  ))}
-                </div>
+                {renderAnalysisContent(content)}
               </CardContent>
             </Card>
           </section>
