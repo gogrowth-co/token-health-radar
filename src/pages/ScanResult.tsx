@@ -17,10 +17,11 @@ import { Button } from "@/components/ui/button";
 import { checkUserHasProAccess } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUserRole } from "@/hooks/useUserRole";
+import { normalizeChainId } from "@/utils/tokenCacheUtils";
 
 enum ScanCategory {
   Security = "security",
-  Tokenomics = "tokenomics",
+  Tokenomics = "tokenomics", 
   Liquidity = "liquidity",
   Community = "community",
   Development = "development"
@@ -39,11 +40,11 @@ export default function ScanResult() {
   const [scanLimitData, setScanLimitData] = useState<any>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
-  // Get parameters from URL - support both formats and chain
+  // Get parameters from URL - support both formats and chain with normalization
   const tokenFromParam = searchParams.get("token") || "";
   const addressFromParam = searchParams.get("address") || "";
   const tokenAddress = tokenFromParam || addressFromParam; // Use token param first, fallback to address
-  const chainId = searchParams.get("chain") || "0x1"; // Default to Ethereum mainnet
+  const chainId = normalizeChainId(searchParams.get("chain") || "0x1"); // Normalize chain ID
   const coinGeckoId = searchParams.get("id") || "";
   const isLimited = searchParams.get("limited") === "true";
 
@@ -51,7 +52,8 @@ export default function ScanResult() {
     token: tokenFromParam,
     address: addressFromParam,
     finalTokenAddress: tokenAddress,
-    chainId,
+    rawChain: searchParams.get("chain"),
+    normalizedChainId: chainId,
     coinGeckoId,
     isLimited
   });
