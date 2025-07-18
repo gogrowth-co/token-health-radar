@@ -688,39 +688,67 @@ function calculateOverallScore(categoryData: any) {
     : 0;
 }
 
-// Delete cached data to force fresh scan
+// Delete cached data to force fresh scan - fixed to handle foreign key constraints properly
 async function invalidateTokenCache(tokenAddress: string, chainId: string) {
   console.log(`[CACHE-INVALIDATION] Clearing cached data for: ${tokenAddress} on chain: ${chainId}`);
   
-  const deleteOperations = [
-    supabase.from('token_data_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId),
-    supabase.from('token_security_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId),
-    supabase.from('token_tokenomics_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId),
-    supabase.from('token_liquidity_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId),
-    supabase.from('token_community_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId),
-    supabase.from('token_development_cache').delete().eq('token_address', tokenAddress).eq('chain_id', chainId)
-  ];
-
-  const results = await Promise.allSettled(deleteOperations);
-  
-  let deletedCount = 0;
-  results.forEach((result, index) => {
-    if (result.status === 'fulfilled' && !result.value.error) {
-      deletedCount++;
-    } else if (result.status === 'rejected' || result.value.error) {
-      const error = result.status === 'rejected' ? result.reason : result.value.error;
-      console.error(`[CACHE-INVALIDATION] Failed to delete from cache table ${index}:`, error);
-      
-      // If this is a constraint violation, it might indicate a larger issue
-      if (error?.code === '23502') {
-        console.error(`[CACHE-INVALIDATION] CRITICAL: NULL constraint violation during cache deletion`);
-        console.error(`[CACHE-INVALIDATION] This suggests database integrity issues`);
+  try {
+    // Delete child tables first to respect foreign key constraints
+    const childTables = [
+      'token_security_cache',
+      'token_tokenomics_cache', 
+      'token_liquidity_cache',
+      'token_community_cache',
+      'token_development_cache'
+    ];
+    
+    let deletedCount = 0;
+    
+    // Delete child tables sequentially to avoid constraint violations
+    for (const table of childTables) {
+      try {
+        const { error } = await supabase
+          .from(table)
+          .delete()
+          .eq('token_address', tokenAddress)
+          .eq('chain_id', chainId);
+          
+        if (error) {
+          console.warn(`[CACHE-INVALIDATION] Warning: Failed to delete from ${table}:`, error.message);
+        } else {
+          deletedCount++;
+          console.log(`[CACHE-INVALIDATION] Successfully deleted from ${table}`);
+        }
+      } catch (err) {
+        console.warn(`[CACHE-INVALIDATION] Warning: Exception deleting from ${table}:`, err);
       }
     }
-  });
+    
+    // Delete parent table last
+    try {
+      const { error } = await supabase
+        .from('token_data_cache')
+        .delete()
+        .eq('token_address', tokenAddress)
+        .eq('chain_id', chainId);
+        
+      if (error) {
+        console.warn(`[CACHE-INVALIDATION] Warning: Failed to delete from token_data_cache:`, error.message);
+      } else {
+        deletedCount++;
+        console.log(`[CACHE-INVALIDATION] Successfully deleted from token_data_cache`);
+      }
+    } catch (err) {
+      console.warn(`[CACHE-INVALIDATION] Warning: Exception deleting from token_data_cache:`, err);
+    }
 
-  console.log(`[CACHE-INVALIDATION] Successfully cleared ${deletedCount}/6 cache tables for ${tokenAddress}`);
-  return deletedCount;
+    console.log(`[CACHE-INVALIDATION] Successfully cleared ${deletedCount}/6 cache tables for ${tokenAddress}`);
+    return deletedCount;
+    
+  } catch (error) {
+    console.warn(`[CACHE-INVALIDATION] Warning: Cache invalidation failed, but continuing with scan:`, error);
+    return 0;
+  }
 }
 
 Deno.serve(async (req) => {
