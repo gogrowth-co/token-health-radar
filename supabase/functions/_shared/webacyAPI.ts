@@ -1,4 +1,5 @@
 
+
 import { getChainConfigByMoralisId } from './chainConfig.ts';
 
 // API Health Tracking
@@ -25,13 +26,13 @@ function calculateDelay(attempt: number): number {
   return Math.min(delay, RETRY_CONFIG.maxDelay);
 }
 
-// Chain mapping for Webacy API
+// Chain mapping for Webacy API - using correct format from example
 function getWebacyChainCode(chainId: string): string {
   // Convert hex chain IDs to decimal
   const decimalChainId = chainId.startsWith('0x') ? parseInt(chainId, 16).toString() : chainId;
   
   const chainMapping: { [key: string]: string } = {
-    '1': 'eth',      // Ethereum
+    '1': 'eth',      // Ethereum (matches the example)
     '137': 'pol',    // Polygon
     '56': 'bsc',     // BSC
     '42161': 'arb',  // Arbitrum
@@ -44,7 +45,7 @@ function getWebacyChainCode(chainId: string): string {
   return chainMapping[decimalChainId] || 'eth'; // Default to Ethereum
 }
 
-// Webacy Security API client using correct endpoint from documentation
+// Webacy Security API client using the correct endpoint from the provided example
 export async function fetchWebacySecurity(tokenAddress: string, chainId: string) {
   console.log(`[WEBACY] === STARTING WEBACY API CALL ===`);
   console.log(`[WEBACY] Token: ${tokenAddress}, Chain: ${chainId}`);
@@ -75,23 +76,21 @@ export async function fetchWebacySecurity(tokenAddress: string, chainId: string)
     console.log(`[WEBACY] API Key validation passed - Length: ${trimmedApiKey.length} chars, Starts with: ${trimmedApiKey.substring(0, 8)}...`);
     console.log(`[WEBACY] Target address: ${tokenAddress}, Chain: ${chainId} -> ${webacyChain}`);
     
-    // Use the correct Webacy API endpoint as per documentation
-    const url = `https://api.webacy.com/security/v1/addresses/${tokenAddress}?chain=${webacyChain}`;
-    console.log(`[WEBACY] Request URL: ${url}`);
+    // Use the CORRECT Webacy API endpoint from the provided example
+    const url = `https://api.webacy.com/addresses/${tokenAddress}?chain=${webacyChain}`;
+    console.log(`[WEBACY] Request URL (CORRECTED): ${url}`);
     
-    // Make the request with x-api-key header as per Webacy documentation
-    console.log(`[WEBACY] Making request with x-api-key header (Webacy standard)...`);
+    // Make the request with headers matching the provided example
+    console.log(`[WEBACY] Making request with headers matching provided example...`);
     
     const headers = {
-      'x-api-key': trimmedApiKey,
-      'Content-Type': 'application/json',
-      'User-Agent': 'TokenHealthScan/1.0'
+      'accept': 'application/json',
+      'x-api-key': trimmedApiKey
     };
     
     console.log(`[WEBACY] Request headers:`, {
-      'x-api-key': `${trimmedApiKey.substring(0, 8)}...`,
-      'Content-Type': headers['Content-Type'],
-      'User-Agent': headers['User-Agent']
+      'accept': headers['accept'],
+      'x-api-key': `${trimmedApiKey.substring(0, 8)}...`
     });
     
     const response = await fetch(url, {
@@ -219,3 +218,4 @@ export async function fetchWebacySecurity(tokenAddress: string, chainId: string)
     return null;
   }
 }
+
