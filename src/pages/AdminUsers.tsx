@@ -58,6 +58,9 @@ export default function AdminUsers() {
     <div className="flex flex-col min-h-screen">
       <Helmet>
         <title>User Management - Token Health Scan</title>
+        <meta name="description" content="Admin dashboard for managing TokenHealthScan users and monitoring platform usage." />
+        <link rel="canonical" href="https://tokenhealthscan.com/admin/users" />
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <Navbar />
       
