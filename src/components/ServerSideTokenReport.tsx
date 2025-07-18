@@ -35,6 +35,7 @@ export default function ServerSideTokenReport({}: ServerSideTokenReportProps) {
               .maybeSingle();
 
             if (cacheResult) {
+              const reportContent = reportResult.report_content as any;
               const tokenData = {
                 symbol: cacheResult.symbol,
                 name: cacheResult.name,
@@ -45,7 +46,7 @@ export default function ServerSideTokenReport({}: ServerSideTokenReportProps) {
                 coingecko_id: cacheResult.coingecko_id,
                 current_price_usd: cacheResult.current_price_usd,
                 market_cap_usd: cacheResult.market_cap_usd,
-                overall_score: reportResult.report_content?.metadata?.scores?.overall,
+                overall_score: reportContent?.metadata?.scores?.overall,
                 token_address: reportResult.token_address,
                 chain_id: reportResult.chain_id
               };
