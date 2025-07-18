@@ -10,7 +10,7 @@ import CategoryScoresGrid from "@/components/CategoryScoresGrid";
 import ScanLimitIndicator from "@/components/ScanLimitIndicator";
 import UpgradeModal from "@/components/UpgradeModal";
 import RefreshScanButton from "@/components/RefreshScanButton";
-import TestScanButton from "@/components/TestScanButton";
+import GenerateReportButton from "@/components/GenerateReportButton";
 import { toast } from "sonner";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -350,11 +350,11 @@ export default function ScanResult() {
             />
           )}
 
-          {/* Debug: Test scan button and API health - Admin only */}
+          {/* Admin Controls - Generate Report & Refresh Scan */}
           {isAdmin && (
-            <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-              <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
-                🔧 Debug Mode: Token Scan & API Health Testing
+            <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                🛠️ Admin Controls
               </h3>
               <div className="flex flex-col sm:flex-row gap-3">
                 <RefreshScanButton 
@@ -362,18 +362,11 @@ export default function ScanResult() {
                   chainId={chainId}
                   className="flex-1"
                 />
-                <TestScanButton 
+                <GenerateReportButton 
                   tokenAddress={tokenAddress}
                   chainId={chainId}
                   className="flex-1"
                 />
-                <Button
-                  variant="outline"
-                  onClick={() => window.open('/api-health', '_blank')}
-                  className="flex-1"
-                >
-                  Open API Health Dashboard
-                </Button>
               </div>
             </div>
           )}

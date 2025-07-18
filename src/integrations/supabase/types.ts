@@ -278,6 +278,72 @@ export type Database = {
           },
         ]
       }
+      token_reports: {
+        Row: {
+          chain_id: string
+          created_at: string | null
+          generated_by: string | null
+          id: string
+          report_content: Json
+          token_address: string
+          token_name: string
+          token_symbol: string
+          updated_at: string | null
+        }
+        Insert: {
+          chain_id?: string
+          created_at?: string | null
+          generated_by?: string | null
+          id?: string
+          report_content: Json
+          token_address: string
+          token_name: string
+          token_symbol: string
+          updated_at?: string | null
+        }
+        Update: {
+          chain_id?: string
+          created_at?: string | null
+          generated_by?: string | null
+          id?: string
+          report_content?: Json
+          token_address?: string
+          token_name?: string
+          token_symbol?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      token_risk_reports: {
+        Row: {
+          chain_id: string
+          created_at: string
+          generated_by: string | null
+          id: string
+          report_content: Json
+          token_address: string
+          updated_at: string
+        }
+        Insert: {
+          chain_id?: string
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          report_content: Json
+          token_address: string
+          updated_at?: string
+        }
+        Update: {
+          chain_id?: string
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          report_content?: Json
+          token_address?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       token_scans: {
         Row: {
           chain_id: string

@@ -23,6 +23,7 @@ import TokenScanGuide from "./pages/TokenScanGuide";
 import TokenSnifferComparison from "./pages/TokenSnifferComparison";
 import SolanaLaunchpads from "./pages/SolanaLaunchpads";
 import EthereumLaunchpads from "./pages/EthereumLaunchpads";
+import TokenReport from "./pages/TokenReport";
 import NotFound from "./pages/NotFound";
 import AdminUsers from "./pages/AdminUsers";
 import AdminRoute from "./components/admin/AdminRoute";
@@ -91,6 +92,7 @@ const App = () => {
                     <Route path="/token-sniffer-vs-tokenhealthscan" element={<TokenSnifferComparison />} />
                     <Route path="/solana-launchpads" element={<SolanaLaunchpads />} />
                     <Route path="/ethereum-launchpads" element={<EthereumLaunchpads />} />
+                    <Route path="/token/:symbol" element={<TokenReport />} />
                     <Route path="/admin/users" element={
                       <AdminRoute>
                         <AdminUsers />
