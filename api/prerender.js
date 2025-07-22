@@ -193,17 +193,25 @@ function generateStaticHTML(tokenData, reportContent) {
   const canonicalUrl = `https://tokenhealthscan.com/token/${tokenData.symbol.toLowerCase()}`;
   const imageUrl = tokenData.logo_url || "https://tokenhealthscan.com/tokenhealthscan-og.png";
   
+  // Generate all structured data schemas - no duplicates
+  const schemas = generateAllTokenSchemas(tokenData, canonicalUrl, reportContent);
+  const structuredDataHTML = schemas.map(schema => 
+    `<script type="application/ld+json">${JSON.stringify(schema)}</script>`
+  ).join('\n  ');
+  
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
+  <!-- Dynamic Meta Tags -->
   <title>${title}</title>
   <meta name="description" content="${description}" />
   <meta name="keywords" content="${tokenData.name}, ${tokenData.symbol}, crypto risk, token analysis, security report, DeFi, cryptocurrency, smart contract audit, liquidity analysis, tokenomics" />
   <meta name="author" content="Token Health Scan" />
   
+  <!-- Open Graph -->
   <meta property="og:title" content="${tokenData.name} (${tokenData.symbol.toUpperCase()}) Risk Report" />
   <meta property="og:description" content="${description}" />
   <meta property="og:type" content="article" />
@@ -213,16 +221,28 @@ function generateStaticHTML(tokenData, reportContent) {
   <meta property="og:image:height" content="630" />
   <meta property="og:site_name" content="Token Health Scan" />
   
+  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@tokenhealthscan" />
   <meta name="twitter:title" content="${tokenData.name} Risk Report" />
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image" content="${imageUrl}" />
   
+  <!-- Canonical URL -->
   <link rel="canonical" href="${canonicalUrl}" />
+  
+  <!-- Structured Data - All schemas in one place, no duplicates -->
+  ${structuredDataHTML}
+  
+  <!-- Favicon -->
   <link rel="icon" href="/lovable-uploads/ae39e42e-1394-4b63-8dd4-8ca4bf332fa3.png" type="image/png">
+  
+  <!-- Preload critical resources -->
+  <link rel="preload" as="image" href="${imageUrl}">
+  <link rel="dns-prefetch" href="//fonts.googleapis.com">
 </head>
 <body>
+  <!-- This content will be hydrated by React -->
   <div id="root">
     <div style="padding: 2rem; text-align: center; font-family: system-ui;">
       <h1>${tokenData.name} (${tokenData.symbol.toUpperCase()}) Risk Report</h1>
@@ -231,12 +251,148 @@ function generateStaticHTML(tokenData, reportContent) {
     </div>
   </div>
   
+  <!-- Load React app -->
+  <script type="module" src="/src/main.tsx"></script>
+  
+  <!-- Bot detection and redirect script -->
   <script>
-    // Redirect to React app for interactive experience
-    if (typeof window !== 'undefined') {
-      window.location.href = '/token/${tokenData.symbol.toLowerCase()}';
+    // Only load React for regular users, not bots
+    if (!navigator.userAgent.match(/bot|crawler|spider|crawling/i)) {
+      // React will hydrate this page
+    } else {
+      // For bots, redirect to React app after brief delay
+      setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.location.href = '/token/${tokenData.symbol.toLowerCase()}';
+        }
+      }, 1000);
     }
   </script>
 </body>
 </html>`;
+}
+
+// Schema generation functions for the serverless environment
+function generateAllTokenSchemas(tokenData, reportUrl, reportContent) {
+  const schemas = [];
+  
+  // FinancialProduct schema
+  const financialProductSchema = {
+    "@context": "https://schema.org",
+    "@type": "FinancialProduct",
+    "name": tokenData.name,
+    "alternateName": tokenData.symbol.toUpperCase(),
+    "url": reportUrl,
+    "description": tokenData.description || `Comprehensive risk analysis and security report for ${tokenData.name} (${tokenData.symbol.toUpperCase()}).`,
+    "category": "Cryptocurrency",
+    "provider": {
+      "@type": "Organization",
+      "name": "Token Health Scan",
+      "url": "https://tokenhealthscan.com"
+    }
+  };
+  
+  if (tokenData.logo_url) {
+    financialProductSchema.image = tokenData.logo_url;
+  }
+  
+  const sameAs = [];
+  if (tokenData.coingecko_id) {
+    sameAs.push(`https://www.coingecko.com/en/coins/${tokenData.coingecko_id}`);
+  }
+  if (tokenData.website_url) {
+    sameAs.push(tokenData.website_url.startsWith('http') ? tokenData.website_url : `https://${tokenData.website_url}`);
+  }
+  if (tokenData.token_address) {
+    sameAs.push(`https://etherscan.io/token/${tokenData.token_address}`);
+  }
+  
+  if (sameAs.length > 0) {
+    financialProductSchema.sameAs = sameAs;
+  }
+  
+  schemas.push(financialProductSchema);
+  
+  // Review schema (only if we have a score)
+  if (tokenData.overall_score) {
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "Review",
+      "itemReviewed": {
+        "@type": "FinancialProduct",
+        "name": tokenData.name,
+        "alternateName": tokenData.symbol.toUpperCase()
+      },
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": tokenData.overall_score,
+        "bestRating": 100,
+        "worstRating": 0
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Token Health Scan"
+      },
+      "reviewBody": `Comprehensive risk analysis of ${tokenData.name} covering security, liquidity, tokenomics, community, and development aspects.`,
+      "url": reportUrl
+    });
+  }
+  
+  // FAQ schema (only if we have FAQ content)
+  if (reportContent?.faq) {
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": reportContent.faq.map(item => ({
+        "@type": "Question",
+        "name": item.question,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": item.answer
+        }
+      }))
+    });
+  }
+  
+  // Breadcrumb schema
+  schemas.push({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://tokenhealthscan.com"
+      },
+      {
+        "@type": "ListItem", 
+        "position": 2,
+        "name": "Token Reports",
+        "item": "https://tokenhealthscan.com/reports"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": `${tokenData.name} Report`,
+        "item": reportUrl
+      }
+    ]
+  });
+  
+  // Organization schema
+  schemas.push({
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Token Health Scan",
+    "url": "https://tokenhealthscan.com",
+    "logo": "https://tokenhealthscan.com/tokenhealthscan-og.png",
+    "description": "AI-powered cryptocurrency risk analysis platform providing comprehensive token security and risk assessments.",
+    "foundingDate": "2024",
+    "sameAs": [
+      "https://twitter.com/tokenhealthscan"
+    ]
+  });
+  
+  return schemas;
 }

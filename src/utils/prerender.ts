@@ -35,88 +35,11 @@ export const generateStaticHTML = (tokenData: PrerenderTokenData, reportContent:
   const canonicalUrl = `https://tokenhealthscan.com/token/${tokenData.symbol.toLowerCase()}`;
   const imageUrl = tokenData.logo_url || "https://tokenhealthscan.com/tokenhealthscan-og.png";
 
-  const financialProductSchema = {
-    "@context": "https://schema.org",
-    "@type": "FinancialProduct",
-    "name": tokenData.name,
-    "alternateName": tokenData.symbol.toUpperCase(),
-    "url": canonicalUrl,
-    "description": tokenData.description || description,
-    "category": "Cryptocurrency",
-    "image": tokenData.logo_url,
-    "provider": {
-      "@type": "Organization",
-      "name": "Token Health Scan",
-      "url": "https://tokenhealthscan.com"
-    }
-  };
+  // Import and use the centralized schema generation
+  const { generateAllTokenSchemas } = require('./seoUtils');
+  const schemas = generateAllTokenSchemas(tokenData, canonicalUrl, reportContent);
 
-  const reviewSchema = tokenData.overall_score ? {
-    "@context": "https://schema.org",
-    "@type": "Review",
-    "itemReviewed": {
-      "@type": "FinancialProduct",
-      "name": tokenData.name,
-      "alternateName": tokenData.symbol.toUpperCase()
-    },
-    "reviewRating": {
-      "@type": "Rating",
-      "ratingValue": tokenData.overall_score,
-      "bestRating": 100,
-      "worstRating": 0
-    },
-    "author": {
-      "@type": "Organization",
-      "name": "Token Health Scan"
-    },
-    "reviewBody": `Comprehensive risk analysis of ${tokenData.name} covering security, liquidity, tokenomics, community, and development aspects.`,
-    "url": canonicalUrl
-  } : null;
-
-  const faqSchema = reportContent?.faq ? {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": reportContent.faq.map((item: any) => ({
-      "@type": "Question",
-      "name": item.question,
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": item.answer
-      }
-    }))
-  } : null;
-
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": "https://tokenhealthscan.com"
-      },
-      {
-        "@type": "ListItem", 
-        "position": 2,
-        "name": "Token Reports",
-        "item": "https://tokenhealthscan.com/reports"
-      },
-      {
-        "@type": "ListItem",
-        "position": 3,
-        "name": `${tokenData.name} Report`,
-        "item": canonicalUrl
-      }
-    ]
-  };
-
-  return generateHTMLTemplate(title, description, canonicalUrl, imageUrl, [
-    financialProductSchema,
-    reviewSchema,
-    faqSchema,
-    breadcrumbSchema
-  ].filter(Boolean));
+  return generateHTMLTemplate(title, description, canonicalUrl, imageUrl, schemas);
 };
 
 export const generateGuidePageHTML = (guideData: GuidePageData) => {

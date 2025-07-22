@@ -114,3 +114,75 @@ export const generateOrganizationSchema = () => {
     ]
   };
 };
+
+export const generateFAQSchema = (reportContent: any) => {
+  if (!reportContent?.faq) return null;
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": reportContent.faq.map((item: any) => ({
+      "@type": "Question",
+      "name": item.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.answer
+      }
+    }))
+  };
+};
+
+export const generateBreadcrumbSchema = (token: TokenSEOData, reportUrl: string) => {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://tokenhealthscan.com"
+      },
+      {
+        "@type": "ListItem", 
+        "position": 2,
+        "name": "Token Reports",
+        "item": "https://tokenhealthscan.com/reports"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": `${token.name} Report`,
+        "item": reportUrl
+      }
+    ]
+  };
+};
+
+// Centralized function to generate all schemas for a token with no duplicates
+export const generateAllTokenSchemas = (token: TokenSEOData, reportUrl: string, reportContent?: any) => {
+  const schemas = [];
+  
+  // Always include FinancialProduct schema
+  schemas.push(generateFinancialProductSchema(token, reportUrl));
+  
+  // Add Review schema only if we have a score
+  const reviewSchema = generateReviewSchema(token, reportUrl);
+  if (reviewSchema) {
+    schemas.push(reviewSchema);
+  }
+  
+  // Add FAQ schema only if we have FAQ content
+  const faqSchema = generateFAQSchema(reportContent);
+  if (faqSchema) {
+    schemas.push(faqSchema);
+  }
+  
+  // Always include breadcrumb schema
+  schemas.push(generateBreadcrumbSchema(token, reportUrl));
+  
+  // Always include organization schema
+  schemas.push(generateOrganizationSchema());
+  
+  return schemas.filter(Boolean);
+};
