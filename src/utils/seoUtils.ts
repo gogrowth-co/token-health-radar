@@ -77,13 +77,16 @@ export const generateFinancialProductSchema = (token: TokenSEOData, reportUrl: s
 export const generateReviewSchema = (token: TokenSEOData, reportUrl: string) => {
   if (!token.overall_score) return null;
 
+  const reviewBody = `Comprehensive risk analysis of ${token.name} (${token.symbol.toUpperCase()}) covering security vulnerabilities, liquidity depth, tokenomics structure, community engagement, and development activity. Our analysis provides a ${token.overall_score}/100 risk score based on multiple data sources and real-time blockchain metrics.`;
+
   return {
     "@context": "https://schema.org",
     "@type": "Review",
     "itemReviewed": {
-      "@type": "FinancialProduct",
+      "@type": "Product",
       "name": token.name,
-      "alternateName": token.symbol.toUpperCase()
+      "alternateName": token.symbol.toUpperCase(),
+      "url": reportUrl
     },
     "reviewRating": {
       "@type": "Rating",
@@ -95,7 +98,7 @@ export const generateReviewSchema = (token: TokenSEOData, reportUrl: string) => 
       "@type": "Organization",
       "name": "Token Health Scan"
     },
-    "reviewBody": `Comprehensive risk analysis of ${token.name} covering security, liquidity, tokenomics, community, and development aspects.`,
+    "reviewBody": reviewBody,
     "url": reportUrl
   };
 };
