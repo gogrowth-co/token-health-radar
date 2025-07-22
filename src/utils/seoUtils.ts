@@ -135,6 +135,42 @@ export const generateFAQSchema = (reportContent: any) => {
   };
 };
 
+export const generateHowToSchema = (token: TokenSEOData) => {
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": `How to Buy ${token.symbol.toUpperCase()}`,
+    "description": `Step-by-step guide on how to purchase ${token.name} (${token.symbol.toUpperCase()}) cryptocurrency safely`,
+    "step": [
+      {
+        "@type": "HowToStep",
+        "name": "Set up a cryptocurrency wallet",
+        "text": "Download and set up a secure cryptocurrency wallet that supports Ethereum-based tokens, such as MetaMask or Trust Wallet."
+      },
+      {
+        "@type": "HowToStep", 
+        "name": "Purchase ETH or USDC",
+        "text": "Buy Ethereum (ETH) or USD Coin (USDC) from a reputable cryptocurrency exchange like Coinbase, Binance, or Kraken."
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Transfer funds to your wallet",
+        "text": "Withdraw your ETH or USDC from the exchange to your personal cryptocurrency wallet address."
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Connect to a decentralized exchange",
+        "text": "Visit a DEX like Uniswap or SushiSwap and connect your wallet to the platform."
+      },
+      {
+        "@type": "HowToStep",
+        "name": `Swap for ${token.symbol.toUpperCase()}`,
+        "text": `Use the DEX interface to swap your ETH or USDC for ${token.name} (${token.symbol.toUpperCase()}). Always verify the token contract address before completing the transaction.`
+      }
+    ]
+  };
+};
+
 export const generateBreadcrumbSchema = (token: TokenSEOData, reportUrl: string) => {
   return {
     "@context": "https://schema.org",
@@ -180,6 +216,9 @@ export const generateAllTokenSchemas = (token: TokenSEOData, reportUrl: string, 
   if (faqSchema) {
     schemas.push(faqSchema);
   }
+  
+  // Always include HowTo schema
+  schemas.push(generateHowToSchema(token));
   
   // Always include breadcrumb schema
   schemas.push(generateBreadcrumbSchema(token, reportUrl));
