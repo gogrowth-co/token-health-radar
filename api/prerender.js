@@ -354,6 +354,41 @@ function generateAllTokenSchemas(tokenData, reportUrl, reportContent) {
     });
   }
   
+  // HowTo schema
+  schemas.push({
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": `How to Buy ${tokenData.symbol.toUpperCase()}`,
+    "description": `Step-by-step guide on how to purchase ${tokenData.name} (${tokenData.symbol.toUpperCase()}) cryptocurrency safely`,
+    "step": [
+      {
+        "@type": "HowToStep",
+        "name": "Set up a cryptocurrency wallet",
+        "text": "Download and set up a secure cryptocurrency wallet that supports Ethereum-based tokens, such as MetaMask or Trust Wallet."
+      },
+      {
+        "@type": "HowToStep", 
+        "name": "Purchase ETH or USDC",
+        "text": "Buy Ethereum (ETH) or USD Coin (USDC) from a reputable cryptocurrency exchange like Coinbase, Binance, or Kraken."
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Transfer funds to your wallet",
+        "text": "Withdraw your ETH or USDC from the exchange to your personal cryptocurrency wallet address."
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Connect to a decentralized exchange",
+        "text": "Visit a DEX like Uniswap or SushiSwap and connect your wallet to the platform."
+      },
+      {
+        "@type": "HowToStep",
+        "name": `Swap for ${tokenData.symbol.toUpperCase()}`,
+        "text": `Use the DEX interface to swap your ETH or USDC for ${tokenData.name} (${tokenData.symbol.toUpperCase()}). Always verify the token contract address before completing the transaction.`
+      }
+    ]
+  });
+  
   // Breadcrumb schema
   schemas.push({
     "@context": "https://schema.org",
