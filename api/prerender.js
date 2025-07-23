@@ -359,13 +359,24 @@ function generateAllTokenSchemas(tokenData, reportUrl, reportContent) {
   schemas.push({
     "@context": "https://schema.org",
     "@type": "HowTo",
-    "name": `How to Buy ${tokenData.symbol.toUpperCase()}`,
-    "description": `Step-by-step guide on how to purchase ${tokenData.name} (${tokenData.symbol.toUpperCase()}) cryptocurrency safely`,
+    "name": `How to Buy ${tokenData.name} (${tokenData.symbol.toUpperCase()})`,
+    "description": `A step-by-step guide to safely buying ${tokenData.name} tokens`,
+    "image": tokenData.logo_url || "https://tokenhealthscan.com/tokenhealthscan-og.png",
+    "totalTime": "PT5M",
+    "supply": {
+      "@type": "HowToSupply",
+      "name": "Crypto wallet"
+    },
+    "tool": {
+      "@type": "HowToTool",
+      "name": "DEX or exchange"
+    },
     "step": [
       {
         "@type": "HowToStep",
         "name": "Set up a cryptocurrency wallet",
-        "text": "Download and set up a secure cryptocurrency wallet that supports Ethereum-based tokens, such as MetaMask or Trust Wallet."
+        "text": "Download and set up a secure cryptocurrency wallet that supports Ethereum-based tokens, such as MetaMask or Trust Wallet.",
+        "url": `https://tokenhealthscan.com/token/${tokenData.symbol.toLowerCase()}`
       },
       {
         "@type": "HowToStep", 

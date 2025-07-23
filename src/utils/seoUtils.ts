@@ -139,13 +139,24 @@ export const generateHowToSchema = (token: TokenSEOData) => {
   return {
     "@context": "https://schema.org",
     "@type": "HowTo",
-    "name": `How to Buy ${token.symbol.toUpperCase()}`,
-    "description": `Step-by-step guide on how to purchase ${token.name} (${token.symbol.toUpperCase()}) cryptocurrency safely`,
+    "name": `How to Buy ${token.name} (${token.symbol.toUpperCase()})`,
+    "description": `A step-by-step guide to safely buying ${token.name} tokens`,
+    "image": getTokenImageUrl(token),
+    "totalTime": "PT5M",
+    "supply": {
+      "@type": "HowToSupply",
+      "name": "Crypto wallet"
+    },
+    "tool": {
+      "@type": "HowToTool",
+      "name": "DEX or exchange"
+    },
     "step": [
       {
         "@type": "HowToStep",
         "name": "Set up a cryptocurrency wallet",
-        "text": "Download and set up a secure cryptocurrency wallet that supports Ethereum-based tokens, such as MetaMask or Trust Wallet."
+        "text": "Download and set up a secure cryptocurrency wallet that supports Ethereum-based tokens, such as MetaMask or Trust Wallet.",
+        "url": generateCanonicalUrl(token.symbol)
       },
       {
         "@type": "HowToStep", 
