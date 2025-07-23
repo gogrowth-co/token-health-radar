@@ -313,31 +313,6 @@ function generateAllTokenSchemas(tokenData, reportUrl, reportContent) {
   
   schemas.push(financialProductSchema);
   
-  // Review schema (only if we have a score)
-  if (tokenData.overall_score) {
-    schemas.push({
-      "@context": "https://schema.org",
-      "@type": "Review",
-      "itemReviewed": {
-        "@type": "Thing",
-        "name": tokenData.name,
-        "alternateName": tokenData.symbol.toUpperCase(),
-        "url": reportUrl
-      },
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": tokenData.overall_score,
-        "bestRating": 100,
-        "worstRating": 0
-      },
-      "author": {
-        "@type": "Organization",
-        "name": "Token Health Scan"
-      },
-      "reviewBody": `Comprehensive risk analysis of ${tokenData.name} covering security, liquidity, tokenomics, community, and development aspects.`,
-      "url": reportUrl
-    });
-  }
   
   // FAQ schema (only if we have FAQ content)
   if (reportContent?.faq) {

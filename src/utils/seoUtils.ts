@@ -74,34 +74,6 @@ export const generateFinancialProductSchema = (token: TokenSEOData, reportUrl: s
   return schema;
 };
 
-export const generateReviewSchema = (token: TokenSEOData, reportUrl: string) => {
-  if (!token.overall_score) return null;
-
-  const reviewBody = `Comprehensive risk analysis of ${token.name} (${token.symbol.toUpperCase()}) covering security vulnerabilities, liquidity depth, tokenomics structure, community engagement, and development activity. Our analysis provides a ${token.overall_score}/100 risk score based on multiple data sources and real-time blockchain metrics.`;
-
-  return {
-    "@context": "https://schema.org",
-    "@type": "Review",
-    "itemReviewed": {
-      "@type": "Thing",
-      "name": token.name,
-      "alternateName": token.symbol.toUpperCase(),
-      "url": reportUrl
-    },
-    "reviewRating": {
-      "@type": "Rating",
-      "ratingValue": token.overall_score,
-      "bestRating": 100,
-      "worstRating": 0
-    },
-    "author": {
-      "@type": "Organization",
-      "name": "Token Health Scan"
-    },
-    "reviewBody": reviewBody,
-    "url": reportUrl
-  };
-};
 
 export const generateOrganizationSchema = () => {
   return {
@@ -215,12 +187,6 @@ export const generateAllTokenSchemas = (token: TokenSEOData, reportUrl: string, 
   
   // Always include FinancialProduct schema
   schemas.push(generateFinancialProductSchema(token, reportUrl));
-  
-  // Add Review schema only if we have a score
-  const reviewSchema = generateReviewSchema(token, reportUrl);
-  if (reviewSchema) {
-    schemas.push(reviewSchema);
-  }
   
   // Add FAQ schema only if we have FAQ content
   const faqSchema = generateFAQSchema(reportContent);

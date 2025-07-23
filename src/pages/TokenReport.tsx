@@ -36,7 +36,6 @@ import {
   getTokenImageUrl,
   generateCanonicalUrl,
   generateFinancialProductSchema,
-  generateReviewSchema,
   generateOrganizationSchema
 } from "@/utils/seoUtils";
 
@@ -371,13 +370,6 @@ export default function TokenReport() {
         <script type="application/ld+json">
           {JSON.stringify(generateFinancialProductSchema(seoData, reportUrl))}
         </script>
-
-        {/* Review Schema (if score available) */}
-        {seoData.overall_score && (
-          <script type="application/ld+json">
-            {JSON.stringify(generateReviewSchema(seoData, reportUrl))}
-          </script>
-        )}
 
         {/* Organization Schema */}
         <script type="application/ld+json">
