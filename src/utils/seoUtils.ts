@@ -83,7 +83,7 @@ export const generateReviewSchema = (token: TokenSEOData, reportUrl: string) => 
     "@context": "https://schema.org",
     "@type": "Review",
     "itemReviewed": {
-      "@type": "FinancialProduct",
+      "@type": "Thing",
       "name": token.name,
       "alternateName": token.symbol.toUpperCase(),
       "url": reportUrl

@@ -319,7 +319,7 @@ function generateAllTokenSchemas(tokenData, reportUrl, reportContent) {
       "@context": "https://schema.org",
       "@type": "Review",
       "itemReviewed": {
-        "@type": "FinancialProduct",
+        "@type": "Thing",
         "name": tokenData.name,
         "alternateName": tokenData.symbol.toUpperCase(),
         "url": reportUrl
