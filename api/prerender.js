@@ -321,7 +321,8 @@ function generateAllTokenSchemas(tokenData, reportUrl, reportContent) {
       "itemReviewed": {
         "@type": "FinancialProduct",
         "name": tokenData.name,
-        "alternateName": tokenData.symbol.toUpperCase()
+        "alternateName": tokenData.symbol.toUpperCase(),
+        "url": reportUrl
       },
       "reviewRating": {
         "@type": "Rating",
