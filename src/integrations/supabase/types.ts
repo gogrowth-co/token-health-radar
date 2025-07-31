@@ -77,6 +77,42 @@ export type Database = {
         }
         Relationships: []
       }
+      "Token Reports": {
+        Row: {
+          chain_id: number | null
+          created_at: string | null
+          generated_by: string | null
+          id: string | null
+          report_content: string | null
+          token_address: string | null
+          token_name: string | null
+          token_symbol: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          chain_id?: number | null
+          created_at?: string | null
+          generated_by?: string | null
+          id?: string | null
+          report_content?: string | null
+          token_address?: string | null
+          token_name?: string | null
+          token_symbol?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          chain_id?: number | null
+          created_at?: string | null
+          generated_by?: string | null
+          id?: string | null
+          report_content?: string | null
+          token_address?: string | null
+          token_name?: string | null
+          token_symbol?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       token_community_cache: {
         Row: {
           active_channels: string[] | null
