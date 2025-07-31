@@ -19,6 +19,7 @@ import {
   calculateDevelopmentScore
 } from '../_shared/apiClients.ts'
 import { fetchDeFiLlamaTVL } from '../_shared/defillama.ts'
+import { fetchTwitterFollowers } from '../_shared/apifyAPI.ts'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -276,6 +277,22 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       console.log(`[SCAN] No GitHub URL found in metadata`);
     }
 
+    // Fetch Twitter follower data if Twitter handle is available
+    let twitterFollowers = 0;
+    const twitterHandle = metadata?.links?.twitter ? metadata.links.twitter.replace('https://twitter.com/', '').replace('@', '') : '';
+    if (twitterHandle) {
+      console.log(`[SCAN] Twitter handle found: @${twitterHandle} - fetching follower count`);
+      const followerCount = await fetchTwitterFollowers(twitterHandle);
+      if (followerCount !== null) {
+        twitterFollowers = followerCount;
+        console.log(`[SCAN] Twitter follower count: ${twitterFollowers}`);
+      } else {
+        console.log(`[SCAN] Failed to fetch Twitter follower count for @${twitterHandle}`);
+      }
+    } else {
+      console.log(`[SCAN] No Twitter handle found in metadata`);
+    }
+
     // Prioritize Moralis metadata and price data
     const name = metadata?.name || priceDataResult?.name || `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
     const symbol = metadata?.symbol || priceDataResult?.symbol || 'UNKNOWN';
@@ -365,7 +382,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       ownersData: owners,
       githubData: githubData,
       tvlData: tvl,
-      cexData: cexCount
+      cexData: cexCount,
+      twitterFollowers: twitterFollowers
     };
   } catch (error) {
     console.error(`[SCAN] Error fetching token data from APIs:`, error);
@@ -545,7 +563,7 @@ function generateCategoryData(apiData: any) {
       score: liquidityScore
     },
     community: {
-      twitter_followers: 0,
+      twitter_followers: apiData.twitterFollowers || 0,
       twitter_verified: false,
       twitter_growth_7d: 0,
       discord_members: 0,

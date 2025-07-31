@@ -1,0 +1,54 @@
+// Apify API integration for Twitter follower data
+export async function fetchTwitterFollowers(twitterHandle: string): Promise<number | null> {
+  if (!twitterHandle) {
+    console.log('[APIFY] No Twitter handle provided');
+    return null;
+  }
+
+  const apiKey = Deno.env.get('APIFY_API_KEY');
+  if (!apiKey) {
+    console.error('[APIFY] APIFY_API_KEY not configured');
+    return null;
+  }
+
+  try {
+    console.log(`[APIFY] Fetching Twitter followers for: @${twitterHandle}`);
+    
+    const response = await fetch(
+      `https://api.apify.com/v2/acts/practicaltools~cheap-simple-twitter-api/run-sync?token=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          endpoint: 'user/info',
+          parameters: {
+            userName: twitterHandle
+          }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      console.error(`[APIFY] HTTP error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log(`[APIFY] Raw Apify response:`, JSON.stringify(data, null, 2));
+
+    const followerCount = data?.data?.results?.[0]?.followers || null;
+    
+    if (followerCount !== null) {
+      console.log(`[APIFY] Successfully fetched Twitter followers for @${twitterHandle}: ${followerCount}`);
+    } else {
+      console.log(`[APIFY] No follower data found for @${twitterHandle}`);
+    }
+
+    return followerCount;
+  } catch (error) {
+    console.error(`[APIFY] Error fetching Twitter followers for @${twitterHandle}:`, error);
+    return null;
+  }
+}
