@@ -14,21 +14,24 @@ export async function fetchTwitterFollowers(twitterHandle: string): Promise<numb
   try {
     console.log(`[APIFY] Fetching Twitter followers for: @${twitterHandle}`);
     
-    const response = await fetch(
-      `https://api.apify.com/v2/acts/practicaltools~cheap-simple-twitter-api/run-sync?token=${apiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          endpoint: 'user/info',
-          parameters: {
-            userName: twitterHandle
-          }
-        })
+    const apiUrl = `https://api.apify.com/v2/acts/practicaltools~cheap-simple-twitter-api/run-sync-get-dataset-items?token=${apiKey}`;
+    console.log(`[APIFY] API URL: ${apiUrl}`);
+    
+    const requestBody = {
+      endpoint: 'user/info',
+      parameters: {
+        userName: twitterHandle
       }
-    );
+    };
+    console.log(`[APIFY] Request body:`, JSON.stringify(requestBody, null, 2));
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    });
 
     if (!response.ok) {
       console.error(`[APIFY] HTTP error: ${response.status}`);
@@ -54,7 +57,8 @@ export async function fetchTwitterFollowers(twitterHandle: string): Promise<numb
       return null;
     }
 
-    const followerCount = data?.data?.results?.[0]?.followers || null;
+    // For /run-sync-get-dataset-items endpoint, response is an array
+    const followerCount = Array.isArray(data) ? data[0]?.followers || null : null;
     
     if (followerCount !== null) {
       console.log(`[APIFY] Successfully fetched Twitter followers for @${twitterHandle}: ${followerCount}`);

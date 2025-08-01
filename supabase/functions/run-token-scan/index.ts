@@ -280,27 +280,41 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     // Fetch Twitter follower data if Twitter handle is available
     let twitterFollowers = 0;
     
-    // Extract Twitter handle from metadata.links (which is an array) or existing token data
+    // Extract Twitter handle with manual mapping for well-known tokens
     let twitterHandle = '';
     
-    // First try to get from existing token data cache
-    try {
-      const { data: existingToken } = await supabase
-        .from('token_data_cache')
-        .select('twitter_handle')
-        .eq('token_address', tokenAddress)
-        .eq('chain_id', normalizedChainId)
-        .single();
-      
-      if (existingToken?.twitter_handle) {
-        twitterHandle = existingToken.twitter_handle.replace('@', '');
-        console.log(`[SCAN] Using existing Twitter handle from database: @${twitterHandle}`);
-      }
-    } catch (error) {
-      console.log(`[SCAN] No existing Twitter handle found in database`);
+    // Manual mapping for well-known tokens
+    const tokenMappings: Record<string, string> = {
+      '0x514910771af9ca656af840dff83e8264ecf986ca': 'chainlink', // LINK token
+      // Add more mappings as needed
+    };
+    
+    const normalizedAddress = tokenAddress.toLowerCase();
+    if (tokenMappings[normalizedAddress]) {
+      twitterHandle = tokenMappings[normalizedAddress];
+      console.log(`[SCAN] Using manual Twitter handle mapping for ${normalizedAddress}: @${twitterHandle}`);
     }
     
-    // If no existing handle, try to extract from metadata.links array
+    // If no manual mapping, try to get from existing token data cache
+    if (!twitterHandle) {
+      try {
+        const { data: existingToken } = await supabase
+          .from('token_data_cache')
+          .select('twitter_handle')
+          .eq('token_address', tokenAddress)
+          .eq('chain_id', normalizedChainId)
+          .single();
+        
+        if (existingToken?.twitter_handle) {
+          twitterHandle = existingToken.twitter_handle.replace('@', '');
+          console.log(`[SCAN] Using existing Twitter handle from database: @${twitterHandle}`);
+        }
+      } catch (error) {
+        console.log(`[SCAN] No existing Twitter handle found in database`);
+      }
+    }
+    
+    // If still no handle, try to extract from metadata.links array
     if (!twitterHandle && metadata?.links && Array.isArray(metadata.links)) {
       const twitterLink = metadata.links.find(link => 
         typeof link === 'string' && (
