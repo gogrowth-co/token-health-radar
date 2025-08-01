@@ -35,8 +35,24 @@ export async function fetchTwitterFollowers(twitterHandle: string): Promise<numb
       return null;
     }
 
-    const data = await response.json();
-    console.log(`[APIFY] Raw Apify response:`, JSON.stringify(data, null, 2));
+    // Defensive JSON parsing to handle empty or malformed responses
+    const responseText = await response.text();
+    console.log(`[APIFY] Raw response text:`, responseText);
+    
+    if (!responseText || responseText.trim() === '') {
+      console.error(`[APIFY] Empty response body from Apify API`);
+      return null;
+    }
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+      console.log(`[APIFY] Parsed Apify response:`, JSON.stringify(data, null, 2));
+    } catch (parseError) {
+      console.error(`[APIFY] Failed to parse JSON response:`, parseError);
+      console.error(`[APIFY] Response text that failed to parse:`, responseText);
+      return null;
+    }
 
     const followerCount = data?.data?.results?.[0]?.followers || null;
     
