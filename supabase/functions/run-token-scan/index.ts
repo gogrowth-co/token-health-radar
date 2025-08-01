@@ -279,7 +279,46 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
 
     // Fetch Twitter follower data if Twitter handle is available
     let twitterFollowers = 0;
-    const twitterHandle = metadata?.links?.twitter ? metadata.links.twitter.replace('https://twitter.com/', '').replace('@', '') : '';
+    
+    // Extract Twitter handle from metadata.links (which is an array) or existing token data
+    let twitterHandle = '';
+    
+    // First try to get from existing token data cache
+    try {
+      const { data: existingToken } = await supabase
+        .from('token_data_cache')
+        .select('twitter_handle')
+        .eq('token_address', tokenAddress)
+        .eq('chain_id', normalizedChainId)
+        .single();
+      
+      if (existingToken?.twitter_handle) {
+        twitterHandle = existingToken.twitter_handle.replace('@', '');
+        console.log(`[SCAN] Using existing Twitter handle from database: @${twitterHandle}`);
+      }
+    } catch (error) {
+      console.log(`[SCAN] No existing Twitter handle found in database`);
+    }
+    
+    // If no existing handle, try to extract from metadata.links array
+    if (!twitterHandle && metadata?.links && Array.isArray(metadata.links)) {
+      const twitterLink = metadata.links.find(link => 
+        typeof link === 'string' && (
+          link.includes('twitter.com') || 
+          link.includes('x.com')
+        )
+      );
+      
+      if (twitterLink) {
+        // Extract handle from URL: https://twitter.com/chainlink -> chainlink
+        const match = twitterLink.match(/(?:twitter\.com\/|x\.com\/)([^\/\?]+)/);
+        if (match && match[1]) {
+          twitterHandle = match[1].replace('@', '');
+          console.log(`[SCAN] Extracted Twitter handle from metadata: @${twitterHandle}`);
+        }
+      }
+    }
+    
     if (twitterHandle) {
       console.log(`[SCAN] Twitter handle found: @${twitterHandle} - fetching follower count`);
       const followerCount = await fetchTwitterFollowers(twitterHandle);
@@ -305,11 +344,42 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
         : `${name} on ${chainConfig.name}`;
 
-    // Extract social links from Moralis metadata
-    const links = metadata?.links || {};
-    const website_url = links.website || '';
-    const twitter_handle = links.twitter ? links.twitter.replace('https://twitter.com/', '').replace('@', '') : '';
-    const github_url = links.github || '';
+    // Extract social links from Moralis metadata (links is an array)
+    const links = metadata?.links || [];
+    let website_url = '';
+    let extracted_twitter_handle = '';
+    let github_url = '';
+    
+    if (Array.isArray(links)) {
+      // Find specific link types in the array
+      website_url = links.find(link => 
+        typeof link === 'string' && 
+        !link.includes('twitter.com') && 
+        !link.includes('x.com') && 
+        !link.includes('github.com') &&
+        !link.includes('telegram') &&
+        !link.includes('discord') &&
+        (link.startsWith('http://') || link.startsWith('https://'))
+      ) || '';
+      
+      const twitterLink = links.find(link => 
+        typeof link === 'string' && (
+          link.includes('twitter.com') || 
+          link.includes('x.com')
+        )
+      );
+      
+      if (twitterLink) {
+        const match = twitterLink.match(/(?:twitter\.com\/|x\.com\/)([^\/\?]+)/);
+        if (match && match[1]) {
+          extracted_twitter_handle = match[1].replace('@', '');
+        }
+      }
+      
+      github_url = links.find(link => 
+        typeof link === 'string' && link.includes('github.com')
+      ) || '';
+    }
 
     // Combine data from all sources, prioritizing Moralis for richer data
     const combinedData = {
@@ -321,9 +391,9 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
           ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
           : `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)} on ${chainConfig.name}`,
       logo_url: metadata?.logo || metadata?.thumbnail || '',
-      website_url: metadata?.links?.website || '',
-      twitter_handle: metadata?.links?.twitter ? metadata.links.twitter.replace('https://twitter.com/', '').replace('@', '') : '',
-      github_url: metadata?.links?.github || '',
+      website_url: website_url,
+      twitter_handle: extracted_twitter_handle || twitterHandle,
+      github_url: github_url,
       current_price_usd: priceDataResult?.current_price_usd || 0,
       price_change_24h: priceDataResult?.price_change_24h, // Keep null if no data
       market_cap_usd: metadata?.market_cap ? parseFloat(metadata.market_cap) : 0,
@@ -803,7 +873,8 @@ Deno.serve(async (req) => {
     SUPABASE_SERVICE_ROLE_KEY: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
     WEBACY_API_KEY: !!Deno.env.get('WEBACY_API_KEY'),
     MORALIS_API_KEY: !!Deno.env.get('MORALIS_API_KEY'),
-    GITHUB_API_KEY: !!Deno.env.get('GITHUB_API_KEY')
+    GITHUB_API_KEY: !!Deno.env.get('GITHUB_API_KEY'),
+    APIFY_API_KEY: !!Deno.env.get('APIFY_API_KEY')
   };
   
   console.log(`[SCAN-STARTUP] Environment variables:`, envCheck);
