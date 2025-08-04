@@ -11,6 +11,7 @@ import ScanLimitIndicator from "@/components/ScanLimitIndicator";
 import UpgradeModal from "@/components/UpgradeModal";
 import RefreshScanButton from "@/components/RefreshScanButton";
 import GenerateReportButton from "@/components/GenerateReportButton";
+import TestSocialLinksButton from "@/components/TestSocialLinksButton";
 import { toast } from "sonner";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -367,6 +368,7 @@ export default function ScanResult() {
                   chainId={chainId}
                   className="flex-1"
                 />
+                <TestSocialLinksButton />
               </div>
             </div>
           )}

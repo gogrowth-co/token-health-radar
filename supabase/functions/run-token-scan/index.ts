@@ -277,26 +277,60 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       console.log(`[SCAN] No GitHub URL found in metadata`);
     }
 
-    // Fetch Twitter follower data if Twitter handle is available
-    let twitterFollowers = 0;
+    // Extract social links from Moralis metadata first
+    console.log(`[SCAN] === SOCIAL LINKS EXTRACTION ===`);
+    console.log(`[SCAN] Raw metadata.links:`, metadata?.links);
     
-    // Extract Twitter handle with manual mapping for well-known tokens
-    let twitterHandle = '';
+    // Extract social links from metadata.links array
+    const links = metadata?.links || [];
+    let website_url = '';
+    let twitter_handle = '';
+    let github_url = '';
     
-    // Manual mapping for well-known tokens
-    const tokenMappings: Record<string, string> = {
-      '0x514910771af9ca656af840dff83e8264ecf986ca': 'chainlink', // LINK token
-      // Add more mappings as needed
-    };
-    
-    const normalizedAddress = tokenAddress.toLowerCase();
-    if (tokenMappings[normalizedAddress]) {
-      twitterHandle = tokenMappings[normalizedAddress];
-      console.log(`[SCAN] Using manual Twitter handle mapping for ${normalizedAddress}: @${twitterHandle}`);
+    if (Array.isArray(links)) {
+      console.log(`[SCAN] Processing ${links.length} links from metadata`);
+      
+      // Find website (first non-social media HTTP link)
+      website_url = links.find(link => 
+        typeof link === 'string' && 
+        !link.includes('twitter.com') && 
+        !link.includes('x.com') && 
+        !link.includes('github.com') &&
+        !link.includes('telegram') &&
+        !link.includes('discord') &&
+        (link.startsWith('http://') || link.startsWith('https://'))
+      ) || '';
+      
+      // Find Twitter link
+      const twitterLink = links.find(link => 
+        typeof link === 'string' && (
+          link.includes('twitter.com') || 
+          link.includes('x.com')
+        )
+      );
+      
+      if (twitterLink) {
+        const match = twitterLink.match(/(?:twitter\.com\/|x\.com\/)([^\/\?]+)/);
+        if (match && match[1]) {
+          twitter_handle = match[1].replace('@', '');
+          console.log(`[SCAN] Extracted Twitter handle from metadata: @${twitter_handle}`);
+        }
+      }
+      
+      // Find GitHub link
+      github_url = links.find(link => 
+        typeof link === 'string' && link.includes('github.com')
+      ) || '';
+      
+      console.log(`[SCAN] Extracted social links:`, {
+        website_url,
+        twitter_handle,
+        github_url
+      });
     }
     
-    // If no manual mapping, try to get from existing token data cache
-    if (!twitterHandle) {
+    // Try to get existing Twitter handle from database if not found in metadata
+    if (!twitter_handle) {
       try {
         const { data: existingToken } = await supabase
           .from('token_data_cache')
@@ -306,44 +340,27 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
           .single();
         
         if (existingToken?.twitter_handle) {
-          twitterHandle = existingToken.twitter_handle.replace('@', '');
-          console.log(`[SCAN] Using existing Twitter handle from database: @${twitterHandle}`);
+          twitter_handle = existingToken.twitter_handle.replace('@', '');
+          console.log(`[SCAN] Using existing Twitter handle from database: @${twitter_handle}`);
         }
       } catch (error) {
         console.log(`[SCAN] No existing Twitter handle found in database`);
       }
     }
     
-    // If still no handle, try to extract from metadata.links array
-    if (!twitterHandle && metadata?.links && Array.isArray(metadata.links)) {
-      const twitterLink = metadata.links.find(link => 
-        typeof link === 'string' && (
-          link.includes('twitter.com') || 
-          link.includes('x.com')
-        )
-      );
-      
-      if (twitterLink) {
-        // Extract handle from URL: https://twitter.com/chainlink -> chainlink
-        const match = twitterLink.match(/(?:twitter\.com\/|x\.com\/)([^\/\?]+)/);
-        if (match && match[1]) {
-          twitterHandle = match[1].replace('@', '');
-          console.log(`[SCAN] Extracted Twitter handle from metadata: @${twitterHandle}`);
-        }
-      }
-    }
-    
-    if (twitterHandle) {
-      console.log(`[SCAN] Twitter handle found: @${twitterHandle} - fetching follower count`);
-      const followerCount = await fetchTwitterFollowers(twitterHandle);
+    // Fetch Twitter follower data if Twitter handle is available
+    let twitterFollowers = 0;
+    if (twitter_handle) {
+      console.log(`[SCAN] Twitter handle found: @${twitter_handle} - fetching follower count via Apify`);
+      const followerCount = await fetchTwitterFollowers(twitter_handle);
       if (followerCount !== null) {
         twitterFollowers = followerCount;
-        console.log(`[SCAN] Twitter follower count: ${twitterFollowers}`);
+        console.log(`[SCAN] Successfully retrieved Twitter follower count: ${twitterFollowers}`);
       } else {
-        console.log(`[SCAN] Failed to fetch Twitter follower count for @${twitterHandle}`);
+        console.log(`[SCAN] Failed to fetch Twitter follower count for @${twitter_handle}`);
       }
     } else {
-      console.log(`[SCAN] No Twitter handle found in metadata`);
+      console.log(`[SCAN] No Twitter handle found - skipping Apify API call`);
     }
 
     // Prioritize Moralis metadata and price data
@@ -358,42 +375,6 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
         : `${name} on ${chainConfig.name}`;
 
-    // Extract social links from Moralis metadata (links is an array)
-    const links = metadata?.links || [];
-    let website_url = '';
-    let extracted_twitter_handle = '';
-    let github_url = '';
-    
-    if (Array.isArray(links)) {
-      // Find specific link types in the array
-      website_url = links.find(link => 
-        typeof link === 'string' && 
-        !link.includes('twitter.com') && 
-        !link.includes('x.com') && 
-        !link.includes('github.com') &&
-        !link.includes('telegram') &&
-        !link.includes('discord') &&
-        (link.startsWith('http://') || link.startsWith('https://'))
-      ) || '';
-      
-      const twitterLink = links.find(link => 
-        typeof link === 'string' && (
-          link.includes('twitter.com') || 
-          link.includes('x.com')
-        )
-      );
-      
-      if (twitterLink) {
-        const match = twitterLink.match(/(?:twitter\.com\/|x\.com\/)([^\/\?]+)/);
-        if (match && match[1]) {
-          extracted_twitter_handle = match[1].replace('@', '');
-        }
-      }
-      
-      github_url = links.find(link => 
-        typeof link === 'string' && link.includes('github.com')
-      ) || '';
-    }
 
     // Combine data from all sources, prioritizing Moralis for richer data
     const combinedData = {
@@ -406,7 +387,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
           : `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)} on ${chainConfig.name}`,
       logo_url: metadata?.logo || metadata?.thumbnail || '',
       website_url: website_url,
-      twitter_handle: extracted_twitter_handle || twitterHandle,
+      twitter_handle: twitter_handle,
       github_url: github_url,
       current_price_usd: priceDataResult?.current_price_usd || 0,
       price_change_24h: priceDataResult?.price_change_24h, // Keep null if no data
