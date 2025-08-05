@@ -279,16 +279,20 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
 
     // Extract social links from Moralis metadata first
     console.log(`[SCAN] === SOCIAL LINKS EXTRACTION ===`);
+    console.log(`[SCAN] Raw metadata object:`, JSON.stringify(metadata, null, 2));
     console.log(`[SCAN] Raw metadata.links:`, metadata?.links);
+    console.log(`[SCAN] Links type:`, typeof metadata?.links);
+    console.log(`[SCAN] Links is array:`, Array.isArray(metadata?.links));
     
-    // Extract social links from metadata.links array
+    // Extract social links from metadata.links array OR object
     const links = metadata?.links || [];
     let website_url = '';
     let twitter_handle = '';
     let github_url = '';
     
+    // Handle both array and object formats for links
     if (Array.isArray(links)) {
-      console.log(`[SCAN] Processing ${links.length} links from metadata`);
+      console.log(`[SCAN] Processing ${links.length} links from metadata array`);
       
       // Find website (first non-social media HTTP link)
       website_url = links.find(link => 
@@ -322,12 +326,51 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         typeof link === 'string' && link.includes('github.com')
       ) || '';
       
-      console.log(`[SCAN] Extracted social links:`, {
-        website_url,
-        twitter_handle,
-        github_url
-      });
+    } else if (links && typeof links === 'object') {
+      console.log(`[SCAN] Processing links from metadata object`);
+      
+      // Handle object format: { website: "...", twitter: "...", github: "..." }
+      website_url = links.website || links.homepage || '';
+      
+      if (links.twitter) {
+        const twitterUrl = links.twitter;
+        if (twitterUrl.includes('twitter.com') || twitterUrl.includes('x.com')) {
+          const match = twitterUrl.match(/(?:twitter\.com\/|x\.com\/)([^\/\?]+)/);
+          if (match && match[1]) {
+            twitter_handle = match[1].replace('@', '');
+            console.log(`[SCAN] Extracted Twitter handle from object: @${twitter_handle}`);
+          }
+        } else {
+          // Assume it's already a handle
+          twitter_handle = twitterUrl.replace('@', '');
+          console.log(`[SCAN] Using Twitter handle from object: @${twitter_handle}`);
+        }
+      }
+      
+      github_url = links.github || '';
     }
+    
+    // Additional extraction from other metadata fields if not found in links
+    if (!twitter_handle && metadata?.twitter_username) {
+      twitter_handle = metadata.twitter_username.replace('@', '');
+      console.log(`[SCAN] Using Twitter from metadata.twitter_username: @${twitter_handle}`);
+    }
+    
+    if (!website_url && metadata?.website) {
+      website_url = metadata.website;
+      console.log(`[SCAN] Using website from metadata.website: ${website_url}`);
+    }
+    
+    if (!github_url && metadata?.github) {
+      github_url = metadata.github;
+      console.log(`[SCAN] Using GitHub from metadata.github: ${github_url}`);
+    }
+    
+    console.log(`[SCAN] Final extracted social links:`, {
+      website_url,
+      twitter_handle,
+      github_url
+    });
     
     // Try to get existing Twitter handle from database if not found in metadata
     if (!twitter_handle) {
