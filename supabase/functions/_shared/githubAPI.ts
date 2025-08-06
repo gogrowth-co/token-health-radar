@@ -74,7 +74,13 @@ async function findMainRepository(owner: string, headers: any) {
     });
     
     const mainRepo = targetRepos[0];
-    console.log(`[GITHUB] Selected main repository: ${mainRepo.name} (${mainRepo.stargazers_count} stars, last updated: ${mainRepo.updated_at})`);
+    
+    console.log(`[GITHUB] === REPOSITORY SELECTION RESULT ===`);
+    console.log(`[GITHUB] Selected: ${mainRepo.name} (${mainRepo.stargazers_count} stars, updated: ${mainRepo.updated_at})`);
+    if (targetRepos.length > 1) {
+      console.log(`[GITHUB] Rejected alternatives:`, targetRepos.slice(1, 3).map(r => `${r.name} (${r.stargazers_count || 0} stars)`));
+    }
+    console.log(`[GITHUB] Selection reason: Enhanced scoring algorithm with version prioritization`);
     
     return {
       owner: mainRepo.owner.login,
@@ -184,14 +190,16 @@ export async function fetchGitHubRepoData(githubUrl: string) {
     const totalIssues = openIssues + closedIssues;
     const contributorsCount = contributorsData.length || 0;
     
-    console.log(`[GITHUB] Repository metrics for ${owner}/${repo}:`);
-    console.log(`[GITHUB] - Stars: ${repoData.stargazers_count}`);
-    console.log(`[GITHUB] - Forks: ${repoData.forks_count}`);
-    console.log(`[GITHUB] - Commits (30d): ${commitsData.length}`);
-    console.log(`[GITHUB] - Contributors: ${contributorsCount}`);
-    console.log(`[GITHUB] - Open Issues: ${openIssues}`);
-    console.log(`[GITHUB] - Closed Issues: ${closedIssues}`);
-    console.log(`[GITHUB] - Last Push: ${repoData.pushed_at}`);
+    console.log(`[GITHUB] === FINAL REPOSITORY METRICS ===`);
+    console.log(`[GITHUB] Repository: ${owner}/${repo}`);
+    console.log(`[GITHUB] Stars: ${repoData.stargazers_count}`);
+    console.log(`[GITHUB] Forks: ${repoData.forks_count}`);
+    console.log(`[GITHUB] Contributors: ${contributorsCount} (KEY METRIC FOR UI)`);
+    console.log(`[GITHUB] Commits (30d): ${commitsData.length}`);
+    console.log(`[GITHUB] Open Issues: ${openIssues}`);
+    console.log(`[GITHUB] Closed Issues: ${closedIssues}`);
+    console.log(`[GITHUB] Last Push: ${repoData.pushed_at}`);
+    console.log(`[GITHUB] This data will be used for development scoring`);
     
     return {
       owner,

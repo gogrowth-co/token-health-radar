@@ -449,15 +449,25 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     
     // Fetch GitHub data now that we have the final GitHub URL (including CoinMarketCap fallback)
     if (github_url) {
-      console.log(`[SCAN] Fetching GitHub data for URL: ${github_url}`);
+      console.log(`[GITHUB] === FETCHING GITHUB DATA ===`);
+      console.log(`[GITHUB] URL: ${github_url}`);
       const githubResult = await Promise.allSettled([fetchGitHubRepoData(github_url)]);
       githubData = githubResult[0].status === 'fulfilled' ? githubResult[0].value : null;
-      console.log(`[SCAN] GitHub data: ${githubData ? 'available' : 'unavailable'}`);
+      console.log(`[GITHUB] Data fetch result: ${githubData ? 'SUCCESS' : 'FAILED'}`);
       if (githubData) {
-        console.log(`[SCAN] GitHub metrics - Stars: ${githubData.stars}, Forks: ${githubData.forks}, Contributors: ${githubData.contributors_count}, Commits (30d): ${githubData.commits_30d}`);
+        console.log(`[GITHUB] === REPOSITORY METRICS ===`);
+        console.log(`[GITHUB] Repository: ${githubData.repository || 'Unknown'}`);
+        console.log(`[GITHUB] Stars: ${githubData.stars}`);
+        console.log(`[GITHUB] Forks: ${githubData.forks}`);
+        console.log(`[GITHUB] Contributors: ${githubData.contributors_count} (THIS IS THE KEY METRIC)`);
+        console.log(`[GITHUB] Recent Commits (30d): ${githubData.commits_30d}`);
+        console.log(`[GITHUB] Last Commit: ${githubData.lastCommitDate}`);
+        console.log(`[GITHUB] === REPOSITORY SELECTION VERIFIED ===`);
+      } else {
+        console.warn(`[GITHUB] Failed to fetch data for ${github_url}`);
       }
     } else {
-      console.log(`[SCAN] No GitHub URL available - skipping GitHub data fetch`);
+      console.log(`[GITHUB] No GitHub URL available - skipping GitHub data fetch`);
     }
     
     // Try to get existing Twitter handle from database if not found in metadata
@@ -956,7 +966,9 @@ async function invalidateTokenCache(tokenAddress: string, chainId: string) {
       console.warn(`[CACHE-INVALIDATION] Warning: Exception deleting from token_data_cache:`, err);
     }
 
+    console.log(`[CACHE-INVALIDATION] === CACHE INVALIDATION COMPLETE ===`);
     console.log(`[CACHE-INVALIDATION] Successfully cleared ${deletedCount}/6 cache tables for ${tokenAddress}`);
+    console.log(`[CACHE-INVALIDATION] Fresh data will now be fetched from all external APIs`);
     return deletedCount;
     
   } catch (error) {
@@ -1086,8 +1098,20 @@ Deno.serve(async (req) => {
 
     console.log(`[SCAN] Scanning on ${chainConfig.name} (${normalizedChainId})`);
 
+    console.log(`[SCAN] === STARTING FRESH TOKEN SCAN ===`);
+    console.log(`[SCAN] Token: ${token_address}, Chain: ${normalizedChainId}`);
+    console.log(`[SCAN] Force refresh: ${force_refresh}`);
+    console.log(`[SCAN] User: ${user_id || 'Anonymous'}`);
+    console.log(`[SCAN] Timestamp: ${new Date().toISOString()}`);
+    
     // FORCE FRESH SCAN: Delete all cached data before scanning (ALWAYS)
-    await invalidateTokenCache(token_address.toLowerCase(), normalizedChainId);
+    if (force_refresh) {
+      console.log(`[SCAN] === FORCE REFRESH ACTIVATED ===`);
+      const clearedTables = await invalidateTokenCache(token_address.toLowerCase(), normalizedChainId);
+      console.log(`[SCAN] Cache cleared: ${clearedTables} tables updated`);
+    } else {
+      await invalidateTokenCache(token_address.toLowerCase(), normalizedChainId);
+    }
 
     // Check if user has pro access (simplified for now)
     const proScan = false; // Will be enhanced later with proper pro check
