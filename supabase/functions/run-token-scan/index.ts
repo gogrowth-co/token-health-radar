@@ -335,16 +335,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     console.log(`[SCAN] GoPlus data:`, goplusSecurity ? JSON.stringify(goplusSecurity, null, 2) : 'null');
     console.log(`[SCAN] Merged security data:`, JSON.stringify(security, null, 2));
 
-    // Fetch GitHub data if GitHub URL is available in metadata
+    // GitHub data will be fetched later after CoinMarketCap fallback
     let githubData = null;
-    if (metadata?.links?.github) {
-      console.log(`[SCAN] GitHub URL found: ${metadata.links.github}`);
-      const githubResult = await Promise.allSettled([fetchGitHubRepoData(metadata.links.github)]);
-      githubData = githubResult[0].status === 'fulfilled' ? githubResult[0].value : null;
-      console.log(`[SCAN] GitHub data: ${githubData ? 'available' : 'unavailable'}`);
-    } else {
-      console.log(`[SCAN] No GitHub URL found in metadata`);
-    }
 
     // Extract social links from Moralis metadata first
     console.log(`[SCAN] === SOCIAL LINKS EXTRACTION ===`);
@@ -453,6 +445,19 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       }
     } else {
       console.log(`[SCAN] GitHub URL already found from Moralis: ${github_url}`);
+    }
+    
+    // Fetch GitHub data now that we have the final GitHub URL (including CoinMarketCap fallback)
+    if (github_url) {
+      console.log(`[SCAN] Fetching GitHub data for URL: ${github_url}`);
+      const githubResult = await Promise.allSettled([fetchGitHubRepoData(github_url)]);
+      githubData = githubResult[0].status === 'fulfilled' ? githubResult[0].value : null;
+      console.log(`[SCAN] GitHub data: ${githubData ? 'available' : 'unavailable'}`);
+      if (githubData) {
+        console.log(`[SCAN] GitHub metrics - Stars: ${githubData.stars}, Forks: ${githubData.forks}, Contributors: ${githubData.contributors_count}, Commits (30d): ${githubData.commits_30d}`);
+      }
+    } else {
+      console.log(`[SCAN] No GitHub URL available - skipping GitHub data fetch`);
     }
     
     // Try to get existing Twitter handle from database if not found in metadata
