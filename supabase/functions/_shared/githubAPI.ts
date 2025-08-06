@@ -31,14 +31,46 @@ async function findMainRepository(owner: string, headers: any) {
     const nonForkRepos = repos.filter((repo: any) => !repo.fork);
     const targetRepos = nonForkRepos.length > 0 ? nonForkRepos : repos;
     
-    // Sort by stars first, then by recent activity
+    // Enhanced repository selection algorithm
     targetRepos.sort((a: any, b: any) => {
-      const starDiff = (b.stargazers_count || 0) - (a.stargazers_count || 0);
-      if (starDiff !== 0) return starDiff;
+      // Extract version numbers from repository names
+      const getVersionScore = (name: string) => {
+        const versionMatch = name.match(/v(\d+)/i);
+        return versionMatch ? parseInt(versionMatch[1]) : 0;
+      };
       
-      const aUpdated = new Date(a.updated_at || a.pushed_at || 0).getTime();
-      const bUpdated = new Date(b.updated_at || b.pushed_at || 0).getTime();
-      return bUpdated - aUpdated;
+      // Check for recent activity (last 6 months)
+      const getActivityScore = (repo: any) => {
+        const sixMonthsAgo = Date.now() - (6 * 30 * 24 * 60 * 60 * 1000);
+        const lastPush = new Date(repo.pushed_at || 0).getTime();
+        return lastPush > sixMonthsAgo ? 1 : 0;
+      };
+      
+      // Check if repo name contains common project indicators
+      const getMainProjectScore = (name: string) => {
+        const mainPatterns = /^(core|main|protocol|v\d+)$/i;
+        const legacyPatterns = /-(legacy|old|deprecated|archive)/i;
+        
+        if (mainPatterns.test(name)) return 2;
+        if (legacyPatterns.test(name)) return -1;
+        return 0;
+      };
+      
+      const aVersionScore = getVersionScore(a.name);
+      const bVersionScore = getVersionScore(b.name);
+      const aActivityScore = getActivityScore(a);
+      const bActivityScore = getActivityScore(b);
+      const aMainScore = getMainProjectScore(a.name);
+      const bMainScore = getMainProjectScore(b.name);
+      
+      // Priority scoring system
+      const aScore = (aVersionScore * 100) + (aActivityScore * 50) + (aMainScore * 25) + Math.min(a.stargazers_count || 0, 1000);
+      const bScore = (bVersionScore * 100) + (bActivityScore * 50) + (bMainScore * 25) + Math.min(b.stargazers_count || 0, 1000);
+      
+      console.log(`[GITHUB] Scoring ${a.name}: version=${aVersionScore}, activity=${aActivityScore}, main=${aMainScore}, stars=${a.stargazers_count || 0}, total=${aScore}`);
+      console.log(`[GITHUB] Scoring ${b.name}: version=${bVersionScore}, activity=${bActivityScore}, main=${bMainScore}, stars=${b.stargazers_count || 0}, total=${bScore}`);
+      
+      return bScore - aScore;
     });
     
     const mainRepo = targetRepos[0];
