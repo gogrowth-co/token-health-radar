@@ -26,6 +26,75 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
+// CoinMarketCap fallback for GitHub URL
+async function fetchCoinMarketCapGithubUrl(tokenAddress: string): Promise<string> {
+  try {
+    const cmcApiKey = Deno.env.get('COINMARKETCAP_API_KEY');
+    if (!cmcApiKey) {
+      console.log(`[CMC] CoinMarketCap API key not available`);
+      return '';
+    }
+
+    console.log(`[CMC] Fetching GitHub URL for token: ${tokenAddress}`);
+    
+    const response = await fetch(
+      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}&aux=urls`,
+      {
+        headers: {
+          'X-CMC_PRO_API_KEY': cmcApiKey,
+          'Accept': 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      console.log(`[CMC] API request failed: ${response.status} ${response.statusText}`);
+      return '';
+    }
+
+    const data = await response.json();
+    console.log(`[CMC] API response status:`, data.status);
+
+    if (data.status?.error_code !== 0) {
+      console.log(`[CMC] API error:`, data.status?.error_message);
+      return '';
+    }
+
+    // Extract token data - CMC returns data keyed by contract address
+    const tokenData = Object.values(data.data || {})[0] as any;
+    
+    if (!tokenData) {
+      console.log(`[CMC] No token data found for address: ${tokenAddress}`);
+      return '';
+    }
+
+    console.log(`[CMC] Found token:`, tokenData.name, tokenData.symbol);
+
+    // Extract GitHub URL from source_code URLs
+    const urls = tokenData.urls || {};
+    const sourceCodeUrls = urls.source_code || [];
+    
+    console.log(`[CMC] Source code URLs found:`, sourceCodeUrls.length);
+
+    // Find GitHub URL in source code links
+    const githubUrl = sourceCodeUrls.find((url: string) => 
+      url && url.includes('github.com')
+    );
+
+    if (githubUrl) {
+      console.log(`[CMC] GitHub URL found: ${githubUrl}`);
+      return githubUrl;
+    } else {
+      console.log(`[CMC] No GitHub URL found in source code URLs`);
+      return '';
+    }
+
+  } catch (error) {
+    console.error(`[CMC] Error fetching GitHub URL:`, error);
+    return '';
+  }
+}
+
 // Fetch CEX count from CoinGecko API
 async function fetchCoinGeckoCexCount(tokenAddress: string, chainId: string): Promise<number> {
   console.log(`[CEX] Fetching CEX count for ${tokenAddress} on chain ${chainId}`);
@@ -371,6 +440,20 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       twitter_handle,
       github_url
     });
+    
+    // CoinMarketCap fallback for GitHub URL if not found from Moralis
+    if (!github_url) {
+      console.log(`[SCAN] GitHub URL not found in Moralis, trying CoinMarketCap fallback`);
+      const cmcGithubUrl = await fetchCoinMarketCapGithubUrl(tokenAddress);
+      if (cmcGithubUrl) {
+        github_url = cmcGithubUrl;
+        console.log(`[SCAN] GitHub URL found via CoinMarketCap: ${github_url}`);
+      } else {
+        console.log(`[SCAN] No GitHub URL found via CoinMarketCap fallback`);
+      }
+    } else {
+      console.log(`[SCAN] GitHub URL already found from Moralis: ${github_url}`);
+    }
     
     // Try to get existing Twitter handle from database if not found in metadata
     if (!twitter_handle) {
