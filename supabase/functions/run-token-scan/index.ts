@@ -498,7 +498,10 @@ async function fetchCoinMarketCapLogoUrl(tokenAddress: string): Promise<string> 
 
 // Check if description is generic/template-based
 function isGenericDescription(description: string): boolean {
-  if (!description || description.length < 100) return true;
+  if (!description || description.length < 100) {
+    console.log(`[DESCRIPTION-DEBUG] isGenericDescription: REJECT - too short (${description?.length || 0} chars)`);
+    return true;
+  }
   
   const genericPatterns = [
     /is a cryptocurrency launched in \d{4}/i,
@@ -510,7 +513,8 @@ function isGenericDescription(description: string): boolean {
   ];
   
   // Check if it matches any generic patterns
-  const matchesGeneric = genericPatterns.some(pattern => pattern.test(description));
+  const matchingPatterns = genericPatterns.filter(pattern => pattern.test(description));
+  const matchesGeneric = matchingPatterns.length > 0;
   
   // Check for technical keywords that indicate quality content
   const technicalKeywords = [
@@ -520,12 +524,25 @@ function isGenericDescription(description: string): boolean {
     'interoperability', 'cross-chain', 'scalability', 'dapp'
   ];
   
-  const technicalScore = technicalKeywords.reduce((score, keyword) => {
-    return score + (description.toLowerCase().includes(keyword) ? 1 : 0);
-  }, 0);
+  const foundKeywords = technicalKeywords.filter(keyword => 
+    description.toLowerCase().includes(keyword)
+  );
+  const technicalScore = foundKeywords.length;
+  
+  const isGeneric = matchesGeneric || technicalScore < 2;
+  
+  console.log(`[DESCRIPTION-DEBUG] isGenericDescription analysis:`, {
+    length: description.length,
+    matchesGeneric,
+    matchingPatterns: matchingPatterns.length,
+    technicalScore,
+    foundKeywords,
+    isGeneric,
+    preview: description.substring(0, 150)
+  });
   
   // Generic if matches template patterns or has low technical content
-  return matchesGeneric || technicalScore < 2;
+  return isGeneric;
 }
 
 // Fetch description from CoinGecko API
@@ -1180,6 +1197,15 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     // Enhanced description logic with CoinMarketCap fallback
     let description = '';
     
+    // Debug what Moralis is returning
+    console.log(`[DESCRIPTION-DEBUG] Moralis metadata description analysis:`, {
+      hasDescription: !!metadata?.description,
+      descriptionLength: metadata?.description?.length || 0,
+      descriptionPreview: metadata?.description ? metadata.description.substring(0, 200) : 'null/undefined',
+      isGeneric: metadata?.description ? isGenericDescription(metadata.description) : 'N/A',
+      meetsLengthReq: metadata?.description ? metadata.description.length > 100 : false
+    });
+    
     // First try Moralis description (if high quality)
     if (metadata?.description && metadata.description.trim() && metadata.description.length > 100 && !isGenericDescription(metadata.description)) {
       description = metadata.description.trim();
@@ -1187,17 +1213,17 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     } else {
       console.log(`[DESCRIPTION] Moralis description not available, too short, or generic. Trying fallbacks...`);
       
-      // Try CoinGecko as first fallback (temporarily disabled due to API complexity)
-      // const coinGeckoDescription = await fetchCoinGeckoDescription(tokenAddress, chainId);
-      // if (coinGeckoDescription && !isGenericDescription(coinGeckoDescription)) {
-      //   description = coinGeckoDescription;
-      //   console.log(`[DESCRIPTION] Using CoinGecko description: ${description.substring(0, 100)}...`);
-      // } else {
-      
       console.log(`[DESCRIPTION] Trying CoinMarketCap fallback`);
       
       // Try CoinMarketCap as fallback
       const cmcDescription = await fetchCoinMarketCapDescription(tokenAddress);
+      console.log(`[DESCRIPTION-DEBUG] CoinMarketCap response:`, {
+        hasResponse: !!cmcDescription,
+        responseLength: cmcDescription?.length || 0,
+        responsePreview: cmcDescription ? cmcDescription.substring(0, 200) : 'null/undefined',
+        isGeneric: cmcDescription ? isGenericDescription(cmcDescription) : 'N/A'
+      });
+      
       if (cmcDescription && !isGenericDescription(cmcDescription)) {
         description = cmcDescription;
         console.log(`[DESCRIPTION] Using CoinMarketCap description: ${description.substring(0, 100)}...`);
@@ -1208,7 +1234,6 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
           : `${name} on ${chainConfig.name}`;
         console.log(`[DESCRIPTION] Using generic template: ${description}`);
       }
-      // }
     }
 
 
