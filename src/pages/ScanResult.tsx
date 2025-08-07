@@ -342,27 +342,27 @@ export default function ScanResult() {
   const chainName = chainId === "0xa4b1" ? "Arbitrum" : "Ethereum";
 
   const displayDescription = (() => {
-    const base = properDescription.trim();
-    if (base && !isTaglineStyle(base)) return base;
-
     const sec: any = scanData.security || {};
-    const notes: string[] = [];
-    if (sec.contract_verified === true) notes.push('verified smart contract');
-    const securityBits: string[] = [];
-    if (sec.ownership_renounced === true) securityBits.push('ownership renounced');
-    if (sec.freeze_authority === false) securityBits.push('no freeze authority');
-    if (sec.honeypot_detected === false) securityBits.push('no honeypot detected');
 
-    const first = `${properName} (${properSymbol}) is a token on ${chainName}${notes.length ? ` with a ${notes.join(', ')}` : ''}.`;
-    const second = securityBits.length ? ` Key security notes: ${securityBits.join('; ')}.` : '';
-    const marketBits: string[] = [];
-    if (properPrice && properPrice > 0) marketBits.push(`price around ${formatCompactUSD(properPrice)}`);
+    const bits: string[] = [];
+    if (sec.contract_verified === true) bits.push('Verified contract');
+    if (sec.honeypot_detected === false) bits.push('No honeypot');
+    if (sec.freeze_authority === false) bits.push('No freeze');
+    if (sec.ownership_renounced === true) bits.push('Renounced');
+
     const mc = parseFloat(properMarketCap.replace(/[^0-9.]/g, "")) || 0;
-    if (mc > 0) marketBits.push(`market capitalization approximately ${formatCompactUSD(mc)}`);
-    const third = marketBits.length ? ` Market overview: ${marketBits.join(', ')}.` : '';
-    const composed = `${first}${second}${third}`.trim();
-    console.log("ScanResult: Using composed formal description (client):", composed.substring(0, 120) + "...");
-    return composed;
+    const market: string[] = [];
+    if (properPrice && properPrice > 0) market.push(formatCompactUSD(properPrice));
+    if (mc > 0) market.push(`MC ${formatCompactUSD(mc)}`);
+
+    const details = [bits.join(' · '), market.join(' · ')].filter(Boolean).join(' | ');
+    const base = `${properName} (${properSymbol}) on ${chainName}`;
+    const composed = details ? `${base}: ${details}` : base;
+
+    const truncate = (s: string, max = 180) => (s.length <= max ? s : s.slice(0, max - 1).trimEnd() + '…');
+    const finalText = truncate(composed, 180);
+    console.log('ScanResult: Using concise description:', finalText);
+    return finalText;
   })();
 
   const networkName = chainId === "0xa4b1" ? "ARB" : "ETH";
