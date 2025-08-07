@@ -527,7 +527,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     console.log(`[SCAN] Final extracted social links:`, {
       website_url,
       twitter_handle,
-      github_url
+      github_url,
+      discord_url
     });
     
     // CoinMarketCap fallback for GitHub URL if not found from Moralis
@@ -542,6 +543,20 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       }
     } else {
       console.log(`[SCAN] GitHub URL already found from Moralis: ${github_url}`);
+    }
+    
+    // CoinMarketCap fallback for Discord URL if not found from Moralis
+    if (!discord_url) {
+      console.log(`[SCAN] Discord URL not found in Moralis, trying CoinMarketCap fallback`);
+      const cmcDiscordUrl = await fetchCoinMarketCapDiscordUrl(tokenAddress);
+      if (cmcDiscordUrl && isValidDiscordUrl(cmcDiscordUrl)) {
+        discord_url = cmcDiscordUrl;
+        console.log(`[SCAN] Discord URL found via CoinMarketCap: ${discord_url}`);
+      } else {
+        console.log(`[SCAN] No valid Discord URL found via CoinMarketCap fallback`);
+      }
+    } else {
+      console.log(`[SCAN] Discord URL already found from Moralis: ${discord_url}`);
     }
     
     // Fetch GitHub data now that we have the final GitHub URL (including CoinMarketCap fallback)
