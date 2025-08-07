@@ -616,6 +616,76 @@ function isGenericDescription(description: string): boolean {
   return isGeneric;
 }
 
+// Additional quality check for marketing/tagline-style descriptions
+function isTaglineStyle(description: string): boolean {
+  if (!description) return true;
+  const text = description.toLowerCase();
+  const marketingPhrases = [
+    'for everyone', 'revolution', 'revolutionize', 'next-gen', 'next generation',
+    'empower', 'seamless', 'warp speed', 'the future of', 'unlock', 'supercharge'
+  ];
+  const hasMarketing = marketingPhrases.some(p => text.includes(p));
+  const sentenceCount = (description.match(/[.!?]/g) || []).length;
+  const tooShort = description.length < 120;
+  return hasMarketing || sentenceCount <= 1 || tooShort;
+}
+
+// Compose a formal, informative token description from available data
+function composeFormalDescription(opts: {
+  name: string; symbol: string; chainName: string; contract: string;
+  security?: any; stats?: any; price?: any; marketCap?: number; website?: string;
+}): string {
+  const { name, symbol, chainName, contract, security = {}, stats = {}, price = {}, marketCap, website } = opts;
+  const parts: string[] = [];
+  // First sentence: identity
+  let identity = `${name} (${symbol}) is a token on ${chainName}`;
+  if (security.contract_verified === true) {
+    identity += ' with a verified smart contract';
+  }
+  identity += `.`;
+  parts.push(identity);
+
+  // Security notes
+  const notes: string[] = [];
+  if (security.ownership_renounced === true) notes.push('ownership renounced');
+  if (security.can_mint === false) notes.push('minting disabled');
+  if (security.freeze_authority === false) notes.push('no freeze authority');
+  if (security.honeypot_detected === false) notes.push('no honeypot detected');
+  if (notes.length) {
+    parts.push(`Key security notes: ${notes.join('; ')}.`);
+  }
+
+  // Supply/holders
+  const holders = typeof (stats as any).holders === 'number' ? (stats as any).holders : Number((stats as any)?.holders) || 0;
+  const totalSupply = (stats as any)?.total_supply && (stats as any).total_supply !== '0' ? (stats as any).total_supply : '';
+  const supplyBits: string[] = [];
+  if (totalSupply) supplyBits.push(`total supply ${totalSupply}`);
+  if (holders > 0) supplyBits.push(`approximately ${holders.toLocaleString()} holders`);
+  if (supplyBits.length) {
+    parts.push(`Token distribution: ${supplyBits.join('; ')}.`);
+  }
+
+  // Market context
+  const priceUsd = typeof (price as any)?.current_price_usd === 'number' ? (price as any).current_price_usd : null;
+  const mcUsd = typeof marketCap === 'number' && !Number.isNaN(marketCap)
+    ? marketCap
+    : (typeof (price as any)?.market_cap_usd === 'number' ? (price as any).market_cap_usd : null);
+  const fmt = (n: number) => {
+    if (n >= 1e9) return `$${(n/1e9).toFixed(2)}B`;
+    if (n >= 1e6) return `$${(n/1e6).toFixed(2)}M`;
+    if (n >= 1e3) return `$${(n/1e3).toFixed(2)}k`;
+    return `$${n.toFixed(4)}`;
+  };
+  const marketBits: string[] = [];
+  if (priceUsd && priceUsd > 0) marketBits.push(`price around ${fmt(priceUsd)}`);
+  if (mcUsd && mcUsd > 0) marketBits.push(`market capitalization approximately ${fmt(mcUsd)}`);
+  if (marketBits.length) {
+    parts.push(`Market overview: ${marketBits.join(', ')}.`);
+  }
+
+  return parts.join(' ');
+}
+
 // Fetch description from CoinGecko API
 async function fetchCoinGeckoDescription(tokenAddress: string, chainId: string): Promise<string> {
   try {
@@ -1338,7 +1408,27 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         }
       }
     }
-
+    
+    // Ensure formal, informative description
+    if (description) {
+      if (isTaglineStyle(description) || description.length < 140) {
+        const formal = composeFormalDescription({
+          name,
+          symbol,
+          chainName: chainConfig.name,
+          contract: tokenAddress,
+          security,
+          stats,
+          price: priceDataResult,
+          marketCap: metadata?.market_cap ? parseFloat(metadata.market_cap) : 0,
+          website: website_url
+        });
+        if (formal) {
+          description = formal;
+          console.log(`[DESCRIPTION] Using composed formal description: ${description.substring(0, 120)}...`);
+        }
+      }
+    }
 
     // Combine data from all sources, prioritizing Moralis for richer data
     const combinedData = {
