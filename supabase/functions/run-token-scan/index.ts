@@ -19,7 +19,7 @@ import {
   calculateDevelopmentScore
 } from '../_shared/apiClients.ts'
 import { fetchDeFiLlamaTVL } from '../_shared/defillama.ts'
-import { fetchTwitterFollowers } from '../_shared/apifyAPI.ts'
+import { fetchTwitterFollowers, fetchTelegramMembers } from '../_shared/apifyAPI.ts'
 import { fetchDiscordMemberCount } from '../_shared/discordAPI.ts'
 
 const supabase = createClient(
