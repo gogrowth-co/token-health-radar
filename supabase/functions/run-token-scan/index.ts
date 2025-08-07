@@ -496,6 +496,126 @@ async function fetchCoinMarketCapLogoUrl(tokenAddress: string): Promise<string> 
   }
 }
 
+// Check if description is generic/template-based
+function isGenericDescription(description: string): boolean {
+  if (!description || description.length < 100) return true;
+  
+  const genericPatterns = [
+    /is a cryptocurrency launched in \d{4}/i,
+    /operates on the .+ platform/i,
+    /has a current supply of/i,
+    /more information can be found at/i,
+    /is currently trading on \d+ active market/i,
+    /the last known price/i
+  ];
+  
+  // Check if it matches any generic patterns
+  const matchesGeneric = genericPatterns.some(pattern => pattern.test(description));
+  
+  // Check for technical keywords that indicate quality content
+  const technicalKeywords = [
+    'protocol', 'blockchain', 'smart contract', 'defi', 'dao', 'nft',
+    'consensus', 'validator', 'governance', 'staking', 'yield', 'liquidity',
+    'bridge', 'layer', 'zero-knowledge', 'rollup', 'privacy', 'oracle',
+    'interoperability', 'cross-chain', 'scalability', 'dapp'
+  ];
+  
+  const technicalScore = technicalKeywords.reduce((score, keyword) => {
+    return score + (description.toLowerCase().includes(keyword) ? 1 : 0);
+  }, 0);
+  
+  // Generic if matches template patterns or has low technical content
+  return matchesGeneric || technicalScore < 2;
+}
+
+// Fetch description from CoinGecko API
+async function fetchCoinGeckoDescription(tokenAddress: string, chainId: string): Promise<string> {
+  try {
+    const chainConfig = getChainConfigByMoralisId(chainId);
+    if (!chainConfig || !chainConfig.gecko) {
+      console.log(`[COINGECKO] No CoinGecko platform mapping for chain: ${chainId}`);
+      return '';
+    }
+
+    // Map chain to CoinGecko platform
+    const platformMap: Record<string, string> = {
+      'eth': 'ethereum',
+      'bsc': 'binance-smart-chain', 
+      'polygon_pos': 'polygon-pos',
+      'arbitrum': 'arbitrum-one',
+      'optimism': 'optimistic-ethereum',
+      'base': 'base'
+    };
+    
+    const coinGeckoPlatform = platformMap[chainConfig.gecko] || chainConfig.gecko;
+    console.log(`[COINGECKO] Fetching description for ${tokenAddress} on platform: ${coinGeckoPlatform}`);
+
+    // Step 1: Get CoinGecko ID for the token
+    const idResponse = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coinGeckoPlatform}/contract/${tokenAddress.toLowerCase()}`,
+      {
+        headers: {
+          'accept': 'application/json',
+          ...(Deno.env.get('COINGECKO_API_KEY') && {
+            'x-cg-demo-api-key': Deno.env.get('COINGECKO_API_KEY')
+          })
+        }
+      }
+    );
+
+    if (!idResponse.ok) {
+      if (idResponse.status === 404) {
+        console.log(`[COINGECKO] Token not found on CoinGecko`);
+        return '';
+      }
+      throw new Error(`CoinGecko API error: ${idResponse.status}`);
+    }
+
+    const tokenData = await idResponse.json();
+    const coinGeckoId = tokenData.id;
+    
+    if (!coinGeckoId) {
+      console.log(`[COINGECKO] No CoinGecko ID found for token`);
+      return '';
+    }
+
+    console.log(`[COINGECKO] Found CoinGecko ID: ${coinGeckoId}`);
+
+    // Step 2: Get detailed token information including description
+    const detailResponse = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coinGeckoId}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false`,
+      {
+        headers: {
+          'accept': 'application/json',
+          ...(Deno.env.get('COINGECKO_API_KEY') && {
+            'x-cg-demo-api-key': Deno.env.get('COINGECKO_API_KEY')
+          })
+        }
+      }
+    );
+
+    if (!detailResponse.ok) {
+      console.log(`[COINGECKO] Failed to fetch token details: ${detailResponse.status}`);
+      return '';
+    }
+
+    const detailData = await detailResponse.json();
+    const description = detailData.description?.en || '';
+    
+    if (description && description.length > 100 && !isGenericDescription(description)) {
+      console.log(`[COINGECKO] High-quality description found (${description.length} chars)`);
+      return description.trim();
+    } else {
+      console.log(`[COINGECKO] Description not suitable: ${description ? 'generic/low quality' : 'not found'}`);
+      return '';
+    }
+
+  } catch (error) {
+    console.error(`[COINGECKO] Error fetching description:`, error);
+    return '';
+  }
+}
+
 // Fetch CEX count from CoinGecko API
 async function fetchCoinGeckoCexCount(tokenAddress: string, chainId: string): Promise<number> {
   console.log(`[CEX] Fetching CEX count for ${tokenAddress} on chain ${chainId}`);
@@ -1060,24 +1180,33 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     // Enhanced description logic with CoinMarketCap fallback
     let description = '';
     
-    // First try Moralis description
-    if (metadata?.description && metadata.description.trim() && metadata.description.length > 50) {
+    // First try Moralis description (if high quality)
+    if (metadata?.description && metadata.description.trim() && metadata.description.length > 100 && !isGenericDescription(metadata.description)) {
       description = metadata.description.trim();
-      console.log(`[DESCRIPTION] Using Moralis description: ${description.substring(0, 100)}...`);
+      console.log(`[DESCRIPTION] Using high-quality Moralis description: ${description.substring(0, 100)}...`);
     } else {
-      console.log(`[DESCRIPTION] Moralis description not available or too short, trying CoinMarketCap fallback`);
+      console.log(`[DESCRIPTION] Moralis description not available, too short, or generic. Trying fallbacks...`);
       
-      // Try CoinMarketCap as fallback
-      const cmcDescription = await fetchCoinMarketCapDescription(tokenAddress);
-      if (cmcDescription) {
-        description = cmcDescription;
-        console.log(`[DESCRIPTION] Using CoinMarketCap description: ${description.substring(0, 100)}...`);
+      // Try CoinGecko as first fallback
+      const coinGeckoDescription = await fetchCoinGeckoDescription(tokenAddress, normalizedChainId);
+      if (coinGeckoDescription) {
+        description = coinGeckoDescription;
+        console.log(`[DESCRIPTION] Using CoinGecko description: ${description.substring(0, 100)}...`);
       } else {
-        // Fallback to generic template
-        description = metadata?.name 
-          ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
-          : `${name} on ${chainConfig.name}`;
-        console.log(`[DESCRIPTION] Using generic template: ${description}`);
+        console.log(`[DESCRIPTION] CoinGecko description not available, trying CoinMarketCap fallback`);
+        
+        // Try CoinMarketCap as second fallback
+        const cmcDescription = await fetchCoinMarketCapDescription(tokenAddress);
+        if (cmcDescription && !isGenericDescription(cmcDescription)) {
+          description = cmcDescription;
+          console.log(`[DESCRIPTION] Using CoinMarketCap description: ${description.substring(0, 100)}...`);
+        } else {
+          // Fallback to enhanced generic template
+          description = metadata?.name 
+            ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
+            : `${name} on ${chainConfig.name}`;
+          console.log(`[DESCRIPTION] Using generic template: ${description}`);
+        }
       }
     }
 
