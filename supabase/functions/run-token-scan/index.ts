@@ -1756,6 +1756,10 @@ Deno.serve(async (req) => {
           throw new Error('Chain ID cannot be null for token scan record');
         }
         
+        // Determine if this is a pro scan (force_refresh indicates admin/pro access)
+        const proScan = force_refresh || false;
+        console.log(`[SCAN] Pro scan status: ${proScan} (force_refresh: ${force_refresh})`);
+        
         console.log(`[SCAN] Recording scan for user ${user_id} with chain_id: ${normalizedChainId}`);
         const { error: scanError } = await supabase
           .from('token_scans')
