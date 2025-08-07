@@ -1316,71 +1316,103 @@ async function invalidateTokenCache(tokenAddress: string, chainId: string) {
 }
 
 Deno.serve(async (req) => {
-  // IMMEDIATE STARTUP LOGGING
-  console.log(`[SCAN-STARTUP] === EDGE FUNCTION STARTED ===`);
-  console.log(`[SCAN-STARTUP] Method: ${req.method}`);
-  console.log(`[SCAN-STARTUP] URL: ${req.url}`);
-  console.log(`[SCAN-STARTUP] Timestamp: ${new Date().toISOString()}`);
+  const startTime = Date.now();
+  const requestId = `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  console.log(`[${requestId}] === EDGE FUNCTION STARTED ===`);
+  console.log(`[${requestId}] Method: ${req.method}`);
+  console.log(`[${requestId}] URL: ${req.url}`);
+  console.log(`[${requestId}] Timestamp: ${new Date().toISOString()}`);
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log(`[SCAN-STARTUP] Handling CORS preflight request`);
+    console.log(`[${requestId}] Handling CORS preflight request`);
     return new Response(null, { headers: corsHeaders });
   }
 
-  // HEALTH CHECK ENDPOINT - Add this for testing deployment
+  // HEALTH CHECK ENDPOINT
   if (req.method === 'GET') {
-    console.log(`[SCAN-STARTUP] Health check requested`);
+    console.log(`[${requestId}] Health check requested`);
     return new Response(JSON.stringify({ 
       success: true, 
       message: 'Edge function is deployed and running',
       timestamp: new Date().toISOString(),
-      deployment_status: 'active'
+      deployment_status: 'active',
+      request_id: requestId
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
 
-  // Test deployment by checking environment variables immediately
-  console.log(`[SCAN-STARTUP] === ENVIRONMENT CHECK ===`);
-  const envCheck = {
-    SUPABASE_URL: !!Deno.env.get('SUPABASE_URL'),
-    SUPABASE_SERVICE_ROLE_KEY: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
-    WEBACY_API_KEY: !!Deno.env.get('WEBACY_API_KEY'),
-    MORALIS_API_KEY: !!Deno.env.get('MORALIS_API_KEY'),
-    GITHUB_API_KEY: !!Deno.env.get('GITHUB_API_KEY'),
-    APIFY_API_KEY: !!Deno.env.get('APIFY_API_KEY')
-  };
-  
-  console.log(`[SCAN-STARTUP] Environment variables:`, envCheck);
-
-  // Critical environment variables check
-  if (!envCheck.SUPABASE_URL || !envCheck.SUPABASE_SERVICE_ROLE_KEY) {
-    console.error(`[SCAN-STARTUP] CRITICAL: Missing Supabase configuration`);
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: 'Function misconfigured - missing Supabase credentials',
-      envCheck 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  }
-
-  console.log(`[SCAN-STARTUP] Function deployment successful - processing request`);
-
+  // Comprehensive try-catch wrapper for all edge function logic
   try {
-    // Parse request body with error handling
-    console.log(`[SCAN-STARTUP] Parsing request body...`);
-    let requestBody;
-    try {
-      requestBody = await req.json();
-    } catch (parseError) {
-      console.error(`[SCAN-STARTUP] Failed to parse request body:`, parseError);
+    // PHASE 1: Environment validation
+    console.log(`[${requestId}] === PHASE 1: ENVIRONMENT VALIDATION ===`);
+    
+    const envCheck = {
+      SUPABASE_URL: !!Deno.env.get('SUPABASE_URL'),
+      SUPABASE_SERVICE_ROLE_KEY: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+      WEBACY_API_KEY: !!Deno.env.get('WEBACY_API_KEY'),
+      MORALIS_API_KEY: !!Deno.env.get('MORALIS_API_KEY'),
+      GITHUB_API_KEY: !!Deno.env.get('GITHUB_API_KEY'),
+      APIFY_API_KEY: !!Deno.env.get('APIFY_API_KEY')
+    };
+    
+    console.log(`[${requestId}] Environment check:`, envCheck);
+
+    // Critical environment variables check
+    if (!envCheck.SUPABASE_URL || !envCheck.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error(`[${requestId}] CRITICAL: Missing Supabase configuration`);
       return new Response(JSON.stringify({ 
         success: false, 
-        error: 'Invalid JSON in request body' 
+        error: 'Function misconfigured - missing Supabase credentials',
+        request_id: requestId,
+        env_check: envCheck 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // API key validation with warnings
+    const missingKeys = [];
+    if (!envCheck.WEBACY_API_KEY) missingKeys.push('WEBACY_API_KEY');
+    if (!envCheck.MORALIS_API_KEY) missingKeys.push('MORALIS_API_KEY');
+    
+    if (missingKeys.length > 0) {
+      console.error(`[${requestId}] CRITICAL: Missing required API keys:`, missingKeys);
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: `Missing required API keys: ${missingKeys.join(', ')}`,
+        request_id: requestId,
+        missing_keys: missingKeys
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // PHASE 2: Request parsing and validation
+    console.log(`[${requestId}] === PHASE 2: REQUEST VALIDATION ===`);
+    
+    let requestBody;
+    try {
+      const bodyText = await req.text();
+      console.log(`[${requestId}] Raw request body length: ${bodyText.length} chars`);
+      
+      if (!bodyText.trim()) {
+        throw new Error('Empty request body');
+      }
+      
+      requestBody = JSON.parse(bodyText);
+    } catch (parseError) {
+      console.error(`[${requestId}] Failed to parse request body:`, parseError);
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Invalid or empty JSON in request body',
+        request_id: requestId,
+        details: parseError.message
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1388,102 +1420,154 @@ Deno.serve(async (req) => {
     }
 
     const { token_address, chain_id, user_id, force_refresh = true } = requestBody;
-    console.log(`[SCAN-STARTUP] Request parameters:`, { token_address, chain_id, user_id, force_refresh });
+    console.log(`[${requestId}] Request parameters:`, { token_address, chain_id, user_id, force_refresh });
     
-    // ALWAYS force fresh scans - ignore any cached data
-    const alwaysRefresh = true;
-
-    console.log(`[SCAN] === STARTING COMPREHENSIVE TOKEN SCAN ===`);
-    console.log(`[SCAN] Token: ${token_address}, Chain: ${chain_id}, User: ${user_id}, Force Refresh: ${force_refresh}`);
-    console.log(`[SCAN] Timestamp: ${new Date().toISOString()}`);
-
-    if (!token_address || !chain_id) {
-      console.error(`[SCAN] Missing required parameters - token_address: ${token_address}, chain_id: ${chain_id}`);
-      throw new Error('Token address and chain ID are required');
+    // Validate required parameters
+    if (!token_address || typeof token_address !== 'string') {
+      console.error(`[${requestId}] Invalid token_address:`, token_address);
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Missing or invalid token_address parameter',
+        request_id: requestId,
+        received: { token_address, type: typeof token_address }
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    // PHASE 1: Validate API Keys
-    console.log(`[SCAN] === PHASE 1: API KEY VALIDATION ===`);
-    const apiKeys = {
-      webacy: Deno.env.get('WEBACY_API_KEY'),
-      moralis: Deno.env.get('MORALIS_API_KEY'), 
-      github: Deno.env.get('GITHUB_API_KEY')
-    };
+    if (!chain_id || typeof chain_id !== 'string') {
+      console.error(`[${requestId}] Invalid chain_id:`, chain_id);
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Missing or invalid chain_id parameter',
+        request_id: requestId,
+        received: { chain_id, type: typeof chain_id }
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Validate token address format (basic hex check)
+    const addressPattern = /^0x[a-fA-F0-9]{40}$/;
+    if (!addressPattern.test(token_address)) {
+      console.error(`[${requestId}] Invalid token address format:`, token_address);
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Invalid token address format. Must be a valid Ethereum address (0x...)',
+        request_id: requestId,
+        received_address: token_address
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    // PHASE 3: Chain validation and normalization
+    console.log(`[${requestId}] === PHASE 3: CHAIN VALIDATION ===`);
     
-    console.log(`[SCAN] API Key Status:`, {
-      webacy: apiKeys.webacy ? 'CONFIGURED' : 'MISSING',
-      moralis: apiKeys.moralis ? 'CONFIGURED' : 'MISSING',
-      github: apiKeys.github ? 'CONFIGURED' : 'MISSING'
+    let normalizedChainId;
+    let chainConfig;
+    
+    try {
+      normalizedChainId = normalizeChainId(chain_id);
+      chainConfig = getChainConfigByMoralisId(normalizedChainId);
+      
+      if (!chainConfig) {
+        console.error(`[${requestId}] Unsupported chain:`, chain_id);
+        return new Response(JSON.stringify({
+          success: false,
+          error: `Unsupported chain: ${chain_id}`,
+          request_id: requestId,
+          supported_chains: ['0x1', '0x89', '0xa4b1', '0x38'] // Example
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      console.log(`[${requestId}] Validated chain: ${chainConfig.name} (${normalizedChainId})`);
+    } catch (error) {
+      console.error(`[${requestId}] Chain validation error:`, error);
+      return new Response(JSON.stringify({
+        success: false,
+        error: `Chain validation failed: ${error.message}`,
+        request_id: requestId
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // PHASE 4: Set up timeout protection for the entire scan
+    console.log(`[${requestId}] === PHASE 4: TIMEOUT SETUP ===`);
+    
+    const SCAN_TIMEOUT_MS = 25000; // 25 seconds
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`Scan timeout exceeded (${SCAN_TIMEOUT_MS}ms)`));
+      }, SCAN_TIMEOUT_MS);
     });
 
-    if (!apiKeys.webacy) {
-      console.error(`[SCAN] CRITICAL: WEBACY_API_KEY not configured`);
-    }
-    if (!apiKeys.moralis) {
-      console.error(`[SCAN] CRITICAL: MORALIS_API_KEY not configured`);
-    }
-    if (!apiKeys.github) {
-      console.warn(`[SCAN] WARNING: GITHUB_API_KEY not configured - development scores will be limited`);
-    }
-
-    // Normalize chain ID and validate
-    const normalizedChainId = normalizeChainId(chain_id);
-    const chainConfig = getChainConfigByMoralisId(normalizedChainId);
+    // PHASE 5: Execute main scan logic with timeout protection
+    console.log(`[${requestId}] === PHASE 5: MAIN SCAN EXECUTION ===`);
+    console.log(`[${requestId}] Token: ${token_address}, Chain: ${normalizedChainId}`);
+    console.log(`[${requestId}] User: ${user_id || 'Anonymous'}, Force refresh: ${force_refresh}`);
     
-    if (!chainConfig) {
-      throw new Error(`Unsupported chain: ${chain_id}`);
-    }
+    const mainScanLogic = async () => {
+      // Cache invalidation
+      console.log(`[${requestId}] Invalidating cache...`);
+      try {
+        const clearedTables = await invalidateTokenCache(token_address.toLowerCase(), normalizedChainId);
+        console.log(`[${requestId}] Cache cleared: ${clearedTables} tables updated`);
+      } catch (cacheError) {
+        console.warn(`[${requestId}] Cache invalidation failed (continuing):`, cacheError);
+      }
 
-    console.log(`[SCAN] Scanning on ${chainConfig.name} (${normalizedChainId})`);
+      // Fetch token data with comprehensive error handling
+      console.log(`[${requestId}] Fetching token data from APIs...`);
+      let apiData;
+      
+      try {
+        apiData = await fetchTokenDataFromAPIs(token_address, normalizedChainId);
+        
+        if (!apiData) {
+          throw new Error('fetchTokenDataFromAPIs returned null - no data available from external APIs');
+        }
+        
+        console.log(`[${requestId}] Successfully fetched API data for: ${apiData.tokenData?.name || 'Unknown'} (${apiData.tokenData?.symbol || 'Unknown'})`);
+      } catch (apiError) {
+        console.error(`[${requestId}] API data fetch failed:`, apiError);
+        throw new Error(`Failed to fetch token data: ${apiError.message}`);
+      }
 
-    console.log(`[SCAN] === STARTING FRESH TOKEN SCAN ===`);
-    console.log(`[SCAN] Token: ${token_address}, Chain: ${normalizedChainId}`);
-    console.log(`[SCAN] Force refresh: ${force_refresh}`);
-    console.log(`[SCAN] User: ${user_id || 'Anonymous'}`);
-    console.log(`[SCAN] Timestamp: ${new Date().toISOString()}`);
-    
-    // FORCE FRESH SCAN: Delete all cached data before scanning (ALWAYS)
-    if (force_refresh) {
-      console.log(`[SCAN] === FORCE REFRESH ACTIVATED ===`);
-      const clearedTables = await invalidateTokenCache(token_address.toLowerCase(), normalizedChainId);
-      console.log(`[SCAN] Cache cleared: ${clearedTables} tables updated`);
-    } else {
-      await invalidateTokenCache(token_address.toLowerCase(), normalizedChainId);
-    }
+      // Generate scores and category data
+      console.log(`[${requestId}] Generating category scores...`);
+      let categoryData;
+      let overallScore;
+      
+      try {
+        categoryData = generateCategoryData(apiData);
+        overallScore = calculateOverallScore(categoryData);
+        console.log(`[${requestId}] Successfully calculated overall score: ${overallScore}`);
+      } catch (scoreError) {
+        console.error(`[${requestId}] Score calculation failed:`, scoreError);
+        throw new Error(`Failed to calculate scores: ${scoreError.message}`);
+      }
 
-    // Check if user has pro access (simplified for now)
-    const proScan = false; // Will be enhanced later with proper pro check
-    console.log(`[SCAN] Pro scan permitted: ${proScan}`);
-
-    // Fetch comprehensive token data from multiple APIs using Moralis as primary metadata source
-    console.log(`[SCAN] Fetching FRESH data from APIs...`);
-    const apiData = await fetchTokenDataFromAPIs(token_address, normalizedChainId);
-    
-    if (!apiData) {
-      throw new Error('Failed to fetch token data from APIs');
-    }
-
-    console.log(`[SCAN] Token data collected for: ${apiData.tokenData.name} (${apiData.tokenData.symbol})`);
-
-    // Generate category data with real API integration including GitHub
-    const categoryData = generateCategoryData(apiData);
-    const overallScore = calculateOverallScore(categoryData);
-
-    console.log(`[SCAN] Calculated overall score: ${overallScore}`);
-
-    try {
-      // UPSERT token data to main cache table
-      console.log(`[SCAN] === UPSERTING TOKEN DATA TO DATABASE ===`);
-      console.log(`[SCAN] Token: ${token_address}, Chain: ${normalizedChainId}`);
-      console.log(`[SCAN] Data to save:`, {
-        name: apiData.tokenData.name,
-        symbol: apiData.tokenData.symbol,
-        current_price_usd: apiData.tokenData.current_price_usd,
-        price_change_24h: apiData.tokenData.price_change_24h,
-        market_cap_usd: apiData.tokenData.market_cap_usd,
-        logo_url: apiData.tokenData.logo_url ? 'present' : 'missing',
-        description_length: apiData.tokenData.description?.length || 0
-      });
+      // Database operations with enhanced error handling
+      console.log(`[${requestId}] === DATABASE OPERATIONS ===`);
+      
+      try {
+        // UPSERT token data to main cache table
+        console.log(`[${requestId}] Upserting token data to database...`);
+        console.log(`[${requestId}] Data summary:`, {
+          name: apiData.tokenData.name,
+          symbol: apiData.tokenData.symbol,
+          current_price_usd: apiData.tokenData.current_price_usd,
+          market_cap_usd: apiData.tokenData.market_cap_usd,
+          logo_url: apiData.tokenData.logo_url ? 'present' : 'missing'
+        });
       
       const { error: upsertError } = await supabase
         .from('token_data_cache')
@@ -1715,19 +1799,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    } catch (error) {
-      console.error(`[SCAN] Error during database operations:`, error);
-      throw error;
-    }
+      } catch (dbError) {
+        console.error(`[${requestId}] Database operations failed:`, dbError);
+        throw new Error(`Database operations failed: ${dbError.message}`);
+      }
 
-    console.log(`[SCAN] Comprehensive scan completed for ${token_address} on ${chainConfig.name}, overall score: ${overallScore}`);
-
-    return new Response(
-      JSON.stringify({
+      // Return successful scan result
+      return {
         success: true,
         token_address,
         chain_id: normalizedChainId,
         overall_score: overallScore,
+        request_id: requestId,
+        processing_time_ms: Date.now() - startTime,
         data_sources: {
           security: apiData.webacyData ? 'Webacy API (primary)' : (apiData.goplusData ? 'GoPlus API (fallback)' : 'unavailable'),
           price: apiData.priceData ? 'Moralis Price API' : 'unavailable',
@@ -1741,23 +1825,68 @@ Deno.serve(async (req) => {
           community: categoryData.community.score,
           development: categoryData.development.score
         }
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      };
+    };
+
+    // Execute main logic with timeout protection
+    let scanResult;
+    try {
+      scanResult = await Promise.race([mainScanLogic(), timeoutPromise]);
+      console.log(`[${requestId}] Scan completed successfully in ${Date.now() - startTime}ms`);
+    } catch (timeoutError) {
+      if (timeoutError.message.includes('timeout')) {
+        console.error(`[${requestId}] Scan timed out:`, timeoutError);
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Scan timeout - the operation took too long to complete',
+          request_id: requestId,
+          timeout_ms: SCAN_TIMEOUT_MS,
+          processing_time_ms: Date.now() - startTime
+        }), {
+          status: 408,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } else {
+        throw timeoutError; // Re-throw non-timeout errors
       }
-    );
+    }
+
+    // Return successful response
+    return new Response(JSON.stringify(scanResult), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
 
   } catch (error) {
-    console.error('[SCAN] Error during comprehensive token scan:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    const processingTime = Date.now() - startTime;
+    console.error(`[${requestId}] Comprehensive error during token scan:`, error);
+    console.error(`[${requestId}] Error stack:`, error.stack);
+    console.error(`[${requestId}] Processing time before error: ${processingTime}ms`);
+    
+    // Determine appropriate error status code
+    let statusCode = 500;
+    let errorMessage = error.message || 'Internal server error';
+    
+    if (errorMessage.includes('Invalid') || errorMessage.includes('Missing')) {
+      statusCode = 400;
+    } else if (errorMessage.includes('timeout')) {
+      statusCode = 408;
+    } else if (errorMessage.includes('API key') || errorMessage.includes('misconfigured')) {
+      statusCode = 500;
+    } else if (errorMessage.includes('Unsupported chain')) {
+      statusCode = 400;
+    }
+
+    return new Response(JSON.stringify({
+      success: false,
+      error: errorMessage,
+      request_id: requestId,
+      processing_time_ms: processingTime,
+      timestamp: new Date().toISOString(),
+      error_type: error.constructor.name
+    }), {
+      status: statusCode,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
 });
