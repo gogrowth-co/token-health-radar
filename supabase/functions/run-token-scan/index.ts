@@ -367,6 +367,69 @@ async function fetchCoinMarketCapWebsiteUrl(tokenAddress: string): Promise<strin
   }
 }
 
+// Website meta description fallback (OpenGraph/Twitter/Meta tags)
+async function fetchWebsiteMetaDescription(websiteUrl: string): Promise<string> {
+  try {
+    if (!websiteUrl) return '';
+    let url = websiteUrl.trim();
+    if (!/^https?:\/\//i.test(url)) {
+      url = `https://${url}`;
+    }
+
+    console.log(`[WEBSITE-DESC] Fetching site for meta description: ${url}`);
+    const resp = await fetch(url, {
+      headers: {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'User-Agent': 'TokenHealthScanBot/1.0 (+https://tokenhealthscan.com)'
+      }
+    });
+
+    if (!resp.ok) {
+      console.log(`[WEBSITE-DESC] Request failed: ${resp.status} ${resp.statusText}`);
+      return '';
+    }
+
+    const html = await resp.text();
+
+    // Helper to extract content for a meta tag regardless of attribute order
+    const extractMeta = (attr: 'name' | 'property', value: string): string => {
+      const pattern1 = new RegExp(`<meta[^>]*${attr}\\s*=\\s*["]${value}["][^>]*content\\s*=\\s*["]([^\"]+)["][^>]*>`, 'i');
+      const pattern2 = new RegExp(`<meta[^>]*content\\s*=\\s*["]([^\"]+)["][^>]*${attr}\\s*=\\s*["]${value}["][^>]*>`, 'i');
+      const m1 = html.match(pattern1);
+      if (m1 && m1[1]) return m1[1];
+      const m2 = html.match(pattern2);
+      if (m2 && m2[1]) return m2[1];
+      return '';
+    };
+
+    let desc =
+      extractMeta('property', 'og:description') ||
+      extractMeta('name', 'twitter:description') ||
+      extractMeta('name', 'description');
+
+    // Basic HTML entity decode for common entities
+    if (desc) {
+      desc = desc
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+    }
+
+    if (desc && desc.trim().length > 50) {
+      console.log(`[WEBSITE-DESC] Extracted meta description: ${desc.substring(0, 120)}...`);
+      return desc.trim();
+    }
+
+    console.log(`[WEBSITE-DESC] No suitable meta description found`);
+    return '';
+  } catch (err) {
+    console.error(`[WEBSITE-DESC] Error extracting meta description:`, err);
+    return '';
+  }
+}
+
 // Fetch Twitter handle from CoinMarketCap as fallback
 async function fetchCoinMarketCapTwitterHandle(tokenAddress: string): Promise<string> {
   try {
@@ -1228,11 +1291,29 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         description = cmcDescription;
         console.log(`[DESCRIPTION] Using CoinMarketCap description: ${description.substring(0, 100)}...`);
       } else {
-        // Fallback to enhanced generic template
-        description = metadata?.name 
-          ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
-          : `${name} on ${chainConfig.name}`;
-        console.log(`[DESCRIPTION] Using generic template: ${description}`);
+        // Try website meta description fallback
+        if (website_url) {
+          console.log(`[DESCRIPTION] Trying website meta description fallback: ${website_url}`);
+          const siteDesc = await fetchWebsiteMetaDescription(website_url);
+          console.log(`[DESCRIPTION-DEBUG] Website meta response:`, {
+            hasResponse: !!siteDesc,
+            responseLength: siteDesc?.length || 0,
+            responsePreview: siteDesc ? siteDesc.substring(0, 200) : 'null/undefined',
+            isGeneric: siteDesc ? isGenericDescription(siteDesc) : 'N/A'
+          });
+          if (siteDesc && !isGenericDescription(siteDesc)) {
+            description = siteDesc;
+            console.log(`[DESCRIPTION] Using Website meta description: ${description.substring(0, 100)}...`);
+          }
+        }
+
+        // Final fallback to enhanced generic template
+        if (!description) {
+          description = metadata?.name 
+            ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
+            : `${name} on ${chainConfig.name}`;
+          console.log(`[DESCRIPTION] Using generic template: ${description}`);
+        }
       }
     }
 
