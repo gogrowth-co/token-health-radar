@@ -256,7 +256,7 @@ async function fetchCoinMarketCapDescription(tokenAddress: string): Promise<stri
     console.log(`[CMC] Fetching description for token: ${tokenAddress}`);
     
     const response = await fetch(
-      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}&aux=description`,
+      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}&aux=description,urls,logo`,
       {
         headers: {
           'X-CMC_PRO_API_KEY': cmcApiKey,
@@ -301,6 +301,197 @@ async function fetchCoinMarketCapDescription(tokenAddress: string): Promise<stri
 
   } catch (error) {
     console.error(`[CMC] Error fetching description:`, error);
+    return '';
+  }
+}
+
+// Fetch website URL from CoinMarketCap as fallback
+async function fetchCoinMarketCapWebsiteUrl(tokenAddress: string): Promise<string> {
+  try {
+    const cmcApiKey = Deno.env.get('COINMARKETCAP_API_KEY');
+    if (!cmcApiKey) {
+      console.log(`[CMC] CoinMarketCap API key not available for website fallback`);
+      return '';
+    }
+
+    console.log(`[CMC] Fetching website for token: ${tokenAddress}`);
+    
+    const response = await fetch(
+      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}&aux=urls`,
+      {
+        headers: {
+          'X-CMC_PRO_API_KEY': cmcApiKey,
+          'Accept': 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      console.log(`[CMC] Website fallback API request failed: ${response.status} ${response.statusText}`);
+      return '';
+    }
+
+    const data = await response.json();
+    console.log(`[CMC] Website fallback API response status:`, data.status);
+
+    if (data.status?.error_code !== 0) {
+      console.log(`[CMC] Website fallback API error:`, data.status?.error_message);
+      return '';
+    }
+
+    // Extract token data - CMC returns data keyed by contract address
+    const tokenData = Object.values(data.data || {})[0] as any;
+    
+    if (!tokenData) {
+      console.log(`[CMC] No token data found for website fallback: ${tokenAddress}`);
+      return '';
+    }
+
+    console.log(`[CMC] Found token for website fallback:`, tokenData.name, tokenData.symbol);
+
+    // Extract website URL
+    const urls = tokenData.urls;
+    const website = urls?.website?.[0];
+    
+    if (website && website.trim()) {
+      console.log(`[CMC] Website found via fallback: ${website}`);
+      return website.trim();
+    } else {
+      console.log(`[CMC] No valid website found via fallback`);
+      return '';
+    }
+
+  } catch (error) {
+    console.error(`[CMC] Error fetching website:`, error);
+    return '';
+  }
+}
+
+// Fetch Twitter handle from CoinMarketCap as fallback
+async function fetchCoinMarketCapTwitterHandle(tokenAddress: string): Promise<string> {
+  try {
+    const cmcApiKey = Deno.env.get('COINMARKETCAP_API_KEY');
+    if (!cmcApiKey) {
+      console.log(`[CMC] CoinMarketCap API key not available for Twitter fallback`);
+      return '';
+    }
+
+    console.log(`[CMC] Fetching Twitter for token: ${tokenAddress}`);
+    
+    const response = await fetch(
+      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}&aux=urls`,
+      {
+        headers: {
+          'X-CMC_PRO_API_KEY': cmcApiKey,
+          'Accept': 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      console.log(`[CMC] Twitter fallback API request failed: ${response.status} ${response.statusText}`);
+      return '';
+    }
+
+    const data = await response.json();
+    console.log(`[CMC] Twitter fallback API response status:`, data.status);
+
+    if (data.status?.error_code !== 0) {
+      console.log(`[CMC] Twitter fallback API error:`, data.status?.error_message);
+      return '';
+    }
+
+    // Extract token data - CMC returns data keyed by contract address
+    const tokenData = Object.values(data.data || {})[0] as any;
+    
+    if (!tokenData) {
+      console.log(`[CMC] No token data found for Twitter fallback: ${tokenAddress}`);
+      return '';
+    }
+
+    console.log(`[CMC] Found token for Twitter fallback:`, tokenData.name, tokenData.symbol);
+
+    // Extract Twitter URL
+    const urls = tokenData.urls;
+    const twitterUrls = urls?.twitter || [];
+    
+    if (twitterUrls.length > 0) {
+      const twitterUrl = twitterUrls[0];
+      // Extract handle from Twitter URL
+      const match = twitterUrl.match(/twitter\.com\/([^\/\?]+)/);
+      if (match && match[1]) {
+        const handle = match[1];
+        console.log(`[CMC] Twitter handle found via fallback: ${handle}`);
+        return handle;
+      }
+    }
+    
+    console.log(`[CMC] No valid Twitter handle found via fallback`);
+    return '';
+
+  } catch (error) {
+    console.error(`[CMC] Error fetching Twitter:`, error);
+    return '';
+  }
+}
+
+// Fetch logo URL from CoinMarketCap as fallback
+async function fetchCoinMarketCapLogoUrl(tokenAddress: string): Promise<string> {
+  try {
+    const cmcApiKey = Deno.env.get('COINMARKETCAP_API_KEY');
+    if (!cmcApiKey) {
+      console.log(`[CMC] CoinMarketCap API key not available for logo fallback`);
+      return '';
+    }
+
+    console.log(`[CMC] Fetching logo for token: ${tokenAddress}`);
+    
+    const response = await fetch(
+      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}&aux=logo`,
+      {
+        headers: {
+          'X-CMC_PRO_API_KEY': cmcApiKey,
+          'Accept': 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      console.log(`[CMC] Logo fallback API request failed: ${response.status} ${response.statusText}`);
+      return '';
+    }
+
+    const data = await response.json();
+    console.log(`[CMC] Logo fallback API response status:`, data.status);
+
+    if (data.status?.error_code !== 0) {
+      console.log(`[CMC] Logo fallback API error:`, data.status?.error_message);
+      return '';
+    }
+
+    // Extract token data - CMC returns data keyed by contract address
+    const tokenData = Object.values(data.data || {})[0] as any;
+    
+    if (!tokenData) {
+      console.log(`[CMC] No token data found for logo fallback: ${tokenAddress}`);
+      return '';
+    }
+
+    console.log(`[CMC] Found token for logo fallback:`, tokenData.name, tokenData.symbol);
+
+    // Extract logo URL
+    const logo = tokenData.logo;
+    
+    if (logo && logo.trim()) {
+      console.log(`[CMC] Logo found via fallback: ${logo}`);
+      return logo.trim();
+    } else {
+      console.log(`[CMC] No valid logo found via fallback`);
+      return '';
+    }
+
+  } catch (error) {
+    console.error(`[CMC] Error fetching logo:`, error);
     return '';
   }
 }
@@ -689,6 +880,34 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       telegram_url
     });
     
+    // CoinMarketCap fallback for website URL if not found from Moralis
+    if (!website_url) {
+      console.log(`[SCAN] Website URL not found in Moralis, trying CoinMarketCap fallback`);
+      const cmcWebsiteUrl = await fetchCoinMarketCapWebsiteUrl(tokenAddress);
+      if (cmcWebsiteUrl) {
+        website_url = cmcWebsiteUrl;
+        console.log(`[SCAN] Website URL found via CoinMarketCap: ${website_url}`);
+      } else {
+        console.log(`[SCAN] No website URL found via CoinMarketCap fallback`);
+      }
+    } else {
+      console.log(`[SCAN] Website URL already found from Moralis: ${website_url}`);
+    }
+
+    // CoinMarketCap fallback for Twitter handle if not found from Moralis
+    if (!twitter_handle) {
+      console.log(`[SCAN] Twitter handle not found in Moralis, trying CoinMarketCap fallback`);
+      const cmcTwitterHandle = await fetchCoinMarketCapTwitterHandle(tokenAddress);
+      if (cmcTwitterHandle) {
+        twitter_handle = cmcTwitterHandle;
+        console.log(`[SCAN] Twitter handle found via CoinMarketCap: @${twitter_handle}`);
+      } else {
+        console.log(`[SCAN] No Twitter handle found via CoinMarketCap fallback`);
+      }
+    } else {
+      console.log(`[SCAN] Twitter handle already found from Moralis: @${twitter_handle}`);
+    }
+
     // CoinMarketCap fallback for GitHub URL if not found from Moralis
     if (!github_url) {
       console.log(`[SCAN] GitHub URL not found in Moralis, trying CoinMarketCap fallback`);
@@ -822,7 +1041,21 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     // Prioritize Moralis metadata and price data
     const name = metadata?.name || priceDataResult?.name || `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
     const symbol = metadata?.symbol || priceDataResult?.symbol || 'UNKNOWN';
-    const logo_url = metadata?.logo || metadata?.thumbnail || '';
+    
+    // Logo fallback logic with CoinMarketCap
+    let logo_url = metadata?.logo || metadata?.thumbnail || '';
+    if (!logo_url) {
+      console.log(`[SCAN] Logo URL not found in Moralis, trying CoinMarketCap fallback`);
+      const cmcLogoUrl = await fetchCoinMarketCapLogoUrl(tokenAddress);
+      if (cmcLogoUrl) {
+        logo_url = cmcLogoUrl;
+        console.log(`[SCAN] Logo URL found via CoinMarketCap: ${logo_url}`);
+      } else {
+        console.log(`[SCAN] No logo URL found via CoinMarketCap fallback`);
+      }
+    } else {
+      console.log(`[SCAN] Logo URL already found from Moralis: ${logo_url}`);
+    }
     
     // Enhanced description logic with CoinMarketCap fallback
     let description = '';
@@ -854,7 +1087,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       name: metadata?.name || priceDataResult?.name || `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`,
       symbol: metadata?.symbol || priceDataResult?.symbol || 'UNKNOWN',
       description: description,
-      logo_url: metadata?.logo || metadata?.thumbnail || '',
+      logo_url: logo_url,
       website_url: website_url,
       twitter_handle: twitter_handle,
       github_url: github_url,
