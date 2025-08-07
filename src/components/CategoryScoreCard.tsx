@@ -59,8 +59,6 @@ export default function CategoryScoreCard({
     }
   };
 
-  const isCommunity = category.toLowerCase() === 'community';
-
   return (
     <Card 
       className="token-score-card cursor-pointer hover:shadow-md hover:scale-105 relative"
@@ -68,7 +66,7 @@ export default function CategoryScoreCard({
     >
       <div className={`score-gradient-bg ${getColorClass()}`}></div>
       
-      <div className={`flex flex-col items-center gap-2 p-1 ${isCommunity ? 'blur-sm' : ''}`}>
+      <div className="flex flex-col items-center gap-2 p-1">
         <div className={`text-3xl font-bold ${getTextColorClass()}`}>
           {score}
         </div>
@@ -89,16 +87,6 @@ export default function CategoryScoreCard({
           {getLevelText()}
         </span>
       </div>
-
-      {isCommunity && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
-          <div className="bg-white/90 dark:bg-gray-800/90 px-3 py-1 rounded-md">
-            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-              Coming Soon
-            </span>
-          </div>
-        </div>
-      )}
     </Card>
   );
 }
