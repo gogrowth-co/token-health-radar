@@ -1187,27 +1187,28 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     } else {
       console.log(`[DESCRIPTION] Moralis description not available, too short, or generic. Trying fallbacks...`);
       
-      // Try CoinGecko as first fallback
-      const coinGeckoDescription = await fetchCoinGeckoDescription(tokenAddress, normalizedChainId);
-      if (coinGeckoDescription) {
-        description = coinGeckoDescription;
-        console.log(`[DESCRIPTION] Using CoinGecko description: ${description.substring(0, 100)}...`);
+      // Try CoinGecko as first fallback (temporarily disabled due to API complexity)
+      // const coinGeckoDescription = await fetchCoinGeckoDescription(tokenAddress, chainId);
+      // if (coinGeckoDescription && !isGenericDescription(coinGeckoDescription)) {
+      //   description = coinGeckoDescription;
+      //   console.log(`[DESCRIPTION] Using CoinGecko description: ${description.substring(0, 100)}...`);
+      // } else {
+      
+      console.log(`[DESCRIPTION] Trying CoinMarketCap fallback`);
+      
+      // Try CoinMarketCap as fallback
+      const cmcDescription = await fetchCoinMarketCapDescription(tokenAddress);
+      if (cmcDescription && !isGenericDescription(cmcDescription)) {
+        description = cmcDescription;
+        console.log(`[DESCRIPTION] Using CoinMarketCap description: ${description.substring(0, 100)}...`);
       } else {
-        console.log(`[DESCRIPTION] CoinGecko description not available, trying CoinMarketCap fallback`);
-        
-        // Try CoinMarketCap as second fallback
-        const cmcDescription = await fetchCoinMarketCapDescription(tokenAddress);
-        if (cmcDescription && !isGenericDescription(cmcDescription)) {
-          description = cmcDescription;
-          console.log(`[DESCRIPTION] Using CoinMarketCap description: ${description.substring(0, 100)}...`);
-        } else {
-          // Fallback to enhanced generic template
-          description = metadata?.name 
-            ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
-            : `${name} on ${chainConfig.name}`;
-          console.log(`[DESCRIPTION] Using generic template: ${description}`);
-        }
+        // Fallback to enhanced generic template
+        description = metadata?.name 
+          ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
+          : `${name} on ${chainConfig.name}`;
+        console.log(`[DESCRIPTION] Using generic template: ${description}`);
       }
+      // }
     }
 
 
