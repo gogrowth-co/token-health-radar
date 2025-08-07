@@ -316,11 +316,56 @@ export default function ScanResult() {
   const properMarketCap = typeof tokenInfo?.market_cap_usd === "number"
     ? tokenInfo.market_cap_usd.toString() : "0";
   
-  // Use database description directly (which comes from Moralis scan)
-  const properDescription = tokenInfo?.description || "";
-  
-  const networkName = chainId === "0xa4b1" ? "ARB" : "ETH";
+  // Use database description, but ensure it's formal/informative (client-side guard)
+  const properDescription = (tokenInfo?.description || "").toString();
 
+  // Heuristic: detect marketing/tagline style
+  const isTaglineStyle = (text: string): boolean => {
+    if (!text) return true;
+    const lower = text.toLowerCase();
+    const marketingPhrases = [
+      'for everyone','revolution','revolutionize','next-gen','next generation',
+      'empower','seamless','warp speed','the future of','unlock','supercharge'
+    ];
+    const sentenceCount = (text.match(/[.!?]/g) || []).length;
+    return text.length < 120 || sentenceCount <= 1 || marketingPhrases.some(p => lower.includes(p));
+  };
+
+  const formatCompactUSD = (n: number) => {
+    if (!Number.isFinite(n)) return '';
+    if (n >= 1e9) return `$${(n/1e9).toFixed(2)}B`;
+    if (n >= 1e6) return `$${(n/1e6).toFixed(2)}M`;
+    if (n >= 1e3) return `$${(n/1e3).toFixed(2)}k`;
+    return `$${n.toFixed(4)}`;
+  };
+
+  const chainName = chainId === "0xa4b1" ? "Arbitrum" : "Ethereum";
+
+  const displayDescription = (() => {
+    const base = properDescription.trim();
+    if (base && !isTaglineStyle(base)) return base;
+
+    const sec: any = scanData.security || {};
+    const notes: string[] = [];
+    if (sec.contract_verified === true) notes.push('verified smart contract');
+    const securityBits: string[] = [];
+    if (sec.ownership_renounced === true) securityBits.push('ownership renounced');
+    if (sec.freeze_authority === false) securityBits.push('no freeze authority');
+    if (sec.honeypot_detected === false) securityBits.push('no honeypot detected');
+
+    const first = `${properName} (${properSymbol}) is a token on ${chainName}${notes.length ? ` with a ${notes.join(', ')}` : ''}.`;
+    const second = securityBits.length ? ` Key security notes: ${securityBits.join('; ')}.` : '';
+    const marketBits: string[] = [];
+    if (properPrice && properPrice > 0) marketBits.push(`price around ${formatCompactUSD(properPrice)}`);
+    const mc = parseFloat(properMarketCap.replace(/[^0-9.]/g, "")) || 0;
+    if (mc > 0) marketBits.push(`market capitalization approximately ${formatCompactUSD(mc)}`);
+    const third = marketBits.length ? ` Market overview: ${marketBits.join(', ')}.` : '';
+    const composed = `${first}${second}${third}`.trim();
+    console.log("ScanResult: Using composed formal description (client):", composed.substring(0, 120) + "...");
+    return composed;
+  })();
+
+  const networkName = chainId === "0xa4b1" ? "ARB" : "ETH";
   // Use the calculated overall score from the scan data
   const overallScore = scanData.overall_score || 0;
 
@@ -385,7 +430,7 @@ export default function ScanResult() {
             priceChange={properPriceChange}
             marketCap={properMarketCap}
             overallScore={overallScore}
-            description={properDescription}
+            description={displayDescription}
             network={networkName}
             chainId={chainId}
           />
