@@ -20,6 +20,7 @@ import {
 } from '../_shared/apiClients.ts'
 import { fetchDeFiLlamaTVL } from '../_shared/defillama.ts'
 import { fetchTwitterFollowers } from '../_shared/apifyAPI.ts'
+import { fetchDiscordMemberCount } from '../_shared/discordAPI.ts'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -350,6 +351,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     let website_url = '';
     let twitter_handle = '';
     let github_url = '';
+    let discord_url = '';
     
     // Handle both array and object formats for links
     if (Array.isArray(links)) {
@@ -387,6 +389,12 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         typeof link === 'string' && link.includes('github.com')
       ) || '';
       
+      // Find Discord URL (contains discord.gg or discord.com/invite)
+      discord_url = links.find(link => 
+        typeof link === 'string' && 
+        (link.toLowerCase().includes('discord.gg') || link.toLowerCase().includes('discord.com/invite'))
+      ) || '';
+      
     } else if (links && typeof links === 'object') {
       console.log(`[SCAN] Processing links from metadata object`);
       
@@ -409,6 +417,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       }
       
       github_url = links.github || '';
+      discord_url = links.discord || '';
     }
     
     // Additional extraction from other metadata fields if not found in links
@@ -503,6 +512,21 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     } else {
       console.log(`[SCAN] No Twitter handle found - skipping Apify API call`);
     }
+    
+    // Fetch Discord member count if Discord URL is available
+    let discordMembers = 0;
+    if (discord_url) {
+      console.log(`[SCAN] Discord URL found: ${discord_url} - fetching member count`);
+      const memberCount = await fetchDiscordMemberCount(discord_url);
+      if (memberCount !== null) {
+        discordMembers = memberCount;
+        console.log(`[SCAN] Successfully retrieved Discord member count: ${discordMembers}`);
+      } else {
+        console.log(`[SCAN] Failed to fetch Discord member count for ${discord_url}`);
+      }
+    } else {
+      console.log(`[SCAN] No Discord URL found - skipping Discord API call`);
+    }
 
     // Prioritize Moralis metadata and price data
     const name = metadata?.name || priceDataResult?.name || `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
@@ -589,7 +613,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       githubData: githubData,
       tvlData: tvl,
       cexData: cexCount,
-      twitterFollowers: twitterFollowers
+      twitterFollowers: twitterFollowers,
+      discordMembers: discordMembers
     };
   } catch (error) {
     console.error(`[SCAN] Error fetching token data from APIs:`, error);
@@ -772,7 +797,7 @@ function generateCategoryData(apiData: any) {
       twitter_followers: apiData.twitterFollowers || 0,
       twitter_verified: false,
       twitter_growth_7d: 0,
-      discord_members: 0,
+      discord_members: apiData.discordMembers || 0,
       telegram_members: 0,
       active_channels: [],
       team_visibility: 'unknown',
