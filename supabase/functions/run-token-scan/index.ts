@@ -500,6 +500,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     let twitter_handle = '';
     let github_url = '';
     let discord_url = '';
+    let telegram_url = ''; // Declare telegram_url in proper scope
     
     // Handle both array and object formats for links
     if (Array.isArray(links)) {
@@ -555,15 +556,15 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         (link.toLowerCase().includes('t.me') || 
          link.toLowerCase().includes('telegram.me') || 
          link.toLowerCase().includes('telegram.dog'))
-      ) || '';
-      
-      let telegram_url = '';
-      if (telegramLink && isValidTelegramUrl(telegramLink)) {
-        telegram_url = telegramLink;
-        console.log(`[SCAN] Valid Telegram URL found: ${telegram_url}`);
-      } else if (telegramLink) {
-        console.log(`[SCAN] Invalid Telegram URL format found: ${telegramLink}`);
-      }
+       ) || '';
+       
+       // Validate Telegram URL
+       if (telegramLink && isValidTelegramUrl(telegramLink)) {
+         telegram_url = telegramLink;
+         console.log(`[SCAN] Valid Telegram URL found: ${telegram_url}`);
+       } else if (telegramLink) {
+         console.log(`[SCAN] Invalid Telegram URL format found: ${telegramLink}`);
+       }
       
     } else if (links && typeof links === 'object') {
       console.log(`[SCAN] Processing links from metadata object`);
@@ -585,15 +586,22 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
           console.log(`[SCAN] Using Twitter handle from object: @${twitter_handle}`);
         }
       }
-      
-      github_url = links.github || '';
-      discord_url = links.discord || '';
-      
-      // Validate Discord URL from object
-      if (discord_url && !isValidDiscordUrl(discord_url)) {
-        console.log(`[SCAN] Invalid Discord URL format found in object: ${discord_url}`);
-        discord_url = '';
-      }
+       
+       github_url = links.github || '';
+       discord_url = links.discord || '';
+       telegram_url = links.telegram || '';
+       
+       // Validate Discord URL from object
+       if (discord_url && !isValidDiscordUrl(discord_url)) {
+         console.log(`[SCAN] Invalid Discord URL format found in object: ${discord_url}`);
+         discord_url = '';
+       }
+       
+       // Validate Telegram URL from object
+       if (telegram_url && !isValidTelegramUrl(telegram_url)) {
+         console.log(`[SCAN] Invalid Telegram URL format found in object: ${telegram_url}`);
+         telegram_url = '';
+       }
     }
     
     // Additional extraction from other metadata fields if not found in links
@@ -616,7 +624,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       website_url,
       twitter_handle,
       github_url,
-      discord_url
+      discord_url,
+      telegram_url
     });
     
     // CoinMarketCap fallback for GitHub URL if not found from Moralis
