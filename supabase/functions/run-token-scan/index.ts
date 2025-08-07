@@ -377,12 +377,20 @@ async function fetchWebsiteMetaDescription(websiteUrl: string): Promise<string> 
     }
 
     console.log(`[WEBSITE-DESC] Fetching site for meta description: ${url}`);
-    const resp = await fetch(url, {
-      headers: {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'User-Agent': 'TokenHealthScanBot/1.0 (+https://tokenhealthscan.com)'
-      }
-    });
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 5000);
+    let resp: Response;
+    try {
+      resp = await fetch(url, {
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'User-Agent': 'TokenHealthScanBot/1.0 (+https://tokenhealthscan.com)'
+        },
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(t);
+    }
 
     if (!resp.ok) {
       console.log(`[WEBSITE-DESC] Request failed: ${resp.status} ${resp.statusText}`);
@@ -2054,7 +2062,7 @@ Deno.serve(async (req) => {
     // PHASE 4: Set up timeout protection for the entire scan
     console.log(`[${requestId}] === PHASE 4: TIMEOUT SETUP ===`);
     
-    const SCAN_TIMEOUT_MS = 25000; // 25 seconds
+    const SCAN_TIMEOUT_MS = 50000; // 50 seconds (extended to reduce timeout errors)
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
         reject(new Error(`Scan timeout exceeded (${SCAN_TIMEOUT_MS}ms)`));
