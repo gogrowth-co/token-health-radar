@@ -569,7 +569,7 @@ async function fetchCoinMarketCapLogoUrl(tokenAddress: string): Promise<string> 
 
 // Check if description is generic/template-based
 function isGenericDescription(description: string): boolean {
-  if (!description || description.length < 100) {
+  if (!description || description.length < 80) {
     console.log(`[DESCRIPTION-DEBUG] isGenericDescription: REJECT - too short (${description?.length || 0} chars)`);
     return true;
   }
@@ -591,8 +591,8 @@ function isGenericDescription(description: string): boolean {
   const technicalKeywords = [
     'protocol', 'blockchain', 'smart contract', 'defi', 'dao', 'nft',
     'consensus', 'validator', 'governance', 'staking', 'yield', 'liquidity',
-    'bridge', 'layer', 'zero-knowledge', 'rollup', 'privacy', 'oracle',
-    'interoperability', 'cross-chain', 'scalability', 'dapp'
+    'bridge', 'layer', 'zero-knowledge', 'zk', 'rollup', 'privacy', 'oracle',
+    'interoperability', 'cross-chain', 'scalability', 'dapp', 'proof', 'proofs', 'prover', 'succinct'
   ];
   
   const foundKeywords = technicalKeywords.filter(keyword => 
@@ -600,7 +600,7 @@ function isGenericDescription(description: string): boolean {
   );
   const technicalScore = foundKeywords.length;
   
-  const isGeneric = matchesGeneric || technicalScore < 2;
+  const isGeneric = matchesGeneric || technicalScore < 1;
   
   console.log(`[DESCRIPTION-DEBUG] isGenericDescription analysis:`, {
     length: description.length,
@@ -1312,6 +1312,20 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
           if (siteDesc && !isGenericDescription(siteDesc)) {
             description = siteDesc;
             console.log(`[DESCRIPTION] Using Website meta description: ${description.substring(0, 100)}...`);
+          }
+        }
+
+        // Try CoinGecko description as additional fallback
+        if (!description) {
+          const cgDesc = await fetchCoinGeckoDescription(tokenAddress, normalizedChainId);
+          console.log(`[DESCRIPTION-DEBUG] CoinGecko response:`, {
+            hasResponse: !!cgDesc,
+            responseLength: cgDesc?.length || 0,
+            isGeneric: cgDesc ? isGenericDescription(cgDesc) : 'N/A'
+          });
+          if (cgDesc && !isGenericDescription(cgDesc)) {
+            description = cgDesc.trim();
+            console.log(`[DESCRIPTION] Using CoinGecko description: ${description.substring(0, 100)}...`);
           }
         }
 
