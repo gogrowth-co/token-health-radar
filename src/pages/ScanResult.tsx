@@ -341,7 +341,23 @@ export default function ScanResult() {
 
   const chainName = chainId === "0xa4b1" ? "Arbitrum" : "Ethereum";
 
+  // Curated, purpose-first overrides for known tokens
+  const curatedDescriptionOverride = (() => {
+    const map: Record<string, string> = {
+      "0x6bef15d938d4e72056ac92ea4bdd0d76b1c4ad29": "Succinct (PROVE) is an ERC‑20 on Ethereum powering SP1’s decentralized prover network for fast zk proofs."
+    };
+    return map[tokenAddress.toLowerCase()] || "";
+  })();
+
   const displayDescription = (() => {
+    const truncate = (s: string, max = 180) => (s.length <= max ? s : s.slice(0, max - 1).trimEnd() + '…');
+
+    if (curatedDescriptionOverride) {
+      const finalText = truncate(curatedDescriptionOverride, 180);
+      console.log('ScanResult: Using curated description:', finalText);
+      return finalText;
+    }
+
     const sec: any = scanData.security || {};
 
     const bits: string[] = [];
@@ -359,7 +375,6 @@ export default function ScanResult() {
     const base = `${properName} (${properSymbol}) on ${chainName}`;
     const composed = details ? `${base}: ${details}` : base;
 
-    const truncate = (s: string, max = 180) => (s.length <= max ? s : s.slice(0, max - 1).trimEnd() + '…');
     const finalText = truncate(composed, 180);
     console.log('ScanResult: Using concise description:', finalText);
     return finalText;
