@@ -34,6 +34,13 @@ function isValidDiscordUrl(url: string): boolean {
   return discordPattern.test(url);
 }
 
+// Telegram URL validation helper
+function isValidTelegramUrl(url: string): boolean {
+  if (!url || typeof url !== 'string') return false;
+  const telegramPattern = /(?:t\.me|telegram\.me|telegram\.dog)\/(?:s\/|joinchat\/|\+)?([a-zA-Z0-9_]+)/;
+  return telegramPattern.test(url);
+}
+
 // CoinMarketCap fallback for GitHub URL
 async function fetchCoinMarketCapGithubUrl(tokenAddress: string): Promise<string> {
   try {
@@ -168,6 +175,71 @@ async function fetchCoinMarketCapDiscordUrl(tokenAddress: string): Promise<strin
 
   } catch (error) {
     console.error(`[CMC] Error fetching Discord URL:`, error);
+    return '';
+  }
+}
+
+// CoinMarketCap fallback for Telegram URL
+async function fetchCoinMarketCapTelegramUrl(tokenAddress: string): Promise<string> {
+  try {
+    const cmcApiKey = Deno.env.get('COINMARKETCAP_API_KEY');
+    if (!cmcApiKey) {
+      console.log(`[CMC] CoinMarketCap API key not available for Telegram fallback`);
+      return '';
+    }
+
+    console.log(`[CMC] Fetching Telegram URL for token: ${tokenAddress}`);
+    
+    const response = await fetch(
+      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}&aux=urls`,
+      {
+        headers: {
+          'X-CMC_PRO_API_KEY': cmcApiKey,
+          'Accept': 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      console.log(`[CMC] Telegram fallback API request failed: ${response.status} ${response.statusText}`);
+      return '';
+    }
+
+    const data = await response.json();
+    console.log(`[CMC] Telegram fallback API response status:`, data.status);
+
+    if (data.status?.error_code !== 0) {
+      console.log(`[CMC] Telegram fallback API error:`, data.status?.error_message);
+      return '';
+    }
+
+    // Extract token data - CMC returns data keyed by contract address
+    const tokenData = Object.values(data.data || {})[0] as any;
+    
+    if (!tokenData) {
+      console.log(`[CMC] No token data found for Telegram fallback: ${tokenAddress}`);
+      return '';
+    }
+
+    console.log(`[CMC] Found token for Telegram fallback:`, tokenData.name, tokenData.symbol);
+
+    // Extract Telegram URL from chat URLs (CoinMarketCap stores Discord/Telegram in chat category)
+    const chatUrls = tokenData.urls?.chat || [];
+    console.log(`[CMC] Found ${chatUrls.length} chat URLs for Telegram extraction`);
+    
+    for (const chatUrl of chatUrls) {
+      console.log(`[CMC] Checking chat URL for Telegram:`, chatUrl);
+      if (chatUrl && (chatUrl.includes('t.me') || chatUrl.includes('telegram'))) {
+        console.log(`[CMC] Found Telegram URL via fallback: ${chatUrl}`);
+        return chatUrl;
+      }
+    }
+
+    console.log(`[CMC] No Telegram URL found in chat URLs via fallback`);
+    return '';
+
+  } catch (error) {
+    console.error(`[CMC] Error fetching Telegram URL:`, error);
     return '';
   }
 }
@@ -477,6 +549,22 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         discord_url = '';
       }
       
+      // Find Telegram URL (contains t.me, telegram.me, or telegram.dog)
+      const telegramLink = links.find(link => 
+        typeof link === 'string' && 
+        (link.toLowerCase().includes('t.me') || 
+         link.toLowerCase().includes('telegram.me') || 
+         link.toLowerCase().includes('telegram.dog'))
+      ) || '';
+      
+      let telegram_url = '';
+      if (telegramLink && isValidTelegramUrl(telegramLink)) {
+        telegram_url = telegramLink;
+        console.log(`[SCAN] Valid Telegram URL found: ${telegram_url}`);
+      } else if (telegramLink) {
+        console.log(`[SCAN] Invalid Telegram URL format found: ${telegramLink}`);
+      }
+      
     } else if (links && typeof links === 'object') {
       console.log(`[SCAN] Processing links from metadata object`);
       
@@ -559,6 +647,20 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       console.log(`[SCAN] Discord URL already found from Moralis: ${discord_url}`);
     }
     
+    // CoinMarketCap fallback for Telegram URL if not found from Moralis
+    if (!telegram_url) {
+      console.log(`[SCAN] Telegram URL not found in Moralis, trying CoinMarketCap fallback`);
+      const cmcTelegramUrl = await fetchCoinMarketCapTelegramUrl(tokenAddress);
+      if (cmcTelegramUrl && isValidTelegramUrl(cmcTelegramUrl)) {
+        telegram_url = cmcTelegramUrl;
+        console.log(`[SCAN] Telegram URL found via CoinMarketCap: ${telegram_url}`);
+      } else {
+        console.log(`[SCAN] No valid Telegram URL found via CoinMarketCap fallback`);
+      }
+    } else {
+      console.log(`[SCAN] Telegram URL already found from Moralis: ${telegram_url}`);
+    }
+    
     // Fetch GitHub data now that we have the final GitHub URL (including CoinMarketCap fallback)
     if (github_url) {
       console.log(`[GITHUB] === FETCHING GITHUB DATA ===`);
@@ -629,6 +731,22 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       }
     } else {
       console.log(`[SCAN] No Discord URL found - skipping Discord API call`);
+    }
+    
+    // Fetch Telegram member count if valid Telegram URL is available
+    let telegramMembers = 0;
+    let telegramData = { members: null, name: '', description: '' };
+    if (telegram_url && isValidTelegramUrl(telegram_url)) {
+      console.log(`[SCAN] Valid Telegram URL found: ${telegram_url} - fetching member count`);
+      telegramData = await fetchTelegramMembers(telegram_url);
+      if (telegramData.members !== null) {
+        telegramMembers = telegramData.members;
+        console.log(`[SCAN] Successfully retrieved Telegram member count: ${telegramMembers}`);
+      } else {
+        console.log(`[SCAN] Failed to fetch Telegram member count for ${telegram_url}`);
+      }
+    } else {
+      console.log(`[SCAN] No Telegram URL found - skipping Telegram API call`);
     }
 
     // Prioritize Moralis metadata and price data
@@ -717,7 +835,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       tvlData: tvl,
       cexData: cexCount,
       twitterFollowers: twitterFollowers,
-      discordMembers: discordMembers
+      discordMembers: discordMembers,
+      telegramMembers: telegramMembers
     };
   } catch (error) {
     console.error(`[SCAN] Error fetching token data from APIs:`, error);
@@ -795,8 +914,12 @@ function generateCategoryData(apiData: any) {
   
   const developmentScore = calculateDevelopmentScore(apiData.githubData);
   
-  // Community score - this would need additional APIs (Twitter, Discord, etc.)
-  const communityScore = 30; // Conservative score
+  // Calculate dynamic community score based on social media metrics
+  const communityScore = calculateCommunityScore({
+    twitterFollowers: apiData.twitterFollowers || 0,
+    discordMembers: apiData.discordMembers || 0,
+    telegramMembers: apiData.telegramMembers || 0
+  });
 
   console.log(`[TOKENOMICS] === FINAL TOKENOMICS DATA EXTRACTION ===`);
   
@@ -901,7 +1024,7 @@ function generateCategoryData(apiData: any) {
       twitter_verified: false,
       twitter_growth_7d: 0,
       discord_members: apiData.discordMembers || 0,
-      telegram_members: 0,
+      telegram_members: apiData.telegramMembers || 0,
       active_channels: [],
       team_visibility: 'unknown',
       score: communityScore
@@ -1023,6 +1146,93 @@ function calculateTokenomicsConfidence(apiData: any): number {
   }
   
   return totalChecks > 0 ? Math.round((confidence / totalChecks) * 100) : 0;
+}
+
+// Calculate community score based on social media metrics
+function calculateCommunityScore(data: { twitterFollowers: number; discordMembers: number; telegramMembers: number }): number {
+  let score = 20; // Base score
+  
+  console.log(`[COMMUNITY-SCORE] === CALCULATING COMMUNITY SCORE ===`);
+  console.log(`[COMMUNITY-SCORE] Twitter followers: ${data.twitterFollowers}`);
+  console.log(`[COMMUNITY-SCORE] Discord members: ${data.discordMembers}`);
+  console.log(`[COMMUNITY-SCORE] Telegram members: ${data.telegramMembers}`);
+  
+  // Twitter scoring (max 25 points)
+  if (data.twitterFollowers >= 100000) {
+    score += 25;
+    console.log(`[COMMUNITY-SCORE] Twitter 100k+: +25 points`);
+  } else if (data.twitterFollowers >= 50000) {
+    score += 20;
+    console.log(`[COMMUNITY-SCORE] Twitter 50k+: +20 points`);
+  } else if (data.twitterFollowers >= 10000) {
+    score += 15;
+    console.log(`[COMMUNITY-SCORE] Twitter 10k+: +15 points`);
+  } else if (data.twitterFollowers >= 1000) {
+    score += 10;
+    console.log(`[COMMUNITY-SCORE] Twitter 1k+: +10 points`);
+  } else if (data.twitterFollowers > 0) {
+    score += 5;
+    console.log(`[COMMUNITY-SCORE] Twitter present: +5 points`);
+  }
+  
+  // Discord scoring (max 20 points)
+  if (data.discordMembers >= 50000) {
+    score += 20;
+    console.log(`[COMMUNITY-SCORE] Discord 50k+: +20 points`);
+  } else if (data.discordMembers >= 10000) {
+    score += 15;
+    console.log(`[COMMUNITY-SCORE] Discord 10k+: +15 points`);
+  } else if (data.discordMembers >= 5000) {
+    score += 10;
+    console.log(`[COMMUNITY-SCORE] Discord 5k+: +10 points`);
+  } else if (data.discordMembers >= 1000) {
+    score += 8;
+    console.log(`[COMMUNITY-SCORE] Discord 1k+: +8 points`);
+  } else if (data.discordMembers > 0) {
+    score += 5;
+    console.log(`[COMMUNITY-SCORE] Discord present: +5 points`);
+  }
+  
+  // Telegram scoring (max 15 points)
+  if (data.telegramMembers >= 50000) {
+    score += 15;
+    console.log(`[COMMUNITY-SCORE] Telegram 50k+: +15 points`);
+  } else if (data.telegramMembers >= 10000) {
+    score += 12;
+    console.log(`[COMMUNITY-SCORE] Telegram 10k+: +12 points`);
+  } else if (data.telegramMembers >= 5000) {
+    score += 8;
+    console.log(`[COMMUNITY-SCORE] Telegram 5k+: +8 points`);
+  } else if (data.telegramMembers >= 1000) {
+    score += 6;
+    console.log(`[COMMUNITY-SCORE] Telegram 1k+: +6 points`);
+  } else if (data.telegramMembers > 0) {
+    score += 3;
+    console.log(`[COMMUNITY-SCORE] Telegram present: +3 points`);
+  }
+  
+  // Multi-platform bonus (max 20 points)
+  const platforms = [
+    data.twitterFollowers > 0,
+    data.discordMembers > 0,
+    data.telegramMembers > 0
+  ].filter(Boolean).length;
+  
+  if (platforms === 3) {
+    score += 20;
+    console.log(`[COMMUNITY-SCORE] All 3 platforms: +20 points`);
+  } else if (platforms === 2) {
+    score += 10;
+    console.log(`[COMMUNITY-SCORE] 2 platforms: +10 points`);
+  } else if (platforms === 1) {
+    score += 5;
+    console.log(`[COMMUNITY-SCORE] 1 platform: +5 points`);
+  }
+  
+  const finalScore = Math.min(100, score);
+  console.log(`[COMMUNITY-SCORE] Final community score: ${finalScore}/100`);
+  
+  return finalScore;
 }
 
 // Calculate overall score from category scores

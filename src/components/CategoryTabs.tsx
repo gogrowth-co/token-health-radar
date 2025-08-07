@@ -196,21 +196,10 @@ export default function CategoryTabs({
       
       {/* Community Tab Content */}
       {renderTabContent(communityData, (
-        <div className="relative">
-          <div className="filter blur-sm pointer-events-none">
-            <CategoryFeatureGrid
-              features={transformCommunityData(communityData)}
-              description="Social media presence and community engagement metrics"
-            />
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-white/60 via-white/80 to-white/90 dark:from-gray-900/60 dark:via-gray-900/80 dark:to-gray-900/90">
-            <div className="bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-md">
-              <span className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                Coming Soon
-              </span>
-            </div>
-          </div>
-        </div>
+        <CategoryFeatureGrid
+          features={transformCommunityData(communityData)}
+          description="Social media presence and community engagement metrics"
+        />
       ), ScanCategory.Community)}
       
       {/* Development Tab Content */}

@@ -416,6 +416,7 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
       { icon: Shield, title: "Twitter Verified", description: "Twitter/X account verification status", badgeLabel: "Unknown", badgeVariant: "gray" },
       { icon: TrendingUp, title: "Twitter Growth (7d)", description: "Follower growth in the last 7 days", badgeLabel: "Unknown", badgeVariant: "gray" },
       { icon: Users, title: "Discord Members", description: "Number of Discord community members", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Users, title: "Telegram Members", description: "Number of Telegram community members", badgeLabel: "Unknown", badgeVariant: "gray" },
       { icon: Activity, title: "Team Visibility", description: "How visible and accessible the team is", badgeLabel: "Unknown", badgeVariant: "gray" }
     ];
   }
@@ -454,6 +455,16 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
       description: "Number of Discord community members",
       badgeLabel: formatNumber(discordMembers),
       badgeVariant: discordMembers >= 50000 ? "green" : discordMembers >= 5000 ? "blue" : discordMembers >= 500 ? "orange" : "gray"
+    },
+    { 
+      icon: Users, 
+      title: "Telegram Members", 
+      description: "Number of Telegram community members",
+      badgeLabel: formatNumber(safeNumberAccess(data, 'telegram_members')),
+      badgeVariant: safeNumberAccess(data, 'telegram_members') >= 50000 ? "green" : 
+                   safeNumberAccess(data, 'telegram_members') >= 5000 ? "blue" : 
+                   safeNumberAccess(data, 'telegram_members') >= 500 ? "orange" : 
+                   safeNumberAccess(data, 'telegram_members') > 0 ? "yellow" : "gray"
     },
     { 
       icon: Activity, 
