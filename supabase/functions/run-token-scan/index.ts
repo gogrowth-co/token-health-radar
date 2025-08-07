@@ -27,6 +27,13 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
+// Discord URL validation helper
+function isValidDiscordUrl(url: string): boolean {
+  if (!url || typeof url !== 'string') return false;
+  const discordPattern = /(?:discord\.gg|discord\.com\/invite)\/([a-zA-Z0-9]+)/;
+  return discordPattern.test(url);
+}
+
 // CoinMarketCap fallback for GitHub URL
 async function fetchCoinMarketCapGithubUrl(tokenAddress: string): Promise<string> {
   try {
@@ -92,6 +99,75 @@ async function fetchCoinMarketCapGithubUrl(tokenAddress: string): Promise<string
 
   } catch (error) {
     console.error(`[CMC] Error fetching GitHub URL:`, error);
+    return '';
+  }
+}
+
+// CoinMarketCap fallback for Discord URL
+async function fetchCoinMarketCapDiscordUrl(tokenAddress: string): Promise<string> {
+  try {
+    const cmcApiKey = Deno.env.get('COINMARKETCAP_API_KEY');
+    if (!cmcApiKey) {
+      console.log(`[CMC] CoinMarketCap API key not available for Discord fallback`);
+      return '';
+    }
+
+    console.log(`[CMC] Fetching Discord URL for token: ${tokenAddress}`);
+    
+    const response = await fetch(
+      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}&aux=urls`,
+      {
+        headers: {
+          'X-CMC_PRO_API_KEY': cmcApiKey,
+          'Accept': 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      console.log(`[CMC] Discord fallback API request failed: ${response.status} ${response.statusText}`);
+      return '';
+    }
+
+    const data = await response.json();
+    console.log(`[CMC] Discord fallback API response status:`, data.status);
+
+    if (data.status?.error_code !== 0) {
+      console.log(`[CMC] Discord fallback API error:`, data.status?.error_message);
+      return '';
+    }
+
+    // Extract token data - CMC returns data keyed by contract address
+    const tokenData = Object.values(data.data || {})[0] as any;
+    
+    if (!tokenData) {
+      console.log(`[CMC] No token data found for Discord fallback: ${tokenAddress}`);
+      return '';
+    }
+
+    console.log(`[CMC] Found token for Discord fallback:`, tokenData.name, tokenData.symbol);
+
+    // Extract Discord URL from chat URLs (CoinMarketCap stores Discord/Telegram in chat category)
+    const urls = tokenData.urls || {};
+    const chatUrls = urls.chat || [];
+    
+    console.log(`[CMC] Chat URLs found:`, chatUrls.length);
+
+    // Find Discord URL in chat links
+    const discordUrl = chatUrls.find((url: string) => 
+      url && (url.includes('discord.gg') || url.includes('discord.com/invite'))
+    );
+
+    if (discordUrl && isValidDiscordUrl(discordUrl)) {
+      console.log(`[CMC] Discord URL found: ${discordUrl}`);
+      return discordUrl;
+    } else {
+      console.log(`[CMC] No valid Discord URL found in chat URLs`);
+      return '';
+    }
+
+  } catch (error) {
+    console.error(`[CMC] Error fetching Discord URL:`, error);
     return '';
   }
 }
@@ -395,6 +471,12 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         (link.toLowerCase().includes('discord.gg') || link.toLowerCase().includes('discord.com/invite'))
       ) || '';
       
+      // Validate Discord URL
+      if (discord_url && !isValidDiscordUrl(discord_url)) {
+        console.log(`[SCAN] Invalid Discord URL format found: ${discord_url}`);
+        discord_url = '';
+      }
+      
     } else if (links && typeof links === 'object') {
       console.log(`[SCAN] Processing links from metadata object`);
       
@@ -418,6 +500,12 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       
       github_url = links.github || '';
       discord_url = links.discord || '';
+      
+      // Validate Discord URL from object
+      if (discord_url && !isValidDiscordUrl(discord_url)) {
+        console.log(`[SCAN] Invalid Discord URL format found in object: ${discord_url}`);
+        discord_url = '';
+      }
     }
     
     // Additional extraction from other metadata fields if not found in links
@@ -513,10 +601,10 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       console.log(`[SCAN] No Twitter handle found - skipping Apify API call`);
     }
     
-    // Fetch Discord member count if Discord URL is available
+    // Fetch Discord member count if valid Discord URL is available
     let discordMembers = 0;
-    if (discord_url) {
-      console.log(`[SCAN] Discord URL found: ${discord_url} - fetching member count`);
+    if (discord_url && isValidDiscordUrl(discord_url)) {
+      console.log(`[SCAN] Valid Discord URL found: ${discord_url} - fetching member count`);
       const memberCount = await fetchDiscordMemberCount(discord_url);
       if (memberCount !== null) {
         discordMembers = memberCount;
