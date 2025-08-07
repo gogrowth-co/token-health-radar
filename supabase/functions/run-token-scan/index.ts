@@ -244,6 +244,67 @@ async function fetchCoinMarketCapTelegramUrl(tokenAddress: string): Promise<stri
   }
 }
 
+// CoinMarketCap fallback for token description
+async function fetchCoinMarketCapDescription(tokenAddress: string): Promise<string> {
+  try {
+    const cmcApiKey = Deno.env.get('COINMARKETCAP_API_KEY');
+    if (!cmcApiKey) {
+      console.log(`[CMC] CoinMarketCap API key not available for description fallback`);
+      return '';
+    }
+
+    console.log(`[CMC] Fetching description for token: ${tokenAddress}`);
+    
+    const response = await fetch(
+      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}&aux=description`,
+      {
+        headers: {
+          'X-CMC_PRO_API_KEY': cmcApiKey,
+          'Accept': 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      console.log(`[CMC] Description fallback API request failed: ${response.status} ${response.statusText}`);
+      return '';
+    }
+
+    const data = await response.json();
+    console.log(`[CMC] Description fallback API response status:`, data.status);
+
+    if (data.status?.error_code !== 0) {
+      console.log(`[CMC] Description fallback API error:`, data.status?.error_message);
+      return '';
+    }
+
+    // Extract token data - CMC returns data keyed by contract address
+    const tokenData = Object.values(data.data || {})[0] as any;
+    
+    if (!tokenData) {
+      console.log(`[CMC] No token data found for description fallback: ${tokenAddress}`);
+      return '';
+    }
+
+    console.log(`[CMC] Found token for description fallback:`, tokenData.name, tokenData.symbol);
+
+    // Extract description
+    const description = tokenData.description;
+    
+    if (description && description.trim() && description.length > 50) {
+      console.log(`[CMC] Description found via fallback: ${description.substring(0, 100)}...`);
+      return description.trim();
+    } else {
+      console.log(`[CMC] No valid description found via fallback`);
+      return '';
+    }
+
+  } catch (error) {
+    console.error(`[CMC] Error fetching description:`, error);
+    return '';
+  }
+}
+
 // Fetch CEX count from CoinGecko API
 async function fetchCoinGeckoCexCount(tokenAddress: string, chainId: string): Promise<number> {
   console.log(`[CEX] Fetching CEX count for ${tokenAddress} on chain ${chainId}`);
@@ -763,23 +824,36 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     const symbol = metadata?.symbol || priceDataResult?.symbol || 'UNKNOWN';
     const logo_url = metadata?.logo || metadata?.thumbnail || '';
     
-    // Use rich description from Moralis if available, otherwise create a basic one
-    const description = metadata?.description && metadata.description.trim() 
-      ? metadata.description
-      : metadata?.name 
-        ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
-        : `${name} on ${chainConfig.name}`;
+    // Enhanced description logic with CoinMarketCap fallback
+    let description = '';
+    
+    // First try Moralis description
+    if (metadata?.description && metadata.description.trim() && metadata.description.length > 50) {
+      description = metadata.description.trim();
+      console.log(`[DESCRIPTION] Using Moralis description: ${description.substring(0, 100)}...`);
+    } else {
+      console.log(`[DESCRIPTION] Moralis description not available or too short, trying CoinMarketCap fallback`);
+      
+      // Try CoinMarketCap as fallback
+      const cmcDescription = await fetchCoinMarketCapDescription(tokenAddress);
+      if (cmcDescription) {
+        description = cmcDescription;
+        console.log(`[DESCRIPTION] Using CoinMarketCap description: ${description.substring(0, 100)}...`);
+      } else {
+        // Fallback to generic template
+        description = metadata?.name 
+          ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
+          : `${name} on ${chainConfig.name}`;
+        console.log(`[DESCRIPTION] Using generic template: ${description}`);
+      }
+    }
 
 
     // Combine data from all sources, prioritizing Moralis for richer data
     const combinedData = {
       name: metadata?.name || priceDataResult?.name || `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`,
       symbol: metadata?.symbol || priceDataResult?.symbol || 'UNKNOWN',
-      description: metadata?.description && metadata.description.trim() 
-        ? metadata.description
-        : metadata?.name 
-          ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
-          : `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)} on ${chainConfig.name}`,
+      description: description,
       logo_url: metadata?.logo || metadata?.thumbnail || '',
       website_url: website_url,
       twitter_handle: twitter_handle,
