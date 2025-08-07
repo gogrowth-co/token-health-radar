@@ -25,14 +25,6 @@ export function useUserRole() {
         return;
       }
 
-      // Special hardcoded admin check for gmangabeira@gmail.com
-      if (user.email === 'gmangabeira@gmail.com') {
-        console.log('useUserRole - Hardcoded admin access for gmangabeira@gmail.com');
-        setRole('admin');
-        setLoading(false);
-        return;
-      }
-
       console.log('useUserRole - Fetching role for user:', {
         userId: user.id,
         email: user.email
@@ -83,7 +75,7 @@ export function useUserRole() {
     };
   }, [user?.id, user?.email, isAuthenticated, authLoading]);
 
-  const isAdmin = role === 'admin' || user?.email === 'gmangabeira@gmail.com';
+  const isAdmin = role === 'admin';
 
   console.log('useUserRole - Current state:', {
     role,

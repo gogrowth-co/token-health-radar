@@ -45,7 +45,7 @@ serve(async (req) => {
       _user_id: user.id
     });
     
-    const isAdmin = roleData === 'admin' || user.email === 'gmangabeira@gmail.com';
+    const isAdmin = roleData === 'admin';
     console.log(`User admin status: ${isAdmin}, role: ${roleData}, email: ${user.email}`);
 
     // If user is admin, give them unlimited pro access
