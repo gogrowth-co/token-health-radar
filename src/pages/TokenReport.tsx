@@ -38,6 +38,7 @@ import {
   generateFinancialProductSchema,
   generateOrganizationSchema
 } from "@/utils/seoUtils";
+import { ChartPreviewGrid } from "@/components/report/ChartPreviewGrid";
 
 interface AnalysisSection {
   keyPoints?: string[];
@@ -149,6 +150,30 @@ export default function TokenReport() {
 
     loadReport();
   }, [symbol]);
+
+  const [chartUrls, setChartUrls] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!reportData) return;
+    const { tokenAddress, chainId } = reportData.metadata;
+    const chain = chainId === '0x1' ? 'ethereum' : chainId;
+    const tokenId = `${chain}_${tokenAddress.toLowerCase()}`;
+    const types = ['price_7d','tvl_90d','holders_donut'] as const;
+    let cancelled = false;
+    (async () => {
+      for (const type of types) {
+        try {
+          const { data } = await supabase.functions.invoke('render-chart', {
+            body: { chain, address: tokenAddress, tokenId, type }
+          });
+          if (!cancelled && (data as any)?.url) {
+            setChartUrls(prev => ({ ...prev, [type]: (data as any).url as string }));
+          }
+        } catch (_) { /* ignore */ }
+      }
+    })();
+    return () => { cancelled = true };
+  }, [reportData?.metadata?.tokenAddress]);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600 dark:text-green-400";
