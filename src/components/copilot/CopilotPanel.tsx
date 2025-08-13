@@ -220,7 +220,8 @@ export default function CopilotPanel({ token }: CopilotPanelProps) {
                   h: point.v,
                   l: point.v,
                   c: point.v
-                }))} 
+                }))}
+                window={message.data.change?.window}
               />
             )}
 

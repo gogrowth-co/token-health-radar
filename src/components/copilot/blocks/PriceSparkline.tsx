@@ -11,9 +11,10 @@ interface OHLCData {
 interface PriceSparklineProps {
   ohlc?: OHLCData[];
   loading?: boolean;
+  window?: string;
 }
 
-export default function PriceSparkline({ ohlc, loading }: PriceSparklineProps) {
+export default function PriceSparkline({ ohlc, loading, window }: PriceSparklineProps) {
   if (loading) {
     return (
       <div className="w-full h-16 bg-muted animate-pulse rounded"></div>
@@ -23,7 +24,7 @@ export default function PriceSparkline({ ohlc, loading }: PriceSparklineProps) {
   if (!ohlc || ohlc.length === 0) {
     return (
       <div className="text-sm text-muted-foreground text-center py-4">
-        7-day price chart not available
+        Price chart not available
       </div>
     );
   }
@@ -38,10 +39,17 @@ export default function PriceSparkline({ ohlc, loading }: PriceSparklineProps) {
   const maxPrice = Math.max(...chartData.map(d => d.price));
   const isPositive = chartData[chartData.length - 1]?.price >= chartData[0]?.price;
 
+  // Format timeframe for display
+  const getTimeframeLabel = (timeframe?: string) => {
+    if (!timeframe) return "Price trend";
+    const formatted = timeframe.replace('d', '-day').replace('y', '-year');
+    return `${formatted} price trend`;
+  };
+
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm text-muted-foreground">7-day price trend</span>
+        <span className="text-sm text-muted-foreground">{getTimeframeLabel(window)}</span>
         <span className="text-xs text-muted-foreground">
           ${minPrice.toFixed(4)} - ${maxPrice.toFixed(4)}
         </span>
