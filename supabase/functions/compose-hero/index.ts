@@ -140,7 +140,8 @@ async function renderComposite(
       body: JSON.stringify({
         model: 'gpt-image-1',
         prompt,
-        size: `${Math.min(W, 1536)}x${Math.min(H, 1536)}`,
+        size: W <= 1024 && H <= 1024 ? '1024x1024' : 
+              W > H ? '1536x1024' : '1024x1536',
       }),
     });
 

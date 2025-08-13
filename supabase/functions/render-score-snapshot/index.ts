@@ -98,7 +98,8 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-image-1',
         prompt,
-        size: `${Math.min(width, 1536)}x${Math.min(height, 1536)}`,
+        size: width <= 1024 && height <= 1024 ? '1024x1024' : 
+              width > height ? '1536x1024' : '1024x1536',
       }),
     });
 
@@ -111,7 +112,8 @@ Deno.serve(async (req) => {
     const genJson = await genRes.json();
     const b64 = genJson?.data?.[0]?.b64_json as string | undefined;
     if (!b64) {
-      return json({ ok: false, error: 'ai_failed' });
+      console.error('OpenAI response missing b64_json:', genJson);
+      return json({ ok: false, error: 'ai_no_image' });
     }
 
     // Upload to storage

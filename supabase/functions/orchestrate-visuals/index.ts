@@ -85,9 +85,10 @@ Deno.serve(async (req) => {
             body: { chain, address, name, symbol, overallScore, scores, lastScannedAt, format: 'og' }
           });
           if (error) throw error;
-          if ((data as any)?.url) assets['scoreSnapshot'] = (data as any).url;
+          if ((data as any)?.ok && (data as any)?.url) assets['scoreSnapshot'] = (data as any).url;
           else skipped.push('scoreSnapshot');
         } catch (e) {
+          console.error('Score snapshot error:', e);
           errors.push({ step: 'scoreSnapshot', error: 'failed' });
         }
       } else {
@@ -108,6 +109,7 @@ Deno.serve(async (req) => {
             const d = data as any;
             if (d?.url) assets[key] = d.url; else if (d?.error === 'no_data') skipped.push(key); else errors.push({ step: key, error: 'render_failed' });
           } catch (e) {
+            console.error(`Chart ${key} error:`, e);
             errors.push({ step: key, error: 'invoke_failed' });
           }
         } else {
@@ -134,6 +136,7 @@ Deno.serve(async (req) => {
             skipped.push('hero_bg');
           }
         } catch (e) {
+          console.error('Hero background error:', e);
           errors.push({ step: 'hero_bg', error: 'invoke_failed' });
         }
       } else {
@@ -161,6 +164,7 @@ Deno.serve(async (req) => {
             errors.push({ step: 'compose_hero', error: d?.error || 'compose_failed' });
           }
         } catch (e) {
+          console.error('Compose hero error:', e);
           errors.push({ step: 'compose_hero', error: 'invoke_failed' });
         }
       } else {
