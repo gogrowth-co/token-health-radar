@@ -5,6 +5,7 @@ interface PriceData {
   usd: number;
   change24hPct: number;
   mcap: number;
+  change30dPct?: number;
 }
 
 interface MetricCardsProps {
@@ -100,6 +101,25 @@ export default function MetricCards({ price, loading }: MetricCardsProps) {
           </div>
         </CardContent>
       </Card>
+
+      {price?.change30dPct !== undefined && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              {price.change30dPct >= 0 ? 
+                <TrendingUp className="h-4 w-4 text-green-500" /> : 
+                <TrendingDown className="h-4 w-4 text-red-500" />
+              }
+              <span className="text-sm text-muted-foreground">30d Change</span>
+            </div>
+            <div className={`text-lg font-semibold ${
+              price.change30dPct >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+            }`}>
+              {price.change30dPct >= 0 ? '+' : ''}{price.change30dPct.toFixed(2)}%
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

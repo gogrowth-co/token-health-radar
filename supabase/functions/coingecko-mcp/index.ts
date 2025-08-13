@@ -6,133 +6,92 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface McpRequest {
-  query: string; // "auto_insights" or user text
-  token: {
-    chain: string;
-    address: string;
-    coingeckoId: string;
-  };
-}
-
-interface McpResponse {
-  source: "coingecko-mcp";
-  available: string[];
-  price?: {
-    usd: number;
-    change24hPct: number;
-    mcap: number;
-  };
-  ohlc?: Array<{
-    t: number;
-    o: number;
-    h: number;
-    l: number;
-    c: number;
-  }>;
-  topPools?: Array<{
-    name: string;
-    dex: string;
-    liquidityUsd: number;
-    vol24hUsd: number;
-    ageDays: number;
-  }>;
-  categories?: string[];
-  limited: boolean;
-  errors: string[];
-}
-
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const startTime = Date.now();
-    const { query, token }: McpRequest = await req.json();
+    const { query, token } = await req.json();
 
     if (!token?.address || !token?.coingeckoId) {
       return new Response(JSON.stringify({
         source: "coingecko-mcp",
         available: [],
         limited: false,
-        errors: ["Missing token address or CoinGecko ID"]
+        errors: ["Missing token data"]
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Initialize Supabase client for telemetry
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL'),
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    );
 
-    console.log(`[MCP] Processing query: ${query} for token: ${token.coingeckoId}`);
+    console.log(`[MCP] Processing: "${query}" for ${token.coingeckoId}`);
 
-    const response: McpResponse = {
+    const response = {
       source: "coingecko-mcp",
       available: [],
       limited: false,
       errors: []
     };
 
-    // Set up timeout promise
-    const timeoutPromise = new Promise<McpResponse>((resolve) => {
+    // 6-second timeout
+    const timeoutPromise = new Promise((resolve) => {
       setTimeout(() => {
-        console.log('[MCP] Request timed out after 6 seconds');
         resolve({
           ...response,
-          available: response.available,
           limited: true,
-          errors: [...response.errors, "Request timed out - showing partial results"]
+          errors: [...response.errors, "Timeout - partial results"]
         });
       }, 6000);
     });
 
-    // Main processing promise
-    const processPromise = (async (): Promise<McpResponse> => {
-      const coingeckoApiKey = Deno.env.get('COINGECKO_API_KEY');
-      const baseUrl = coingeckoApiKey 
-        ? 'https://pro-api.coingecko.com/api/v3'
-        : 'https://api.coingecko.com/api/v3';
-
-      const headers = {
-        'Content-Type': 'application/json',
-        ...(coingeckoApiKey && { 'x-cg-pro-api-key': coingeckoApiKey })
-      };
+    // Main data fetching
+    const processPromise = (async () => {
+      const baseUrl = 'https://api.coingecko.com/api/v3';
+      const headers = { 'Content-Type': 'application/json' };
 
       try {
-        // For auto_insights, fetch multiple data points
-        if (query === 'auto_insights' || query.toLowerCase().includes('auto') || query.toLowerCase().includes('insight')) {
-          const promises = [];
-
-          // Price data with better error handling
-          promises.push(
-            fetch(`${baseUrl}/simple/price?ids=${token.coingeckoId}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`, { 
-              headers,
-              signal: AbortSignal.timeout(4000) 
+        const promises = [];
+        
+        // ALWAYS fetch price data for ANY query
+        promises.push(
+          fetch(`${baseUrl}/simple/price?ids=${token.coingeckoId}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`, { 
+            headers,
+            signal: AbortSignal.timeout(4000) 
+          })
+            .then(res => res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`))
+            .then(data => {
+              const tokenData = data[token.coingeckoId];
+              if (tokenData) {
+                response.price = {
+                  usd: tokenData.usd,
+                  change24hPct: tokenData.usd_24h_change || 0,
+                  mcap: tokenData.usd_market_cap || 0
+                };
+                response.available.push('price');
+              }
             })
-              .then(res => res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`))
-              .then(data => {
-                const tokenData = data[token.coingeckoId];
-                if (tokenData) {
-                  response.price = {
-                    usd: tokenData.usd,
-                    change24hPct: tokenData.usd_24h_change || 0,
-                    mcap: tokenData.usd_market_cap || 0
-                  };
-                  response.available.push('price');
-                }
-              })
-              .catch(err => {
-                console.log('[MCP] Price fetch failed:', err.message);
-                response.errors.push('Price data unavailable');
-              })
-          );
+            .catch(err => {
+              console.log('[MCP] Price failed:', err);
+              response.errors.push('Price unavailable');
+            })
+        );
 
-          // OHLC data for 7 days with timeout
+        // Check for chart/trend/history/7d in query
+        if (query === 'auto_insights' || 
+            query.toLowerCase().includes('chart') || 
+            query.toLowerCase().includes('trend') || 
+            query.toLowerCase().includes('history') ||
+            query.toLowerCase().includes('7d') ||
+            query.toLowerCase().includes('price')) {
+          
           promises.push(
             fetch(`${baseUrl}/coins/${token.coingeckoId}/ohlc?vs_currency=usd&days=7`, { 
               headers,
@@ -142,19 +101,96 @@ serve(async (req) => {
               .then(data => {
                 if (Array.isArray(data) && data.length > 0) {
                   response.ohlc = data.map(([t, o, h, l, c]) => ({
-                    t: Math.floor(t / 1000), // Convert to seconds
+                    t: Math.floor(t / 1000),
                     o, h, l, c
                   }));
                   response.available.push('ohlc');
                 }
               })
               .catch(err => {
-                console.log('[MCP] OHLC fetch failed:', err.message);
-                response.errors.push('Price history unavailable');
+                console.log('[MCP] OHLC failed:', err);
+                response.errors.push('Chart unavailable');
               })
           );
+        }
 
-          // Token categories with timeout
+        // Check for pools/liquidity/dex/top in query
+        if (query === 'auto_insights' || 
+            query.toLowerCase().includes('pool') || 
+            query.toLowerCase().includes('liquidity') ||
+            query.toLowerCase().includes('dex') ||
+            query.toLowerCase().includes('top')) {
+          
+          promises.push(
+            fetch(`https://api.geckoterminal.com/api/v2/networks/eth/tokens/${token.address}/pools?page=1`, { 
+              signal: AbortSignal.timeout(4000)
+            })
+              .then(res => res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`))
+              .then(data => {
+                if (data.data && data.data.length > 0) {
+                  response.topPools = data.data.slice(0, 5).map(pool => ({
+                    name: pool.attributes.name || 'Unknown',
+                    dex: pool.relationships?.dex?.data?.id || 'Unknown',
+                    liquidityUsd: parseFloat(pool.attributes.reserve_in_usd || 0),
+                    vol24hUsd: parseFloat(pool.attributes.volume_usd?.h24 || 0),
+                    ageDays: pool.attributes.pool_created_at ? 
+                      Math.floor((Date.now() - new Date(pool.attributes.pool_created_at).getTime()) / 86400000) : 0
+                  }));
+                  response.available.push('topPools');
+                }
+              })
+              .catch(err => {
+                console.log('[MCP] Pools failed:', err);
+                // Fallback pools
+                response.topPools = [{
+                  name: `${token.coingeckoId.toUpperCase()}/USDC`,
+                  dex: "Data Unavailable",
+                  liquidityUsd: 0,
+                  vol24hUsd: 0,
+                  ageDays: 0
+                }];
+                response.available.push('topPools');
+              })
+        );
+        }
+
+        // Handle TVL queries (redirect to market cap)
+        if (query.toLowerCase().includes('tvl')) {
+          response.errors.push('TVL not directly available. Showing market cap instead.');
+        }
+
+        // Handle 30d queries
+        if (query.toLowerCase().includes('30d') || query.toLowerCase().includes('30 d')) {
+          promises.push(
+            fetch(`${baseUrl}/coins/${token.coingeckoId}/ohlc?vs_currency=usd&days=30`, { 
+              headers,
+              signal: AbortSignal.timeout(4000)
+            })
+              .then(res => res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`))
+              .then(data => {
+                if (Array.isArray(data) && data.length > 0) {
+                  const firstPrice = data[0][4]; // closing price 30d ago
+                  const lastPrice = data[data.length - 1][4]; // current price
+                  const change30d = ((lastPrice - firstPrice) / firstPrice) * 100;
+                  
+                  // Add 30d change to price data
+                  response.price = response.price || {};
+                  response.price.change30dPct = change30d;
+                  
+                  if (!response.available.includes('price')) {
+                    response.available.push('price');
+                  }
+                }
+              })
+              .catch(err => {
+                console.log('[MCP] 30d data failed:', err);
+                response.errors.push('30-day data unavailable');
+              })
+          );
+        }
+
+        // Categories for auto_insights only
+        if (query === 'auto_insights') {
           promises.push(
             fetch(`${baseUrl}/coins/${token.coingeckoId}`, { 
               headers,
@@ -168,77 +204,21 @@ serve(async (req) => {
                 }
               })
               .catch(err => {
-                console.log('[MCP] Categories fetch failed:', err.message);
-                response.errors.push('Categories unavailable');
+                console.log('[MCP] Categories failed:', err);
               })
           );
+        }
 
-          // Try GeckoTerminal for pools first, fallback to mock data
-          promises.push(
-            fetch(`https://api.geckoterminal.com/api/v2/networks/eth/tokens/${token.address}/pools?page=1`, { 
-              signal: AbortSignal.timeout(4000)
-            })
-              .then(res => res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`))
-              .then(data => {
-                if (data.data && data.data.length > 0) {
-                  response.topPools = data.data.slice(0, 5).map(pool => ({
-                    name: pool.attributes.name || `${token.coingeckoId.toUpperCase()}/UNKNOWN`,
-                    dex: pool.relationships?.dex?.data?.id || 'Unknown DEX',
-                    liquidityUsd: parseFloat(pool.attributes.reserve_in_usd || 0),
-                    vol24hUsd: parseFloat(pool.attributes.volume_usd?.h24 || 0),
-                    ageDays: pool.attributes.pool_created_at ? 
-                      Math.floor((Date.now() - new Date(pool.attributes.pool_created_at).getTime()) / 86400000) : 
-                      Math.floor(Math.random() * 365)
-                  }));
-                } else {
-                  // Fallback mock data
-                  response.topPools = [
-                    {
-                      name: `${token.coingeckoId.toUpperCase()}/USDC`,
-                      dex: "Uniswap V3",
-                      liquidityUsd: 1500000,
-                      vol24hUsd: 850000,
-                      ageDays: 120
-                    },
-                    {
-                      name: `${token.coingeckoId.toUpperCase()}/ETH`,
-                      dex: "Uniswap V2",
-                      liquidityUsd: 900000,
-                      vol24hUsd: 450000,
-                      ageDays: 200
-                    }
-                  ];
-                }
-                response.available.push('topPools');
-              })
-              .catch(err => {
-                console.log('[MCP] Pools fetch failed, using fallback:', err.message);
-                // Always provide fallback pools
-                response.topPools = [
-                  {
-                    name: `${token.coingeckoId.toUpperCase()}/USDC`,
-                    dex: "Uniswap V3",
-                    liquidityUsd: 1500000,
-                    vol24hUsd: 850000,
-                    ageDays: 120
-                  },
-                  {
-                    name: `${token.coingeckoId.toUpperCase()}/ETH`,
-                    dex: "Uniswap V2",
-                    liquidityUsd: 900000,
-                    vol24hUsd: 450000,
-                    ageDays: 200
-                  }
-                ];
-                response.available.push('topPools');
-              })
-          );
+        // Wait for all promises
+        await Promise.allSettled(promises);
 
-          await Promise.allSettled(promises);
-        } else {
-          // Handle specific user queries
-          if (query.toLowerCase().includes('price')) {
-            const priceRes = await fetch(`${baseUrl}/simple/price?ids=${token.coingeckoId}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`, { headers });
+        // If no data was fetched, ensure we at least try to get price
+        if (response.available.length === 0) {
+          try {
+            const priceRes = await fetch(
+              `${baseUrl}/simple/price?ids=${token.coingeckoId}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`,
+              { headers, signal: AbortSignal.timeout(2000) }
+            );
             const priceData = await priceRes.json();
             const tokenData = priceData[token.coingeckoId];
             if (tokenData) {
@@ -249,18 +229,8 @@ serve(async (req) => {
               };
               response.available.push('price');
             }
-          }
-
-          if (query.toLowerCase().includes('chart') || query.toLowerCase().includes('history')) {
-            const ohlcRes = await fetch(`${baseUrl}/coins/${token.coingeckoId}/ohlc?vs_currency=usd&days=7`, { headers });
-            const ohlcData = await ohlcRes.json();
-            if (Array.isArray(ohlcData) && ohlcData.length > 0) {
-              response.ohlc = ohlcData.map(([t, o, h, l, c]) => ({
-                t: Math.floor(t / 1000),
-                o, h, l, c
-              }));
-              response.available.push('ohlc');
-            }
+          } catch (e) {
+            response.errors.push('Unable to fetch any data');
           }
         }
 
@@ -272,28 +242,27 @@ serve(async (req) => {
       }
     })();
 
-    // Race between timeout and processing
     const finalResponse = await Promise.race([processPromise, timeoutPromise]);
 
     // Log telemetry
     const latency = Date.now() - startTime;
-    try {
-      await supabase.from('copilot_events').insert({
-        type: 'mcp_query',
-        token_address: token.address,
-        query: query,
-        available: finalResponse.available,
-        limited: finalResponse.limited,
-        latency_ms: latency
-      });
-    } catch (telemetryError) {
-      console.log('[MCP] Telemetry logging failed:', telemetryError);
-    }
+    const eventType = query === 'auto_insights' 
+      ? (finalResponse.errors.length === 0 ? 'auto_insights_success' : 'auto_insights_partial')
+      : (finalResponse.errors.length === 0 ? 'ask_success' : 'ask_error');
 
-    console.log(`[MCP] Response generated in ${latency}ms:`, {
+    await supabase.from('copilot_events').insert({
+      type: eventType,
+      token_address: token.address,
+      query: query,
       available: finalResponse.available,
       limited: finalResponse.limited,
-      errorCount: finalResponse.errors.length
+      latency_ms: latency
+    }).catch(err => console.log('[MCP] Telemetry failed:', err));
+
+    console.log(`[MCP] Complete in ${latency}ms:`, {
+      query: query,
+      available: finalResponse.available,
+      errors: finalResponse.errors
     });
 
     return new Response(JSON.stringify(finalResponse), {
@@ -301,7 +270,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('[MCP] Request failed:', error);
+    console.error('[MCP] Failed:', error);
     return new Response(JSON.stringify({
       source: "coingecko-mcp",
       available: [],
