@@ -208,17 +208,12 @@ Deno.serve(async (req) => {
               from: 0.57,
               to: 0.5234
             },
-            price: {
-              usd: 0.5234,
-              change24hPct: 2.45,
-              mcap: 156789000
-            },
             sparkline: Array.from({ length: 30 }, (_, i) => ({
               t: Date.now() - (29 - i) * 24 * 60 * 60 * 1000,
               v: 0.57 - (i / 29) * 0.0466 + Math.random() * 0.02 - 0.01
             }))
           },
-          available: ["change", "price", "sparkline"],
+          available: ["change", "sparkline"],
           limited: false,
           errors: []
         };
@@ -232,17 +227,12 @@ Deno.serve(async (req) => {
               from: 0.50,
               to: 0.5234
             },
-            price: {
-              usd: 0.5234,
-              change24hPct: 2.45,
-              mcap: 156789000
-            },
             sparkline: Array.from({ length: 7 }, (_, i) => ({
               t: Date.now() - (6 - i) * 24 * 60 * 60 * 1000,
               v: 0.50 + (i / 6) * 0.0234 + Math.random() * 0.01 - 0.005
             }))
           },
-          available: ["change", "price", "sparkline"],
+          available: ["change", "sparkline"],
           limited: false,
           errors: []
         };
@@ -256,17 +246,12 @@ Deno.serve(async (req) => {
               from: 0.45,
               to: 0.5234
             },
-            price: {
-              usd: 0.5234,
-              change24hPct: 2.45,
-              mcap: 156789000
-            },
             sparkline: Array.from({ length: 90 }, (_, i) => ({
               t: Date.now() - (89 - i) * 24 * 60 * 60 * 1000,
               v: 0.45 + (i / 89) * 0.0734 + Math.random() * 0.03 - 0.015
             }))
           },
-          available: ["change", "price", "sparkline"],
+          available: ["change", "sparkline"],
           limited: false,
           errors: []
         };
@@ -280,17 +265,12 @@ Deno.serve(async (req) => {
               from: 0.37,
               to: 0.5234
             },
-            price: {
-              usd: 0.5234,
-              change24hPct: 2.45,
-              mcap: 156789000
-            },
             sparkline: Array.from({ length: 30 }, (_, i) => ({
               t: Date.now() - (29 - i) * 12 * 24 * 60 * 60 * 1000,
               v: 0.37 + (i / 29) * 0.1534 + Math.random() * 0.05 - 0.025
             }))
           },
-          available: ["change", "price", "sparkline"],
+          available: ["change", "sparkline"],
           limited: false,
           errors: []
         };
