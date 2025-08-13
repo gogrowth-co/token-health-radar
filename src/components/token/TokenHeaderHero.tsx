@@ -11,11 +11,28 @@ type Props = {
 
 export default function TokenHeaderHero({ symbol, name, heroUrl, logoUrl, overallScore }: Props) {
   const [ready, setReady] = useState(false)
+  const [imageError, setImageError] = useState(false)
+  
   useEffect(() => {
-    if (!heroUrl) return setReady(true)
+    if (!heroUrl) {
+      setReady(true)
+      setImageError(false)
+      return
+    }
+    
+    setReady(false)
+    setImageError(false)
+    
     const img = new Image()
-    img.onload = () => setReady(true)
-    img.onerror = () => setReady(true)
+    img.onload = () => {
+      setReady(true)
+      setImageError(false)
+    }
+    img.onerror = () => {
+      console.warn('Hero image failed to load:', heroUrl)
+      setReady(true)
+      setImageError(true)
+    }
     img.src = heroUrl
   }, [heroUrl])
 
@@ -24,7 +41,7 @@ export default function TokenHeaderHero({ symbol, name, heroUrl, logoUrl, overal
       {/* background image or gradient fallback */}
       <div
         className="w-full h-56 md:h-72 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
-        style={heroUrl ? {
+        style={heroUrl && !imageError ? {
           backgroundImage: `url(${heroUrl})`,
           backgroundSize: "cover",
           backgroundPosition: "center"
@@ -51,9 +68,14 @@ export default function TokenHeaderHero({ symbol, name, heroUrl, logoUrl, overal
           )}
         </div>
       </div>
-      {!ready && (
+      {!ready && heroUrl && (
         <div className="absolute inset-0 flex items-center justify-center text-sm text-white/70">
           Loading cover…
+        </div>
+      )}
+      {process.env.NODE_ENV !== 'production' && imageError && heroUrl && (
+        <div className="absolute top-2 left-2 bg-red-500/80 text-white text-xs px-2 py-1 rounded">
+          Image failed: {heroUrl}
         </div>
       )}
     </header>

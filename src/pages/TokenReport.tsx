@@ -373,6 +373,18 @@ export default function TokenReport() {
   const priceUrl = storagePublicUrl(supabase, pathChartPrice(chainStr, metadata.tokenAddress));
   const ogImage = heroUrl || scoreUrl || priceUrl || imageUrl;
 
+  // Debug logging for URL construction
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Token Report URLs:', {
+      chainStr,
+      tokenAddress: metadata.tokenAddress,
+      heroUrl,
+      scoreUrl,
+      priceUrl,
+      ogImage
+    });
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <ServerSideTokenReport />
