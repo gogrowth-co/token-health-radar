@@ -12,6 +12,7 @@ import MetricCards from "./blocks/MetricCards";
 import PriceSparkline from "./blocks/PriceSparkline";
 import PoolsTable from "./blocks/PoolsTable";
 import CategoryTags from "./blocks/CategoryTags";
+import { ChangeCard } from "./blocks/ChangeCard";
 
 interface CopilotPanelProps {
   token: {
@@ -31,6 +32,12 @@ interface ChatMessage {
       change24hPct: number;
       mcap: number | null;
       change30dPct?: number | null;
+    };
+    change?: {
+      window: string;
+      pct: number;
+      from: number;
+      to: number;
     };
     sparkline?: Array<{
       t: number;
@@ -195,6 +202,10 @@ export default function CopilotPanel({ token }: CopilotPanelProps) {
                   Public MCP is rate-limited. Showing partial data.
                 </AlertDescription>
               </Alert>
+            )}
+
+            {message.data.change && (
+              <ChangeCard change={message.data.change} />
             )}
 
             {message.data.price && (

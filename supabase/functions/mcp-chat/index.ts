@@ -20,7 +20,8 @@ interface ChatRequest {
 interface ChatResponse {
   text: string;
   data: {
-    price?: { usd: number; change24hPct: number; mcap: number | null; change30dPct: number | null };
+    price?: { usd: number; change24hPct: number; mcap: number | null; change30dPct?: number | null };
+    change?: { window: string; pct: number; from: number; to: number };
     sparkline?: Array<{ t: number; v: number }>;
     topPools?: Array<{
       name: string;
@@ -196,22 +197,118 @@ Deno.serve(async (req) => {
       // Simple chat response
       const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || '';
       
-      if (lastMessage.includes('price') || lastMessage.includes('cost')) {
+      // Check for timeframe-specific requests FIRST
+      if (lastMessage.includes('30d') || lastMessage.includes('30 d') || lastMessage.includes('30 day') || lastMessage.includes('last 30') || lastMessage.includes('past month')) {
+        mockResponse = {
+          text: "30d price change is -8.2% from $0.57 to $0.52. Source: CoinGecko MCP (public).",
+          data: {
+            change: {
+              window: "30d",
+              pct: -8.2,
+              from: 0.57,
+              to: 0.5234
+            },
+            price: {
+              usd: 0.5234,
+              change24hPct: 2.45,
+              mcap: 156789000
+            },
+            sparkline: Array.from({ length: 30 }, (_, i) => ({
+              t: Date.now() - (29 - i) * 24 * 60 * 60 * 1000,
+              v: 0.57 - (i / 29) * 0.0466 + Math.random() * 0.02 - 0.01
+            }))
+          },
+          available: ["change", "price", "sparkline"],
+          limited: false,
+          errors: []
+        };
+      } else if (lastMessage.includes('7d') || lastMessage.includes('7 d') || lastMessage.includes('7 day') || lastMessage.includes('last 7') || lastMessage.includes('last week')) {
+        mockResponse = {
+          text: "7d price change is +3.8% from $0.50 to $0.52. Source: CoinGecko MCP (public).",
+          data: {
+            change: {
+              window: "7d",
+              pct: 3.8,
+              from: 0.50,
+              to: 0.5234
+            },
+            price: {
+              usd: 0.5234,
+              change24hPct: 2.45,
+              mcap: 156789000
+            },
+            sparkline: Array.from({ length: 7 }, (_, i) => ({
+              t: Date.now() - (6 - i) * 24 * 60 * 60 * 1000,
+              v: 0.50 + (i / 6) * 0.0234 + Math.random() * 0.01 - 0.005
+            }))
+          },
+          available: ["change", "price", "sparkline"],
+          limited: false,
+          errors: []
+        };
+      } else if (lastMessage.includes('90d') || lastMessage.includes('90 d') || lastMessage.includes('90 day') || lastMessage.includes('3 month') || lastMessage.includes('quarter')) {
+        mockResponse = {
+          text: "90d price change is +15.4% from $0.45 to $0.52. Source: CoinGecko MCP (public).",
+          data: {
+            change: {
+              window: "90d",
+              pct: 15.4,
+              from: 0.45,
+              to: 0.5234
+            },
+            price: {
+              usd: 0.5234,
+              change24hPct: 2.45,
+              mcap: 156789000
+            },
+            sparkline: Array.from({ length: 90 }, (_, i) => ({
+              t: Date.now() - (89 - i) * 24 * 60 * 60 * 1000,
+              v: 0.45 + (i / 89) * 0.0734 + Math.random() * 0.03 - 0.015
+            }))
+          },
+          available: ["change", "price", "sparkline"],
+          limited: false,
+          errors: []
+        };
+      } else if (lastMessage.includes('365d') || lastMessage.includes('1y') || lastMessage.includes('1 y') || lastMessage.includes('year') || lastMessage.includes('12 month')) {
+        mockResponse = {
+          text: "365d price change is +42.7% from $0.37 to $0.52. Source: CoinGecko MCP (public).",
+          data: {
+            change: {
+              window: "365d",
+              pct: 42.7,
+              from: 0.37,
+              to: 0.5234
+            },
+            price: {
+              usd: 0.5234,
+              change24hPct: 2.45,
+              mcap: 156789000
+            },
+            sparkline: Array.from({ length: 30 }, (_, i) => ({
+              t: Date.now() - (29 - i) * 12 * 24 * 60 * 60 * 1000,
+              v: 0.37 + (i / 29) * 0.1534 + Math.random() * 0.05 - 0.025
+            }))
+          },
+          available: ["change", "price", "sparkline"],
+          limited: false,
+          errors: []
+        };
+      } else if (lastMessage.includes('price') || lastMessage.includes('cost')) {
         mockResponse = {
           text: "Current price is $0.5234 with a 2.45% increase in the last 24 hours. Source: CoinGecko MCP (public).",
           data: {
             price: {
               usd: 0.5234,
               change24hPct: 2.45,
-              mcap: 156789000,
-              change30dPct: null
+              mcap: 156789000
             }
           },
           available: ["price"],
           limited: false,
           errors: []
         };
-      } else if (lastMessage.includes('trend') || lastMessage.includes('chart') || lastMessage.includes('7d')) {
+      } else if (lastMessage.includes('trend') || lastMessage.includes('chart')) {
         mockResponse = {
           text: "7-day trend shows steady growth with minor fluctuations. Overall positive momentum. Source: CoinGecko MCP (public).",
           data: {
