@@ -64,7 +64,7 @@ export default function CopilotPanel({ token }: CopilotPanelProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Auto-load insights and connection status on mount
+  // Connection status and greeting message on mount
   useEffect(() => {
     // Simulate MCP connection
     setTimeout(() => {
@@ -74,82 +74,11 @@ export default function CopilotPanel({ token }: CopilotPanelProps) {
     // Add greeting message
     setMessages([{
       role: 'assistant',
-      text: 'Ask me about this token. I\'ll use CoinGecko MCP.',
+      text: 'Ask me about this token. Powered by CoinGecko MCP.',
       timestamp: new Date()
     }]);
+  }, []);
 
-    // Auto-load insights if coingeckoId available
-    if (token.coingeckoId) {
-      handleAutoInsights();
-    }
-  }, [token.coingeckoId]);
-
-  const handleAutoInsights = async () => {
-    const userMessage: ChatMessage = {
-      role: 'user',
-      text: 'auto_insights for current token',
-      timestamp: new Date()
-    };
-
-    // Add typing indicator
-    const typingMessage: ChatMessage = {
-      role: 'assistant',
-      text: 'Fetching insights...',
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage, typingMessage]);
-    setLoading(true);
-
-    try {
-      const { data, error: funcError } = await supabase.functions.invoke('mcp-chat', {
-        body: {
-          messages: [{ role: 'user', content: 'auto_insights for current token' }],
-          token: {
-            chain: token.chain,
-            address: token.address,
-            coingeckoId: token.coingeckoId || token.symbol.toLowerCase()
-          },
-          mode: 'auto_insights'
-        }
-      });
-
-      if (funcError) {
-        console.error('[COPILOT] Function error:', funcError);
-        const errorMessage: ChatMessage = {
-          role: 'assistant',
-          text: `Request failed: ${funcError.message}`,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev.slice(0, -1), errorMessage]);
-        return;
-      }
-
-      const assistantMessage: ChatMessage = {
-        role: 'assistant',
-        text: data.text || 'No response text available',
-        data: data.data,
-        available: data.available,
-        limited: data.limited,
-        errors: data.errors,
-        timestamp: new Date()
-      };
-
-      // Replace the typing indicator with actual response
-      setMessages(prev => [...prev.slice(0, -1), assistantMessage]);
-
-    } catch (err) {
-      console.error('[COPILOT] Request failed:', err);
-      const errorMessage: ChatMessage = {
-        role: 'assistant',
-        text: err instanceof Error ? err.message : 'Request failed',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev.slice(0, -1), errorMessage]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSendMessage = async () => {
     if (!currentInput.trim() || loading) return;
