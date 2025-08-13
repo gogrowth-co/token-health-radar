@@ -41,6 +41,7 @@ import {
 import { ChartPreviewGrid } from "@/components/report/ChartPreviewGrid";
 import HeroBackground from "@/components/report/HeroBackground";
 import HeroComposer from "@/components/report/HeroComposer";
+import VisualsOrchestrator from "@/components/report/VisualsOrchestrator";
 
 interface AnalysisSection {
   keyPoints?: string[];
@@ -459,6 +460,34 @@ export default function TokenReport() {
           <ChevronRight className="h-4 w-4" />
           <span>{seoData.name}</span>
         </nav>
+
+        {/* Visuals Orchestrator */}
+        {(() => {
+          const chainStr = metadata.chainId === '0x1' ? 'ethereum' : (metadata.chainId as any);
+          const tokenId = `${chainStr}_${metadata.tokenAddress.toLowerCase()}`;
+          return (
+            <VisualsOrchestrator
+              req={{
+                chain: chainStr,
+                address: metadata.tokenAddress,
+                tokenId,
+                name: seoData.name,
+                symbol: seoData.symbol,
+                logoUrl: seoData.logo_url,
+                overallScore: metadata.scores.overall ?? null,
+                scores: {
+                  security: metadata.scores.security ?? null,
+                  liquidity: metadata.scores.liquidity ?? null,
+                  tokenomics: metadata.scores.tokenomics ?? null,
+                  community: metadata.scores.community ?? null,
+                  development: metadata.scores.development ?? null,
+                },
+                lastScannedAt: metadata.generatedAt,
+                mood: "neutral",
+              }}
+            />
+          );
+        })()}
 
         {/* Header */}
         <header className="mb-8">

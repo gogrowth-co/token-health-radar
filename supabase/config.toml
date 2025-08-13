@@ -63,3 +63,6 @@ verify_jwt = false
 
 [functions.compose-hero]
 verify_jwt = false
+
+[functions.orchestrate-visuals]
+verify_jwt = false
