@@ -1,7 +1,7 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { ImageResponse } from "https://deno.land/x/og_edge/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,6 +13,196 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// Small helpers for snapshot rendering
+const SCORE_COLORS = {
+  good: '#22c55e',     // success
+  warn: '#f59e0b',     // warning
+  bad:  '#ef4444',     // destructive
+  mut:  '#9ca3af'      // muted
+};
+
+function colorForScore(n?: number | null) {
+  if (n == null) return SCORE_COLORS.mut;
+  if (n >= 70) return SCORE_COLORS.good;
+  if (n >= 40) return SCORE_COLORS.warn;
+  return SCORE_COLORS.bad;
+}
+
+function barWidth(n?: number | null, max = 300) {
+  if (n == null) return Math.round(max * 0.15);
+  const clamped = Math.max(0, Math.min(100, n));
+  return Math.round((clamped / 100) * max);
+}
+
+async function renderScoreSnapshotPNG(params: {
+  name: string;
+  symbol: string;
+  chainId: string;
+  overall?: number | null;
+  scores: {
+    security?: number | null;
+    liquidity?: number | null;
+    tokenomics?: number | null;
+    community?: number | null;
+    development?: number | null;
+  };
+  updatedAt?: string;
+}) {
+  const width = 1200;
+  const height = 630;
+
+  const {
+    name,
+    symbol,
+    chainId,
+    overall,
+    scores,
+    updatedAt
+  } = params;
+
+  const headerStyle = {
+    display: 'flex',
+    flexDirection: 'row' as const,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  };
+
+  const sectionTitleStyle = {
+    fontSize: 28,
+    fontWeight: 700,
+    marginBottom: 12,
+  };
+
+  const labelStyle = {
+    fontSize: 22,
+    color: '#d1d5db',
+  };
+
+  const textStyle = {
+    fontSize: 24,
+    color: '#e5e7eb',
+  };
+
+  const scoreDial = (
+    <div style={{
+      width: 220,
+      height: 220,
+      borderRadius: 110,
+      border: `8px solid ${colorForScore(overall)}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: colorForScore(overall),
+      fontSize: 64,
+      fontWeight: 800
+    }}>
+      {overall == null ? '—' : `${overall}`}
+    </div>
+  );
+
+  const renderBar = (label: string, value?: number | null) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ ...labelStyle }}>{label}</div>
+      <div style={{
+        width: 320,
+        height: 20,
+        background: '#374151',
+        borderRadius: 10,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          width: barWidth(value, 320),
+          height: 20,
+          background: colorForScore(value)
+        }} />
+      </div>
+    </div>
+  );
+
+  const image = new ImageResponse(
+    (
+      <div
+        style={{
+          width,
+          height,
+          display: 'flex',
+          flexDirection: 'column',
+          padding: 48,
+          background: '#0b0f16',
+          color: '#fff',
+          fontFamily:
+            'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji"',
+        }}
+      >
+        {/* Header */}
+        <div style={headerStyle}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ fontSize: 42, fontWeight: 800 }}>
+              {name} ({symbol?.toUpperCase()})
+            </div>
+            <div style={{ ...labelStyle }}>
+              Chain: {chainId} • Updated: {updatedAt ? new Date(updatedAt).toLocaleString() : 'now'}
+            </div>
+          </div>
+          {scoreDial}
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: '#1f2937', margin: '24px 0' }} />
+
+        {/* Body */}
+        <div style={{ display: 'flex', gap: 48 }}>
+          {/* Pillars */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={sectionTitleStyle}>Pillar Scores</div>
+            {renderBar('Security', scores.security)}
+            {renderBar('Liquidity', scores.liquidity)}
+            {renderBar('Tokenomics', scores.tokenomics)}
+            {renderBar('Community', scores.community)}
+            {renderBar('Development', scores.development)}
+          </div>
+
+          {/* Legend */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={sectionTitleStyle}>Legend</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 16, height: 16, background: SCORE_COLORS.good, borderRadius: 4 }} />
+              <div style={textStyle}>70-100 Good</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 16, height: 16, background: SCORE_COLORS.warn, borderRadius: 4 }} />
+              <div style={textStyle}>40-69 Moderate</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 16, height: 16, background: SCORE_COLORS.bad, borderRadius: 4 }} />
+              <div style={textStyle}>0-39 High Risk</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 16, height: 16, background: SCORE_COLORS.mut, borderRadius: 4 }} />
+              <div style={textStyle}>No data</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: 20, color: '#9ca3af' }}>
+            Token Health Scan • tokenhealthscan.com
+          </div>
+          <div style={{ fontSize: 20, color: '#9ca3af' }}>
+            Snapshot generated by server
+          </div>
+        </div>
+      </div>
+    ),
+    { width, height }
+  );
+
+  const pngArrayBuffer = await image.arrayBuffer();
+  return new Uint8Array(pngArrayBuffer);
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -350,12 +540,51 @@ Make the content informative, balanced, and professional. Include specific data 
 
     console.log('Report generated and saved successfully');
 
+    // Generate and upload the score snapshot PNG (non-blocking on failure)
+    let snapshotUrl: string | undefined;
+    try {
+      const pngBytes = await renderScoreSnapshotPNG({
+        name: token.name,
+        symbol: token.symbol,
+        chainId,
+        overall: fullReportContent.metadata.scores.overall,
+        scores: {
+          security: fullReportContent.metadata.scores.security,
+          liquidity: fullReportContent.metadata.scores.liquidity,
+          tokenomics: fullReportContent.metadata.scores.tokenomics,
+          community: fullReportContent.metadata.scores.community,
+          development: fullReportContent.metadata.scores.development
+        },
+        updatedAt: fullReportContent.metadata.generatedAt
+      });
+
+      const objectPath = `${chainId}/${tokenAddress}/score-snapshot_1200x630.png`;
+      const { error: uploadError } = await supabase
+        .storage
+        .from('reports')
+        .upload(objectPath, pngBytes, {
+          contentType: 'image/png',
+          upsert: true
+        });
+
+      if (uploadError) {
+        console.error('Snapshot upload failed:', uploadError);
+      } else {
+        const { data: pub } = supabase.storage.from('reports').getPublicUrl(objectPath);
+        snapshotUrl = pub?.publicUrl;
+        console.log('Snapshot generated at:', snapshotUrl);
+      }
+    } catch (snapErr) {
+      console.error('Snapshot generation error (ignored):', snapErr);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
         reportId: savedReport.id,
         tokenSymbol: token.symbol.toLowerCase(),
-        reportUrl: `/token/${token.symbol.toLowerCase()}`
+        reportUrl: `/token/${token.symbol.toLowerCase()}`,
+        snapshotUrl // optional; may be undefined if snapshot failed, but report succeeded
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
