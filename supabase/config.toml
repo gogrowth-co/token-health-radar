@@ -60,3 +60,6 @@ verify_jwt = false
 
 [functions.ai-hero-background]
 verify_jwt = false
+
+[functions.compose-hero]
+verify_jwt = false

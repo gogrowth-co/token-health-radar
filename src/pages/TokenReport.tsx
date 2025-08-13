@@ -40,6 +40,7 @@ import {
 } from "@/utils/seoUtils";
 import { ChartPreviewGrid } from "@/components/report/ChartPreviewGrid";
 import HeroBackground from "@/components/report/HeroBackground";
+import HeroComposer from "@/components/report/HeroComposer";
 
 interface AnalysisSection {
   keyPoints?: string[];
@@ -486,6 +487,34 @@ export default function TokenReport() {
                 name={seoData.name}
                 symbol={seoData.symbol}
                 verticalHint={tokenCacheData?.description || seoData.name}
+              />
+            );
+          })()}
+        </section>
+
+        {/* Branded Hero Composer */}
+        <section className="mb-8" aria-labelledby="branded-hero-heading">
+          <h2 id="branded-hero-heading" className="sr-only">Branded Hero</h2>
+          {(() => {
+            const chainStr = metadata.chainId === '0x1' ? 'ethereum' : metadata.chainId;
+            return (
+              <HeroComposer
+                overlay={{
+                  chain: chainStr,
+                  address: metadata.tokenAddress,
+                  name: seoData.name,
+                  symbol: seoData.symbol,
+                  logoUrl: seoData.logo_url,
+                  overallScore: metadata.scores.overall ?? null,
+                  scores: {
+                    security: metadata.scores.security ?? null,
+                    liquidity: metadata.scores.liquidity ?? null,
+                    tokenomics: metadata.scores.tokenomics ?? null,
+                    community: metadata.scores.community ?? null,
+                    development: metadata.scores.development ?? null,
+                  },
+                  lastScannedAt: metadata.generatedAt,
+                }}
               />
             );
           })()}
