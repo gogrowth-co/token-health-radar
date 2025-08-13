@@ -39,6 +39,7 @@ import {
   generateOrganizationSchema
 } from "@/utils/seoUtils";
 import { ChartPreviewGrid } from "@/components/report/ChartPreviewGrid";
+import HeroBackground from "@/components/report/HeroBackground";
 
 interface AnalysisSection {
   keyPoints?: string[];
@@ -472,6 +473,23 @@ export default function TokenReport() {
             Generated on {new Date(metadata.generatedAt).toLocaleDateString()}
           </p>
         </header>
+
+        {/* Hero Background Preview */}
+        <section className="mb-8" aria-labelledby="hero-bg-heading">
+          <h2 id="hero-bg-heading" className="sr-only">Hero Background</h2>
+          {(() => {
+            const chainStr = metadata.chainId === '0x1' ? 'ethereum' : metadata.chainId;
+            return (
+              <HeroBackground
+                chain={chainStr}
+                address={metadata.tokenAddress}
+                name={seoData.name}
+                symbol={seoData.symbol}
+                verticalHint={tokenCacheData?.description || seoData.name}
+              />
+            );
+          })()}
+        </section>
 
         {/* Chart PNG Previews */}
         <section aria-labelledby="charts-heading" className="mb-8">
