@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { Send, AlertTriangle, Clock, ExternalLink } from "lucide-react";
+import { Send, AlertTriangle, Clock, Bot, User } from "lucide-react";
 import MetricCards from "./blocks/MetricCards";
 import PriceSparkline from "./blocks/PriceSparkline";
 import PoolsTable from "./blocks/PoolsTable";
@@ -21,47 +22,47 @@ interface CopilotPanelProps {
   };
 }
 
-interface McpResponse {
-  source: "coingecko-mcp";
-  available: string[];
-  price?: {
-    usd: number;
-    change24hPct: number;
-    mcap: number;
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  text: string;
+  data?: {
+    price?: {
+      usd: number;
+      change24hPct: number;
+      mcap: number | null;
+      change30dPct?: number | null;
+    };
+    sparkline?: Array<{
+      t: number;
+      v: number;
+    }>;
+    topPools?: Array<{
+      name: string;
+      dex: string;
+      liquidityUsd: number;
+      vol24hUsd: number;
+      ageDays: number;
+    }>;
+    categories?: string[];
   };
-  ohlc?: Array<{
-    t: number;
-    o: number;
-    h: number;
-    l: number;
-    c: number;
-  }>;
-  topPools?: Array<{
-    name: string;
-    dex: string;
-    liquidityUsd: number;
-    vol24hUsd: number;
-    ageDays: number;
-  }>;
-  categories?: string[];
-  limited: boolean;
-  errors: string[];
-}
-
-interface QueryHistory {
-  query: string;
-  response: McpResponse;
+  available?: string[];
+  limited?: boolean;
+  errors?: string[];
   timestamp: Date;
 }
 
 export default function CopilotPanel({ token }: CopilotPanelProps) {
   const [loading, setLoading] = useState(false);
-  const [autoInsightsLoading, setAutoInsightsLoading] = useState(true);
-  const [currentQuery, setCurrentQuery] = useState("");
-  const [currentResponse, setCurrentResponse] = useState<McpResponse | null>(null);
-  const [history, setHistory] = useState<QueryHistory[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [currentInput, setCurrentInput] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // Auto-load insights and connection status on mount
   useEffect(() => {
@@ -70,96 +71,235 @@ export default function CopilotPanel({ token }: CopilotPanelProps) {
       setConnectionStatus('connected');
     }, 1000);
 
+    // Add greeting message
+    setMessages([{
+      role: 'assistant',
+      text: 'Ask me about this token. I\'ll use CoinGecko MCP.',
+      timestamp: new Date()
+    }]);
+
+    // Auto-load insights if coingeckoId available
     if (token.coingeckoId) {
-      handleQuery("auto_insights", true);
-    } else {
-      setAutoInsightsLoading(false);
-      setError("CoinGecko ID not available for this token");
+      handleAutoInsights();
     }
   }, [token.coingeckoId]);
 
-  const handleQuery = async (query: string, isAutoInsights: boolean = false) => {
-    if (!query.trim() && !isAutoInsights) return;
-    
-    const queryToSend = query || "auto_insights";
+  const handleAutoInsights = async () => {
+    const userMessage: ChatMessage = {
+      role: 'user',
+      text: 'auto_insights for current token',
+      timestamp: new Date()
+    };
+
+    // Add typing indicator
+    const typingMessage: ChatMessage = {
+      role: 'assistant',
+      text: 'Fetching insights...',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage, typingMessage]);
     setLoading(true);
-    setError(null);
 
     try {
       const { data, error: funcError } = await supabase.functions.invoke('mcp-chat', {
         body: {
-          query: queryToSend,
+          messages: [{ role: 'user', content: 'auto_insights for current token' }],
           token: {
             chain: token.chain,
             address: token.address,
             coingeckoId: token.coingeckoId || token.symbol.toLowerCase()
-          }
+          },
+          mode: 'auto_insights'
         }
       });
 
       if (funcError) {
         console.error('[COPILOT] Function error:', funcError);
-        setError(`Request failed: ${funcError.message}`);
+        const errorMessage: ChatMessage = {
+          role: 'assistant',
+          text: `Request failed: ${funcError.message}`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev.slice(0, -1), errorMessage]);
         return;
       }
 
-      const response = data;
-      // Transform the new API response to match existing interface
-      const mcpResponse: McpResponse = {
-        source: "coingecko-mcp" as const,
-        available: Object.keys(response.data || {}),
-        price: response.data?.price,
-        ohlc: response.data?.sparkline?.map((point: any) => ({
-          t: point.t,
-          o: point.v,
-          h: point.v,
-          l: point.v,
-          c: point.v
-        })),
-        topPools: response.data?.topPools,
-        categories: response.data?.categories,
-        limited: response.limited || false,
-        errors: response.errors || []
+      const assistantMessage: ChatMessage = {
+        role: 'assistant',
+        text: data.text || 'No response text available',
+        data: data.data,
+        available: data.available,
+        limited: data.limited,
+        errors: data.errors,
+        timestamp: new Date()
       };
-      setCurrentResponse(mcpResponse);
 
-      // Add to history (limit to 3 items)
-      if (!isAutoInsights) {
-        setHistory(prev => [
-          { query: queryToSend, response: mcpResponse, timestamp: new Date() },
-          ...prev.slice(0, 2)
-        ]);
-        setCurrentQuery(""); // Clear input
-      }
-
-      if (mcpResponse.errors.length > 0) {
-        console.warn('[COPILOT] Response errors:', mcpResponse.errors);
-      }
+      // Replace the typing indicator with actual response
+      setMessages(prev => [...prev.slice(0, -1), assistantMessage]);
 
     } catch (err) {
       console.error('[COPILOT] Request failed:', err);
-      setError(err instanceof Error ? err.message : 'Request failed');
+      const errorMessage: ChatMessage = {
+        role: 'assistant',
+        text: err instanceof Error ? err.message : 'Request failed',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev.slice(0, -1), errorMessage]);
     } finally {
       setLoading(false);
-      if (isAutoInsights) {
-        setAutoInsightsLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!currentInput.trim() || loading) return;
+
+    const userMessage: ChatMessage = {
+      role: 'user',
+      text: currentInput,
+      timestamp: new Date()
+    };
+
+    const typingMessage: ChatMessage = {
+      role: 'assistant',
+      text: 'Thinking...',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage, typingMessage]);
+    setCurrentInput('');
+    setLoading(true);
+
+    try {
+      // Get last 8 messages for context (4 turns)
+      const recentMessages = messages.slice(-6).map(msg => ({
+        role: msg.role,
+        content: msg.text
+      }));
+
+      recentMessages.push({ role: 'user', content: userMessage.text });
+
+      const { data, error: funcError } = await supabase.functions.invoke('mcp-chat', {
+        body: {
+          messages: recentMessages,
+          token: {
+            chain: token.chain,
+            address: token.address,
+            coingeckoId: token.coingeckoId || token.symbol.toLowerCase()
+          },
+          mode: 'chat'
+        }
+      });
+
+      if (funcError) {
+        console.error('[COPILOT] Function error:', funcError);
+        const errorMessage: ChatMessage = {
+          role: 'assistant',
+          text: `Request failed: ${funcError.message}`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev.slice(0, -1), errorMessage]);
+        return;
       }
+
+      const assistantMessage: ChatMessage = {
+        role: 'assistant',
+        text: data.text || 'No response text available',
+        data: data.data,
+        available: data.available,
+        limited: data.limited,
+        errors: data.errors,
+        timestamp: new Date()
+      };
+
+      // Replace the typing indicator with actual response
+      setMessages(prev => [...prev.slice(0, -1), assistantMessage]);
+
+    } catch (err) {
+      console.error('[COPILOT] Request failed:', err);
+      const errorMessage: ChatMessage = {
+        role: 'assistant',
+        text: err instanceof Error ? err.message : 'Request failed',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev.slice(0, -1), errorMessage]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (currentQuery.trim() && !loading) {
-      handleQuery(currentQuery);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e as any);
+      handleSendMessage();
     }
   };
+
+  const renderMessageBubble = (message: ChatMessage) => (
+    <div key={message.timestamp.getTime()} className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+        message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+      }`}>
+        {message.role === 'user' ? (
+          <User className="h-4 w-4" />
+        ) : (
+          <Bot className="h-4 w-4" />
+        )}
+      </div>
+      
+      <div className={`flex-1 space-y-3 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
+        <div className={`inline-block rounded-lg p-3 max-w-[80%] ${
+          message.role === 'user' 
+            ? 'bg-primary text-primary-foreground ml-auto' 
+            : 'bg-muted'
+        }`}>
+          <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+        </div>
+
+        {/* Render data blocks for assistant messages */}
+        {message.role === 'assistant' && message.data && (
+          <div className="space-y-3 max-w-full">
+            {message.limited && (
+              <Alert>
+                <Clock className="h-4 w-4" />
+                <AlertDescription>
+                  Public MCP is rate-limited. Showing partial data.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {message.data.price && (
+              <MetricCards price={message.data.price} />
+            )}
+
+            {message.data.sparkline && (
+              <PriceSparkline 
+                ohlc={message.data.sparkline.map(point => ({
+                  t: point.t,
+                  o: point.v,
+                  h: point.v,
+                  l: point.v,
+                  c: point.v
+                }))} 
+              />
+            )}
+
+            {message.data.topPools && message.data.topPools.length > 0 && (
+              <PoolsTable pools={message.data.topPools} />
+            )}
+
+            {message.data.categories && message.data.categories.length > 0 && (
+              <CategoryTags categories={message.data.categories} />
+            )}
+          </div>
+        )}
+
+        <div className="text-xs text-muted-foreground">
+          {message.timestamp.toLocaleTimeString()}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <Card className="w-full">
@@ -197,130 +337,48 @@ export default function CopilotPanel({ token }: CopilotPanelProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 p-0">
+        {/* Messages Area */}
+        <ScrollArea className="h-96 px-6 pt-6">
+          <div className="space-y-4">
+            {messages.map(renderMessageBubble)}
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
+
         {/* Input Section */}
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <Input
-            placeholder="Ask about price, 7d trend, or top pools..."
-            value={currentQuery}
-            onChange={(e) => setCurrentQuery(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={loading}
-            className="flex-1"
-          />
-          <Button 
-            type="submit" 
-            disabled={loading || !currentQuery.trim()}
-            size="sm"
-          >
-            {loading ? (
-              <Clock className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-            Ask
-          </Button>
-        </form>
-
-        {/* Error Display */}
-        {error && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Rate Limited Banner */}
-        {currentResponse?.limited && (
-          <Alert>
-            <Clock className="h-4 w-4" />
-            <AlertDescription>
-              Public MCP is rate-limited. Showing partial data.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Current Response */}
-        {(currentResponse || autoInsightsLoading) && (
-          <div className="space-y-4" aria-live="polite">
-            {/* Metrics */}
-            {(currentResponse?.available.includes('price') || autoInsightsLoading) && (
-              <div>
-                <MetricCards 
-                  price={currentResponse?.price} 
-                  loading={autoInsightsLoading}
-                />
-              </div>
-            )}
-
-            {/* Price Chart */}
-            {(currentResponse?.available.includes('ohlc') || autoInsightsLoading) && (
-              <div>
-                <PriceSparkline 
-                  ohlc={currentResponse?.ohlc} 
-                  loading={autoInsightsLoading}
-                />
-              </div>
-            )}
-
-            {/* Pools */}
-            {(currentResponse?.available.includes('topPools') || autoInsightsLoading) && (
-              <div>
-                <PoolsTable 
-                  pools={currentResponse?.topPools} 
-                  loading={autoInsightsLoading}
-                />
-              </div>
-            )}
-
-            {/* Categories */}
-            {(currentResponse?.available.includes('categories') || autoInsightsLoading) && (
-              <div>
-                <CategoryTags 
-                  categories={currentResponse?.categories} 
-                  loading={autoInsightsLoading}
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Historical Queries */}
-        {history.length > 0 && (
-          <div className="space-y-3">
-            <div className="border-t pt-4">
-              <h4 className="text-sm font-medium text-muted-foreground mb-3">
-                Recent Queries
-              </h4>
-              {history.map((item, index) => (
-                <div key={index} className="border rounded-lg p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">"{item.query}"</span>
-                    <span className="text-xs text-muted-foreground">
-                      {item.timestamp.toLocaleTimeString()}
-                    </span>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Available: {item.response.available.join(', ') || 'None'}
-                    {item.response.errors.length > 0 && (
-                      <span className="text-red-500 ml-2">
-                        ({item.response.errors.length} error{item.response.errors.length > 1 ? 's' : ''})
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
+        <div className="border-t px-6 py-4">
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <Textarea
+                ref={textareaRef}
+                placeholder="Ask about price, 7d trend, or top pools..."
+                value={currentInput}
+                onChange={(e) => setCurrentInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={loading}
+                className="min-h-[60px] max-h-[120px] resize-none"
+                rows={2}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Shift+Enter for new line, Enter to send
+              </p>
             </div>
+            <Button 
+              onClick={handleSendMessage}
+              disabled={loading || !currentInput.trim()}
+              size="sm"
+              className="mb-6"
+            >
+              {loading ? (
+                <Clock className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Ask
+            </Button>
           </div>
-        )}
-
-        {/* No Data State */}
-        {!autoInsightsLoading && !currentResponse && !error && (
-          <div className="text-center py-8 text-muted-foreground">
-            <p className="text-sm">No data loaded yet</p>
-            <p className="text-xs mt-1">Try asking for price data or market insights</p>
-          </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );
