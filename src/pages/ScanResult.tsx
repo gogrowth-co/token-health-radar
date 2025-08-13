@@ -319,6 +319,11 @@ export default function ScanResult() {
   // Use database description, but ensure it's formal/informative (client-side guard)
   const properDescription = (tokenInfo?.description || "").toString();
 
+  // Special override for PENDLE token
+  const pendleDescription = "Pendle is a cross-chain compatible ERC20 token designed to offer fixed yields and control over yield exposure. It allows users to lock their PENDLE tokens for a stake in the protocol, providing opportunities for high returns or fixed yields.";
+  const isPendleToken = properSymbol?.toUpperCase() === 'PENDLE' || properName?.toLowerCase().includes('pendle');
+  const finalDescription = isPendleToken ? pendleDescription : properDescription;
+
   // Heuristic: detect marketing/tagline style
   const isTaglineStyle = (text: string): boolean => {
     if (!text) return true;
@@ -445,7 +450,7 @@ export default function ScanResult() {
             priceChange={properPriceChange}
             marketCap={properMarketCap}
             overallScore={overallScore}
-            description={displayDescription}
+            description={finalDescription || displayDescription}
             network={networkName}
             chainId={chainId}
           />

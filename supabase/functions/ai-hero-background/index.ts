@@ -4,7 +4,6 @@
 
 import "https://deno.land/x/xhr@0.4.0/mod.ts"; // ensure fetch compatibility
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createCanvas, Image } from "https://deno.land/x/canvas@v1.4.1/mod.ts";
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -98,7 +97,6 @@ Deno.serve(async (req) => {
         model: 'gpt-image-1',
         prompt,
         size: '1536x1536',
-        response_format: 'b64_json',
       }),
     });
 
@@ -114,13 +112,12 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: 'ai_failed' });
     }
 
-    // Decode and crop to required sizes
-    const masterBytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-    const img = new Image();
-    img.src = masterBytes as unknown as ArrayBuffer; // deno-canvas supports Uint8Array
-
-    const out1200 = cropTo(img, 1200, 630);
-    const out1080 = cropTo(img, 1080, 1920);
+    // For now, use the image as-is without cropping until we fix canvas issues
+    const imageBytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    
+    // Use the same image for both sizes (will be properly cropped later when canvas is fixed)
+    const out1200 = imageBytes;
+    const out1080 = imageBytes;
 
     // Upload
     const up1 = await supabase.storage.from('reports').upload(file1200, out1200, {
@@ -167,26 +164,8 @@ Color direction: vibrant but not neon, high contrast, modern Web3 aesthetic.
 Avoid: photorealism, text labels, screenshots, logotypes with trademarks overlaid.`;
 }
 
-function cropTo(img: Image, targetW: number, targetH: number): Uint8Array {
-  const srcW = img.width;
-  const srcH = img.height;
-  const targetAR = targetW / targetH;
-  const srcAR = srcW / srcH;
-
-  let sx = 0, sy = 0, sw = srcW, sh = srcH;
-  if (srcAR > targetAR) {
-    // source wider: crop left/right
-    sw = Math.floor(srcH * targetAR);
-    sx = Math.floor((srcW - sw) / 2);
-  } else if (srcAR < targetAR) {
-    // source taller: crop top/bottom
-    sh = Math.floor(srcW / targetAR);
-    sy = Math.floor((srcH - sh) / 2);
-  }
-
-  const canvas = createCanvas(targetW, targetH);
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
-  const png = canvas.toBuffer();
-  return png as Uint8Array;
-}
+// Temporarily disabled until canvas library is fixed
+// function cropTo(img: Image, targetW: number, targetH: number): Uint8Array {
+//   // Canvas implementation temporarily disabled
+//   return new Uint8Array();
+// }

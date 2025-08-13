@@ -66,3 +66,6 @@ verify_jwt = false
 
 [functions.orchestrate-visuals]
 verify_jwt = false
+
+[functions.render-score-snapshot]
+verify_jwt = false

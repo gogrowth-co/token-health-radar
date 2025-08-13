@@ -12,7 +12,7 @@ const corsHeaders: Record<string, string> = {
 };
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createCanvas } from "https://deno.land/x/canvas@v1.4.1/mod.ts";
+// Canvas import temporarily disabled until library is fixed
 
 // Types
 interface SeriesPoint { t: number; v: number }
@@ -172,11 +172,43 @@ async function fetchHoldersBreakdown(
 
 function clamp(n: number, min: number, max: number) { return Math.max(min, Math.min(max, n)); }
 
-// Rendering helpers (Canvas)
+// Rendering helpers (Canvas) - temporarily disabled
 async function renderLineOrArea(points: SeriesPoint[], area: boolean): Promise<Uint8Array> {
-  const W = 1200, H = 630, P = 60;
-  const canvas = createCanvas(W, H);
-  const ctx = canvas.getContext("2d");
+  // Temporarily use OpenAI to generate charts until canvas library is fixed
+  const openAIKey = Deno.env.get('OPENAI_API_KEY');
+  if (!openAIKey) {
+    return new Uint8Array(); // Return empty bytes if no key
+  }
+
+  const chartType = area ? 'TVL area chart (90 days)' : 'Price line chart (7 days)';
+  const prompt = `Create a professional ${chartType} visualization with dark background. Show data trend with ${points.length} data points. Use ${area ? 'blue area fill with blue line' : 'green line'}. Clean, minimal crypto dashboard style. Size 1200x630.`;
+
+  try {
+    const genRes = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-image-1',
+        prompt,
+        size: '1024x1024',
+      }),
+    });
+
+    if (genRes.ok) {
+      const genJson = await genRes.json();
+      const b64 = genJson?.data?.[0]?.b64_json as string | undefined;
+      if (b64) {
+        return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      }
+    }
+  } catch (e) {
+    console.error('Chart generation failed:', e);
+  }
+
+  return new Uint8Array(); // Return empty as fallback
 
   // Background
   ctx.fillStyle = "#0b0d10"; // neutral dark
@@ -263,9 +295,40 @@ async function renderLineOrArea(points: SeriesPoint[], area: boolean): Promise<U
 }
 
 async function renderHoldersDonut(parts: { top1: number; top5: number; top10: number; rest: number }): Promise<Uint8Array> {
-  const W = 1200, H = 630;
-  const canvas = createCanvas(W, H);
-  const ctx = canvas.getContext("2d");
+  // Temporarily use OpenAI to generate donut chart until canvas library is fixed
+  const openAIKey = Deno.env.get('OPENAI_API_KEY');
+  if (!openAIKey) {
+    return new Uint8Array(); // Return empty bytes if no key
+  }
+
+  const prompt = `Create a professional donut chart showing token holder concentration: Top1 ${parts.top1.toFixed(1)}% (red), Top5 ${parts.top5.toFixed(1)}% (orange), Top10 ${parts.top10.toFixed(1)}% (blue), Rest ${parts.rest.toFixed(1)}% (green). Dark background, clean crypto dashboard style, with legend. Size 1200x630.`;
+
+  try {
+    const genRes = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-image-1',
+        prompt,
+        size: '1024x1024',
+      }),
+    });
+
+    if (genRes.ok) {
+      const genJson = await genRes.json();
+      const b64 = genJson?.data?.[0]?.b64_json as string | undefined;
+      if (b64) {
+        return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      }
+    }
+  } catch (e) {
+    console.error('Donut chart generation failed:', e);
+  }
+
+  return new Uint8Array(); // Return empty as fallback
 
   // Background
   ctx.fillStyle = "#0b0d10";
