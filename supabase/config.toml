@@ -54,3 +54,6 @@ verify_jwt = false
 
 [functions.debug-api-health]
 verify_jwt = false
+
+[functions.render-chart]
+verify_jwt = false

@@ -473,6 +473,13 @@ export default function TokenReport() {
           </p>
         </header>
 
+        {/* Chart PNG Previews */}
+        <section aria-labelledby="charts-heading" className="mb-8">
+          <h2 id="charts-heading" className="text-2xl font-semibold mb-2">Charts (PNG)</h2>
+          <p className="text-xs text-muted-foreground mb-3">Auto-generated from stored data</p>
+          <ChartPreviewGrid symbol={seoData.symbol} urls={chartUrls as any} />
+        </section>
+
         {/* What is Token */}
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">What is {seoData.name}?</h2>
