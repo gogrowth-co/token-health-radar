@@ -38,6 +38,39 @@ export type Database = {
         }
         Relationships: []
       }
+      copilot_events: {
+        Row: {
+          available: Json | null
+          created_at: string | null
+          id: string
+          latency_ms: number | null
+          limited: boolean | null
+          query: string | null
+          token_address: string | null
+          type: string
+        }
+        Insert: {
+          available?: Json | null
+          created_at?: string | null
+          id?: string
+          latency_ms?: number | null
+          limited?: boolean | null
+          query?: string | null
+          token_address?: string | null
+          type: string
+        }
+        Update: {
+          available?: Json | null
+          created_at?: string | null
+          id?: string
+          latency_ms?: number | null
+          limited?: boolean | null
+          query?: string | null
+          token_address?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string | null

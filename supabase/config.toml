@@ -69,3 +69,6 @@ verify_jwt = false
 
 [functions.render-score-snapshot]
 verify_jwt = false
+
+[functions.coingecko-mcp]
+verify_jwt = false

@@ -12,6 +12,8 @@ import UpgradeModal from "@/components/UpgradeModal";
 import RefreshScanButton from "@/components/RefreshScanButton";
 import GenerateReportButton from "@/components/GenerateReportButton";
 import TestSocialLinksButton from "@/components/TestSocialLinksButton";
+import CopilotPanel from "@/components/copilot/CopilotPanel";
+import { isMcpEnabled } from "@/lib/config/mcp-config";
 import { toast } from "sonner";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -454,6 +456,18 @@ export default function ScanResult() {
             network={networkName}
             chainId={chainId}
           />
+
+          {/* CoinGecko MCP Copilot Panel */}
+          {isMcpEnabled() && (
+            <CopilotPanel 
+              token={{
+                chain: chainId,
+                address: tokenAddress,
+                coingeckoId: tokenInfo?.coingecko_id || coinGeckoId,
+                symbol: properSymbol
+              }}
+            />
+          )}
 
           <CategoryScoresGrid
             securityScore={scanData.security?.score || 0}
