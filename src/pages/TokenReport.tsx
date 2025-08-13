@@ -42,6 +42,8 @@ import { ChartPreviewGrid } from "@/components/report/ChartPreviewGrid";
 import HeroBackground from "@/components/report/HeroBackground";
 import HeroComposer from "@/components/report/HeroComposer";
 import VisualsOrchestrator from "@/components/report/VisualsOrchestrator";
+import { storagePublicUrl, pathHero, pathScore, pathChartPrice } from "@/lib/urls";
+import TokenHeaderHero from "@/components/token/TokenHeaderHero";
 
 interface AnalysisSection {
   keyPoints?: string[];
@@ -364,6 +366,13 @@ export default function TokenReport() {
   const pageKeywords = generateTokenKeywords(seoData);
   const imageUrl = getTokenImageUrl(seoData);
 
+  // Build Storage-based hero/share URLs with fallbacks
+  const chainStr = metadata.chainId === '0x1' ? 'ethereum' : metadata.chainId;
+  const heroUrl = storagePublicUrl(supabase, pathHero(chainStr, metadata.tokenAddress));
+  const scoreUrl = storagePublicUrl(supabase, pathScore(chainStr, metadata.tokenAddress));
+  const priceUrl = storagePublicUrl(supabase, pathChartPrice(chainStr, metadata.tokenAddress));
+  const ogImage = heroUrl || scoreUrl || priceUrl || imageUrl;
+
   return (
     <div className="min-h-screen bg-background">
       <ServerSideTokenReport />
@@ -379,7 +388,7 @@ export default function TokenReport() {
         <meta property="og:description" content={pageDescription} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={reportUrl} />
-        <meta property="og:image" content={imageUrl} />
+        <meta property="og:image" content={ogImage} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:site_name" content="Token Health Scan" />
@@ -389,7 +398,7 @@ export default function TokenReport() {
         <meta name="twitter:site" content="@tokenhealthscan" />
         <meta name="twitter:title" content={`${seoData.name} Risk Report`} />
         <meta name="twitter:description" content={pageDescription} />
-        <meta name="twitter:image" content={imageUrl} />
+        <meta name="twitter:image" content={ogImage} />
         
         {/* Canonical URL */}
         <link rel="canonical" href={reportUrl} />
@@ -447,11 +456,36 @@ export default function TokenReport() {
             }))
           })}
         </script>
+
+        {/* CreativeWork JSON-LD */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CreativeWork",
+            "name": `${seoData.name} (${seoData.symbol.toUpperCase()}) Token Report`,
+            "url": reportUrl,
+            "image": ogImage,
+            "about": `On-chain health, risks and performance for ${seoData.name} (${seoData.symbol.toUpperCase()}).`,
+            "publisher": { "@type": "Organization", "name": "TokenHealthScan" }
+          })}
+        </script>
       </Helmet>
 
       <Navbar />
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Header Hero */}
+        <section className="mb-8" aria-labelledby="token-hero-header">
+          <h2 id="token-hero-header" className="sr-only">Token Header</h2>
+          <TokenHeaderHero
+            name={seoData.name}
+            symbol={seoData.symbol}
+            logoUrl={seoData.logo_url}
+            overallScore={metadata.scores.overall}
+            heroUrl={heroUrl}
+          />
+        </section>
+
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm text-muted-foreground mb-8">
           <a href="/" className="hover:text-primary">Home</a>
