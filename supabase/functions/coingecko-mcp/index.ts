@@ -250,14 +250,23 @@ serve(async (req) => {
       ? (finalResponse.errors.length === 0 ? 'auto_insights_success' : 'auto_insights_partial')
       : (finalResponse.errors.length === 0 ? 'ask_success' : 'ask_error');
 
-    await supabase.from('copilot_events').insert({
-      type: eventType,
-      token_address: token.address,
-      query: query,
-      available: finalResponse.available,
-      limited: finalResponse.limited,
-      latency_ms: latency
-    }).catch(err => console.log('[MCP] Telemetry failed:', err));
+    // Log telemetry safely
+    try {
+      const { error: telemetryError } = await supabase.from('copilot_events').insert({
+        type: eventType,
+        token_address: token.address,
+        query: query,
+        available: finalResponse.available,
+        limited: finalResponse.limited,
+        latency_ms: latency
+      });
+      
+      if (telemetryError) {
+        console.log('[MCP] Telemetry failed:', telemetryError);
+      }
+    } catch (telemetryErr) {
+      console.log('[MCP] Telemetry exception:', telemetryErr);
+    }
 
     console.log(`[MCP] Complete in ${latency}ms:`, {
       query: query,
