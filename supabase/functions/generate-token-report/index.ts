@@ -465,6 +465,38 @@ Make the content informative, balanced, and professional. Include specific data 
     // Don't await the snapshot generation
     snapshotGeneration.catch(err => console.error('Snapshot generation failed:', err));
 
+    // Generate hero image asynchronously (don't await to avoid blocking response)
+    const heroImageGeneration = (async () => {
+      try {
+        console.log('Generating hero image...');
+        
+        const { data: heroData, error: heroError } = await supabase.functions.invoke('generate-hero-image', {
+          body: {
+            chain: chainId,
+            address: tokenAddress,
+            name: token.name,
+            symbol: token.symbol,
+            overallScore,
+            scores,
+            lastScannedAt: new Date().toISOString()
+          }
+        });
+
+        if (heroError || !heroData?.ok) {
+          console.error('Failed to generate hero image:', heroError);
+          return;
+        }
+
+        console.log('Hero image generated successfully');
+        
+      } catch (error) {
+        console.error('Error in hero image generation:', error);
+      }
+    })();
+
+    // Don't await the hero image generation
+    heroImageGeneration.catch(err => console.error('Hero image generation failed:', err));
+
     const reportUrl = `/token/${token.symbol.toLowerCase()}`;
     
     console.log('=== Token Report Generation Completed Successfully ===');
