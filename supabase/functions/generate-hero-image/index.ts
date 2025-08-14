@@ -57,7 +57,10 @@ Deno.serve(async (req) => {
     const mood = payload.mood || 'neutral';
     const lastScannedAt = payload.lastScannedAt || new Date().toISOString();
 
+    console.log('🎨 Hero image generation started:', { chain, address, name, symbol, overallScore });
+
     if (!address) {
+      console.error('❌ Missing address in payload');
       return json({ ok: false, error: 'invalid_payload' });
     }
 
@@ -95,18 +98,24 @@ Deno.serve(async (req) => {
 
     const openAIKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIKey) {
+      console.error('❌ Missing OpenAI API key');
       return json({ ok: false, error: 'missing_openai_key' });
     }
 
-    // Generate both sizes with OpenAI
+    console.log('🚀 Generating hero images with OpenAI...');
+    
+    // Generate both sizes with OpenAI - using valid gpt-image-1 sizes
     const [image1200, image1080] = await Promise.all([
-      generateHeroImage(openAIKey, { name, symbol, chain, overallScore, scores, vertical, mood, lastScannedAt }, '1536x1024'),
-      generateHeroImage(openAIKey, { name, symbol, chain, overallScore, scores, vertical, mood, lastScannedAt }, '1024x1536')
+      generateHeroImage(openAIKey, { name, symbol, chain, overallScore, scores, vertical, mood, lastScannedAt }, '1792x1024'),
+      generateHeroImage(openAIKey, { name, symbol, chain, overallScore, scores, vertical, mood, lastScannedAt }, '1024x1792')
     ]);
 
     if (!image1200 || !image1080) {
+      console.error('❌ OpenAI image generation failed');
       return json({ ok: false, error: 'ai_generation_failed' });
     }
+
+    console.log('✅ OpenAI images generated successfully');
 
     // Upload both images
     const [up1, up2] = await Promise.all([
@@ -123,12 +132,19 @@ Deno.serve(async (req) => {
     ]);
 
     if (up1.error || up2.error) {
-      console.error('Upload errors:', up1.error, up2.error);
+      console.error('❌ Storage upload errors:', up1.error, up2.error);
       return json({ ok: false, error: 'upload_failed' });
     }
 
+    console.log('📁 Images uploaded to storage successfully');
+
     const { data: p1 } = supabase.storage.from('reports').getPublicUrl(file1200);
     const { data: p2 } = supabase.storage.from('reports').getPublicUrl(file1080);
+
+    console.log('✅ Hero image generation complete:', { 
+      url_1200x630: p1.publicUrl, 
+      url_1080x1920: p2.publicUrl 
+    });
 
     return json({ ok: true, url_1200x630: p1.publicUrl, url_1080x1920: p2.publicUrl });
 
@@ -157,8 +173,8 @@ async function generateHeroImage(
   size: string
 ): Promise<Uint8Array | null> {
   
-  const aspectRatio = size === '1536x1024' ? 'landscape (1200x630 aspect ratio)' : 'portrait (1080x1920 aspect ratio)';
-  const isLandscape = size === '1536x1024';
+  const aspectRatio = size === '1792x1024' ? 'landscape (1200x630 aspect ratio)' : 'portrait (1080x1920 aspect ratio)';
+  const isLandscape = size === '1792x1024';
   
   const prompt = `Create a professional crypto token branded hero image in ${aspectRatio} format.
 
@@ -190,6 +206,8 @@ COLORS: Use green for high scores (70+), yellow for medium (40-69), red for low 
 STYLE: Professional, clean, high-contrast, suitable for social media sharing`;
 
   try {
+    console.log(`🎯 Calling OpenAI API for ${size} hero image for ${data.symbol}`);
+    
     const genRes = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -206,17 +224,18 @@ STYLE: Professional, clean, high-contrast, suitable for social media sharing`;
 
     if (!genRes.ok) {
       const errTxt = await genRes.text().catch(() => '');
-      console.error('OpenAI error:', errTxt);
+      console.error(`❌ OpenAI API error for ${size}:`, { status: genRes.status, error: errTxt });
       return null;
     }
 
     const genJson = await genRes.json();
     const b64 = genJson?.data?.[0]?.b64_json as string | undefined;
     if (!b64) {
-      console.error('OpenAI response missing b64_json:', genJson);
+      console.error(`❌ OpenAI response missing b64_json for ${size}:`, genJson);
       return null;
     }
 
+    console.log(`✅ OpenAI generated ${size} image successfully for ${data.symbol}`);
     return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
 
   } catch (e) {
