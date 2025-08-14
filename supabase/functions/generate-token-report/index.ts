@@ -388,7 +388,7 @@ Make the content informative, balanced, and professional. Include specific data 
 
     console.log('Saving report to database...');
     
-    // Save report to database
+    // Save report to database (only using existing columns)
     const { data: reportData, error: insertError } = await supabase
       .from('token_reports')
       .insert({
@@ -396,16 +396,8 @@ Make the content informative, balanced, and professional. Include specific data 
         chain_id: chainId,
         token_name: token.name,
         token_symbol: token.symbol,
-        overall_score: overallScore,
-        security_score: scores.security,
-        liquidity_score: scores.liquidity,
-        tokenomics_score: scores.tokenomics,
-        community_score: scores.community,
-        development_score: scores.development,
         report_content: enrichedContent,
-        generated_by: userId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        generated_by: userId
       })
       .select()
       .single();
@@ -447,10 +439,18 @@ Make the content informative, balanced, and professional. Include specific data 
 
         console.log('Snapshot generated:', snapshotData.url);
         
-        // Update report with snapshot URL
+        // Update report content with snapshot URL
+        const updatedContent = {
+          ...enrichedContent,
+          metadata: {
+            ...enrichedContent.metadata,
+            snapshotUrl: snapshotData.url
+          }
+        };
+        
         await supabase
           .from('token_reports')
-          .update({ snapshot_url: snapshotData.url })
+          .update({ report_content: updatedContent })
           .eq('id', reportData.id);
           
         console.log('Report updated with snapshot URL');
