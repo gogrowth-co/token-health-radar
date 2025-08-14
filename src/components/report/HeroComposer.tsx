@@ -10,8 +10,16 @@ export default function HeroComposer({ overlay }: { overlay: HeroOverlayPayload 
     let cancelled = false
     async function run() {
       try {
-        const { data } = await supabase.functions.invoke('compose-hero', {
-          body: overlay
+        const { data } = await supabase.functions.invoke('generate-hero-image', {
+          body: {
+            chain: overlay.chain,
+            address: overlay.address,
+            name: overlay.name,
+            symbol: overlay.symbol,
+            overallScore: overlay.overallScore,
+            scores: overlay.scores,
+            lastScannedAt: overlay.lastScannedAt
+          }
         })
         if (!cancelled && (data as any)?.ok) setUrls(data as any)
       } catch { /* ignore; placeholder below */ }
