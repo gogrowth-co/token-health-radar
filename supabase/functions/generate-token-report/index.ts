@@ -465,7 +465,7 @@ Make the content informative, balanced, and professional. Include specific data 
     // Don't await the snapshot generation
     snapshotGeneration.catch(err => console.error('Snapshot generation failed:', err));
 
-    const reportUrl = `/token-report/${token.symbol.toLowerCase()}`;
+    const reportUrl = `/token/${token.symbol.toLowerCase()}`;
     
     console.log('=== Token Report Generation Completed Successfully ===');
 
