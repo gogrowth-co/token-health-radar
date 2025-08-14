@@ -73,8 +73,8 @@ interface ReportData {
     tokenSymbol: string;
     currentPrice: number;
     marketCap: number;
+    overallScore: number;
     scores: {
-      overall: number;
       security: number;
       tokenomics: number;
       liquidity: number;
@@ -329,7 +329,7 @@ export default function TokenReport() {
     coingecko_id: tokenCacheData?.coingecko_id,
     current_price_usd: tokenCacheData?.current_price_usd || metadata.currentPrice,
     market_cap_usd: tokenCacheData?.market_cap_usd || metadata.marketCap,
-    overall_score: metadata.scores.overall,
+    overall_score: reportData.metadata.overallScore,
     token_address: metadata.tokenAddress,
     chain_id: metadata.chainId
   };
@@ -466,7 +466,7 @@ export default function TokenReport() {
             name={seoData.name}
             symbol={seoData.symbol}
             logoUrl={seoData.logo_url}
-            overallScore={metadata.scores.overall}
+            overallScore={reportData.metadata.overallScore}
             heroUrl={heroUrl}
             currentPrice={seoData.current_price_usd}
             marketCap={seoData.market_cap_usd}
@@ -489,7 +489,7 @@ export default function TokenReport() {
             {seoData.name} ({seoData.symbol.toUpperCase()}) Risk Report
           </h1>
           <div className="flex flex-wrap items-center gap-4 mb-4">
-            <Badge variant="outline">Overall Score: {metadata.scores.overall}/100</Badge>
+            <Badge variant="outline">Overall Score: {reportData.metadata.overallScore}/100</Badge>
             <Badge variant="outline">${metadata.currentPrice?.toFixed(4)}</Badge>
             <Badge variant="outline">Market Cap: ${metadata.marketCap?.toLocaleString()}</Badge>
           </div>
