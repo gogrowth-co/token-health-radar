@@ -388,16 +388,18 @@ Make the content informative, balanced, and professional. Include specific data 
 
     console.log('Saving report to database...');
     
-    // Save report to database (only using existing columns)
+    // Save report to database (upsert to handle existing reports)
     const { data: reportData, error: insertError } = await supabase
       .from('token_reports')
-      .insert({
+      .upsert({
         token_address: tokenAddress,
         chain_id: chainId,
         token_name: token.name,
         token_symbol: token.symbol,
         report_content: enrichedContent,
         generated_by: userId
+      }, {
+        onConflict: 'token_address,chain_id'
       })
       .select()
       .single();
