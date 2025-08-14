@@ -7,9 +7,11 @@ type Props = {
   heroUrl?: string
   logoUrl?: string
   overallScore?: number | null
+  currentPrice?: number | null
+  marketCap?: number | null
 }
 
-export default function TokenHeaderHero({ symbol, name, heroUrl, logoUrl, overallScore }: Props) {
+export default function TokenHeaderHero({ symbol, name, heroUrl, logoUrl, overallScore, currentPrice, marketCap }: Props) {
   const [ready, setReady] = useState(false)
   const [imageError, setImageError] = useState(false)
   
@@ -61,11 +63,21 @@ export default function TokenHeaderHero({ symbol, name, heroUrl, logoUrl, overal
           <h2 className="text-white text-lg md:text-2xl font-semibold leading-tight">
             {name} <span className="text-white/80">({symbol})</span>
           </h2>
-          {typeof overallScore === "number" ? (
-            <p className="text-white/80 text-xs md:text-sm">Overall score: {overallScore}</p>
-          ) : (
-            <p className="text-white/60 text-xs md:text-sm">Score not available</p>
-          )}
+          <div className="flex flex-col gap-1">
+            {typeof overallScore === "number" ? (
+              <p className="text-white/80 text-xs md:text-sm">Overall score: {overallScore}/100</p>
+            ) : (
+              <p className="text-white/60 text-xs md:text-sm">Score not available</p>
+            )}
+            <div className="flex flex-wrap items-center gap-3 text-xs md:text-sm text-white/70">
+              {currentPrice && (
+                <span>${currentPrice.toFixed(4)}</span>
+              )}
+              {marketCap && (
+                <span>Market cap: ${marketCap >= 1e9 ? `${(marketCap/1e9).toFixed(1)}B` : marketCap >= 1e6 ? `${(marketCap/1e6).toFixed(0)}M` : `${(marketCap/1e3).toFixed(0)}K`}</span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
       {!ready && heroUrl && (

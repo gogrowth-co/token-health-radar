@@ -468,6 +468,8 @@ export default function TokenReport() {
             logoUrl={seoData.logo_url}
             overallScore={metadata.scores.overall}
             heroUrl={heroUrl}
+            currentPrice={seoData.current_price_usd}
+            marketCap={seoData.market_cap_usd}
           />
         </section>
 

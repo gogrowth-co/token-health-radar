@@ -379,6 +379,8 @@ Make the content informative, balanced, and professional. Include specific data 
         chainId,
         tokenName: token.name,
         tokenSymbol: token.symbol,
+        currentPrice: parseFloat(token.current_price_usd) || 0,
+        marketCap: parseFloat(token.market_cap_usd) || 0,
         overallScore,
         scores,
         generatedAt: new Date().toISOString(),
@@ -472,7 +474,7 @@ Make the content informative, balanced, and professional. Include specific data 
         
         const { data: heroData, error: heroError } = await supabase.functions.invoke('generate-hero-image', {
           body: {
-            chain: chainId,
+            chain: chainId === '0x1' ? 'ethereum' : chainId,
             address: tokenAddress,
             name: token.name,
             symbol: token.symbol,
