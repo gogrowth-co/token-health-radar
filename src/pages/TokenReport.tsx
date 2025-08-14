@@ -117,7 +117,7 @@ export default function TokenReport() {
         const { data: reportResult, error: reportError } = await supabase
           .from('token_reports')
           .select('*')
-          .eq('token_symbol', symbol.toLowerCase())
+          .ilike('token_symbol', symbol)
           .single();
 
         if (reportError) {
