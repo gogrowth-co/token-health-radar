@@ -73,12 +73,12 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceKey);
 
     // Check cache: if both files exist and are fresh, return them
-    const basePath = `reports/${chain}/${address}`;
+    const basePath = `${chain}/${address}`;
     const file1200 = `${basePath}/hero_1200x630.png`;
     const file1080 = `${basePath}/hero_1080x1920.png`;
 
     try {
-      const list = await supabase.storage.from('reports').list(`${basePath.replace(/^reports\//, '')}`, {limit: 100});
+      const list = await supabase.storage.from('reports').list(basePath, {limit: 100});
       const files = list.data || [];
       const f1200 = files.find(f => f.name === 'hero_1200x630.png');
       const f1080 = files.find(f => f.name === 'hero_1080x1920.png');
