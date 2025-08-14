@@ -104,10 +104,10 @@ Deno.serve(async (req) => {
 
     console.log('🚀 Generating hero images with OpenAI...');
     
-    // Generate both sizes with OpenAI - using valid gpt-image-1 sizes
+    // Generate landscape hero image with OpenAI using supported size
     const [image1200, image1080] = await Promise.all([
-      generateHeroImage(openAIKey, { name, symbol, chain, overallScore, scores, vertical, mood, lastScannedAt }, '1792x1024'),
-      generateHeroImage(openAIKey, { name, symbol, chain, overallScore, scores, vertical, mood, lastScannedAt }, '1024x1792')
+      generateHeroImage(openAIKey, { name, symbol, chain, overallScore, scores, vertical, mood, lastScannedAt }, '1536x1024'),
+      generateHeroImage(openAIKey, { name, symbol, chain, overallScore, scores, vertical, mood, lastScannedAt }, '1536x1024')
     ]);
 
     if (!image1200 || !image1080) {
@@ -173,8 +173,8 @@ async function generateHeroImage(
   size: string
 ): Promise<Uint8Array | null> {
   
-  const aspectRatio = size === '1792x1024' ? 'landscape (1200x630 aspect ratio)' : 'portrait (1080x1920 aspect ratio)';
-  const isLandscape = size === '1792x1024';
+  const aspectRatio = size === '1536x1024' ? 'landscape (1200x630 aspect ratio)' : 'portrait (1080x1920 aspect ratio)';
+  const isLandscape = size === '1536x1024';
   
   const prompt = `Create a professional crypto token branded hero image in ${aspectRatio} format.
 
@@ -206,7 +206,8 @@ COLORS: Use green for high scores (70+), yellow for medium (40-69), red for low 
 STYLE: Professional, clean, high-contrast, suitable for social media sharing`;
 
   try {
-    console.log(`🎯 Calling OpenAI API for ${size} hero image for ${data.symbol}`);
+    const promptSnippet = prompt.substring(0, 100) + '...';
+    console.log(`🎯 OpenAI call initiated for size: ${size}, symbol: ${data.symbol}, prompt: ${promptSnippet}`);
     
     const genRes = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
@@ -222,20 +223,23 @@ STYLE: Professional, clean, high-contrast, suitable for social media sharing`;
       }),
     });
 
+    const requestId = genRes.headers.get('x-request-id') || 'unknown';
+    console.log(`📡 OpenAI response: status ${genRes.status}, x-request-id: ${requestId}`);
+
     if (!genRes.ok) {
       const errTxt = await genRes.text().catch(() => '');
-      console.error(`❌ OpenAI API error for ${size}:`, { status: genRes.status, error: errTxt });
+      console.error(`❌ OpenAI API error for ${size}:`, { status: genRes.status, requestId, error: errTxt });
       return null;
     }
 
     const genJson = await genRes.json();
     const b64 = genJson?.data?.[0]?.b64_json as string | undefined;
     if (!b64) {
-      console.error(`❌ OpenAI response missing b64_json for ${size}:`, genJson);
+      console.error(`❌ OpenAI response missing b64_json for ${size}:`, { requestId, response: genJson });
       return null;
     }
 
-    console.log(`✅ OpenAI generated ${size} image successfully for ${data.symbol}`);
+    console.log(`✅ OpenAI generated ${size} image successfully for ${data.symbol}, request-id: ${requestId}`);
     return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
 
   } catch (e) {
