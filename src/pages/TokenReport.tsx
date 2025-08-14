@@ -38,10 +38,6 @@ import {
   generateFinancialProductSchema,
   generateOrganizationSchema
 } from "@/utils/seoUtils";
-import { ChartPreviewGrid } from "@/components/report/ChartPreviewGrid";
-import HeroBackground from "@/components/report/HeroBackground";
-import HeroComposer from "@/components/report/HeroComposer";
-import VisualsOrchestrator from "@/components/report/VisualsOrchestrator";
 import { storagePublicUrl, pathHero, pathScore, pathChartPrice } from "@/lib/urls";
 import TokenHeaderHero from "@/components/token/TokenHeaderHero";
 
@@ -156,29 +152,6 @@ export default function TokenReport() {
     loadReport();
   }, [symbol]);
 
-  const [chartUrls, setChartUrls] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    if (!reportData) return;
-    const { tokenAddress, chainId } = reportData.metadata;
-    const chain = chainId === '0x1' ? 'ethereum' : chainId;
-    const tokenId = `${chain}_${tokenAddress.toLowerCase()}`;
-    const types = ['price_7d','tvl_90d','holders_donut'] as const;
-    let cancelled = false;
-    (async () => {
-      for (const type of types) {
-        try {
-          const { data } = await supabase.functions.invoke('render-chart', {
-            body: { chain, address: tokenAddress, tokenId, type }
-          });
-          if (!cancelled && (data as any)?.url) {
-            setChartUrls(prev => ({ ...prev, [type]: (data as any).url as string }));
-          }
-        } catch (_) { /* ignore */ }
-      }
-    })();
-    return () => { cancelled = true };
-  }, [reportData?.metadata?.tokenAddress]);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600 dark:text-green-400";
@@ -507,34 +480,7 @@ export default function TokenReport() {
           <span>{seoData.name}</span>
         </nav>
 
-        {/* Visuals Orchestrator */}
-        {(() => {
-          const chainStr = metadata.chainId === '0x1' ? 'ethereum' : (metadata.chainId as any);
-          const tokenId = `${chainStr}_${metadata.tokenAddress.toLowerCase()}`;
-          return (
-            <VisualsOrchestrator
-              req={{
-                chain: chainStr,
-                address: metadata.tokenAddress,
-                tokenId,
-                name: seoData.name,
-                symbol: seoData.symbol,
-                logoUrl: seoData.logo_url,
-                overallScore: metadata.scores.overall ?? null,
-                scores: {
-                  security: metadata.scores.security ?? null,
-                  liquidity: metadata.scores.liquidity ?? null,
-                  tokenomics: metadata.scores.tokenomics ?? null,
-                  community: metadata.scores.community ?? null,
-                  development: metadata.scores.development ?? null,
-                },
-                lastScannedAt: metadata.generatedAt,
-                mood: "neutral",
-              }}
-            />
-          );
-        })()}
-
+        {/* What is Token */}
         {/* Header */}
         <header className="mb-8">
           <h1 className="text-4xl font-bold mb-4">
@@ -549,58 +495,6 @@ export default function TokenReport() {
             Generated on {new Date(metadata.generatedAt).toLocaleDateString()}
           </p>
         </header>
-
-        {/* Hero Background Preview */}
-        <section className="mb-8" aria-labelledby="hero-bg-heading">
-          <h2 id="hero-bg-heading" className="sr-only">Hero Background</h2>
-          {(() => {
-            const chainStr = metadata.chainId === '0x1' ? 'ethereum' : metadata.chainId;
-            return (
-              <HeroBackground
-                chain={chainStr}
-                address={metadata.tokenAddress}
-                name={seoData.name}
-                symbol={seoData.symbol}
-                verticalHint={tokenCacheData?.description || seoData.name}
-              />
-            );
-          })()}
-        </section>
-
-        {/* Branded Hero Composer */}
-        <section className="mb-8" aria-labelledby="branded-hero-heading">
-          <h2 id="branded-hero-heading" className="sr-only">Branded Hero</h2>
-          {(() => {
-            const chainStr = metadata.chainId === '0x1' ? 'ethereum' : metadata.chainId;
-            return (
-              <HeroComposer
-                overlay={{
-                  chain: chainStr,
-                  address: metadata.tokenAddress,
-                  name: seoData.name,
-                  symbol: seoData.symbol,
-                  logoUrl: seoData.logo_url,
-                  overallScore: metadata.scores.overall ?? null,
-                  scores: {
-                    security: metadata.scores.security ?? null,
-                    liquidity: metadata.scores.liquidity ?? null,
-                    tokenomics: metadata.scores.tokenomics ?? null,
-                    community: metadata.scores.community ?? null,
-                    development: metadata.scores.development ?? null,
-                  },
-                  lastScannedAt: metadata.generatedAt,
-                }}
-              />
-            );
-          })()}
-        </section>
-
-        {/* Chart PNG Previews */}
-        <section aria-labelledby="charts-heading" className="mb-8">
-          <h2 id="charts-heading" className="text-2xl font-semibold mb-2">Charts (PNG)</h2>
-          <p className="text-xs text-muted-foreground mb-3">Auto-generated from stored data</p>
-          <ChartPreviewGrid symbol={seoData.symbol} urls={chartUrls as any} />
-        </section>
 
         {/* What is Token */}
         <section className="mb-8">
