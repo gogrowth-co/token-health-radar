@@ -635,7 +635,21 @@ function composeFormalDescription(opts: {
   name: string; symbol: string; chainName: string; contract: string;
   security?: any; stats?: any; price?: any; marketCap?: number; website?: string;
 }): string {
-  const { name, symbol, chainName, contract, security = {}, stats = {}, price = {}, marketCap, website } = opts;
+  // Handle null values by providing safe defaults
+  const { name, symbol, chainName, contract, marketCap, website } = opts;
+  const security = opts.security || {};
+  const stats = opts.stats || {};
+  const price = opts.price || {};
+  
+  console.log(`[DESCRIPTION-DEBUG] composeFormalDescription called with:`, {
+    hasStats: !!opts.stats,
+    hasSecurity: !!opts.security,
+    hasPrice: !!opts.price,
+    statsType: typeof opts.stats,
+    securityType: typeof opts.security,
+    priceType: typeof opts.price
+  });
+  
   const parts: string[] = [];
   // First sentence: identity
   let identity = `${name} (${symbol}) is a token on ${chainName}`;
@@ -655,9 +669,10 @@ function composeFormalDescription(opts: {
     parts.push(`Key security notes: ${notes.join('; ')}.`);
   }
 
-  // Supply/holders
-  const holders = typeof (stats as any).holders === 'number' ? (stats as any).holders : Number((stats as any)?.holders) || 0;
-  const totalSupply = (stats as any)?.total_supply && (stats as any).total_supply !== '0' ? (stats as any).total_supply : '';
+  // Supply/holders - Fixed null safety
+  const holders = stats?.holders ? 
+    (typeof stats.holders === 'number' ? stats.holders : Number(stats.holders) || 0) : 0;
+  const totalSupply = stats?.total_supply && stats.total_supply !== '0' ? stats.total_supply : '';
   const supplyBits: string[] = [];
   if (totalSupply) supplyBits.push(`total supply ${totalSupply}`);
   if (holders > 0) supplyBits.push(`approximately ${holders.toLocaleString()} holders`);
@@ -665,11 +680,11 @@ function composeFormalDescription(opts: {
     parts.push(`Token distribution: ${supplyBits.join('; ')}.`);
   }
 
-  // Market context
-  const priceUsd = typeof (price as any)?.current_price_usd === 'number' ? (price as any).current_price_usd : null;
+  // Market context - Fixed null safety
+  const priceUsd = typeof price?.current_price_usd === 'number' ? price.current_price_usd : null;
   const mcUsd = typeof marketCap === 'number' && !Number.isNaN(marketCap)
     ? marketCap
-    : (typeof (price as any)?.market_cap_usd === 'number' ? (price as any).market_cap_usd : null);
+    : (typeof price?.market_cap_usd === 'number' ? price.market_cap_usd : null);
   const fmt = (n: number) => {
     if (n >= 1e9) return `$${(n/1e9).toFixed(2)}B`;
     if (n >= 1e6) return `$${(n/1e6).toFixed(2)}M`;
@@ -880,8 +895,49 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
   
   const chainConfig = getChainConfigByMoralisId(chainId);
   if (!chainConfig) {
-    console.log(`[SCAN] Unsupported chain: ${chainId}`);
-    return null;
+    console.log(`[SCAN] Unsupported chain: ${chainId}, returning fallback data`);
+    // Return fallback data for unsupported chains instead of null
+    return {
+      tokenData: {
+        name: 'Unknown Token',
+        symbol: 'UNKNOWN',
+        decimals: 18,
+        logo: '',
+        description: `Token on unsupported chain (${chainId})`,
+        total_supply: '0',
+        verified_contract: false,
+        possible_spam: false
+      },
+      securityData: {
+        ownership_renounced: null,
+        can_mint: false,
+        honeypot_detected: false,
+        freeze_authority: false,
+        is_proxy: false,
+        is_blacklisted: false,
+        access_control: false,
+        contract_verified: false,
+        audit_status: 'unknown',
+        buy_tax: 0,
+        sell_tax: 0,
+        transfer_tax: 0,
+        is_liquidity_locked: false,
+        liquidity_lock_info: null,
+        liquidity_percentage: null,
+        multisig_status: 'unknown'
+      },
+      webacyData: null,
+      priceData: null,
+      statsData: null,
+      pairsData: null,
+      ownersData: null,
+      githubData: null,
+      tvlData: null,
+      cexData: 0,
+      twitterFollowers: 0,
+      discordMembers: 0,
+      telegramMembers: 0
+    };
   }
 
   try {
@@ -1504,7 +1560,50 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     };
   } catch (error) {
     console.error(`[SCAN] Error fetching token data from APIs:`, error);
-    return null;
+    console.log(`[SCAN] Returning fallback data structure to prevent null reference errors`);
+    
+    // Return a fallback data structure instead of null to prevent crashes
+    return {
+      tokenData: {
+        name: 'Unknown Token',
+        symbol: 'UNKNOWN',
+        decimals: 18,
+        logo: '',
+        description: '',
+        total_supply: '0',
+        verified_contract: false,
+        possible_spam: false
+      },
+      securityData: {
+        ownership_renounced: null,
+        can_mint: false,
+        honeypot_detected: false,
+        freeze_authority: false,
+        is_proxy: false,
+        is_blacklisted: false,
+        access_control: false,
+        contract_verified: false,
+        audit_status: 'unknown',
+        buy_tax: 0,
+        sell_tax: 0,
+        transfer_tax: 0,
+        is_liquidity_locked: false,
+        liquidity_lock_info: null,
+        liquidity_percentage: null,
+        multisig_status: 'unknown'
+      },
+      webacyData: null,
+      priceData: null,
+      statsData: null,
+      pairsData: null,
+      ownersData: null,
+      githubData: null,
+      tvlData: null,
+      cexData: 0,
+      twitterFollowers: 0,
+      discordMembers: 0,
+      telegramMembers: 0
+    };
   }
 }
 
