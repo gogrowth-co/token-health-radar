@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ServerSideTokenReport from "@/components/ServerSideTokenReport";
+import SeoHead from "@/components/seo/SeoHead";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -362,31 +362,15 @@ export default function TokenReport() {
     <div className="min-h-screen bg-background">
       <ServerSideTokenReport />
       
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
-        <meta name="keywords" content={pageKeywords} />
-        <meta name="author" content="Token Health Scan" />
-        
-        {/* Open Graph */}
-        <meta property="og:title" content={`${seoData.name} (${seoData.symbol.toUpperCase()}) Risk Report`} />
-        <meta property="og:description" content={pageDescription} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={reportUrl} />
-        <meta property="og:image" content={ogImage} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:site_name" content="Token Health Scan" />
-        
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@tokenhealthscan" />
-        <meta name="twitter:title" content={`${seoData.name} Risk Report`} />
-        <meta name="twitter:description" content={pageDescription} />
-        <meta name="twitter:image" content={ogImage} />
-        
-        {/* Canonical URL */}
-        <link rel="canonical" href={reportUrl} />
+      <SeoHead
+        title={pageTitle}
+        description={pageDescription}
+        keywords={pageKeywords}
+        canonicalUrl={reportUrl}
+        ogImage={ogImage}
+        ogTitle={`${seoData.name} (${seoData.symbol.toUpperCase()}) Risk Report`}
+        twitterTitle={`${seoData.name} Risk Report`}
+      >
 
         {/* FinancialProduct Schema */}
         <script type="application/ld+json">
@@ -454,7 +438,7 @@ export default function TokenReport() {
             "publisher": { "@type": "Organization", "name": "TokenHealthScan" }
           })}
         </script>
-      </Helmet>
+      </SeoHead>
 
       <Navbar />
 
