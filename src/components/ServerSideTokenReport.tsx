@@ -60,11 +60,16 @@ export default function ServerSideTokenReport({}: ServerSideTokenReportProps) {
               const doc = parser.parseFromString(staticHTML, 'text/html');
               const head = doc.head;
               
-              // Update document head with dynamic meta tags
-              const existingMetas = document.head.querySelectorAll('meta[data-dynamic="true"]');
+              // Update document head with dynamic meta tags (exclude canonical link - handled by SeoHead)
+              const existingMetas = document.head.querySelectorAll('meta[data-dynamic="true"], title[data-dynamic="true"], script[data-dynamic="true"]');
               existingMetas.forEach(meta => meta.remove());
               
               head.querySelectorAll('meta, title, script[type="application/ld+json"]').forEach(element => {
+                // Skip canonical links - they're handled by SeoHead component to ensure exactly one per page
+                if (element.tagName.toLowerCase() === 'link' && element.getAttribute('rel') === 'canonical') {
+                  return;
+                }
+                
                 const clone = element.cloneNode(true) as HTMLElement;
                 clone.setAttribute('data-dynamic', 'true');
                 document.head.appendChild(clone);
