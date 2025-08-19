@@ -60,16 +60,20 @@ export default function ServerSideTokenReport({}: ServerSideTokenReportProps) {
               const doc = parser.parseFromString(staticHTML, 'text/html');
               const head = doc.head;
               
-              // Update document head with dynamic meta tags (exclude canonical link - handled by SeoHead)
+              // Aggressively remove ALL canonical links first to prevent duplicates
+              const removeAllCanonicals = () => {
+                const canonicals = document.head.querySelectorAll('link[rel="canonical"]');
+                canonicals.forEach(link => link.remove());
+              };
+              
+              // Remove existing dynamic content and all canonical links
               const existingMetas = document.head.querySelectorAll('meta[data-dynamic="true"], title[data-dynamic="true"], script[data-dynamic="true"], link[data-dynamic="true"]');
               existingMetas.forEach(meta => meta.remove());
+              removeAllCanonicals();
               
-              // Remove any existing canonical links to prevent duplicates
-              const existingCanonicals = document.head.querySelectorAll('link[rel="canonical"]');
-              existingCanonicals.forEach(link => link.remove());
-              
+              // Add new dynamic content (excluding canonical links)
               head.querySelectorAll('meta, title, link, script[type="application/ld+json"]').forEach(element => {
-                // Skip canonical links - they're handled by SeoHead component to ensure exactly one per page
+                // Skip ALL link elements with rel="canonical" - they're handled by SeoHead component
                 if (element.tagName.toLowerCase() === 'link' && element.getAttribute('rel') === 'canonical') {
                   return;
                 }
@@ -78,6 +82,11 @@ export default function ServerSideTokenReport({}: ServerSideTokenReportProps) {
                 clone.setAttribute('data-dynamic', 'true');
                 document.head.appendChild(clone);
               });
+              
+              // Final cleanup: remove any canonical links that might have snuck through
+              setTimeout(() => {
+                removeAllCanonicals();
+              }, 50);
             }
           }
         } catch (error) {
