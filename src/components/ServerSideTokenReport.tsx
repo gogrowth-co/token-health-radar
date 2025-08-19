@@ -64,7 +64,7 @@ export default function ServerSideTokenReport({}: ServerSideTokenReportProps) {
               const existingMetas = document.head.querySelectorAll('meta[data-dynamic="true"], title[data-dynamic="true"], script[data-dynamic="true"]');
               existingMetas.forEach(meta => meta.remove());
               
-              head.querySelectorAll('meta, title, script[type="application/ld+json"]').forEach(element => {
+              head.querySelectorAll('meta, title, link, script[type="application/ld+json"]').forEach(element => {
                 // Skip canonical links - they're handled by SeoHead component to ensure exactly one per page
                 if (element.tagName.toLowerCase() === 'link' && element.getAttribute('rel') === 'canonical') {
                   return;
