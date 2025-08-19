@@ -88,9 +88,6 @@ const generateHTMLTemplate = (title: string, description: string, canonicalUrl: 
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image" content="${imageUrl}" />
   
-  <!-- Canonical URL -->
-  <link rel="canonical" href="${canonicalUrl}" />
-  
   <!-- Structured Data -->
   ${schemas.map(schema => `<script type="application/ld+json">
     ${JSON.stringify(schema)}
