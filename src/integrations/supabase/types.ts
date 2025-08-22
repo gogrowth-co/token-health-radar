@@ -711,6 +711,21 @@ export type Database = {
       }
     }
     Functions: {
+      get_admin_hubspot_data: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          email: string
+          last_scan_date: string
+          name: string
+          plan: string
+          pro_scan_limit: number
+          pro_subscriber: boolean
+          scan_credits_remaining: number
+          scans_used: number
+          signup_date: string
+          user_id: string
+        }[]
+      }
       get_admin_user_data: {
         Args: { _caller_user_id: string }
         Returns: {
@@ -730,6 +745,21 @@ export type Database = {
       get_user_email_for_hubspot: {
         Args: { user_id: string }
         Returns: string
+      }
+      get_user_hubspot_data: {
+        Args: { target_user_id: string }
+        Returns: {
+          email: string
+          last_scan_date: string
+          name: string
+          plan: string
+          pro_scan_limit: number
+          pro_subscriber: boolean
+          scan_credits_remaining: number
+          scans_used: number
+          signup_date: string
+          user_id: string
+        }[]
       }
       get_user_role: {
         Args: { _user_id: string }
