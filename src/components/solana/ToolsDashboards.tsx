@@ -44,7 +44,7 @@ export default function ToolsDashboards() {
         <div className="bg-card p-4 md:p-6 rounded-lg border">
           <h3 className="text-lg md:text-xl font-bold mb-3 md:mb-4 text-green-600">TokenHealthScan: Score Before You Ape</h3>
           <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
-            <Link to="/" className="text-blue-600 hover:underline">TokenHealthScan</Link> offers a layer of real-time token scanning built specifically for early-stage tokens — including those launched via Solana's new-gen platforms. <Link to="/token-scan-guide" className="text-blue-600 hover:underline">Learn how token scanning works</Link> or see how we <Link to="/token-sniffer-vs-tokenhealthscan" className="text-blue-600 hover:underline">compare to Token Sniffer</Link>.
+            <Link to="/" className="text-blue-600 hover:underline">TokenHealthScan</Link> offers a layer of real-time token scanning built specifically for early-stage tokens — including those launched via Solana's new-gen platforms. <Link to="/token-scan-guide" className="text-blue-600 hover:underline">Learn how token scanning works</Link> or see how we <Link to="/token-sniffer-comparison" className="text-blue-600 hover:underline">compare to Token Sniffer</Link>.
           </p>
           <div className="space-y-2 text-xs md:text-sm">
             <p><strong>What it adds:</strong></p>

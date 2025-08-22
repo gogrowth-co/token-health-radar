@@ -742,6 +742,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      refresh_token_sitemap: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       sync_all_users_to_hubspot: {
         Args: Record<PropertyKey, never>
         Returns: undefined
