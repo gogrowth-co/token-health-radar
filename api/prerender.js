@@ -9,11 +9,20 @@ export default async function handler(req, res) {
   const isBot = /bot|crawler|spider|crawling|facebookexternalhit|twitterbot|linkedinbot|slackbot|whatsapp|discordbot/i.test(userAgent);
   
   if (!isBot) {
-    // Regular users get the normal React app
-    if (token) {
-      return res.redirect(307, `/token/${token}`);
-    }
-    return res.redirect(307, pathname);
+    // Regular users get the normal React app - serve index.html
+    res.setHeader('Content-Type', 'text/html');
+    return res.status(200).send(`<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Token Health Scan</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>`);
   }
   
   try {
@@ -193,11 +202,24 @@ function generateStaticHTML(tokenData, reportContent) {
   const canonicalUrl = `https://tokenhealthscan.com/token/${tokenData.symbol.toLowerCase()}`;
   const imageUrl = tokenData.logo_url || "https://tokenhealthscan.com/tokenhealthscan-og.png";
   
-  // Generate all structured data schemas - no duplicates
+  // Generate all structured data schemas
   const schemas = generateAllTokenSchemas(tokenData, canonicalUrl, reportContent);
   const structuredDataHTML = schemas.map(schema => 
     `<script type="application/ld+json">${JSON.stringify(schema)}</script>`
   ).join('\n  ');
+  
+  // Generate actual report content sections for SEO
+  const securityAnalysis = typeof reportContent?.securityAnalysis === 'string' 
+    ? reportContent.securityAnalysis 
+    : reportContent?.securityAnalysis?.summary || 'Security analysis in progress...';
+    
+  const liquidityAnalysis = typeof reportContent?.liquidityAnalysis === 'string'
+    ? reportContent.liquidityAnalysis
+    : reportContent?.liquidityAnalysis?.summary || 'Liquidity analysis in progress...';
+    
+  const tokenomicsAnalysis = typeof reportContent?.tokenomicsAnalysis === 'string'
+    ? reportContent.tokenomicsAnalysis
+    : reportContent?.tokenomicsAnalysis?.summary || 'Tokenomics analysis in progress...';
   
   return `<!DOCTYPE html>
 <html lang="en">
@@ -228,10 +250,10 @@ function generateStaticHTML(tokenData, reportContent) {
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image" content="${imageUrl}" />
   
-  <!-- Canonical URL -->
+  <!-- Canonical URL - SINGLE CANONICAL -->
   <link rel="canonical" href="${canonicalUrl}" />
   
-  <!-- Structured Data - All schemas in one place, no duplicates -->
+  <!-- Structured Data Schemas -->
   ${structuredDataHTML}
   
   <!-- Favicon -->
@@ -242,30 +264,60 @@ function generateStaticHTML(tokenData, reportContent) {
   <link rel="dns-prefetch" href="//fonts.googleapis.com">
 </head>
 <body>
-  <!-- This content will be hydrated by React -->
-  <div id="root">
-    <div style="padding: 2rem; text-align: center; font-family: system-ui;">
-      <h1>${tokenData.name} (${tokenData.symbol.toUpperCase()}) Risk Report</h1>
-      <p>Loading comprehensive risk analysis...</p>
-      <p>Score: ${tokenData.overall_score || 'Calculating'}/100</p>
-    </div>
-  </div>
+  <!-- Main Content for Crawlers -->
+  <main id="root">
+    <article>
+      <header>
+        <h1>${tokenData.name} (${tokenData.symbol.toUpperCase()}) Risk Report</h1>
+        <p>Comprehensive risk analysis and security assessment for ${tokenData.name}</p>
+        <div>
+          <span>Overall Risk Score: ${tokenData.overall_score || 'Calculating'}/100</span>
+          ${tokenData.current_price_usd ? `<span>Price: $${tokenData.current_price_usd}</span>` : ''}
+          ${tokenData.market_cap_usd ? `<span>Market Cap: $${tokenData.market_cap_usd.toLocaleString()}</span>` : ''}
+        </div>
+      </header>
+      
+      <section>
+        <h2>What is ${tokenData.name}?</h2>
+        <p>${reportContent?.whatIsToken || `${tokenData.name} is a cryptocurrency token that we analyze for risk factors.`}</p>
+      </section>
+      
+      <section>
+        <h2>Security Analysis</h2>
+        <p>${securityAnalysis}</p>
+      </section>
+      
+      <section>
+        <h2>Liquidity Analysis</h2>
+        <p>${liquidityAnalysis}</p>
+      </section>
+      
+      <section>
+        <h2>Tokenomics Analysis</h2>
+        <p>${tokenomicsAnalysis}</p>
+      </section>
+      
+      ${reportContent?.faq ? `
+      <section>
+        <h2>Frequently Asked Questions</h2>
+        ${reportContent.faq.map(item => `
+          <div>
+            <h3>${item.question}</h3>
+            <p>${item.answer}</p>
+          </div>
+        `).join('')}
+      </section>
+      ` : ''}
+    </article>
+  </main>
   
-  <!-- Load React app -->
-  <script type="module" src="/src/main.tsx"></script>
-  
-  <!-- Bot detection and redirect script -->
+  <!-- For bots: content is already visible above, no need to load React -->
+  <!-- For users: load React app for interactive experience -->
   <script>
-    // Only load React for regular users, not bots
+    // Only load React for regular users, serve static content to bots
     if (!navigator.userAgent.match(/bot|crawler|spider|crawling/i)) {
-      // React will hydrate this page
-    } else {
-      // For bots, redirect to React app after brief delay
-      setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          window.location.href = '/token/${tokenData.symbol.toLowerCase()}';
-        }
-      }, 1000);
+      // Load React app for interactive experience
+      import('/src/main.tsx');
     }
   </script>
 </body>

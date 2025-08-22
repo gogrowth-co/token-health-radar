@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import ServerSideTokenReport from "@/components/ServerSideTokenReport";
+
 import SeoHead from "@/components/seo/SeoHead";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -284,7 +284,6 @@ export default function TokenReport() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <ServerSideTokenReport />
         <Navbar />
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
@@ -300,7 +299,6 @@ export default function TokenReport() {
   if (error || !reportData) {
     return (
       <div className="min-h-screen bg-background">
-        <ServerSideTokenReport />
         <Navbar />
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
@@ -360,7 +358,6 @@ export default function TokenReport() {
 
   return (
     <div className="min-h-screen bg-background">
-      <ServerSideTokenReport />
       
       <SeoHead
         title={pageTitle}

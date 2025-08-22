@@ -39,6 +39,19 @@ Allow: /
 User-agent: anthropic-ai
 Allow: /
 
+# Token report pages - high priority
+User-agent: *
+Allow: /token/*
+Crawl-delay: 1
+
+# Guide pages - high priority  
+User-agent: *
+Allow: /token-scan-guide
+Allow: /token-sniffer-comparison
+Allow: /solana-launchpads
+Allow: /ethereum-launchpads
+Crawl-delay: 1
+
 # File access controls
 User-agent: *
 Disallow: /lovable-uploads/
