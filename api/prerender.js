@@ -28,7 +28,6 @@ export default async function handler(req, res) {
   try {
     // Handle guide pages
     if (pathname.includes('/token-scan-guide') || 
-        pathname.includes('/token-sniffer-comparison') || 
         pathname.includes('/token-sniffer-vs-tokenhealthscan') ||
         pathname.includes('/solana-launchpads') || 
         pathname.includes('/ethereum-launchpads')) {
@@ -134,7 +133,7 @@ function getGuidePageData(pathname) {
     '/token-sniffer-vs-tokenhealthscan': {
       title: "TokenHealthScan vs Token Sniffer: 2025 Comparison Guide",
       description: "Compare TokenHealthScan and Token Sniffer for crypto token analysis. See features, pricing, accuracy, and which tool is best for your needs.",
-      canonical_url: "https://tokenhealthscan.com/token-sniffer-comparison",
+      canonical_url: "https://tokenhealthscan.com/token-sniffer-vs-tokenhealthscan",
       image_url: "https://tokenhealthscan.com/lovable-uploads/token-sniffer-vs-tokenhealthscan-cover.png",
       published_date: "2025-06-19"
     },

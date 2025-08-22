@@ -62,7 +62,7 @@ export default function SolanaLaunchpadsHero() {
             <Link to="/token-scan-guide">Token Scan Guide</Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link to="/token-sniffer-comparison">vs Token Sniffer</Link>
+            <Link to="/token-sniffer-vs-tokenhealthscan">vs Token Sniffer</Link>
           </Button>
         </div>
       </div>

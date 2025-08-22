@@ -90,7 +90,6 @@ const App = () => {
                     <Route path="/privacy" element={<Privacy />} />
                     <Route path="/terms" element={<Terms />} />
                     <Route path="/token-scan-guide" element={<TokenScanGuide />} />
-                    <Route path="/token-sniffer-comparison" element={<TokenSnifferComparison />} />
                     <Route path="/token-sniffer-vs-tokenhealthscan" element={<TokenSnifferComparison />} />
                     <Route path="/solana-launchpads" element={<SolanaLaunchpads />} />
                     <Route path="/ethereum-launchpads" element={<EthereumLaunchpads />} />

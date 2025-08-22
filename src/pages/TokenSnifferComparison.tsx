@@ -30,7 +30,7 @@ export default function TokenSnifferComparison() {
     "dateModified": "2025-06-23",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://tokenhealthscan.com/token-sniffer-comparison"
+      "@id": "https://tokenhealthscan.com/token-sniffer-vs-tokenhealthscan"
     },
     "image": "https://tokenhealthscan.com/lovable-uploads/token-sniffer-vs-tokenhealthscan-cover.png",
     "keywords": ["token scanner", "Token Sniffer", "TokenHealthScan", "crypto analysis", "DeFi security", "token due diligence"],
@@ -48,13 +48,13 @@ export default function TokenSnifferComparison() {
         <title>Token Sniffer vs TokenHealthScan: What's Better for Scanning Tokens?</title>
         <meta name="description" content="Compare Token Sniffer and TokenHealthScan to find the best crypto token scanner. Learn how to avoid scams, spot legit projects, and invest smarter in DeFi." />
         <meta name="keywords" content="token scanner, Token Sniffer, TokenHealthScan, crypto analysis, DeFi security, token due diligence" />
-        <link rel="canonical" href="https://tokenhealthscan.com/token-sniffer-comparison" />
+        <link rel="canonical" href="https://tokenhealthscan.com/token-sniffer-vs-tokenhealthscan" />
         
         {/* Open Graph tags */}
         <meta property="og:title" content="Token Sniffer vs TokenHealthScan: What's Better for Scanning Tokens?" />
         <meta property="og:description" content="Compare Token Sniffer and TokenHealthScan to find the best crypto token scanner. Learn how to avoid scams, spot legit projects, and invest smarter in DeFi." />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://tokenhealthscan.com/token-sniffer-comparison" />
+        <meta property="og:url" content="https://tokenhealthscan.com/token-sniffer-vs-tokenhealthscan" />
         <meta property="og:image" content="https://tokenhealthscan.com/lovable-uploads/token-sniffer-vs-tokenhealthscan-cover.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
