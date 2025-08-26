@@ -1,7 +1,7 @@
 
 // Vercel serverless function for prerendering token and guide pages
 export default async function handler(req, res) {
-  const { token } = req.query;
+  const { token, sitemap } = req.query;
   const pathname = req.url;
   
   // Check if request is from a bot/crawler
@@ -23,6 +23,25 @@ export default async function handler(req, res) {
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>`);
+  }
+  
+  // Handle sitemap requests
+  if (sitemap === 'true') {
+    try {
+      const response = await fetch('https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/serve-sitemap', {
+        headers: {
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhcWVicGNxZXNwdnpiZndhd2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3ODkxNzEsImV4cCI6MjA2MzM2NTE3MX0.11hoagaFRKXswTNtXTwDM4NDHpPMO5EDEUhyFS3N8v4'
+        }
+      });
+      const sitemapXml = await response.text();
+      res.setHeader('Content-Type', 'application/xml');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      return res.status(200).send(sitemapXml);
+    } catch (error) {
+      console.error('Error fetching sitemap:', error);
+      res.setHeader('Content-Type', 'application/xml');
+      return res.status(500).send('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>');
+    }
   }
   
   try {
