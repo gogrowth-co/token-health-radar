@@ -3,7 +3,7 @@
   "routes": [
     {
       "src": "/sitemap.xml",
-      "dest": "/sitemap.xml",
+      "dest": "https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/serve-sitemap",
       "headers": {
         "Content-Type": "application/xml"
       }

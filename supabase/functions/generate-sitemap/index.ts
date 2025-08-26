@@ -56,6 +56,20 @@ ${allPages.map(page => `  <url>
   </url>`).join('\n')}
 </urlset>`;
 
+    // Save sitemap to storage bucket
+    const { error: uploadError } = await supabase.storage
+      .from('sitemaps')
+      .upload('sitemap.xml', sitemap, {
+        contentType: 'application/xml',
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error('Error uploading sitemap to storage:', uploadError);
+    } else {
+      console.log('Sitemap successfully uploaded to storage');
+    }
+
     return new Response(sitemap, {
       headers: {
         ...corsHeaders,
