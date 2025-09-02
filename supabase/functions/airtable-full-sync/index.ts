@@ -32,20 +32,71 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Force refresh env var to ensure we get the latest token
+  // Force refresh env var to ensure we get the latest token (v4 deployment)
   const AIRTABLE_ACCESS_TOKEN = Deno.env.get('AIRTABLE_ACCESS_TOKEN');
   
-  console.log('Environment check:', {
+  console.log('Environment check v4:', {
     supabaseUrl: !!supabaseUrl,
     serviceKey: !!supabaseServiceKey,
     airtableToken: !!AIRTABLE_ACCESS_TOKEN,
-    tokenLength: AIRTABLE_ACCESS_TOKEN?.length || 0
+    tokenLength: AIRTABLE_ACCESS_TOKEN?.length || 0,
+    allEnvVars: Object.keys(Deno.env.toObject()).filter(key => key.includes('AIRTABLE'))
   });
 
   if (!AIRTABLE_ACCESS_TOKEN) {
-    console.error('AIRTABLE_ACCESS_TOKEN is not set');
+    console.error('AIRTABLE_ACCESS_TOKEN is not set - deployment v4');
     return new Response(
-      JSON.stringify({ error: 'Airtable access token not configured' }),
+      JSON.stringify({ 
+        error: 'Airtable access token not configured', 
+        tokenExists: false,
+        envCheck: Object.keys(Deno.env.toObject()).filter(key => key.includes('AIRTABLE')),
+        version: 'v4'
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
+  // Test Airtable connection first
+  console.log('Testing Airtable API connection v4...');
+  try {
+    const testResponse = await fetch(
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}?maxRecords=1`,
+      {
+        headers: {
+          'Authorization': `Bearer ${AIRTABLE_ACCESS_TOKEN}`,
+        },
+      }
+    );
+
+    if (!testResponse.ok) {
+      const errorText = await testResponse.text();
+      console.error('Airtable API test failed:', testResponse.status, errorText);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Airtable API connection failed',
+          status: testResponse.status,
+          details: errorText,
+          version: 'v4'
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log('Airtable API connection successful v4!');
+  } catch (testError: any) {
+    console.error('Exception testing Airtable API:', testError);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Failed to test Airtable API',
+        details: testError.message,
+        version: 'v4'
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Fixed Airtable Functions</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .loading { background-color: #fff3cd; color: #856404; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; cursor: pointer; }
+        .log { background-color: #f8f9fa; padding: 10px; margin: 10px 0; border: 1px solid #dee2e6; font-family: monospace; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Test Fixed Airtable Functions (v4)</h1>
+    
+    <button onclick="testDebug()">1. Test Debug Function</button>
+    <button onclick="testFullSync()">2. Test Full Sync</button>
+    <button onclick="runBothTests()">3. Run Both Tests</button>
+    
+    <div id="status" class="status info">Ready to test v4 deployment...</div>
+    
+    <h2>Test Output:</h2>
+    <div id="logs" class="log">Logs will appear here...</div>
+    
+    <script>
+    function log(message) {
+        const timestamp = new Date().toISOString();
+        document.getElementById('logs').innerHTML += `[${timestamp}] ${message}\n`;
+        document.getElementById('logs').scrollTop = document.getElementById('logs').scrollHeight;
+    }
+    
+    async function testDebug() {
+        log('=== TESTING DEBUG FUNCTION V4 ===');
+        document.getElementById('status').className = 'status loading';
+        document.getElementById('status').innerHTML = 'Testing debug function v4...';
+        
+        try {
+            const response = await fetch('https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/debug-airtable', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+            log(`Debug response (${response.status}): ${JSON.stringify(data, null, 2)}`);
+            
+            if (data.success) {
+                document.getElementById('status').className = 'status success';
+                document.getElementById('status').innerHTML = '✅ Debug test successful! Airtable connection working.';
+            } else {
+                document.getElementById('status').className = 'status error';
+                document.getElementById('status').innerHTML = `❌ Debug test failed: ${data.error}`;
+            }
+        } catch (error) {
+            log(`Debug test error: ${error.message}`);
+            document.getElementById('status').className = 'status error';
+            document.getElementById('status').innerHTML = `❌ Debug test failed: ${error.message}`;
+        }
+    }
+    
+    async function testFullSync() {
+        log('=== TESTING FULL SYNC FUNCTION V4 ===');
+        document.getElementById('status').className = 'status loading';
+        document.getElementById('status').innerHTML = 'Testing full sync v4...';
+        
+        try {
+            const response = await fetch('https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/airtable-full-sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ test_v4: true })
+            });
+            
+            const data = await response.json();
+            log(`Full sync response (${response.status}): ${JSON.stringify(data, null, 2)}`);
+            
+            if (data.success) {
+                document.getElementById('status').className = 'status success';
+                document.getElementById('status').innerHTML = `✅ Full sync successful! ${data.recordsCreated} created, ${data.recordsUpdated} updated`;
+            } else {
+                document.getElementById('status').className = 'status error';
+                document.getElementById('status').innerHTML = `❌ Full sync failed: ${data.error}`;
+            }
+        } catch (error) {
+            log(`Full sync test error: ${error.message}`);
+            document.getElementById('status').className = 'status error';
+            document.getElementById('status').innerHTML = `❌ Full sync failed: ${error.message}`;
+        }
+    }
+    
+    async function runBothTests() {
+        await testDebug();
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+        await testFullSync();
+    }
+    </script>
+</body>
+</html>
