@@ -13,16 +13,29 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log('=== AIRTABLE DEBUG TEST ===');
+    console.log('=== AIRTABLE DEBUG TEST v2 ===');
+    console.log('All env vars check:', {
+      SUPABASE_URL: !!Deno.env.get('SUPABASE_URL'),
+      SUPABASE_SERVICE_ROLE_KEY: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+      AIRTABLE_ACCESS_TOKEN: !!AIRTABLE_ACCESS_TOKEN
+    });
     console.log('Token exists:', !!AIRTABLE_ACCESS_TOKEN);
     console.log('Token length:', AIRTABLE_ACCESS_TOKEN?.length || 0);
     
-    if (!AIRTABLE_ACCESS_TOKEN) {
-      console.error('AIRTABLE_ACCESS_TOKEN not found in environment');
+    // Force refresh env var
+    const freshToken = Deno.env.get('AIRTABLE_ACCESS_TOKEN');
+    console.log('Fresh token check:', !!freshToken, freshToken?.length || 0);
+    
+    const activeToken = freshToken || AIRTABLE_ACCESS_TOKEN;
+    
+    if (!activeToken) {
+      console.error('AIRTABLE_ACCESS_TOKEN not found in environment - both checks failed');
       return new Response(
         JSON.stringify({ 
           error: 'AIRTABLE_ACCESS_TOKEN not configured',
-          tokenExists: false
+          tokenExists: false,
+          freshTokenExists: !!freshToken,
+          originalTokenExists: !!AIRTABLE_ACCESS_TOKEN
         }),
         {
           status: 500,
@@ -32,12 +45,12 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Test Airtable API connection
-    console.log('Testing Airtable API connection...');
+    console.log('Testing Airtable API connection with active token...');
     const testResponse = await fetch(
       'https://api.airtable.com/v0/app4JRfXh5wCJcqBj/tblnIbszxeVftpsiU?maxRecords=1',
       {
         headers: {
-          'Authorization': `Bearer ${AIRTABLE_ACCESS_TOKEN}`,
+          'Authorization': `Bearer ${activeToken}`,
         },
       }
     );

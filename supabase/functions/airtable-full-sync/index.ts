@@ -3,7 +3,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const AIRTABLE_ACCESS_TOKEN = Deno.env.get('AIRTABLE_ACCESS_TOKEN');
 const AIRTABLE_BASE_ID = 'app4JRfXh5wCJcqBj';
 const AIRTABLE_TABLE_ID = 'tblnIbszxeVftpsiU';
 
@@ -32,6 +31,16 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Force refresh env var to ensure we get the latest token
+  const AIRTABLE_ACCESS_TOKEN = Deno.env.get('AIRTABLE_ACCESS_TOKEN');
+  
+  console.log('Environment check:', {
+    supabaseUrl: !!supabaseUrl,
+    serviceKey: !!supabaseServiceKey,
+    airtableToken: !!AIRTABLE_ACCESS_TOKEN,
+    tokenLength: AIRTABLE_ACCESS_TOKEN?.length || 0
+  });
 
   if (!AIRTABLE_ACCESS_TOKEN) {
     console.error('AIRTABLE_ACCESS_TOKEN is not set');
