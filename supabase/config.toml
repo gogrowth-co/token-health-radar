@@ -81,3 +81,6 @@ verify_jwt = false
 
 [functions.airtable-full-sync]
 verify_jwt = false
+
+[functions.debug-airtable]
+verify_jwt = false

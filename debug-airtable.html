@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Airtable Connection</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .loading { background-color: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Airtable Connection Debug</h1>
+    <div id="status" class="status loading">Testing Airtable connection...</div>
+    
+    <h2>Steps:</h2>
+    <div id="step1" class="status info">1. Testing Airtable API access token...</div>
+    <div id="step2" class="status info">2. Checking Supabase token_reports data...</div>
+    <div id="step3" class="status info">3. Testing manual sync...</div>
+    
+    <script>
+    async function debugAirtableConnection() {
+        try {
+            // Step 1: Test Airtable connection
+            document.getElementById('status').innerHTML = 'Step 1: Testing Airtable API connection...';
+            
+            const debugResponse = await fetch('https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/debug-airtable', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const debugData = await debugResponse.json();
+            
+            if (debugData.success) {
+                document.getElementById('step1').className = 'status success';
+                document.getElementById('step1').innerHTML = `✅ Step 1: Airtable API connection successful! Found ${debugData.existingRecords} existing records.`;
+            } else {
+                document.getElementById('step1').className = 'status error';
+                document.getElementById('step1').innerHTML = `❌ Step 1: Airtable connection failed: ${debugData.error}`;
+                document.getElementById('status').className = 'status error';
+                document.getElementById('status').innerHTML = 'Connection test failed. Check logs for details.';
+                return;
+            }
+            
+            // Step 2: Test sync
+            document.getElementById('status').innerHTML = 'Step 2: Testing full sync...';
+            
+            const syncResponse = await fetch('https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/airtable-full-sync', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ debug_test: true })
+            });
+            
+            const syncData = await syncResponse.json();
+            
+            if (syncData.success) {
+                document.getElementById('step2').className = 'status success';
+                document.getElementById('step2').innerHTML = `✅ Step 2: Sync completed! Created: ${syncData.recordsCreated}, Updated: ${syncData.recordsUpdated}, Errors: ${syncData.errors}`;
+                
+                document.getElementById('status').className = 'status success';
+                document.getElementById('status').innerHTML = `🎉 Sync completed successfully! Check your Airtable database now.`;
+            } else {
+                document.getElementById('step2').className = 'status error';
+                document.getElementById('step2').innerHTML = `❌ Step 2: Sync failed: ${syncData.error}`;
+                
+                document.getElementById('status').className = 'status error';
+                document.getElementById('status').innerHTML = 'Sync failed. Check logs for details.';
+            }
+            
+        } catch (error) {
+            document.getElementById('status').className = 'status error';
+            document.getElementById('status').innerHTML = `❌ Error: ${error.message}`;
+        }
+    }
+    
+    // Auto-start the debug process
+    debugAirtableConnection();
+    </script>
+</body>
+</html>
