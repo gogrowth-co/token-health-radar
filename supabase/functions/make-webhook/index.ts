@@ -26,6 +26,71 @@ serve(async (req: Request) => {
   try {
     console.log('Make.com webhook triggered');
     
+    // Check if this is a test request
+    if (req.url.includes('test=true')) {
+      console.log('Test mode - sending latest token report');
+      
+      const testRecord = {
+        "id": "23d54bab-f930-4d5a-8132-3091ce190ee9",
+        "token_name": "Aerodrome",
+        "token_symbol": "AERO",
+        "token_address": "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
+        "chain_id": "0x2105",
+        "report_content": {
+          "metadata": {
+            "chainId": "0x2105",
+            "currentPrice": 1.3626847604723464,
+            "generatedAt": "2025-08-26T20:15:35.821Z",
+            "generatedBy": "ai",
+            "marketCap": 1207106846.38,
+            "overallScore": 68,
+            "scores": {
+              "community": 70,
+              "development": 65,
+              "liquidity": 55,
+              "security": 69,
+              "tokenomics": 81
+            },
+            "tokenAddress": "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
+            "tokenName": "Aerodrome",
+            "tokenSymbol": "AERO"
+          }
+        },
+        "generated_by": "a97608f8-5df3-4780-9832-d15cbe8414ac",
+        "created_at": "2025-08-26T20:15:36.229447+00:00",
+        "updated_at": null
+      };
+      
+      // Send test data directly to Make.com
+      const response = await fetch('https://hook.us2.make.com/6agypb495rymylvki6b0iw9iofu6pkds', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...testRecord,
+          webhook_triggered_at: new Date().toISOString(),
+          source: 'manual_test'
+        })
+      });
+
+      const result = await response.text();
+      console.log('Make.com test response:', result);
+
+      return new Response(
+        JSON.stringify({ 
+          success: response.ok, 
+          message: 'Test data sent to Make.com',
+          makeResponse: result,
+          status: response.status
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      );
+    }
+    
     const { record } = await req.json();
     console.log('Received record:', record);
 
