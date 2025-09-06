@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trigger Sitemap Update</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; white-space: pre-wrap; }
+        .error { background: #ffebee; }
+        .success { background: #e8f5e8; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Trigger Sitemap Update</h1>
+    <button onclick="updateSitemap()">Update Sitemap with ONDO</button>
+    
+    <div id="output"></div>
+    
+    <script>
+    function log(message, isError = false) {
+        const div = document.createElement('div');
+        div.className = 'log ' + (isError ? 'error' : 'success');
+        div.textContent = `[${new Date().toISOString()}] ${message}`;
+        document.getElementById('output').appendChild(div);
+    }
+    
+    async function updateSitemap() {
+        log('Triggering sitemap generation...');
+        
+        try {
+            const response = await fetch('https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/generate-sitemap', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const sitemap = await response.text();
+                log('✅ Sitemap updated successfully!');
+                
+                // Check if ONDO is included
+                if (sitemap.includes('/token/ondo')) {
+                    log('✅ ONDO token report URL is included in sitemap');
+                } else {
+                    log('❌ ONDO token report URL not found in sitemap', true);
+                }
+                
+                // Show sitemap content
+                log('Sitemap content:\n' + sitemap);
+            } else {
+                log(`❌ Failed to update sitemap: ${response.status}`, true);
+            }
+        } catch (error) {
+            log(`❌ Error: ${error.message}`, true);
+        }
+    }
+    </script>
+</body>
+</html>
