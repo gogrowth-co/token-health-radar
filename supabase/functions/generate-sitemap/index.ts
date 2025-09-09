@@ -59,7 +59,7 @@ ${allPages.map(page => `  <url>
     // Save sitemap to storage bucket
     const { error: uploadError } = await supabase.storage
       .from('sitemaps')
-      .upload('sitemap.xml', sitemap, {
+      .upload('sitemap.xml', new Blob([sitemap], { type: 'application/xml' }), {
         contentType: 'application/xml',
         upsert: true
       });
