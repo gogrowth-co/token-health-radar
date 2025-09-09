@@ -3,7 +3,7 @@
   "routes": [
     {
       "src": "/sitemap.xml",
-      "dest": "/api/prerender?sitemap=true",
+      "dest": "/sitemap.xml",
       "headers": {
         "Content-Type": "application/xml"
       }
