@@ -11,38 +11,47 @@ serve(async (req) => {
   }
 
   try {
+    console.log('📡 Serving sitemap request');
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Download sitemap from storage
+    console.log('📥 Attempting to download sitemap from storage...');
     const { data, error } = await supabase.storage
       .from('sitemaps')
       .download('sitemap.xml');
 
     if (error) {
-      console.error('Error downloading sitemap from storage:', error);
+      console.error('❌ Error downloading sitemap from storage:', error);
+      console.log('🔄 Falling back to on-the-fly generation...');
+      
       // Fallback: generate sitemap on the fly
       const { data: response, error: invokeError } = await supabase.functions.invoke('generate-sitemap');
       
       if (invokeError) {
+        console.error('❌ Fallback generation failed:', invokeError);
         throw new Error(`Failed to generate fallback sitemap: ${invokeError.message}`);
       }
 
+      console.log('✅ Fallback sitemap generated successfully');
       return new Response(response, {
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/xml',
-          'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+          'Cache-Control': 'public, max-age=300', // Reduced cache to 5 minutes
         },
       });
     }
 
+    console.log('✅ Sitemap downloaded from storage successfully');
     const sitemapText = await data.text();
+    console.log(`📄 Sitemap content length: ${sitemapText.length} characters`);
 
     return new Response(sitemapText, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/xml',
-        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+        'Cache-Control': 'public, max-age=300', // Reduced cache to 5 minutes
+        'Last-Modified': new Date().toUTCString(),
       },
     });
 
