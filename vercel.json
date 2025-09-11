@@ -3,7 +3,7 @@
   "routes": [
     {
       "src": "/sitemap.xml",
-      "dest": "/sitemap.xml",
+      "dest": "/api/sitemap",
       "headers": {
         "Content-Type": "application/xml"
       }
@@ -67,6 +67,9 @@
   ],
   "functions": {
     "api/prerender.js": {
+      "runtime": "nodejs18.x"
+    },
+    "api/sitemap.ts": {
       "runtime": "nodejs18.x"
     }
   }
