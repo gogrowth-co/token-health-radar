@@ -21,6 +21,7 @@ import { checkUserHasProAccess } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUserRole } from "@/hooks/useUserRole";
 import { normalizeChainId } from "@/utils/tokenCacheUtils";
+import { getChainConfigByMoralisId } from "../../supabase/functions/_shared/chainConfig";
 
 enum ScanCategory {
   Security = "security",
@@ -346,7 +347,9 @@ export default function ScanResult() {
     return `$${n.toFixed(4)}`;
   };
 
-  const chainName = chainId === "0xa4b1" ? "Arbitrum" : "Ethereum";
+  // Get chain configuration for proper network display
+  const chainConfig = getChainConfigByMoralisId(chainId);
+  const chainName = chainConfig?.name || "Ethereum";
 
   // Curated, purpose-first overrides for known tokens
   const curatedDescriptionOverride = (() => {
@@ -359,11 +362,21 @@ export default function ScanResult() {
   const displayDescription = (() => {
     const truncate = (s: string, max = 180) => (s.length <= max ? s : s.slice(0, max - 1).trimEnd() + '…');
 
+    // If we have a curated override, use it
     if (curatedDescriptionOverride) {
       const finalText = truncate(curatedDescriptionOverride, 180);
       console.log('ScanResult: Using curated description:', finalText);
       return finalText;
     }
+
+    // If we have a database description that's meaningful, use it
+    if (finalDescription && finalDescription.length > 50 && !isTaglineStyle(finalDescription)) {
+      const finalText = truncate(finalDescription, 180);
+      console.log('ScanResult: Using database description:', finalText);
+      return finalText;
+    }
+
+    // Fallback to generated description
 
     const sec: any = scanData.security || {};
 
@@ -383,11 +396,11 @@ export default function ScanResult() {
     const composed = details ? `${base}: ${details}` : base;
 
     const finalText = truncate(composed, 180);
-    console.log('ScanResult: Using concise description:', finalText);
+    console.log('ScanResult: Using generated description:', finalText);
     return finalText;
   })();
 
-  const networkName = chainId === "0xa4b1" ? "ARB" : "ETH";
+  const networkName = chainConfig?.name === "Base" ? "BASE" : (chainConfig?.name === "Arbitrum" ? "ARB" : "ETH");
   // Use the calculated overall score from the scan data
   const overallScore = scanData.overall_score || 0;
 
