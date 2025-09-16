@@ -180,14 +180,17 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { testToken, testChain } = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => ({}));
+    const { testToken, testChain, testTokenAddress, testChainId } = body;
+    
+    // Support both naming conventions - prefer the newer naming if provided
+    const tokenAddress = testTokenAddress || testToken || '0x808507121b80c02388fad14726482e061b8da827';
+    const chainId = testChainId || testChain || '0x1';
     
     console.log(`[API-HEALTH] Starting comprehensive API health check...`);
+    console.log(`[API-HEALTH] Parsed parameters - Token: ${tokenAddress}, Chain: ${chainId}`);
     
-    const healthResults = await testApiHealth(
-      testToken || '0x808507121b80c02388fad14726482e061b8da827',
-      testChain || '0x1'
-    );
+    const healthResults = await testApiHealth(tokenAddress, chainId);
     
     return new Response(
       JSON.stringify(healthResults, null, 2),

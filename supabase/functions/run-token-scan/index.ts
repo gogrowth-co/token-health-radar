@@ -1314,7 +1314,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
           .from('token_data_cache')
           .select('twitter_handle')
           .eq('token_address', tokenAddress)
-          .eq('chain_id', normalizedChainId)
+          .eq('chain_id', chainId)
           .single();
         
         if (existingToken?.twitter_handle) {
@@ -1443,7 +1443,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
 
         // Try CoinGecko description as additional fallback
         if (!description) {
-          const cgDesc = await fetchCoinGeckoDescription(tokenAddress, normalizedChainId);
+          const cgDesc = await fetchCoinGeckoDescription(tokenAddress, chainId);
           console.log(`[DESCRIPTION-DEBUG] CoinGecko response:`, {
             hasResponse: !!cgDesc,
             responseLength: cgDesc?.length || 0,
