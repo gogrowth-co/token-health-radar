@@ -4,6 +4,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/landing/HeroSection";
 import BenefitsSection from "@/components/landing/BenefitsSection";
+import TestFailedScanButton from "@/components/TestFailedScanButton";
+import { useUserRole } from "@/hooks/useUserRole";
 import { 
   LazyHowItWorks, 
   LazyReportPreview, 
@@ -14,6 +16,8 @@ import {
 } from "@/components/landing/LazySection";
 
 export default function Landing() {
+  const { isAdmin } = useUserRole();
+  
   return (
     <div className="flex flex-col min-h-screen">
       <Helmet>
@@ -48,6 +52,19 @@ export default function Landing() {
       <main className="flex-1">
         {/* Critical above-the-fold content */}
         <HeroSection />
+        
+        {/* Admin debug section */}
+        {isAdmin && (
+          <section className="py-8 bg-destructive/5 border-y border-destructive/20">
+            <div className="container max-w-4xl mx-auto px-4">
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-semibold text-destructive">🚨 Admin Debug Tools</h3>
+                <p className="text-sm text-muted-foreground">Debug the failing Base token scan</p>
+              </div>
+              <TestFailedScanButton />
+            </div>
+          </section>
+        )}
         
         {/* Report preview moved here */}
         <LazyReportPreview />
