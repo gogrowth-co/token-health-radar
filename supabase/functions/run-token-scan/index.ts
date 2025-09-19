@@ -789,6 +789,159 @@ async function fetchCoinGeckoDescription(tokenAddress: string, chainId: string):
   }
 }
 
+// Fetch social media links from CoinGecko API
+async function fetchCoinGeckoSocialLinks(tokenAddress: string, chainId: string): Promise<{
+  website?: string;
+  twitter?: string;
+  github?: string;
+  discord?: string;
+  telegram?: string;
+}> {
+  try {
+    const chainConfig = getChainConfigByMoralisId(chainId);
+    if (!chainConfig || !chainConfig.gecko) {
+      console.log(`[COINGECKO] No CoinGecko platform mapping for chain: ${chainId}`);
+      return {};
+    }
+
+    // Platform mapping for CoinGecko API
+    const platformMap: Record<string, string> = {
+      'ethereum': 'ethereum',
+      'bsc': 'binance-smart-chain',
+      'polygon_pos': 'polygon-pos',
+      'arbitrum': 'arbitrum-one',
+      'optimism': 'optimistic-ethereum',
+      'base': 'base'
+    };
+    
+    const coinGeckoPlatform = platformMap[chainConfig.gecko] || chainConfig.gecko;
+    console.log(`[COINGECKO] Fetching social links for ${tokenAddress} on platform: ${coinGeckoPlatform}`);
+
+    // Step 1: Get CoinGecko ID for the token
+    const idResponse = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coinGeckoPlatform}/contract/${tokenAddress.toLowerCase()}`,
+      {
+        headers: {
+          'accept': 'application/json',
+          ...(Deno.env.get('COINGECKO_API_KEY') && {
+            'x-cg-demo-api-key': Deno.env.get('COINGECKO_API_KEY')
+          })
+        }
+      }
+    );
+
+    if (!idResponse.ok) {
+      if (idResponse.status === 404) {
+        console.log(`[COINGECKO] Token not found on CoinGecko for social links`);
+        return {};
+      }
+      throw new Error(`CoinGecko API error: ${idResponse.status}`);
+    }
+
+    const tokenData = await idResponse.json();
+    const coinGeckoId = tokenData.id;
+    
+    if (!coinGeckoId) {
+      console.log(`[COINGECKO] No CoinGecko ID found for social links`);
+      return {};
+    }
+
+    console.log(`[COINGECKO] Found CoinGecko ID for social links: ${coinGeckoId}`);
+
+    // Step 2: Get detailed token information including links
+    const detailResponse = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coinGeckoId}?localization=false&tickers=false&market_data=false&community_data=true&developer_data=true`,
+      {
+        headers: {
+          'accept': 'application/json',
+          ...(Deno.env.get('COINGECKO_API_KEY') && {
+            'x-cg-demo-api-key': Deno.env.get('COINGECKO_API_KEY')
+          })
+        }
+      }
+    );
+
+    if (!detailResponse.ok) {
+      throw new Error(`CoinGecko social links API error: ${detailResponse.status}`);
+    }
+
+    const detailData = await detailResponse.json();
+    const links = detailData.links || {};
+    const socialLinks: any = {};
+
+    // Extract website
+    if (links.homepage && links.homepage.length > 0) {
+      const website = links.homepage[0]?.trim();
+      if (website && website !== '') {
+        socialLinks.website = website;
+        console.log(`[COINGECKO] Found website: ${website}`);
+      }
+    }
+
+    // Extract Twitter
+    if (links.twitter_screen_name && links.twitter_screen_name.trim()) {
+      socialLinks.twitter = links.twitter_screen_name.trim();
+      console.log(`[COINGECKO] Found Twitter: @${socialLinks.twitter}`);
+    }
+
+    // Extract GitHub
+    if (links.repos_url && links.repos_url.github && links.repos_url.github.length > 0) {
+      const github = links.repos_url.github[0]?.trim();
+      if (github && github !== '') {
+        socialLinks.github = github;
+        console.log(`[COINGECKO] Found GitHub: ${github}`);
+      }
+    }
+
+    // Extract Discord from chat URLs
+    if (links.chat_url && links.chat_url.length > 0) {
+      for (const chatUrl of links.chat_url) {
+        if (chatUrl?.includes('discord')) {
+          socialLinks.discord = chatUrl.trim();
+          console.log(`[COINGECKO] Found Discord: ${socialLinks.discord}`);
+          break;
+        }
+      }
+    }
+
+    // Extract Telegram from chat URLs or announcement URLs
+    if (links.chat_url && links.chat_url.length > 0) {
+      for (const chatUrl of links.chat_url) {
+        if (chatUrl?.includes('t.me') || chatUrl?.includes('telegram')) {
+          socialLinks.telegram = chatUrl.trim();
+          console.log(`[COINGECKO] Found Telegram: ${socialLinks.telegram}`);
+          break;
+        }
+      }
+    }
+
+    // Also check announcement URLs for Telegram
+    if (!socialLinks.telegram && links.announcement_url && links.announcement_url.length > 0) {
+      for (const announceUrl of links.announcement_url) {
+        if (announceUrl?.includes('t.me') || announceUrl?.includes('telegram')) {
+          socialLinks.telegram = announceUrl.trim();
+          console.log(`[COINGECKO] Found Telegram in announcements: ${socialLinks.telegram}`);
+          break;
+        }
+      }
+    }
+
+    console.log(`[COINGECKO] Social links summary:`, {
+      website: !!socialLinks.website,
+      twitter: !!socialLinks.twitter,
+      github: !!socialLinks.github,
+      discord: !!socialLinks.discord,
+      telegram: !!socialLinks.telegram
+    });
+
+    return socialLinks;
+
+  } catch (error) {
+    console.error(`[COINGECKO] Error fetching social links:`, error);
+    return {};
+  }
+}
+
 // Fetch CEX count from CoinGecko API
 async function fetchCoinGeckoCexCount(tokenAddress: string, chainId: string): Promise<number> {
   console.log(`[CEX] Fetching CEX count for ${tokenAddress} on chain ${chainId}`);
@@ -1214,9 +1367,40 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       telegram_url
     });
     
-    // CoinMarketCap fallback for website URL if not found from Moralis
+    // CoinGecko fallback for social links (primary fallback - more reliable than CMC)
+    if (!website_url || !twitter_handle || !github_url || !discord_url || !telegram_url) {
+      console.log(`[SCAN] Missing social links from Moralis, trying CoinGecko fallback`);
+      const cgSocialLinks = await fetchCoinGeckoSocialLinks(tokenAddress, chainId);
+      
+      if (!website_url && cgSocialLinks.website) {
+        website_url = cgSocialLinks.website;
+        console.log(`[SCAN] Website URL found via CoinGecko: ${website_url}`);
+      }
+      
+      if (!twitter_handle && cgSocialLinks.twitter) {
+        twitter_handle = cgSocialLinks.twitter;
+        console.log(`[SCAN] Twitter handle found via CoinGecko: @${twitter_handle}`);
+      }
+      
+      if (!github_url && cgSocialLinks.github) {
+        github_url = cgSocialLinks.github;
+        console.log(`[SCAN] GitHub URL found via CoinGecko: ${github_url}`);
+      }
+      
+      if (!discord_url && cgSocialLinks.discord) {
+        discord_url = cgSocialLinks.discord;
+        console.log(`[SCAN] Discord URL found via CoinGecko: ${discord_url}`);
+      }
+      
+      if (!telegram_url && cgSocialLinks.telegram) {
+        telegram_url = cgSocialLinks.telegram;
+        console.log(`[SCAN] Telegram URL found via CoinGecko: ${telegram_url}`);
+      }
+    }
+
+    // CoinMarketCap fallback for remaining missing links (secondary fallback)
     if (!website_url) {
-      console.log(`[SCAN] Website URL not found in Moralis, trying CoinMarketCap fallback`);
+      console.log(`[SCAN] Website URL not found in Moralis/CoinGecko, trying CoinMarketCap fallback`);
       const cmcWebsiteUrl = await fetchCoinMarketCapWebsiteUrl(tokenAddress);
       if (cmcWebsiteUrl) {
         website_url = cmcWebsiteUrl;
@@ -1225,12 +1409,11 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         console.log(`[SCAN] No website URL found via CoinMarketCap fallback`);
       }
     } else {
-      console.log(`[SCAN] Website URL already found from Moralis: ${website_url}`);
+      console.log(`[SCAN] Website URL already found: ${website_url}`);
     }
 
-    // CoinMarketCap fallback for Twitter handle if not found from Moralis
     if (!twitter_handle) {
-      console.log(`[SCAN] Twitter handle not found in Moralis, trying CoinMarketCap fallback`);
+      console.log(`[SCAN] Twitter handle not found in Moralis/CoinGecko, trying CoinMarketCap fallback`);
       const cmcTwitterHandle = await fetchCoinMarketCapTwitterHandle(tokenAddress);
       if (cmcTwitterHandle) {
         twitter_handle = cmcTwitterHandle;
@@ -1239,12 +1422,11 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         console.log(`[SCAN] No Twitter handle found via CoinMarketCap fallback`);
       }
     } else {
-      console.log(`[SCAN] Twitter handle already found from Moralis: @${twitter_handle}`);
+      console.log(`[SCAN] Twitter handle already found: @${twitter_handle}`);
     }
 
-    // CoinMarketCap fallback for GitHub URL if not found from Moralis
     if (!github_url) {
-      console.log(`[SCAN] GitHub URL not found in Moralis, trying CoinMarketCap fallback`);
+      console.log(`[SCAN] GitHub URL not found in Moralis/CoinGecko, trying CoinMarketCap fallback`);
       const cmcGithubUrl = await fetchCoinMarketCapGithubUrl(tokenAddress);
       if (cmcGithubUrl) {
         github_url = cmcGithubUrl;
@@ -1253,12 +1435,11 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         console.log(`[SCAN] No GitHub URL found via CoinMarketCap fallback`);
       }
     } else {
-      console.log(`[SCAN] GitHub URL already found from Moralis: ${github_url}`);
+      console.log(`[SCAN] GitHub URL already found: ${github_url}`);
     }
     
-    // CoinMarketCap fallback for Discord URL if not found from Moralis
     if (!discord_url) {
-      console.log(`[SCAN] Discord URL not found in Moralis, trying CoinMarketCap fallback`);
+      console.log(`[SCAN] Discord URL not found in Moralis/CoinGecko, trying CoinMarketCap fallback`);
       const cmcDiscordUrl = await fetchCoinMarketCapDiscordUrl(tokenAddress);
       if (cmcDiscordUrl && isValidDiscordUrl(cmcDiscordUrl)) {
         discord_url = cmcDiscordUrl;
@@ -1267,12 +1448,11 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         console.log(`[SCAN] No valid Discord URL found via CoinMarketCap fallback`);
       }
     } else {
-      console.log(`[SCAN] Discord URL already found from Moralis: ${discord_url}`);
+      console.log(`[SCAN] Discord URL already found: ${discord_url}`);
     }
     
-    // CoinMarketCap fallback for Telegram URL if not found from Moralis
     if (!telegram_url) {
-      console.log(`[SCAN] Telegram URL not found in Moralis, trying CoinMarketCap fallback`);
+      console.log(`[SCAN] Telegram URL not found in Moralis/CoinGecko, trying CoinMarketCap fallback`);
       const cmcTelegramUrl = await fetchCoinMarketCapTelegramUrl(tokenAddress);
       if (cmcTelegramUrl && isValidTelegramUrl(cmcTelegramUrl)) {
         telegram_url = cmcTelegramUrl;
@@ -1281,7 +1461,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         console.log(`[SCAN] No valid Telegram URL found via CoinMarketCap fallback`);
       }
     } else {
-      console.log(`[SCAN] Telegram URL already found from Moralis: ${telegram_url}`);
+      console.log(`[SCAN] Telegram URL already found: ${telegram_url}`);
     }
     
     // Fetch GitHub data now that we have the final GitHub URL (including CoinMarketCap fallback)
