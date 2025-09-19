@@ -42,7 +42,7 @@ function isValidTelegramUrl(url: string): boolean {
 }
 
 // CoinMarketCap fallback for GitHub URL
-async function fetchCoinMarketCapGithubUrl(tokenAddress: string): Promise<string> {
+async function fetchCoinMarketCapGithubUrl(tokenAddress: string, chainId?: string): Promise<string> {
   try {
     const cmcApiKey = Deno.env.get('COINMARKETCAP_API_KEY');
     if (!cmcApiKey) {
@@ -52,8 +52,11 @@ async function fetchCoinMarketCapGithubUrl(tokenAddress: string): Promise<string
 
     console.log(`[CMC] Fetching GitHub URL for token: ${tokenAddress}`);
     
+    // CMC uses different platform identifiers, need to include platform parameter for Base chain
+    const platformParam = chainId === '0x2105' ? '&platform=base' : '';
+    
     const response = await fetch(
-      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}&aux=urls`,
+      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}${platformParam}&aux=urls`,
       {
         headers: {
           'X-CMC_PRO_API_KEY': cmcApiKey,
@@ -111,7 +114,7 @@ async function fetchCoinMarketCapGithubUrl(tokenAddress: string): Promise<string
 }
 
 // CoinMarketCap fallback for Discord URL
-async function fetchCoinMarketCapDiscordUrl(tokenAddress: string): Promise<string> {
+async function fetchCoinMarketCapDiscordUrl(tokenAddress: string, chainId?: string): Promise<string> {
   try {
     const cmcApiKey = Deno.env.get('COINMARKETCAP_API_KEY');
     if (!cmcApiKey) {
@@ -121,8 +124,11 @@ async function fetchCoinMarketCapDiscordUrl(tokenAddress: string): Promise<strin
 
     console.log(`[CMC] Fetching Discord URL for token: ${tokenAddress}`);
     
+    // CMC uses different platform identifiers, need to include platform parameter for Base chain
+    const platformParam = chainId === '0x2105' ? '&platform=base' : '';
+    
     const response = await fetch(
-      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}&aux=urls`,
+      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}${platformParam}&aux=urls`,
       {
         headers: {
           'X-CMC_PRO_API_KEY': cmcApiKey,
@@ -180,7 +186,7 @@ async function fetchCoinMarketCapDiscordUrl(tokenAddress: string): Promise<strin
 }
 
 // CoinMarketCap fallback for Telegram URL
-async function fetchCoinMarketCapTelegramUrl(tokenAddress: string): Promise<string> {
+async function fetchCoinMarketCapTelegramUrl(tokenAddress: string, chainId?: string): Promise<string> {
   try {
     const cmcApiKey = Deno.env.get('COINMARKETCAP_API_KEY');
     if (!cmcApiKey) {
@@ -190,8 +196,11 @@ async function fetchCoinMarketCapTelegramUrl(tokenAddress: string): Promise<stri
 
     console.log(`[CMC] Fetching Telegram URL for token: ${tokenAddress}`);
     
+    // CMC uses different platform identifiers, need to include platform parameter for Base chain
+    const platformParam = chainId === '0x2105' ? '&platform=base' : '';
+    
     const response = await fetch(
-      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}&aux=urls`,
+      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}${platformParam}&aux=urls`,
       {
         headers: {
           'X-CMC_PRO_API_KEY': cmcApiKey,
@@ -306,7 +315,7 @@ async function fetchCoinMarketCapDescription(tokenAddress: string): Promise<stri
 }
 
 // Fetch website URL from CoinMarketCap as fallback
-async function fetchCoinMarketCapWebsiteUrl(tokenAddress: string): Promise<string> {
+async function fetchCoinMarketCapWebsiteUrl(tokenAddress: string, chainId?: string): Promise<string> {
   try {
     const cmcApiKey = Deno.env.get('COINMARKETCAP_API_KEY');
     if (!cmcApiKey) {
@@ -316,8 +325,11 @@ async function fetchCoinMarketCapWebsiteUrl(tokenAddress: string): Promise<strin
 
     console.log(`[CMC] Fetching website for token: ${tokenAddress}`);
     
+    // CMC uses different platform identifiers, need to include platform parameter for Base chain
+    const platformParam = chainId === '0x2105' ? '&platform=base' : '';
+    
     const response = await fetch(
-      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}&aux=urls`,
+      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}${platformParam}&aux=urls`,
       {
         headers: {
           'X-CMC_PRO_API_KEY': cmcApiKey,
@@ -439,7 +451,7 @@ async function fetchWebsiteMetaDescription(websiteUrl: string): Promise<string> 
 }
 
 // Fetch Twitter handle from CoinMarketCap as fallback
-async function fetchCoinMarketCapTwitterHandle(tokenAddress: string): Promise<string> {
+async function fetchCoinMarketCapTwitterHandle(tokenAddress: string, chainId?: string): Promise<string> {
   try {
     const cmcApiKey = Deno.env.get('COINMARKETCAP_API_KEY');
     if (!cmcApiKey) {
@@ -449,8 +461,11 @@ async function fetchCoinMarketCapTwitterHandle(tokenAddress: string): Promise<st
 
     console.log(`[CMC] Fetching Twitter for token: ${tokenAddress}`);
     
+    // CMC uses different platform identifiers, need to include platform parameter for Base chain
+    const platformParam = chainId === '0x2105' ? '&platform=base' : '';
+    
     const response = await fetch(
-      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}&aux=urls`,
+      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${tokenAddress}${platformParam}&aux=urls`,
       {
         headers: {
           'X-CMC_PRO_API_KEY': cmcApiKey,
@@ -1401,7 +1416,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     // CoinMarketCap fallback for remaining missing links (secondary fallback)
     if (!website_url) {
       console.log(`[SCAN] Website URL not found in Moralis/CoinGecko, trying CoinMarketCap fallback`);
-      const cmcWebsiteUrl = await fetchCoinMarketCapWebsiteUrl(tokenAddress);
+      const cmcWebsiteUrl = await fetchCoinMarketCapWebsiteUrl(tokenAddress, chainId);
       if (cmcWebsiteUrl) {
         website_url = cmcWebsiteUrl;
         console.log(`[SCAN] Website URL found via CoinMarketCap: ${website_url}`);
@@ -1414,7 +1429,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
 
     if (!twitter_handle) {
       console.log(`[SCAN] Twitter handle not found in Moralis/CoinGecko, trying CoinMarketCap fallback`);
-      const cmcTwitterHandle = await fetchCoinMarketCapTwitterHandle(tokenAddress);
+      const cmcTwitterHandle = await fetchCoinMarketCapTwitterHandle(tokenAddress, chainId);
       if (cmcTwitterHandle) {
         twitter_handle = cmcTwitterHandle;
         console.log(`[SCAN] Twitter handle found via CoinMarketCap: @${twitter_handle}`);
@@ -1427,7 +1442,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
 
     if (!github_url) {
       console.log(`[SCAN] GitHub URL not found in Moralis/CoinGecko, trying CoinMarketCap fallback`);
-      const cmcGithubUrl = await fetchCoinMarketCapGithubUrl(tokenAddress);
+      const cmcGithubUrl = await fetchCoinMarketCapGithubUrl(tokenAddress, chainId);
       if (cmcGithubUrl) {
         github_url = cmcGithubUrl;
         console.log(`[SCAN] GitHub URL found via CoinMarketCap: ${github_url}`);
@@ -1440,7 +1455,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     
     if (!discord_url) {
       console.log(`[SCAN] Discord URL not found in Moralis/CoinGecko, trying CoinMarketCap fallback`);
-      const cmcDiscordUrl = await fetchCoinMarketCapDiscordUrl(tokenAddress);
+      const cmcDiscordUrl = await fetchCoinMarketCapDiscordUrl(tokenAddress, chainId);
       if (cmcDiscordUrl && isValidDiscordUrl(cmcDiscordUrl)) {
         discord_url = cmcDiscordUrl;
         console.log(`[SCAN] Discord URL found via CoinMarketCap: ${discord_url}`);
@@ -1453,7 +1468,7 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     
     if (!telegram_url) {
       console.log(`[SCAN] Telegram URL not found in Moralis/CoinGecko, trying CoinMarketCap fallback`);
-      const cmcTelegramUrl = await fetchCoinMarketCapTelegramUrl(tokenAddress);
+      const cmcTelegramUrl = await fetchCoinMarketCapTelegramUrl(tokenAddress, chainId);
       if (cmcTelegramUrl && isValidTelegramUrl(cmcTelegramUrl)) {
         telegram_url = cmcTelegramUrl;
         console.log(`[SCAN] Telegram URL found via CoinMarketCap: ${telegram_url}`);
