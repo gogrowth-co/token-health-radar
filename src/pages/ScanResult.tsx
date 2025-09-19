@@ -327,16 +327,22 @@ export default function ScanResult() {
   const isPendleToken = properSymbol?.toUpperCase() === 'PENDLE' || properName?.toLowerCase().includes('pendle');
   const finalDescription = isPendleToken ? pendleDescription : properDescription;
 
-  // Heuristic: detect marketing/tagline style
+  // Heuristic: detect marketing/tagline style - updated to be less restrictive
   const isTaglineStyle = (text: string): boolean => {
     if (!text) return true;
+    if (text.length < 50) return true; // Very short descriptions are likely taglines
+    
     const lower = text.toLowerCase();
     const marketingPhrases = [
-      'for everyone','revolution','revolutionize','next-gen','next generation',
-      'empower','seamless','warp speed','the future of','unlock','supercharge'
+      'for everyone','warp speed','supercharge','unlock the future',
+      'next-gen solution','seamless experience'
     ];
+    
+    // Only consider it a tagline if it's very short AND has marketing phrases
     const sentenceCount = (text.match(/[.!?]/g) || []).length;
-    return text.length < 120 || sentenceCount <= 1 || marketingPhrases.some(p => lower.includes(p));
+    const hasMarketingPhrase = marketingPhrases.some(p => lower.includes(p));
+    
+    return text.length < 80 && (sentenceCount <= 1 || hasMarketingPhrase);
   };
 
   const formatCompactUSD = (n: number) => {
