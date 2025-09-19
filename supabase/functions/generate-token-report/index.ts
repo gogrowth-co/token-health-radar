@@ -419,6 +419,25 @@ Make the content informative, balanced, and professional. Include specific data 
 
     console.log('Report saved successfully with ID:', reportData.id);
 
+    // Trigger sitemap regeneration now that the report is saved
+    console.log('Saved report to database, now triggering sitemap regeneration (from function)...');
+
+    try {
+      // Invoke generate-sitemap function — server-side, after DB write/commit
+      const { data: sitemapResponse, error: sitemapError } = await supabase.functions.invoke('generate-sitemap', {
+        body: {} // optional payload; generate-sitemap currently ignores body
+      });
+
+      if (sitemapError) {
+        console.error('❌ generate-sitemap invocation returned an error:', sitemapError);
+        // Don't fail the user flow — log and continue
+      } else {
+        console.log('✅ generate-sitemap invoked successfully from generate-token-report');
+      }
+    } catch (err) {
+      console.error('❌ Unexpected error invoking generate-sitemap:', err);
+    }
+
     // Generate score snapshot image asynchronously (don't await to avoid blocking response)
     const snapshotGeneration = (async () => {
       try {
