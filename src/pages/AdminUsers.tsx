@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import UserSearchFilters from '@/components/admin/UserSearchFilters';
 import UsersTable from '@/components/admin/UsersTable';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
+import TokenRefreshPanel from '@/components/admin/TokenRefreshPanel';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 
 interface AdminUser {
@@ -77,6 +78,9 @@ export default function AdminUsers() {
               </div>
             )}
           </div>
+
+          {/* Token Refresh Panel */}
+          <TokenRefreshPanel />
 
           <UserSearchFilters
             searchTerm={searchTerm}
