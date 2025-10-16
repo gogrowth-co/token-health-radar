@@ -84,3 +84,6 @@ verify_jwt = false
 
 [functions.debug-airtable]
 verify_jwt = false
+
+[functions.weekly-token-refresh]
+verify_jwt = false
