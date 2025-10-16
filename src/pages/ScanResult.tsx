@@ -476,6 +476,22 @@ export default function ScanResult() {
             chainId={chainId}
           />
 
+          {/* Update Frequency Note */}
+          {scanData?.lastUpdated && (
+            <div className="mb-6 text-center">
+              <p className="text-muted-foreground text-sm">
+                Generated on {new Date(scanData.lastUpdated).toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'numeric', 
+                  day: 'numeric' 
+                })} | Updated Weekly | Last Updated: {new Date(scanData.lastUpdated).toLocaleDateString('en-US', { 
+                  month: 'long', 
+                  year: 'numeric' 
+                })}
+              </p>
+            </div>
+          )}
+
           {/* CoinGecko MCP Copilot Panel */}
           {isMcpEnabled() && (
             <CopilotPanel 

@@ -474,8 +474,15 @@ export default function TokenReport() {
             <Badge variant="outline">${metadata.currentPrice?.toFixed(4)}</Badge>
             <Badge variant="outline">Market Cap: ${metadata.marketCap?.toLocaleString()}</Badge>
           </div>
-          <p className="text-muted-foreground">
-            Generated on {new Date(metadata.generatedAt).toLocaleDateString()}
+          <p className="text-muted-foreground text-sm">
+            Generated on {new Date(metadata.generatedAt).toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'numeric', 
+              day: 'numeric' 
+            })} | Updated Weekly | Last Updated: {new Date(metadata.generatedAt).toLocaleDateString('en-US', { 
+              month: 'long', 
+              year: 'numeric' 
+            })}
           </p>
         </header>
 
