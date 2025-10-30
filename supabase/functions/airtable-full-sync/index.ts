@@ -32,6 +32,48 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // SECURITY: Validate shared secret or service role key
+  console.log('[AIRTABLE-FULL-SYNC] Validating authentication...');
+
+  const authHeader = req.headers.get('Authorization');
+  const internalSecret = Deno.env.get('INTERNAL_API_SECRET');
+
+  if (!authHeader) {
+    console.error('[AIRTABLE-FULL-SYNC] No authorization header provided');
+    return new Response(
+      JSON.stringify({
+        error: 'Unauthorized - Authentication required',
+        message: 'This endpoint requires authentication. Please include a valid authorization token or internal API secret.'
+      }),
+      {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+
+  // Accept either service role key or internal API secret
+  const isValidServiceRole = token === supabaseServiceKey;
+  const isValidInternal = internalSecret && token === internalSecret;
+
+  if (!isValidServiceRole && !isValidInternal) {
+    console.error('[AIRTABLE-FULL-SYNC] Invalid authentication token');
+    return new Response(
+      JSON.stringify({
+        error: 'Unauthorized - Invalid token',
+        message: 'Your authentication token is invalid.'
+      }),
+      {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
+  console.log('[AIRTABLE-FULL-SYNC] Authentication successful');
+
   // Force refresh env var to ensure we get the latest token (v4 deployment)
   const AIRTABLE_ACCESS_TOKEN = Deno.env.get('AIRTABLE_ACCESS_TOKEN');
   
