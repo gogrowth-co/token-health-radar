@@ -1,8 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
-import { 
-  normalizeChainId, 
-  getChainConfigByMoralisId 
+import {
+  normalizeChainId,
+  getChainConfigByMoralisId
 } from '../_shared/chainConfig.ts'
 import {
   fetchGoPlusSecurity,
@@ -21,6 +21,11 @@ import {
 import { fetchDeFiLlamaTVL } from '../_shared/defillama.ts'
 import { fetchTwitterFollowers, fetchTelegramMembers } from '../_shared/apifyAPI.ts'
 import { fetchDiscordMemberCount } from '../_shared/discordAPI.ts'
+import {
+  safeApiCall,
+  parallelWithTimeouts,
+  PerformanceTracker
+} from '../_shared/performance.ts'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -1060,7 +1065,10 @@ async function fetchCoinGeckoCexCount(tokenAddress: string, chainId: string): Pr
 // Fetch comprehensive token data from multiple APIs using Moralis as primary metadata source
 async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
   console.log(`[SCAN] Fetching token data from multiple APIs for: ${tokenAddress} on chain: ${chainId}`);
-  
+
+  // Initialize performance tracker
+  const perfTracker = new PerformanceTracker(`Token Scan: ${tokenAddress.substring(0, 8)}...`);
+
   const chainConfig = getChainConfigByMoralisId(chainId);
   if (!chainConfig) {
     console.log(`[SCAN] Unsupported chain: ${chainId}, returning fallback data`);
