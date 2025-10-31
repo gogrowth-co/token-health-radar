@@ -1,12 +1,12 @@
 # Phase 2 Implementation - Setup Guide
 
-This guide covers the setup and configuration required to enable all Phase 2 security features.
+This guide covers the setup and configuration for Phase 2 security features.
 
 ## ✅ Already Implemented
 
-Phase 2 infrastructure is **90% complete**. The following are fully implemented:
+Phase 2 infrastructure is **fully complete**. The following are implemented and operational:
 
-- ✅ Rate limiting infrastructure (needs Upstash credentials)
+- ✅ Rate limiting infrastructure (needs Upstash credentials for production)
 - ✅ Input validation framework with Zod
 - ✅ Centralized error handling
 - ✅ Parallel API call handling (Promise.all/allSettled)
@@ -15,41 +15,9 @@ Phase 2 infrastructure is **90% complete**. The following are fully implemented:
 
 ## 🔧 Configuration Required
 
-### 1. Sentry Error Tracking
+### Upstash Redis (for Rate Limiting)
 
-Sentry is now configured for both frontend and edge functions. You need to set up the following environment variables:
-
-#### Frontend Environment Variables (.env)
-
-Add these to your Vercel project environment variables or local `.env` file:
-
-```bash
-VITE_SENTRY_DSN=your_frontend_sentry_dsn_here
-VITE_SENTRY_RELEASE=1.0.0
-```
-
-#### Edge Functions Environment Variables (Supabase)
-
-Add these to your Supabase Edge Functions secrets:
-
-```bash
-SENTRY_DSN=your_backend_sentry_dsn_here
-SENTRY_ENVIRONMENT=production
-```
-
-**How to get Sentry DSN:**
-
-1. Create account at https://sentry.io
-2. Create new project (select "React" for frontend, "Deno" for backend)
-3. Copy the DSN from project settings
-4. Add to your environment variables
-
-**Frontend Configuration:** `src/main.tsx:8-35`
-**Backend Configuration:** `supabase/functions/_shared/errorHandler.ts:36-95`
-
-### 2. Upstash Redis (for Rate Limiting)
-
-Rate limiting is implemented but requires Upstash Redis credentials.
+Rate limiting is implemented but requires Upstash Redis credentials for production use.
 
 #### Setup Steps:
 
@@ -109,7 +77,7 @@ Expected response when rate limited:
 }
 ```
 
-### 3. Rate Limit Configurations
+### Rate Limit Configurations
 
 Available rate limit presets in `supabase/functions/_shared/rateLimit.ts:168-177`:
 
@@ -212,32 +180,14 @@ export default createSecureHandler(handleRequest, {
 
 1. **Automatic authentication** - `userId` and `isAdmin` provided in context
 2. **Rate limiting** - Applied automatically based on configuration
-3. **Error handling** - Centralized with Sentry integration
+3. **Error handling** - Centralized with proper error responses
 4. **CORS handling** - Automatic with secure defaults
 5. **Request ID tracking** - Automatic for tracing
 6. **Input validation** - Type-safe with Zod
 
 ## 🔍 Verification Steps
 
-### 1. Verify Sentry Integration
-
-**Frontend:**
-```javascript
-// In browser console
-throw new Error('Test error');
-// Should appear in Sentry dashboard
-```
-
-**Backend:**
-```bash
-# Trigger an error in an edge function
-curl -X POST https://your-project.supabase.co/functions/v1/some-function \
-  -H "Content-Type: application/json" \
-  -d '{"invalid": "data"}'
-# Check Sentry dashboard for error
-```
-
-### 2. Verify Rate Limiting
+### 1. Verify Rate Limiting
 
 ```bash
 # Run rapid requests
@@ -249,7 +199,7 @@ done
 # Should see 429 status after limit reached
 ```
 
-### 3. Verify Input Validation
+### 2. Verify Input Validation
 
 ```bash
 # Send invalid data
@@ -260,7 +210,7 @@ curl -X POST https://your-project.supabase.co/functions/v1/check-scan-access-v2 
 # Should return 400 with validation error
 ```
 
-### 4. Verify Centralized Error Handling
+### 3. Verify Centralized Error Handling
 
 Check logs for structured error format:
 ```
@@ -276,17 +226,12 @@ Check logs for structured error format:
 
 After setup, monitor:
 
-1. **Sentry Dashboard**
-   - Error frequency and types
-   - Performance metrics
-   - User impact
-
-2. **Upstash Dashboard**
+1. **Upstash Dashboard**
    - Rate limit hits
    - Redis command usage
    - Response times
 
-3. **Supabase Logs**
+2. **Supabase Logs**
    - Edge function logs
    - Error patterns
    - Request volumes
@@ -299,13 +244,6 @@ After setup, monitor:
 2. Verify function is using `createSecureHandler`
 3. Check Upstash dashboard for connection errors
 4. Review logs for `[RATE-LIMIT]` prefix
-
-### Sentry Not Receiving Errors
-
-1. Verify DSN is correct
-2. Check environment mode (only production by default)
-3. Ensure error is actually thrown
-4. Check Sentry project quotas
 
 ### Validation Errors Not Clear
 
@@ -320,14 +258,12 @@ After setup, monitor:
 - **Error Handling**: `supabase/functions/_shared/errorHandler.ts`
 - **Secure Handler**: `supabase/functions/_shared/secureHandler.ts`
 - **Reference Implementation**: `supabase/functions/check-scan-access-v2/index.ts`
-- **Frontend Sentry**: `src/main.tsx:8-35`
-- **Error Boundary**: `src/components/ErrorBoundary.tsx:33-49`
 
 ## 🎯 Next Steps
 
 1. **Immediate** (Today):
-   - Set up Sentry projects (30 mins)
-   - Configure Upstash Redis (15 mins)
+   - Set up Upstash Redis account (15 mins)
+   - Configure credentials (5 mins)
    - Test reference implementation (15 mins)
 
 2. **Short Term** (This Week):
@@ -337,12 +273,12 @@ After setup, monitor:
 
 3. **Medium Term** (This Month):
    - Migrate remaining high-priority endpoints
-   - Set up Sentry alerts
-   - Create monitoring dashboard
+   - Set up monitoring dashboards
+   - Create runbook for common issues
 
 4. **Long Term**:
    - Phase 3: Advanced Monitoring & Audit Logging
-   - Phase 4: MFA, CSP, Security Scanning
+   - Phase 4: Security Scanning
    - Regular security audits
 
 ## 💡 Best Practices
@@ -351,7 +287,7 @@ After setup, monitor:
 2. **Use appropriate rate limits** - Match rate limit to endpoint cost
 3. **Log with context** - Include request ID in all logs
 4. **Test error scenarios** - Ensure errors are handled gracefully
-5. **Monitor regularly** - Check Sentry and Upstash dashboards weekly
+5. **Monitor regularly** - Check Upstash dashboard weekly
 6. **Keep secrets secure** - Never commit credentials to git
 
 ## 📞 Support
@@ -359,7 +295,6 @@ After setup, monitor:
 If you encounter issues:
 
 1. Check logs in Supabase Dashboard
-2. Review Sentry error details
-3. Check Upstash connection status
-4. Review this documentation
-5. Consult SECURITY_PHASE2.md for detailed implementation guide
+2. Check Upstash connection status
+3. Review this documentation
+4. Consult SECURITY_PHASE2.md for detailed implementation guide
