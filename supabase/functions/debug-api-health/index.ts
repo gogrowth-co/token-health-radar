@@ -180,20 +180,101 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // SECURITY: Verify JWT and check admin role
+    console.log('[API-HEALTH] Verifying authentication...');
+
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('[API-HEALTH] No authorization header provided');
+      return new Response(
+        JSON.stringify({
+          error: 'Unauthorized - Authentication required',
+          message: 'This endpoint requires admin access. Please include a valid authorization token.'
+        }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+
+    // Verify the JWT and get user
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      console.error('[API-HEALTH] Invalid token:', userError?.message);
+      return new Response(
+        JSON.stringify({
+          error: 'Unauthorized - Invalid token',
+          message: 'Your authentication token is invalid or expired.'
+        }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log(`[API-HEALTH] User authenticated: ${user.id} (${user.email})`);
+
+    // Check if user is admin
+    const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
+      _user_id: user.id
+    });
+
+    if (roleError) {
+      console.error('[API-HEALTH] Error checking user role:', roleError);
+      return new Response(
+        JSON.stringify({
+          error: 'Authorization check failed',
+          message: 'Unable to verify user permissions.'
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const isAdmin = roleData === 'admin';
+    console.log(`[API-HEALTH] User role: ${roleData}, isAdmin: ${isAdmin}`);
+
+    if (!isAdmin) {
+      console.error(`[API-HEALTH] Unauthorized access attempt by non-admin user: ${user.email}`);
+      return new Response(
+        JSON.stringify({
+          error: 'Forbidden - Admin access required',
+          message: 'This endpoint is restricted to admin users only.'
+        }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // User is authenticated and authorized - proceed with health check
     const body = await req.json().catch(() => ({}));
     const { testToken, testChain, testTokenAddress, testChainId } = body;
-    
+
     // Support both naming conventions - prefer the newer naming if provided
     const tokenAddress = testTokenAddress || testToken || '0x808507121b80c02388fad14726482e061b8da827';
     const chainId = testChainId || testChain || '0x1';
-    
+
     console.log(`[API-HEALTH] Starting comprehensive API health check...`);
+    console.log(`[API-HEALTH] Requested by admin: ${user.email}`);
     console.log(`[API-HEALTH] Parsed parameters - Token: ${tokenAddress}, Chain: ${chainId}`);
-    
+
     const healthResults = await testApiHealth(tokenAddress, chainId);
-    
+
     return new Response(
-      JSON.stringify(healthResults, null, 2),
+      JSON.stringify({
+        ...healthResults,
+        requestedBy: user.email,
+        requestedAt: new Date().toISOString()
+      }, null, 2),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
@@ -204,7 +285,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: 'Internal server error',
+        message: 'An unexpected error occurred during the health check.',
         timestamp: new Date().toISOString()
       }),
       {

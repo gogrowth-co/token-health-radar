@@ -53,7 +53,7 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.debug-api-health]
-verify_jwt = false
+verify_jwt = true
 
 [functions.render-chart]
 verify_jwt = false
@@ -77,13 +77,13 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.airtable-sync]
-verify_jwt = false
+verify_jwt = true
 
 [functions.airtable-full-sync]
-verify_jwt = false
+verify_jwt = true
 
 [functions.debug-airtable]
-verify_jwt = false
+verify_jwt = true
 
 [functions.weekly-token-refresh]
 verify_jwt = false

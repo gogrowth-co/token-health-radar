@@ -35,26 +35,49 @@ serve(async (req) => {
   }
 
   try {
+    // SECURITY & AUDIT: Log all webhook requests
+    const requestId = crypto.randomUUID();
+    const timestamp = new Date().toISOString();
+
+    console.log(`[STRIPE-WEBHOOK-${requestId}] Webhook received at ${timestamp}`);
+    console.log(`[STRIPE-WEBHOOK-${requestId}] Request headers:`, {
+      'content-type': req.headers.get('content-type'),
+      'stripe-signature': req.headers.get('stripe-signature') ? 'present' : 'missing'
+    });
+
     // Get the signature from the header
     const signature = req.headers.get("stripe-signature");
     if (!signature) {
+      console.error(`[STRIPE-WEBHOOK-${requestId}] No signature provided`);
       return new Response(
-        JSON.stringify({ error: "No signature provided" }),
+        JSON.stringify({ error: "No signature provided", requestId }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     // Get the raw request body
     const body = await req.text();
-    
-    // Verify signature and construct the event
-    const event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      webhookSecret
-    );
+    console.log(`[STRIPE-WEBHOOK-${requestId}] Body length: ${body.length} bytes`);
 
-    console.log(`Processing webhook event: ${event.type}`);
+    // Verify signature and construct the event
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(
+        body,
+        signature,
+        webhookSecret
+      );
+      console.log(`[STRIPE-WEBHOOK-${requestId}] Signature verification successful`);
+    } catch (signatureError: any) {
+      console.error(`[STRIPE-WEBHOOK-${requestId}] Signature verification failed:`, signatureError.message);
+      return new Response(
+        JSON.stringify({ error: "Invalid signature", requestId }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`[STRIPE-WEBHOOK-${requestId}] Processing webhook event: ${event.type}`);
+    console.log(`[STRIPE-WEBHOOK-${requestId}] Event ID: ${event.id}`);
 
     // Handle the event based on its type
     switch (event.type) {
@@ -114,48 +137,56 @@ function getPlanFromPriceId(priceId: string): "free" | "pro" {
 
 // Handle checkout.session.completed event
 async function handleCheckoutCompleted(session: any) {
+  console.log(`[STRIPE] Processing checkout.session.completed - Session: ${session.id}`);
+
   // Get customer ID and subscription ID from the session
   const { customer, subscription } = session;
-  
+
   if (!customer || !subscription) {
-    console.log("Missing customer or subscription ID");
+    console.log("[STRIPE] Missing customer or subscription ID");
     return;
   }
-  
+
+  console.log(`[STRIPE] Customer: ${customer}, Subscription: ${subscription}`);
+
   // Get customer email to match with our users
   const customerData = await stripe.customers.retrieve(customer);
   const email = customerData.email;
-  
+
   if (!email) {
-    console.log("Customer email not found");
+    console.log("[STRIPE] Customer email not found");
     return;
   }
-  
+
+  console.log(`[STRIPE] Processing checkout for email: ${email}`);
+
   // Get subscription details to determine the plan
   const subscriptionData = await stripe.subscriptions.retrieve(subscription);
   const priceId = subscriptionData.items.data[0]?.price.id;
-  
+
   if (!priceId) {
-    console.log("Price ID not found in subscription");
+    console.log("[STRIPE] Price ID not found in subscription");
     return;
   }
-  
+
   const plan = getPlanFromPriceId(priceId);
-  
+  console.log(`[STRIPE] Determined plan: ${plan} from price ID: ${priceId}`);
+
   // Find user by email instead of directly accessing auth.users
   const { data: userData, error: userError } = await supabase
     .from('subscribers')
     .select('id')
     .eq('email', email)
     .single();
-  
+
   if (userError || !userData) {
-    console.log(`User not found for email: ${email}`);
+    console.error(`[STRIPE] User not found for email: ${email}`, userError);
     return;
   }
-  
+
   const userId = userData.id;
-  
+  console.log(`[STRIPE] Found user ID: ${userId}`);
+
   // Update the subscriber record
   const { error } = await supabase
     .from('subscribers')
@@ -167,9 +198,11 @@ async function handleCheckoutCompleted(session: any) {
       updated_at: new Date().toISOString()
     })
     .eq('id', userId);
-  
+
   if (error) {
-    console.error(`Error updating subscriber: ${error.message}`);
+    console.error(`[STRIPE] Error updating subscriber ${userId}:`, error.message);
+  } else {
+    console.log(`[STRIPE] Successfully updated subscriber ${userId} to plan: ${plan}`);
   }
 }
 
