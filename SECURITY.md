@@ -1,13 +1,19 @@
 # Security Documentation - Token Health Radar
 
 **Last Updated:** October 30, 2025
-**Phase 1 Security Hardening - COMPLETED**
+**Status:** Phase 1 ✅ COMPLETED | Phase 2 ✅ COMPLETED
 
 ---
 
 ## 🔐 Overview
 
-This document outlines the security measures implemented in Phase 1 of our security hardening initiative and provides guidelines for maintaining a secure application environment.
+This document outlines the security measures implemented across multiple phases of our security hardening initiative and provides guidelines for maintaining a secure application environment.
+
+**Security Phases:**
+- ✅ **Phase 1:** Critical Security Fixes (COMPLETED)
+- ✅ **Phase 2:** Security Hardening - Rate Limiting, Validation, Error Handling (COMPLETED)
+- 🔄 **Phase 3:** Monitoring & Audit (Planned)
+- 🔄 **Phase 4:** Advanced Security - MFA, CSP, Security Scanning (Planned)
 
 ---
 
@@ -372,25 +378,50 @@ GITHUB_API_KEY=your_github_token
 
 ---
 
-## 🎯 Next Steps (Phase 2 & Beyond)
+## ✅ Phase 2: Security Hardening (COMPLETED)
 
-**Phase 2: Security Hardening (Recommended)**
-- [ ] Implement rate limiting on all public endpoints
-- [ ] Add input validation framework (Zod)
-- [ ] Set up centralized error handling
-- [ ] Implement structured logging with Sentry
+**📄 Full Documentation:** See [`SECURITY_PHASE2.md`](./SECURITY_PHASE2.md)
 
-**Phase 3: Monitoring & Audit**
+**Implemented Features:**
+- [x] **Rate Limiting** - Distributed rate limiting with Upstash Redis
+- [x] **Input Validation** - Type-safe validation with Zod schemas
+- [x] **Centralized Error Handling** - Consistent error responses
+- [x] **Secure Handler Wrapper** - Automatic security features
+- [x] **Example Implementation** - check-scan-access-v2 function
+
+**New Utilities Created:**
+- `_shared/rateLimit.ts` - Rate limiting infrastructure
+- `_shared/validation.ts` - Input validation schemas
+- `_shared/errorHandler.ts` - Error handling utilities
+- `_shared/secureHandler.ts` - Secure handler wrapper
+
+**Action Required:**
+1. Set up Upstash Redis account
+2. Configure environment variables (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN)
+3. Update high-priority functions with new security utilities
+4. Test rate limiting and validation
+
+**See:** [`SECURITY_PHASE2.md`](./SECURITY_PHASE2.md) for complete setup guide and migration instructions.
+
+---
+
+## 🎯 Next Steps (Phase 3 & Beyond)
+
+**Phase 3: Monitoring & Audit (Recommended Next)**
 - [ ] Create admin audit log table
 - [ ] Implement session management with timeouts
 - [ ] Add admin action tracking
 - [ ] Review and restrict RLS policies further
+- [ ] Set up Sentry for error tracking
+- [ ] Create monitoring dashboards
 
 **Phase 4: Advanced Security**
 - [ ] Implement Multi-Factor Authentication (MFA)
 - [ ] Add Content Security Policy (CSP)
-- [ ] Set up automated security scanning
+- [ ] Set up automated security scanning (Dependabot, SAST)
 - [ ] Implement API key rotation mechanism
+- [ ] Add security headers (via vercel.json)
+- [ ] CSRF protection for state-changing operations
 
 ---
 
