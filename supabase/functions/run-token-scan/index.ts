@@ -1145,6 +1145,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       fetchMoralisMetadata(tokenAddress, chainId)
     ]);
 
+    perfTracker.checkpoint('Phase 1: Core APIs');
+
     // Phase 2: Enhanced tokenomics APIs (new features)
     console.log(`[SCAN] Fetching enhanced tokenomics data...`);
     const [statsData, pairsData, ownersData, tvlData] = await Promise.allSettled([
@@ -1154,11 +1156,15 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       fetchDeFiLlamaTVL(tokenAddress)
     ]);
 
+    perfTracker.checkpoint('Phase 2: Enhanced APIs');
+
     // Phase 3: CEX listings data
     console.log(`[SCAN] Fetching CEX listings data...`);
     const [cexData] = await Promise.allSettled([
       fetchCoinGeckoCexCount(tokenAddress, chainId)
     ]);
+
+    perfTracker.checkpoint('Phase 3: CEX Data');
 
     const apiEndTime = Date.now();
     console.log(`[SCAN] API calls completed in ${apiEndTime - apiStartTime}ms`);
@@ -1421,72 +1427,81 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       }
     }
 
-    // CoinMarketCap fallback for remaining missing links (secondary fallback)
-    if (!website_url) {
-      console.log(`[SCAN] Website URL not found in Moralis/CoinGecko, trying CoinMarketCap fallback`);
-      const cmcWebsiteUrl = await fetchCoinMarketCapWebsiteUrl(tokenAddress, chainId);
-      if (cmcWebsiteUrl) {
+    // CoinMarketCap fallback for remaining missing links (secondary fallback - now parallelized)
+    const hasMissingLinks = !website_url || !twitter_handle || !github_url || !discord_url || !telegram_url;
+
+    if (hasMissingLinks) {
+      console.log(`[SCAN] Fetching missing social links from CoinMarketCap in parallel...`);
+      const [
+        cmcWebsiteUrl,
+        cmcTwitterHandle,
+        cmcGithubUrl,
+        cmcDiscordUrl,
+        cmcTelegramUrl
+      ] = await parallelWithTimeouts([
+        {
+          call: () => fetchCoinMarketCapWebsiteUrl(tokenAddress, chainId),
+          name: 'CMC Website',
+          timeoutMs: 5000,
+          fallback: ''
+        },
+        {
+          call: () => fetchCoinMarketCapTwitterHandle(tokenAddress, chainId),
+          name: 'CMC Twitter',
+          timeoutMs: 5000,
+          fallback: ''
+        },
+        {
+          call: () => fetchCoinMarketCapGithubUrl(tokenAddress, chainId),
+          name: 'CMC GitHub',
+          timeoutMs: 5000,
+          fallback: ''
+        },
+        {
+          call: () => fetchCoinMarketCapDiscordUrl(tokenAddress, chainId),
+          name: 'CMC Discord',
+          timeoutMs: 5000,
+          fallback: ''
+        },
+        {
+          call: () => fetchCoinMarketCapTelegramUrl(tokenAddress, chainId),
+          name: 'CMC Telegram',
+          timeoutMs: 5000,
+          fallback: ''
+        }
+      ]);
+
+      // Apply CMC results only for missing values
+      if (!website_url && cmcWebsiteUrl) {
         website_url = cmcWebsiteUrl;
         console.log(`[SCAN] Website URL found via CoinMarketCap: ${website_url}`);
-      } else {
-        console.log(`[SCAN] No website URL found via CoinMarketCap fallback`);
       }
-    } else {
-      console.log(`[SCAN] Website URL already found: ${website_url}`);
-    }
 
-    if (!twitter_handle) {
-      console.log(`[SCAN] Twitter handle not found in Moralis/CoinGecko, trying CoinMarketCap fallback`);
-      const cmcTwitterHandle = await fetchCoinMarketCapTwitterHandle(tokenAddress, chainId);
-      if (cmcTwitterHandle) {
+      if (!twitter_handle && cmcTwitterHandle) {
         twitter_handle = cmcTwitterHandle;
         console.log(`[SCAN] Twitter handle found via CoinMarketCap: @${twitter_handle}`);
-      } else {
-        console.log(`[SCAN] No Twitter handle found via CoinMarketCap fallback`);
       }
-    } else {
-      console.log(`[SCAN] Twitter handle already found: @${twitter_handle}`);
-    }
 
-    if (!github_url) {
-      console.log(`[SCAN] GitHub URL not found in Moralis/CoinGecko, trying CoinMarketCap fallback`);
-      const cmcGithubUrl = await fetchCoinMarketCapGithubUrl(tokenAddress, chainId);
-      if (cmcGithubUrl) {
+      if (!github_url && cmcGithubUrl) {
         github_url = cmcGithubUrl;
         console.log(`[SCAN] GitHub URL found via CoinMarketCap: ${github_url}`);
-      } else {
-        console.log(`[SCAN] No GitHub URL found via CoinMarketCap fallback`);
       }
-    } else {
-      console.log(`[SCAN] GitHub URL already found: ${github_url}`);
-    }
-    
-    if (!discord_url) {
-      console.log(`[SCAN] Discord URL not found in Moralis/CoinGecko, trying CoinMarketCap fallback`);
-      const cmcDiscordUrl = await fetchCoinMarketCapDiscordUrl(tokenAddress, chainId);
-      if (cmcDiscordUrl && isValidDiscordUrl(cmcDiscordUrl)) {
+
+      if (!discord_url && cmcDiscordUrl && isValidDiscordUrl(cmcDiscordUrl)) {
         discord_url = cmcDiscordUrl;
         console.log(`[SCAN] Discord URL found via CoinMarketCap: ${discord_url}`);
-      } else {
-        console.log(`[SCAN] No valid Discord URL found via CoinMarketCap fallback`);
       }
-    } else {
-      console.log(`[SCAN] Discord URL already found: ${discord_url}`);
-    }
-    
-    if (!telegram_url) {
-      console.log(`[SCAN] Telegram URL not found in Moralis/CoinGecko, trying CoinMarketCap fallback`);
-      const cmcTelegramUrl = await fetchCoinMarketCapTelegramUrl(tokenAddress, chainId);
-      if (cmcTelegramUrl && isValidTelegramUrl(cmcTelegramUrl)) {
+
+      if (!telegram_url && cmcTelegramUrl && isValidTelegramUrl(cmcTelegramUrl)) {
         telegram_url = cmcTelegramUrl;
         console.log(`[SCAN] Telegram URL found via CoinMarketCap: ${telegram_url}`);
-      } else {
-        console.log(`[SCAN] No valid Telegram URL found via CoinMarketCap fallback`);
       }
     } else {
-      console.log(`[SCAN] Telegram URL already found: ${telegram_url}`);
+      console.log(`[SCAN] All social links already found - skipping CoinMarketCap fallback`);
     }
-    
+
+    perfTracker.checkpoint('Social Links Extraction');
+
     // Fetch GitHub data now that we have the final GitHub URL (including CoinMarketCap fallback)
     if (github_url) {
       console.log(`[GITHUB] === FETCHING GITHUB DATA ===`);
@@ -1529,51 +1544,38 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       }
     }
     
-    // Fetch Twitter follower data if Twitter handle is available
-    let twitterFollowers = 0;
-    if (twitter_handle) {
-      console.log(`[SCAN] Twitter handle found: @${twitter_handle} - fetching follower count via Apify`);
-      const followerCount = await fetchTwitterFollowers(twitter_handle);
-      if (followerCount !== null) {
-        twitterFollowers = followerCount;
-        console.log(`[SCAN] Successfully retrieved Twitter follower count: ${twitterFollowers}`);
-      } else {
-        console.log(`[SCAN] Failed to fetch Twitter follower count for @${twitter_handle}`);
+    // Fetch social metrics in parallel (Twitter, Discord, Telegram)
+    console.log(`[SCAN] Fetching social metrics in parallel...`);
+    const [twitterFollowers, discordMembers, telegramData] = await parallelWithTimeouts([
+      {
+        call: () => twitter_handle ? fetchTwitterFollowers(twitter_handle) : Promise.resolve(0),
+        name: 'Twitter Followers',
+        timeoutMs: 8000,
+        fallback: 0
+      },
+      {
+        call: () => (discord_url && isValidDiscordUrl(discord_url)) ? fetchDiscordMemberCount(discord_url) : Promise.resolve(0),
+        name: 'Discord Members',
+        timeoutMs: 8000,
+        fallback: 0
+      },
+      {
+        call: () => (telegram_url && isValidTelegramUrl(telegram_url)) ? fetchTelegramMembers(telegram_url) : Promise.resolve({ members: 0, name: '', description: '' }),
+        name: 'Telegram Members',
+        timeoutMs: 8000,
+        fallback: { members: 0, name: '', description: '' }
       }
-    } else {
-      console.log(`[SCAN] No Twitter handle found - skipping Apify API call`);
-    }
-    
-    // Fetch Discord member count if valid Discord URL is available
-    let discordMembers = 0;
-    if (discord_url && isValidDiscordUrl(discord_url)) {
-      console.log(`[SCAN] Valid Discord URL found: ${discord_url} - fetching member count`);
-      const memberCount = await fetchDiscordMemberCount(discord_url);
-      if (memberCount !== null) {
-        discordMembers = memberCount;
-        console.log(`[SCAN] Successfully retrieved Discord member count: ${discordMembers}`);
-      } else {
-        console.log(`[SCAN] Failed to fetch Discord member count for ${discord_url}`);
-      }
-    } else {
-      console.log(`[SCAN] No Discord URL found - skipping Discord API call`);
-    }
-    
-    // Fetch Telegram member count if valid Telegram URL is available
-    let telegramMembers = 0;
-    let telegramData = { members: null, name: '', description: '' };
-    if (telegram_url && isValidTelegramUrl(telegram_url)) {
-      console.log(`[SCAN] Valid Telegram URL found: ${telegram_url} - fetching member count`);
-      telegramData = await fetchTelegramMembers(telegram_url);
-      if (telegramData.members !== null) {
-        telegramMembers = telegramData.members;
-        console.log(`[SCAN] Successfully retrieved Telegram member count: ${telegramMembers}`);
-      } else {
-        console.log(`[SCAN] Failed to fetch Telegram member count for ${telegram_url}`);
-      }
-    } else {
-      console.log(`[SCAN] No Telegram URL found - skipping Telegram API call`);
-    }
+    ]);
+
+    const telegramMembers = telegramData?.members || 0;
+
+    console.log(`[SCAN] Social metrics results:`, {
+      twitterFollowers: twitterFollowers || 0,
+      discordMembers: discordMembers || 0,
+      telegramMembers
+    });
+
+    perfTracker.checkpoint('Social Metrics Fetching');
 
     // Prioritize Moralis metadata and price data
     const name = metadata?.name || priceDataResult?.name || `Token ${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
@@ -1611,63 +1613,57 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       description = metadata.description.trim();
       console.log(`[DESCRIPTION] Using high-quality Moralis description: ${description.substring(0, 100)}...`);
     } else {
-      console.log(`[DESCRIPTION] Moralis description not available, too short, or generic. Trying fallbacks...`);
-      
-      console.log(`[DESCRIPTION] Trying CoinMarketCap fallback`);
-      
-      // Try CoinMarketCap as fallback
-      const cmcDescription = await fetchCoinMarketCapDescription(tokenAddress);
-      console.log(`[DESCRIPTION-DEBUG] CoinMarketCap response:`, {
-        hasResponse: !!cmcDescription,
-        responseLength: cmcDescription?.length || 0,
-        responsePreview: cmcDescription ? cmcDescription.substring(0, 200) : 'null/undefined',
-        isGeneric: cmcDescription ? isGenericDescription(cmcDescription) : 'N/A'
+      console.log(`[DESCRIPTION] Moralis description not available, too short, or generic. Fetching from multiple sources in parallel...`);
+
+      // Fetch descriptions from all sources in parallel
+      const [cmcDescription, siteDesc, cgDesc] = await parallelWithTimeouts([
+        {
+          call: () => fetchCoinMarketCapDescription(tokenAddress),
+          name: 'CMC Description',
+          timeoutMs: 5000,
+          fallback: ''
+        },
+        {
+          call: () => website_url ? fetchWebsiteMetaDescription(website_url) : Promise.resolve(''),
+          name: 'Website Description',
+          timeoutMs: 5000,
+          fallback: ''
+        },
+        {
+          call: () => fetchCoinGeckoDescription(tokenAddress, chainId),
+          name: 'CoinGecko Description',
+          timeoutMs: 5000,
+          fallback: ''
+        }
+      ]);
+
+      console.log(`[DESCRIPTION-DEBUG] Parallel fetch results:`, {
+        cmc: { hasResponse: !!cmcDescription, length: cmcDescription?.length || 0, isGeneric: cmcDescription ? isGenericDescription(cmcDescription) : true },
+        website: { hasResponse: !!siteDesc, length: siteDesc?.length || 0, isGeneric: siteDesc ? isGenericDescription(siteDesc) : true },
+        coingecko: { hasResponse: !!cgDesc, length: cgDesc?.length || 0, isGeneric: cgDesc ? isGenericDescription(cgDesc) : true }
       });
-      
+
+      // Choose best description with priority: CMC > Website > CoinGecko
       if (cmcDescription && !isGenericDescription(cmcDescription)) {
         description = cmcDescription;
         console.log(`[DESCRIPTION] Using CoinMarketCap description: ${description.substring(0, 100)}...`);
+      } else if (siteDesc && !isGenericDescription(siteDesc)) {
+        description = siteDesc;
+        console.log(`[DESCRIPTION] Using Website meta description: ${description.substring(0, 100)}...`);
+      } else if (cgDesc && !isGenericDescription(cgDesc)) {
+        description = cgDesc.trim();
+        console.log(`[DESCRIPTION] Using CoinGecko description: ${description.substring(0, 100)}...`);
       } else {
-        // Try website meta description fallback
-        if (website_url) {
-          console.log(`[DESCRIPTION] Trying website meta description fallback: ${website_url}`);
-          const siteDesc = await fetchWebsiteMetaDescription(website_url);
-          console.log(`[DESCRIPTION-DEBUG] Website meta response:`, {
-            hasResponse: !!siteDesc,
-            responseLength: siteDesc?.length || 0,
-            responsePreview: siteDesc ? siteDesc.substring(0, 200) : 'null/undefined',
-            isGeneric: siteDesc ? isGenericDescription(siteDesc) : 'N/A'
-          });
-          if (siteDesc && !isGenericDescription(siteDesc)) {
-            description = siteDesc;
-            console.log(`[DESCRIPTION] Using Website meta description: ${description.substring(0, 100)}...`);
-          }
-        }
-
-        // Try CoinGecko description as additional fallback
-        if (!description) {
-          const cgDesc = await fetchCoinGeckoDescription(tokenAddress, chainId);
-          console.log(`[DESCRIPTION-DEBUG] CoinGecko response:`, {
-            hasResponse: !!cgDesc,
-            responseLength: cgDesc?.length || 0,
-            isGeneric: cgDesc ? isGenericDescription(cgDesc) : 'N/A'
-          });
-          if (cgDesc && !isGenericDescription(cgDesc)) {
-            description = cgDesc.trim();
-            console.log(`[DESCRIPTION] Using CoinGecko description: ${description.substring(0, 100)}...`);
-          }
-        }
-
         // Final fallback to enhanced generic template
-        if (!description) {
-          description = metadata?.name 
-            ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
-            : `${name} on ${chainConfig.name}`;
-          console.log(`[DESCRIPTION] Using generic template: ${description}`);
-        }
+        description = metadata?.name
+          ? `${metadata.name} (${metadata.symbol}) is a token on ${chainConfig.name}${metadata.verified_contract ? ' with a verified contract' : ''}.`
+          : `${name} on ${chainConfig.name}`;
+        console.log(`[DESCRIPTION] Using generic template: ${description}`);
       }
     }
-    
+
+    perfTracker.checkpoint('Description Fetching');
+
     // Ensure formal, informative description
     if (description) {
       if (isTaglineStyle(description) || description.length < 140) {
@@ -1743,6 +1739,9 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         github: !!combinedData.github_url
       }
     });
+
+    // Complete performance tracking
+    perfTracker.finish();
 
     return {
       tokenData: combinedData,
