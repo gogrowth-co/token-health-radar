@@ -3,9 +3,122 @@
  *
  * Provides consistent error handling and response formatting across all edge functions.
  * Prevents leaking sensitive information while logging detailed errors for debugging.
+ * Integrates with Sentry for production error tracking.
  */
 
 import { corsHeaders } from './cors.ts';
+
+// Sentry integration for Deno
+// Note: Sentry SDK for Deno should be imported when available
+// For now, we'll use a simple HTTP-based error reporting
+interface SentryEvent {
+  message?: string;
+  exception?: {
+    values: Array<{
+      type: string;
+      value: string;
+      stacktrace?: {
+        frames: Array<{
+          filename: string;
+          function: string;
+          lineno: number;
+        }>;
+      };
+    }>;
+  };
+  level: 'error' | 'warning' | 'info';
+  environment: string;
+  tags?: Record<string, string>;
+  extra?: Record<string, unknown>;
+  timestamp: number;
+}
+
+/**
+ * Send error to Sentry (if configured)
+ */
+async function sendToSentry(
+  error: Error | ApplicationError,
+  context?: Record<string, unknown>
+): Promise<void> {
+  const sentryDsn = Deno.env.get('SENTRY_DSN');
+  if (!sentryDsn) {
+    return; // Sentry not configured
+  }
+
+  try {
+    // Parse DSN to extract the endpoint
+    const dsnUrl = new URL(sentryDsn);
+    const projectId = dsnUrl.pathname.substring(1);
+    const sentryEndpoint = `${dsnUrl.protocol}//${dsnUrl.host}/api/${projectId}/store/`;
+
+    const event: SentryEvent = {
+      level: 'error',
+      environment: Deno.env.get('SENTRY_ENVIRONMENT') || 'production',
+      timestamp: Date.now() / 1000,
+      exception: {
+        values: [
+          {
+            type: error.name,
+            value: error.message,
+            stacktrace: error.stack
+              ? {
+                  frames: parseStackTrace(error.stack),
+                }
+              : undefined,
+          },
+        ],
+      },
+      tags: {
+        function: context?.functionName as string || 'unknown',
+        errorCode: error instanceof ApplicationError ? error.code : 'UNKNOWN',
+      },
+      extra: {
+        ...context,
+        statusCode: error instanceof ApplicationError ? error.statusCode : 500,
+      },
+    };
+
+    // Send to Sentry asynchronously (don't block on response)
+    fetch(sentryEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Sentry-Auth': `Sentry sentry_version=7, sentry_client=custom-deno/1.0, sentry_key=${dsnUrl.username}`,
+      },
+      body: JSON.stringify(event),
+    }).catch((err) => {
+      console.error('[SENTRY] Failed to send error:', err);
+    });
+  } catch (err) {
+    console.error('[SENTRY] Failed to process error:', err);
+  }
+}
+
+/**
+ * Parse stack trace into Sentry frames
+ */
+function parseStackTrace(stack: string): Array<{
+  filename: string;
+  function: string;
+  lineno: number;
+}> {
+  const frames = [];
+  const lines = stack.split('\n');
+
+  for (const line of lines) {
+    // Parse format: "    at functionName (file:line:col)"
+    const match = line.match(/at\s+(.+?)\s+\((.+?):(\d+):\d+\)/);
+    if (match) {
+      frames.push({
+        function: match[1],
+        filename: match[2],
+        lineno: parseInt(match[3], 10),
+      });
+    }
+  }
+
+  return frames.reverse(); // Sentry expects oldest frame first
+}
 
 export enum ErrorCode {
   // Authentication & Authorization
@@ -90,7 +203,7 @@ interface ErrorResponse {
 }
 
 /**
- * Log error with context
+ * Log error with context and send to Sentry
  */
 function logError(error: Error | ApplicationError, context?: Record<string, unknown>): void {
   const timestamp = new Date().toISOString();
@@ -112,6 +225,9 @@ function logError(error: Error | ApplicationError, context?: Record<string, unkn
       ...context,
     });
   }
+
+  // Send to Sentry (async, non-blocking)
+  sendToSentry(error, context);
 }
 
 /**
