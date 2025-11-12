@@ -261,11 +261,17 @@ export type Database = {
           chain_id: string
           commits_30d: number | null
           contributors_count: number | null
+          forks: number | null
           github_repo: string | null
+          is_archived: boolean | null
           is_open_source: boolean | null
+          language: string | null
           last_commit: string | null
+          open_issues: number | null
+          repo_created_at: string | null
           roadmap_progress: string | null
           score: number | null
+          stars: number | null
           token_address: string
           updated_at: string | null
         }
@@ -273,11 +279,17 @@ export type Database = {
           chain_id?: string
           commits_30d?: number | null
           contributors_count?: number | null
+          forks?: number | null
           github_repo?: string | null
+          is_archived?: boolean | null
           is_open_source?: boolean | null
+          language?: string | null
           last_commit?: string | null
+          open_issues?: number | null
+          repo_created_at?: string | null
           roadmap_progress?: string | null
           score?: number | null
+          stars?: number | null
           token_address: string
           updated_at?: string | null
         }
@@ -285,11 +297,17 @@ export type Database = {
           chain_id?: string
           commits_30d?: number | null
           contributors_count?: number | null
+          forks?: number | null
           github_repo?: string | null
+          is_archived?: boolean | null
           is_open_source?: boolean | null
+          language?: string | null
           last_commit?: string | null
+          open_issues?: number | null
+          repo_created_at?: string | null
           roadmap_progress?: string | null
           score?: number | null
+          stars?: number | null
           token_address?: string
           updated_at?: string | null
         }

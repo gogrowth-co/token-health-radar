@@ -2017,6 +2017,12 @@ function generateCategoryData(apiData: any) {
       commits_30d: apiData.githubData?.commits_30d || 0,
       last_commit: apiData.githubData?.last_push || null,
       is_open_source: !!apiData.githubData,
+      stars: apiData.githubData?.stars || 0,
+      forks: apiData.githubData?.forks || 0,
+      open_issues: apiData.githubData?.open_issues || 0,
+      language: apiData.githubData?.language || null,
+      is_archived: apiData.githubData?.is_archived || false,
+      repo_created_at: apiData.githubData?.created_at || null,
       roadmap_progress: 'unknown',
       score: developmentScore
     }
@@ -2694,6 +2700,12 @@ Deno.serve(async (req) => {
             commits_30d: categoryData.development.commits_30d,
             last_commit: categoryData.development.last_commit,
             is_open_source: categoryData.development.is_open_source,
+            stars: categoryData.development.stars,
+            forks: categoryData.development.forks,
+            open_issues: categoryData.development.open_issues,
+            language: categoryData.development.language,
+            is_archived: categoryData.development.is_archived,
+            repo_created_at: categoryData.development.repo_created_at,
             roadmap_progress: categoryData.development.roadmap_progress
           }
         }
