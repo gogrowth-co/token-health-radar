@@ -757,12 +757,12 @@ export const transformLiquidityData = (data: LiquidityData | null): CategoryFeat
 export const transformCommunityData = (data: CommunityData | null): CategoryFeature[] => {
   if (!data) {
     return [
-      { icon: Users, title: "Twitter Followers", description: "Number of followers on Twitter/X", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Shield, title: "Twitter Verified", description: "Twitter/X account verification status", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: TrendingUp, title: "Twitter Growth (7d)", description: "Follower growth in the last 7 days", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Users, title: "Discord Members", description: "Number of Discord community members", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Users, title: "Telegram Members", description: "Number of Telegram community members", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Activity, title: "Team Visibility", description: "How visible and accessible the team is", badgeLabel: "Unknown", badgeVariant: "gray" }
+      { icon: Users, title: "Twitter Followers", description: "Social media following size - larger audiences indicate community interest and project awareness", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Shield, title: "Twitter Verified", description: "Official account verification status - verified accounts reduce impersonation risk and add legitimacy", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: TrendingUp, title: "Twitter Growth (7d)", description: "Recent follower growth rate - positive growth shows increasing community interest and project momentum", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Users, title: "Discord Members", description: "Active Discord community size - engaged communities provide support, feedback, and long-term project sustainability", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Users, title: "Telegram Members", description: "Telegram group participation - large groups indicate widespread community engagement and information sharing", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Activity, title: "Team Visibility", description: "Team transparency and accessibility - visible teams build trust, accountability, and reduce anonymity risks", badgeLabel: "Unknown", badgeVariant: "gray" }
     ];
   }
 
@@ -770,55 +770,138 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
   const twitterVerified = safeBooleanAccess(data, 'twitter_verified');
   const twitterGrowth = safeNumberAccess(data, 'twitter_growth_7d');
   const discordMembers = safeNumberAccess(data, 'discord_members');
+  const telegramMembers = safeNumberAccess(data, 'telegram_members');
   const teamVisibility = safeAccess(data, 'team_visibility', 'Unknown');
 
-  return [
-    {
-      icon: Users,
-      title: "Twitter Followers",
-      description: "Number of followers on Twitter/X",
-      badgeLabel: formatNumber(twitterFollowers),
-      badgeVariant: twitterFollowers >= 100000 ? "green" : twitterFollowers >= 10000 ? "blue" : twitterFollowers >= 1000 ? "orange" : "gray"
-    },
-    {
-      icon: Shield,
-      title: "Twitter Verified",
-      description: "Twitter/X account verification status",
-      badgeLabel: getSecurityBadgeLabel(twitterVerified),
-      badgeVariant: getSecurityBadgeVariant(twitterVerified, true)
-    },
-    { 
-      icon: TrendingUp, 
-      title: "Twitter Growth (7d)", 
-      description: "Follower growth in the last 7 days",
-      badgeLabel: `${twitterGrowth}%`,
-      badgeVariant: twitterGrowth > 5 ? "green" : twitterGrowth > 0 ? "blue" : twitterGrowth < 0 ? "red" : "gray"
-    },
-    { 
-      icon: Users, 
-      title: "Discord Members", 
-      description: "Number of Discord community members",
-      badgeLabel: formatNumber(discordMembers),
-      badgeVariant: discordMembers >= 50000 ? "green" : discordMembers >= 5000 ? "blue" : discordMembers >= 500 ? "orange" : "gray"
-    },
-    { 
-      icon: Users, 
-      title: "Telegram Members", 
-      description: "Number of Telegram community members",
-      badgeLabel: formatNumber(safeNumberAccess(data, 'telegram_members')),
-      badgeVariant: safeNumberAccess(data, 'telegram_members') >= 50000 ? "green" : 
-                   safeNumberAccess(data, 'telegram_members') >= 5000 ? "blue" : 
-                   safeNumberAccess(data, 'telegram_members') >= 500 ? "orange" : 
-                   safeNumberAccess(data, 'telegram_members') > 0 ? "yellow" : "gray"
-    },
-    { 
-      icon: Activity, 
-      title: "Team Visibility", 
-      description: "How visible and accessible the team is",
-      badgeLabel: teamVisibility,
-      badgeVariant: teamVisibility === "Unknown" ? "gray" : teamVisibility === "High" ? "green" : teamVisibility === "Medium" ? "blue" : teamVisibility === "Low" ? "red" : "gray"
-    }
-  ];
+  // Build comprehensive community metrics
+  const metrics: CategoryFeature[] = [];
+
+  // 1. Twitter Followers - Social media reach
+  let followersVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
+
+  if (twitterFollowers === 0) {
+    followersVariant = "gray";
+  } else if (twitterFollowers < 1000) {
+    followersVariant = "orange";
+  } else if (twitterFollowers < 10000) {
+    followersVariant = "yellow";
+  } else if (twitterFollowers < 100000) {
+    followersVariant = "blue";
+  } else {
+    followersVariant = "green";
+  }
+
+  metrics.push({
+    icon: Users,
+    title: "Twitter Followers",
+    description: "Social media following size - larger audiences indicate community interest and project awareness",
+    badgeLabel: twitterFollowers > 0 ? formatNumber(twitterFollowers) : "No Followers",
+    badgeVariant: followersVariant
+  });
+
+  // 2. Twitter Verified - Account authenticity
+  metrics.push({
+    icon: Shield,
+    title: "Twitter Verified",
+    description: "Official account verification status - verified accounts reduce impersonation risk and add legitimacy",
+    badgeLabel: getSecurityBadgeLabel(twitterVerified),
+    badgeVariant: getSecurityBadgeVariant(twitterVerified, true)
+  });
+
+  // 3. Twitter Growth (7d) - Community momentum
+  let growthVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
+
+  if (twitterGrowth === 0) {
+    growthVariant = "gray";
+  } else if (twitterGrowth < 0) {
+    growthVariant = "red";
+  } else if (twitterGrowth < 1) {
+    growthVariant = "yellow";
+  } else if (twitterGrowth < 5) {
+    growthVariant = "blue";
+  } else {
+    growthVariant = "green";
+  }
+
+  metrics.push({
+    icon: TrendingUp,
+    title: "Twitter Growth (7d)",
+    description: "Recent follower growth rate - positive growth shows increasing community interest and project momentum",
+    badgeLabel: twitterGrowth !== 0 ? `${twitterGrowth}%` : "0%",
+    badgeVariant: growthVariant
+  });
+
+  // 4. Discord Members - Community engagement
+  let discordVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
+
+  if (discordMembers === 0) {
+    discordVariant = "gray";
+  } else if (discordMembers < 500) {
+    discordVariant = "orange";
+  } else if (discordMembers < 5000) {
+    discordVariant = "yellow";
+  } else if (discordMembers < 50000) {
+    discordVariant = "blue";
+  } else {
+    discordVariant = "green";
+  }
+
+  metrics.push({
+    icon: Users,
+    title: "Discord Members",
+    description: "Active Discord community size - engaged communities provide support, feedback, and long-term project sustainability",
+    badgeLabel: discordMembers > 0 ? formatNumber(discordMembers) : "No Discord",
+    badgeVariant: discordVariant
+  });
+
+  // 5. Telegram Members - Group participation
+  let telegramVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
+
+  if (telegramMembers === 0) {
+    telegramVariant = "gray";
+  } else if (telegramMembers < 500) {
+    telegramVariant = "orange";
+  } else if (telegramMembers < 5000) {
+    telegramVariant = "yellow";
+  } else if (telegramMembers < 50000) {
+    telegramVariant = "blue";
+  } else {
+    telegramVariant = "green";
+  }
+
+  metrics.push({
+    icon: Users,
+    title: "Telegram Members",
+    description: "Telegram group participation - large groups indicate widespread community engagement and information sharing",
+    badgeLabel: telegramMembers > 0 ? formatNumber(telegramMembers) : "No Telegram",
+    badgeVariant: telegramVariant
+  });
+
+  // 6. Team Visibility - Transparency and trust
+  let visibilityVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
+  const normalizedVisibility = teamVisibility.toLowerCase();
+
+  if (normalizedVisibility === "unknown" || !teamVisibility) {
+    visibilityVariant = "gray";
+  } else if (normalizedVisibility === "high") {
+    visibilityVariant = "green";
+  } else if (normalizedVisibility === "medium") {
+    visibilityVariant = "blue";
+  } else if (normalizedVisibility === "low") {
+    visibilityVariant = "red";
+  } else {
+    visibilityVariant = "gray";
+  }
+
+  metrics.push({
+    icon: Activity,
+    title: "Team Visibility",
+    description: "Team transparency and accessibility - visible teams build trust, accountability, and reduce anonymity risks",
+    badgeLabel: teamVisibility.charAt(0).toUpperCase() + teamVisibility.slice(1),
+    badgeVariant: visibilityVariant
+  });
+
+  return metrics;
 };
 
 // Transform development data into feature format
