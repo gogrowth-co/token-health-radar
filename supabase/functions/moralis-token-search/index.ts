@@ -37,13 +37,15 @@ const CHAIN_CONFIG = [
   { id: '0xa', name: 'Optimism', logo: 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png' },
   { id: '0xa4b1', name: 'Arbitrum', logo: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png' },
   { id: 'bsc', name: 'BSC', logo: 'https://cryptologos.cc/logos/bnb-bnb-logo.png' },
-  { id: '0x2105', name: 'Base', logo: 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png' }
+  { id: '0x2105', name: 'Base', logo: 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png' },
+  { id: '0x89', name: 'Polygon', logo: 'https://cryptologos.cc/logos/polygon-matic-logo.png' }
 ];
 
 // Chain logos mapping (including hex IDs)
 const CHAIN_LOGOS: Record<string, string> = {
   'eth': 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
   'polygon': 'https://cryptologos.cc/logos/polygon-matic-logo.png',
+  '0x89': 'https://cryptologos.cc/logos/polygon-matic-logo.png',
   'bsc': 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
   'arbitrum': 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
   '0xa4b1': 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
@@ -275,8 +277,9 @@ async function searchBySymbolParallel(searchTerm: string, apiKey: string, limit:
     'eth': 1,
     '0xa4b1': 2, // Arbitrum
     'bsc': 3,
-    '0xa': 4, // Optimism
+    '0x89': 4, // Polygon
     '0x2105': 5, // Base
+    '0xa': 6, // Optimism
   };
 
   allResults.sort((a, b) => {
@@ -438,6 +441,7 @@ function getChainDisplayName(chain: string, chainConfig?: { id: string; name: st
   const chainNames: Record<string, string> = {
     'eth': 'Ethereum',
     'polygon': 'Polygon',
+    '0x89': 'Polygon',
     'bsc': 'BSC',
     'arbitrum': 'Arbitrum',
     '0xa4b1': 'Arbitrum',
