@@ -608,11 +608,11 @@ function getDistributionVariant(distributionScore: string, concentrationRisk: st
 export const transformLiquidityData = (data: LiquidityData | null): CategoryFeature[] => {
   if (!data) {
     return [
-      { icon: TrendingUp, title: "Trading Volume (24h)", description: "Total trading volume in the last 24 hours", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: BarChart3, title: "CEX Listings", description: "Number of centralized exchange listings", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Lock, title: "Liquidity Lock", description: "How long liquidity is locked for", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Activity, title: "DEX Depth", description: "Liquidity depth on decentralized exchanges", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Users, title: "Holder Distribution", description: "How tokens are distributed among holders", badgeLabel: "Unknown", badgeVariant: "gray" }
+      { icon: TrendingUp, title: "Trading Volume (24h)", description: "Total trading volume in the last 24 hours - indicates liquidity and ease of buying/selling", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Lock, title: "Liquidity Lock", description: "How long liquidity is locked for - prevents sudden removal of trading liquidity", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Activity, title: "DEX Depth", description: "Liquidity depth on decentralized exchanges - affects slippage and price impact on trades", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: BarChart3, title: "CEX Listings", description: "Number of centralized exchange listings - indicates accessibility and institutional adoption", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Users, title: "Holder Distribution", description: "How tokens are distributed among holders - concentrated holdings increase manipulation risk", badgeLabel: "Unknown", badgeVariant: "gray" }
     ];
   }
 
@@ -626,160 +626,126 @@ export const transformLiquidityData = (data: LiquidityData | null): CategoryFeat
   const metrics: CategoryFeature[] = [];
 
   // 1. Trading Volume (24h) - Critical for understanding liquidity
-  let volumeDescription = "";
   let volumeVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
 
   if (tradingVolume === 0) {
-    volumeDescription = "No trading activity detected in the last 24 hours - very low liquidity";
     volumeVariant = "red";
   } else if (tradingVolume < 1000) {
-    volumeDescription = `Very low trading volume of ${formatCurrency(tradingVolume)} - high price impact on trades`;
     volumeVariant = "red";
   } else if (tradingVolume < 10000) {
-    volumeDescription = `Low trading volume of ${formatCurrency(tradingVolume)} - moderate slippage expected`;
     volumeVariant = "orange";
   } else if (tradingVolume < 100000) {
-    volumeDescription = `Moderate trading volume of ${formatCurrency(tradingVolume)} - reasonable for small trades`;
     volumeVariant = "yellow";
   } else if (tradingVolume < 1000000) {
-    volumeDescription = `Good trading volume of ${formatCurrency(tradingVolume)} - sufficient liquidity for most trades`;
     volumeVariant = "blue";
   } else {
-    volumeDescription = `High trading volume of ${formatCurrency(tradingVolume)} - excellent liquidity with minimal slippage`;
     volumeVariant = "green";
   }
 
   metrics.push({
     icon: TrendingUp,
     title: "Trading Volume (24h)",
-    description: volumeDescription,
+    description: "Total trading volume in the last 24 hours - indicates liquidity and ease of buying/selling",
     badgeLabel: tradingVolume > 0 ? formatCurrency(tradingVolume) : "No Volume",
     badgeVariant: volumeVariant
   });
 
   // 2. Liquidity Lock - Important security measure
-  let lockDescription = "";
   let lockVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
 
   if (liquidityLocked === 0) {
-    lockDescription = "Liquidity is NOT locked - high risk of rug pull as liquidity can be removed anytime";
     lockVariant = "red";
   } else if (liquidityLocked < 30) {
-    lockDescription = `Liquidity locked for only ${liquidityLocked} days - short-term lock provides minimal security`;
     lockVariant = "orange";
   } else if (liquidityLocked < 90) {
-    lockDescription = `Liquidity locked for ${liquidityLocked} days - moderate lock period provides some security`;
     lockVariant = "yellow";
   } else if (liquidityLocked < 365) {
-    lockDescription = `Liquidity locked for ${liquidityLocked} days (~${Math.round(liquidityLocked / 30)} months) - good lock period`;
     lockVariant = "blue";
   } else if (liquidityLocked < 730) {
-    lockDescription = `Liquidity locked for ${liquidityLocked} days (~${Math.round(liquidityLocked / 365)} year) - strong security commitment`;
     lockVariant = "green";
   } else {
-    lockDescription = `Liquidity locked for ${liquidityLocked} days (~${Math.round(liquidityLocked / 365)} years) - excellent long-term security`;
     lockVariant = "green";
   }
 
   metrics.push({
     icon: Lock,
     title: "Liquidity Lock",
-    description: lockDescription,
+    description: "How long liquidity is locked for - prevents sudden removal of trading liquidity",
     badgeLabel: liquidityLocked > 0 ? `${liquidityLocked} days` : "Not Locked",
     badgeVariant: lockVariant
   });
 
   // 3. DEX Depth - Liquidity depth assessment
-  let depthDescription = "";
   let depthVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
   const normalizedDepth = dexDepth.toLowerCase();
 
   if (normalizedDepth === "unknown" || !dexDepth) {
-    depthDescription = "DEX liquidity depth information not available - unable to assess trading conditions";
     depthVariant = "gray";
   } else if (normalizedDepth === "good" || normalizedDepth === "high") {
-    depthDescription = "Deep liquidity pools on DEXs - large trades can be executed with minimal price impact";
     depthVariant = "green";
   } else if (normalizedDepth === "medium" || normalizedDepth === "moderate") {
-    depthDescription = "Moderate liquidity depth - suitable for small to medium sized trades";
     depthVariant = "blue";
   } else if (normalizedDepth === "limited" || normalizedDepth === "low") {
-    depthDescription = "Limited liquidity depth - expect higher slippage on trades, especially larger amounts";
     depthVariant = "orange";
   } else if (normalizedDepth === "very low" || normalizedDepth === "poor") {
-    depthDescription = "Very shallow liquidity - high risk of significant price impact even on small trades";
     depthVariant = "red";
   } else {
-    depthDescription = `DEX depth status: ${dexDepth}`;
     depthVariant = "gray";
   }
 
   metrics.push({
     icon: Activity,
     title: "DEX Depth",
-    description: depthDescription,
+    description: "Liquidity depth on decentralized exchanges - affects slippage and price impact on trades",
     badgeLabel: dexDepth.charAt(0).toUpperCase() + dexDepth.slice(1),
     badgeVariant: depthVariant
   });
 
   // 4. CEX Listings - Exchange availability
-  let cexDescription = "";
   let cexVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
 
   if (cexListings === 0) {
-    cexDescription = "Not listed on any centralized exchanges - only available on DEXs with limited accessibility";
     cexVariant = "orange";
   } else if (cexListings === 1) {
-    cexDescription = "Listed on 1 centralized exchange - limited CEX availability but some institutional access";
     cexVariant = "yellow";
   } else if (cexListings < 5) {
-    cexDescription = `Listed on ${cexListings} centralized exchanges - moderate accessibility and trading options`;
     cexVariant = "blue";
   } else if (cexListings < 10) {
-    cexDescription = `Listed on ${cexListings} centralized exchanges - good accessibility with multiple trading venues`;
     cexVariant = "green";
   } else {
-    cexDescription = `Listed on ${cexListings} centralized exchanges - excellent accessibility and widespread adoption`;
     cexVariant = "green";
   }
 
   metrics.push({
     icon: BarChart3,
     title: "CEX Listings",
-    description: cexDescription,
+    description: "Number of centralized exchange listings - indicates accessibility and institutional adoption",
     badgeLabel: cexListings === 0 ? "None" : cexListings.toString(),
     badgeVariant: cexVariant
   });
 
   // 5. Holder Distribution - Concentration risk
-  let distributionDescription = "";
   let distributionVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
   const normalizedDistribution = holderDistribution.toLowerCase();
 
   if (normalizedDistribution === "unknown") {
-    distributionDescription = "Holder distribution data unavailable - concentration risk cannot be assessed";
     distributionVariant = "gray";
   } else if (normalizedDistribution === "low" || normalizedDistribution === "good") {
-    distributionDescription = "Well distributed among holders - low concentration risk, healthy decentralization";
     distributionVariant = "green";
   } else if (normalizedDistribution === "medium" || normalizedDistribution === "fair" || normalizedDistribution === "moderate") {
-    distributionDescription = "Moderate holder concentration - some large holders exist but not critical risk";
     distributionVariant = "blue";
   } else if (normalizedDistribution === "high" || normalizedDistribution === "poor") {
-    distributionDescription = "High concentration among top holders - significant risk of price manipulation";
     distributionVariant = "orange";
   } else if (normalizedDistribution === "very high" || normalizedDistribution === "critical") {
-    distributionDescription = "Very high concentration in few wallets - extreme risk of dump or manipulation";
     distributionVariant = "red";
   } else {
-    distributionDescription = `Holder concentration risk: ${holderDistribution}`;
     distributionVariant = "gray";
   }
 
   metrics.push({
     icon: Users,
     title: "Holder Distribution",
-    description: distributionDescription,
+    description: "How tokens are distributed among holders - concentrated holdings increase manipulation risk",
     badgeLabel: holderDistribution.charAt(0).toUpperCase() + holderDistribution.slice(1) + " Risk",
     badgeVariant: distributionVariant
   });
