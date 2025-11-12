@@ -26,6 +26,10 @@ function calculateDelay(attempt: number): number {
   return Math.min(delay, RETRY_CONFIG.maxDelay);
 }
 
+// Cache for Webacy API responses (1 hour TTL)
+const apiResponseCache = new Map<string, { data: any; timestamp: number }>();
+const API_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
 // Chain mapping for Webacy API - using correct format from example
 function getWebacyChainCode(chainId: string): string {
   // Convert hex chain IDs to decimal
@@ -52,7 +56,15 @@ export async function fetchWebacySecurity(tokenAddress: string, chainId: string)
   console.log(`[WEBACY] API Health Stats:`, webacyApiHealthStats);
   
   webacyApiHealthStats.totalRequests++;
-  
+
+  // Check API response cache first
+  const cacheKey = `${chainId}:${tokenAddress.toLowerCase()}`;
+  const cached = apiResponseCache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp < API_CACHE_TTL)) {
+    console.log(`[WEBACY] Using cached API response (age: ${Math.round((Date.now() - cached.timestamp) / 1000)}s)`);
+    return cached.data;
+  }
+
   try {
     // Get API key from environment with enhanced validation
     const apiKey = Deno.env.get('WEBACY_API_KEY');
@@ -198,7 +210,14 @@ export async function fetchWebacySecurity(tokenAddress: string, chainId: string)
     webacyApiHealthStats.successfulRequests++;
     webacyApiHealthStats.lastSuccessTime = Date.now();
     console.log(`[WEBACY] API Health - Success rate: ${((webacyApiHealthStats.successfulRequests / webacyApiHealthStats.totalRequests) * 100).toFixed(1)}%`);
-    
+
+    // Cache the successful response
+    apiResponseCache.set(cacheKey, {
+      data: result,
+      timestamp: Date.now()
+    });
+    console.log(`[WEBACY] Cached API response for future requests (TTL: ${API_CACHE_TTL / 1000}s)`);
+
     return result;
     
   } catch (error) {

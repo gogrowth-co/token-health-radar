@@ -83,18 +83,41 @@ export default function ScanResult() {
       try {
         setLoading(true);
         setError(null);
-        
+
         console.log("ScanResult: Loading data for token:", tokenAddress, "Chain:", chainId, "CoinGecko ID:", coinGeckoId);
-        
+
         if (!tokenAddress) {
           console.error("ScanResult: No token address found in URL params");
           setError("No token address provided");
           return;
         }
 
+        // Stale-while-revalidate: Check for cached scan data first
+        const cacheKey = `scan_data_${tokenAddress.toLowerCase()}_${chainId}`;
+        const cachedDataStr = localStorage.getItem(cacheKey);
+
+        if (cachedDataStr) {
+          try {
+            const cachedEntry = JSON.parse(cachedDataStr);
+            const cacheAge = Date.now() - cachedEntry.timestamp;
+            const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+            if (cacheAge < CACHE_TTL) {
+              console.log(`[CACHE] Using cached scan data (age: ${Math.round(cacheAge / 1000)}s)`);
+              setScanData(cachedEntry.data);
+              setLoading(false); // Show cached data immediately!
+              // Continue to fetch fresh data in background below
+            } else {
+              console.log(`[CACHE] Cached data expired (age: ${Math.round(cacheAge / 1000)}s)`);
+            }
+          } catch (cacheError) {
+            console.warn("[CACHE] Failed to parse cached data:", cacheError);
+          }
+        }
+
         console.log("ScanResult: User authenticated:", isAuthenticated, "User ID:", user?.id);
 
-        // Load scan data from database with chain support
+        // Load scan data from database with chain support (fresh data)
         try {
           // First try to get token data - this is the primary table with chain support
           const { data: tokenData, error: tokenError } = await supabase
@@ -207,8 +230,8 @@ export default function ScanResult() {
             : 0;
 
           console.log("ScanResult: Calculated overall score:", overallScore, "from scores:", scores);
-          
-          setScanData({
+
+          const freshScanData = {
             success: true,
             token_address: tokenAddress,
             chain_id: chainId,
@@ -220,8 +243,22 @@ export default function ScanResult() {
             liquidity: cacheData.liquidity,
             development: cacheData.development,
             community: cacheData.community,
-          });
-          
+          };
+
+          setScanData(freshScanData);
+
+          // Cache the fresh data to localStorage for instant future loads
+          try {
+            const cacheKey = `scan_data_${tokenAddress.toLowerCase()}_${chainId}`;
+            localStorage.setItem(cacheKey, JSON.stringify({
+              data: freshScanData,
+              timestamp: Date.now()
+            }));
+            console.log("[CACHE] Saved fresh scan data to localStorage");
+          } catch (cacheError) {
+            console.warn("[CACHE] Failed to save to localStorage:", cacheError);
+          }
+
         } catch (dbError) {
           console.error("ScanResult: Database query error:", dbError);
           setError(dbError instanceof Error ? dbError.message : "Failed to load scan data from database");
