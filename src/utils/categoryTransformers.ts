@@ -111,9 +111,12 @@ const safeAccess = <T>(data: any, key: string, fallback: T): T => {
   return data && data[key] != null ? data[key] : fallback;
 };
 
-// Helper function for safe boolean access
-const safeBooleanAccess = (data: any, key: string, fallback: boolean = false): boolean => {
-  return data && data[key] != null ? Boolean(data[key]) : fallback;
+// Helper function for safe boolean access - returns null when unavailable
+const safeBooleanAccess = (data: any, key: string): boolean | null => {
+  if (!data || data[key] === null || data[key] === undefined) {
+    return null;
+  }
+  return Boolean(data[key]);
 };
 
 // Helper function for safe number access
@@ -121,13 +124,19 @@ const safeNumberAccess = (data: any, key: string, fallback: number = 0): number 
   return data && data[key] != null ? Number(data[key]) : fallback;
 };
 
-// Helper to get badge variant for boolean values
-const getBooleanBadgeVariant = (value: boolean, positive: boolean): "green" | "red" => {
-  return (value && positive) || (!value && !positive) ? "green" : "red";
+// Helper to get badge variant for boolean security values (handles null)
+const getSecurityBadgeVariant = (value: boolean | null, positiveIsSafe: boolean): "green" | "red" | "gray" => {
+  if (value === null) return "gray"; // Unknown = gray
+  if (positiveIsSafe) {
+    return value ? "green" : "red"; // true is safe, false is risky
+  } else {
+    return value ? "red" : "green"; // true is risky, false is safe
+  }
 };
 
-// Helper to get badge label for boolean values
-const getBooleanBadgeLabel = (value: boolean): string => {
+// Helper to get badge label for boolean values (handles null)
+const getSecurityBadgeLabel = (value: boolean | null): string => {
+  if (value === null) return "Unknown";
   return value ? "Yes" : "No";
 };
 
@@ -135,118 +144,206 @@ const getBooleanBadgeLabel = (value: boolean): string => {
 export const transformSecurityData = (data: SecurityData | null): CategoryFeature[] => {
   if (!data) {
     return [
-      { icon: Shield, title: "Ownership Renounced", description: "Contract ownership has been renounced (more secure)", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Lock, title: "Can Mint", description: "Ability to create new tokens", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Shield, title: "Contract Verified", description: "Source code is public and verified on block explorer", badgeLabel: "Unknown", badgeVariant: "gray" },
       { icon: AlertCircle, title: "Honeypot Detection", description: "Checks if token can be sold after purchase", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Shield, title: "Ownership Renounced", description: "Contract ownership has been renounced (more secure)", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Lock, title: "Mint Function", description: "Ability to create new tokens", badgeLabel: "Unknown", badgeVariant: "gray" },
       { icon: Activity, title: "Freeze Authority", description: "Ability to freeze token transfers", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Shield, title: "Audit Status", description: "Security audit verification by third-party firm", badgeLabel: "Unknown", badgeVariant: "gray" }
+      { icon: Shield, title: "Security Audit", description: "Third-party security audit status", badgeLabel: "Unknown", badgeVariant: "gray" }
     ];
   }
 
-  const features: CategoryFeature[] = [
-    {
-      icon: Shield,
-      title: "Ownership Renounced",
-      description: "Contract ownership has been renounced (more secure)",
-      badgeLabel: safeBooleanAccess(data, 'ownership_renounced') ? "Yes" : "No",
-      badgeVariant: getBooleanBadgeVariant(safeBooleanAccess(data, 'ownership_renounced'), true)
-    },
-    {
-      icon: Lock,
-      title: "Can Mint",
-      description: "Ability to create new tokens",
-      badgeLabel: safeBooleanAccess(data, 'can_mint') ? "Yes" : "No",
-      badgeVariant: getBooleanBadgeVariant(safeBooleanAccess(data, 'can_mint'), false)
-    },
-    {
-      icon: AlertCircle,
-      title: "Honeypot Detection",
-      description: "Checks if token can be sold after purchase",
-      badgeLabel: safeBooleanAccess(data, 'honeypot_detected') ? "Detected" : "Clean",
-      badgeVariant: getBooleanBadgeVariant(safeBooleanAccess(data, 'honeypot_detected'), false)
-    },
-    {
-      icon: Activity,
-      title: "Freeze Authority",
-      description: "Ability to freeze token transfers",
-      badgeLabel: safeBooleanAccess(data, 'freeze_authority') ? "Yes" : "No",
-      badgeVariant: getBooleanBadgeVariant(safeBooleanAccess(data, 'freeze_authority'), false)
-    },
-    {
-      icon: Shield,
-      title: "Smart Contract Risk Flags (via Webacy)",
-      description: "No significant risk flags detected or data unavailable",
-      badgeLabel: "Clean",
-      badgeVariant: "green"
-    },
-    {
-      icon: Shield,
-      title: "Audit Status",
-      description: "Security audit verification by third-party firm",
-      badgeLabel: safeAccess(data, 'audit_status', 'Unknown'),
-      badgeVariant: data.audit_status === 'verified' ? 'green' : data.audit_status === 'unverified' ? 'red' : 'gray'
-    }
-  ];
+  // Priority order: Most important security checks first
+  const features: CategoryFeature[] = [];
 
-  // Add Webacy-enhanced features if available
-  if (data.is_proxy !== null && data.is_proxy !== undefined) {
+  // 1. CONTRACT VERIFICATION (Most important - can't audit unverified code)
+  const contractVerified = safeBooleanAccess(data, 'contract_verified');
+  features.push({
+    icon: Shield,
+    title: "Contract Verified",
+    description: contractVerified === null
+      ? "Verification status unknown - source code availability not confirmed"
+      : contractVerified
+        ? "Source code is publicly verified on block explorer"
+        : "Source code NOT verified - higher risk, cannot audit",
+    badgeLabel: getSecurityBadgeLabel(contractVerified),
+    badgeVariant: getSecurityBadgeVariant(contractVerified, true)
+  });
+
+  // 2. HONEYPOT DETECTION (Critical - can you sell the token?)
+  const honeypotDetected = safeBooleanAccess(data, 'honeypot_detected');
+  features.push({
+    icon: AlertCircle,
+    title: "Honeypot Detection",
+    description: honeypotDetected === null
+      ? "Honeypot check unavailable - sell functionality not tested"
+      : honeypotDetected
+        ? "WARNING: Honeypot detected - tokens may not be sellable"
+        : "No honeypot detected - token can be sold normally",
+    badgeLabel: honeypotDetected === null ? "Unknown" : honeypotDetected ? "Detected ⚠️" : "Clean ✓",
+    badgeVariant: getSecurityBadgeVariant(honeypotDetected, false)
+  });
+
+  // 3. OWNERSHIP STATUS
+  const ownershipRenounced = safeBooleanAccess(data, 'ownership_renounced');
+  features.push({
+    icon: Shield,
+    title: "Ownership Renounced",
+    description: ownershipRenounced === null
+      ? "Ownership status unknown - control level unclear"
+      : ownershipRenounced
+        ? "Ownership renounced - contract cannot be modified (more secure)"
+        : "Owner can still modify contract - requires trust in team",
+    badgeLabel: getSecurityBadgeLabel(ownershipRenounced),
+    badgeVariant: getSecurityBadgeVariant(ownershipRenounced, true)
+  });
+
+  // 4. MINT FUNCTION
+  const canMint = safeBooleanAccess(data, 'can_mint');
+  features.push({
+    icon: Lock,
+    title: "Mint Function",
+    description: canMint === null
+      ? "Mint capability unknown - supply inflation risk unclear"
+      : canMint
+        ? "Contract can mint new tokens - supply may increase (inflation risk)"
+        : "No mint function - fixed supply (better for value preservation)",
+    badgeLabel: getSecurityBadgeLabel(canMint),
+    badgeVariant: getSecurityBadgeVariant(canMint, false)
+  });
+
+  // 5. FREEZE AUTHORITY
+  const freezeAuthority = safeBooleanAccess(data, 'freeze_authority');
+  features.push({
+    icon: Activity,
+    title: "Freeze Authority",
+    description: freezeAuthority === null
+      ? "Freeze authority status unknown - transfer control unclear"
+      : freezeAuthority
+        ? "Contract can freeze transfers - owner has significant control"
+        : "No freeze authority - transfers cannot be blocked",
+    badgeLabel: getSecurityBadgeLabel(freezeAuthority),
+    badgeVariant: getSecurityBadgeVariant(freezeAuthority, false)
+  });
+
+  // 6. WEBACY RISK ASSESSMENT (if available)
+  if (data.webacy_risk_score !== null && data.webacy_risk_score !== undefined) {
+    const riskScore = data.webacy_risk_score;
+    const flagCount = data.webacy_flags?.length || 0;
+    const severity = data.webacy_severity || 'unknown';
+
+    features.push({
+      icon: AlertCircle,
+      title: "Webacy Risk Assessment",
+      description: flagCount > 0
+        ? `${flagCount} risk flag${flagCount > 1 ? 's' : ''} detected - ${severity} severity`
+        : `Risk score: ${riskScore}/100 - ${severity} risk level`,
+      badgeLabel: riskScore >= 70 ? `High Risk (${riskScore})` :
+                  riskScore >= 40 ? `Medium Risk (${riskScore})` :
+                  riskScore >= 20 ? `Low Risk (${riskScore})` :
+                  `Minimal Risk (${riskScore})`,
+      badgeVariant: riskScore >= 70 ? 'red' : riskScore >= 40 ? 'orange' : riskScore >= 20 ? 'yellow' : 'green'
+    });
+  }
+
+  // 7. SECURITY AUDIT
+  const auditStatus = safeAccess(data, 'audit_status', null);
+  if (auditStatus && auditStatus !== 'unknown') {
+    features.push({
+      icon: Shield,
+      title: "Security Audit",
+      description: auditStatus === 'verified'
+        ? "Contract has been audited by a third-party security firm"
+        : "No verified security audit found",
+      badgeLabel: auditStatus === 'verified' ? 'Audited ✓' : 'Not Audited',
+      badgeVariant: auditStatus === 'verified' ? 'green' : 'yellow'
+    });
+  }
+
+  // 8. PROXY CONTRACT (Upgradeability risk)
+  const isProxy = safeBooleanAccess(data, 'is_proxy');
+  if (isProxy !== null) {
     features.push({
       icon: Shield,
       title: "Proxy Contract",
-      description: "Contract is upgradeable through proxy pattern",
-      badgeLabel: data.is_proxy ? "Yes" : "No",
-      badgeVariant: data.is_proxy ? "yellow" : "green"
+      description: isProxy
+        ? "Contract is upgradeable via proxy - code can be changed by owner"
+        : "Not a proxy contract - code is immutable",
+      badgeLabel: getSecurityBadgeLabel(isProxy),
+      badgeVariant: isProxy ? "yellow" : "green"
     });
   }
 
-  if (data.is_blacklisted !== null && data.is_blacklisted !== undefined) {
+  // 9. BLACKLIST FUNCTION
+  const hasBlacklist = safeBooleanAccess(data, 'is_blacklisted');
+  if (hasBlacklist !== null) {
     features.push({
       icon: AlertCircle,
       title: "Blacklist Function",
-      description: "Contract can blacklist specific addresses",
-      badgeLabel: data.is_blacklisted ? "Present" : "None",
-      badgeVariant: data.is_blacklisted ? "red" : "green"
+      description: hasBlacklist
+        ? "Contract can blacklist addresses - owner can block specific wallets"
+        : "No blacklist function - all addresses treated equally",
+      badgeLabel: hasBlacklist ? "Present ⚠️" : "None ✓",
+      badgeVariant: hasBlacklist ? "red" : "green"
     });
   }
 
-  if (data.access_control !== null && data.access_control !== undefined) {
+  // 10. ACCESS CONTROL
+  const hasAccessControl = safeBooleanAccess(data, 'access_control');
+  if (hasAccessControl !== null) {
     features.push({
       icon: Lock,
       title: "Access Control",
-      description: "Special privileges for certain addresses",
-      badgeLabel: data.access_control ? "Present" : "None",
-      badgeVariant: data.access_control ? "yellow" : "green"
+      description: hasAccessControl
+        ? "Special privileges exist for certain addresses - unequal access"
+        : "No special access controls - equal treatment for all users",
+      badgeLabel: hasAccessControl ? "Present" : "None ✓",
+      badgeVariant: hasAccessControl ? "yellow" : "green"
     });
   }
 
-  if (data.contract_verified !== null && data.contract_verified !== undefined) {
-    features.push({
-      icon: Shield,
-      title: "Contract Verified",
-      description: "Source code is public and verified",
-      badgeLabel: data.contract_verified ? "Yes" : "No",
-      badgeVariant: data.contract_verified ? "green" : "red"
-    });
-  }
-
-  // Add transaction tax information from GoPlus if available
-  if (data.buy_tax !== null && data.buy_tax !== undefined && data.buy_tax > 0) {
+  // 11. TRANSACTION TAXES - Buy Tax
+  if (data.buy_tax !== null && data.buy_tax !== undefined) {
+    const buyTaxPercent = data.buy_tax * 100;
     features.push({
       icon: DollarSign,
       title: "Buy Tax",
-      description: "Transaction fee when purchasing tokens",
-      badgeLabel: `${(data.buy_tax * 100).toFixed(1)}%`,
-      badgeVariant: data.buy_tax > 0.1 ? "red" : data.buy_tax > 0.05 ? "yellow" : "blue"
+      description: buyTaxPercent === 0
+        ? "No buy tax - full amount goes to purchase"
+        : buyTaxPercent > 10
+          ? `HIGH buy tax of ${buyTaxPercent.toFixed(1)}% - significant cost to purchase`
+          : `${buyTaxPercent.toFixed(1)}% buy tax - moderate transaction cost`,
+      badgeLabel: `${buyTaxPercent.toFixed(1)}%`,
+      badgeVariant: buyTaxPercent === 0 ? "green" : buyTaxPercent > 10 ? "red" : buyTaxPercent > 5 ? "yellow" : "blue"
     });
   }
 
-  if (data.sell_tax !== null && data.sell_tax !== undefined && data.sell_tax > 0) {
+  // 12. TRANSACTION TAXES - Sell Tax
+  if (data.sell_tax !== null && data.sell_tax !== undefined) {
+    const sellTaxPercent = data.sell_tax * 100;
     features.push({
       icon: DollarSign,
-      title: "Sell Tax", 
-      description: "Transaction fee when selling tokens",
-      badgeLabel: `${(data.sell_tax * 100).toFixed(1)}%`,
-      badgeVariant: data.sell_tax > 0.1 ? "red" : data.sell_tax > 0.05 ? "yellow" : "blue"
+      title: "Sell Tax",
+      description: sellTaxPercent === 0
+        ? "No sell tax - full proceeds from sale"
+        : sellTaxPercent > 10
+          ? `HIGH sell tax of ${sellTaxPercent.toFixed(1)}% - difficult to exit position`
+          : `${sellTaxPercent.toFixed(1)}% sell tax - moderate transaction cost`,
+      badgeLabel: `${sellTaxPercent.toFixed(1)}%`,
+      badgeVariant: sellTaxPercent === 0 ? "green" : sellTaxPercent > 10 ? "red" : sellTaxPercent > 5 ? "yellow" : "blue"
+    });
+  }
+
+  // 13. TRANSFER TAX (if different from buy/sell)
+  if (data.transfer_tax !== null && data.transfer_tax !== undefined &&
+      data.transfer_tax > 0 && data.transfer_tax !== data.buy_tax && data.transfer_tax !== data.sell_tax) {
+    const transferTaxPercent = data.transfer_tax * 100;
+    features.push({
+      icon: DollarSign,
+      title: "Transfer Tax",
+      description: `${transferTaxPercent.toFixed(1)}% tax on wallet-to-wallet transfers`,
+      badgeLabel: `${transferTaxPercent.toFixed(1)}%`,
+      badgeVariant: transferTaxPercent > 5 ? "red" : transferTaxPercent > 2 ? "yellow" : "blue"
     });
   }
 
@@ -428,19 +525,19 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
   const teamVisibility = safeAccess(data, 'team_visibility', 'Unknown');
 
   return [
-    { 
-      icon: Users, 
-      title: "Twitter Followers", 
+    {
+      icon: Users,
+      title: "Twitter Followers",
       description: "Number of followers on Twitter/X",
       badgeLabel: formatNumber(twitterFollowers),
       badgeVariant: twitterFollowers >= 100000 ? "green" : twitterFollowers >= 10000 ? "blue" : twitterFollowers >= 1000 ? "orange" : "gray"
     },
-    { 
-      icon: Shield, 
-      title: "Twitter Verified", 
+    {
+      icon: Shield,
+      title: "Twitter Verified",
       description: "Twitter/X account verification status",
-      badgeLabel: getBooleanBadgeLabel(twitterVerified),
-      badgeVariant: getBooleanBadgeVariant(twitterVerified, true)
+      badgeLabel: getSecurityBadgeLabel(twitterVerified),
+      badgeVariant: getSecurityBadgeVariant(twitterVerified, true)
     },
     { 
       icon: TrendingUp, 
@@ -498,12 +595,12 @@ export const transformDevelopmentData = (data: DevelopmentData | null): Category
   const daysSinceCommit = lastCommit ? Math.floor((Date.now() - new Date(lastCommit).getTime()) / (1000 * 60 * 60 * 24)) : null;
 
   return [
-    { 
-      icon: Github, 
-      title: "Open Source", 
+    {
+      icon: Github,
+      title: "Open Source",
       description: "Code is publicly available for review",
-      badgeLabel: getBooleanBadgeLabel(isOpenSource),
-      badgeVariant: getBooleanBadgeVariant(isOpenSource, true)
+      badgeLabel: getSecurityBadgeLabel(isOpenSource),
+      badgeVariant: getSecurityBadgeVariant(isOpenSource, true)
     },
     { 
       icon: Users, 
