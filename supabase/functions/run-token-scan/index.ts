@@ -588,45 +588,62 @@ function isGenericDescription(description: string): boolean {
     console.log(`[DESCRIPTION-DEBUG] isGenericDescription: REJECT - too short (${description?.length || 0} chars)`);
     return true;
   }
-  
+
   const genericPatterns = [
     /is a cryptocurrency launched in \d{4}/i,
     /operates on the .+ platform/i,
     /has a current supply of/i,
     /more information can be found at/i,
     /is currently trading on \d+ active market/i,
-    /the last known price/i
+    /the last known price/i,
+    /is a (token|cryptocurrency|digital asset|crypto token)/i,
+    /^[^.]+\s+(token|coin)\s+on\s+\w+\.?$/i, // "Token X on Ethereum"
+    /is a digital (currency|asset|token)/i,
+    /cryptocurrency\s+token\.?$/i,
+    /No description available/i,
+    /token description not found/i,
+    /^[A-Z0-9]+\s+is\s+the\s+native\s+token/i, // "XXX is the native token"
+    /is\s+an?\s+(ERC-20|BEP-20|token)\s+on\s+/i, // "is an ERC-20 on..."
   ];
-  
+
   // Check if it matches any generic patterns
   const matchingPatterns = genericPatterns.filter(pattern => pattern.test(description));
   const matchesGeneric = matchingPatterns.length > 0;
-  
+
   // Check for technical keywords that indicate quality content
   const technicalKeywords = [
     'protocol', 'blockchain', 'smart contract', 'defi', 'dao', 'nft',
     'consensus', 'validator', 'governance', 'staking', 'yield', 'liquidity',
     'bridge', 'layer', 'zero-knowledge', 'zk', 'rollup', 'privacy', 'oracle',
-    'interoperability', 'cross-chain', 'scalability', 'dapp', 'proof', 'proofs', 'prover', 'succinct'
+    'interoperability', 'cross-chain', 'scalability', 'dapp', 'proof', 'proofs',
+    'prover', 'succinct', 'decentralized', 'lending', 'borrowing', 'exchange',
+    'swap', 'pool', 'vault', 'farming', 'synthetic', 'derivative', 'collateral',
+    'flash loan', 'automated market maker', 'amm', 'liquidity pool'
   ];
-  
-  const foundKeywords = technicalKeywords.filter(keyword => 
+
+  const foundKeywords = technicalKeywords.filter(keyword =>
     description.toLowerCase().includes(keyword)
   );
   const technicalScore = foundKeywords.length;
-  
-  const isGeneric = matchesGeneric || technicalScore < 1;
-  
+
+  // Calculate uniqueness - check if description has specific details
+  const hasNumbers = /\d+/.test(description);
+  const hasSpecificFeatures = description.split(' ').length > 20; // More than 20 words suggests detail
+
+  const isGeneric = matchesGeneric || (technicalScore < 1 && !hasNumbers && !hasSpecificFeatures);
+
   console.log(`[DESCRIPTION-DEBUG] isGenericDescription analysis:`, {
     length: description.length,
     matchesGeneric,
     matchingPatterns: matchingPatterns.length,
     technicalScore,
     foundKeywords,
+    hasNumbers,
+    hasSpecificFeatures,
     isGeneric,
     preview: description.substring(0, 150)
   });
-  
+
   // Generic if matches template patterns or has low technical content
   return isGeneric;
 }
@@ -637,12 +654,19 @@ function isTaglineStyle(description: string): boolean {
   const text = description.toLowerCase();
   const marketingPhrases = [
     'for everyone', 'revolution', 'revolutionize', 'next-gen', 'next generation',
-    'empower', 'seamless', 'warp speed', 'the future of', 'unlock', 'supercharge'
+    'empower', 'seamless', 'warp speed', 'the future of', 'unlock', 'supercharge',
+    'game-changing', 'cutting-edge', 'breakthrough', 'innovative solution',
+    'transforms the way', 'reimagines', 'redefines', 'pioneers'
   ];
   const hasMarketing = marketingPhrases.some(p => text.includes(p));
   const sentenceCount = (description.match(/[.!?]/g) || []).length;
-  const tooShort = description.length < 120;
-  return hasMarketing || sentenceCount <= 1 || tooShort;
+  const tooShort = description.length < 100;
+
+  // Check if it's mostly just the token name and basic info
+  const wordCount = description.split(/\s+/).length;
+  const isVeryBrief = wordCount < 15;
+
+  return (hasMarketing && tooShort) || sentenceCount <= 1 || isVeryBrief;
 }
 
 // Compose a formal, informative token description from available data
