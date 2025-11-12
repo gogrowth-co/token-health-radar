@@ -511,7 +511,7 @@ export default function ScanResult() {
             priceChange={properPriceChange}
             marketCap={properMarketCap}
             overallScore={overallScore}
-            description={finalDescription || displayDescription}
+            description={displayDescription}
             network={networkName}
             chainId={chainId}
           />
