@@ -35,6 +35,10 @@ async function sha1Hex(input: string): Promise<string> {
 // Cache for GoPlus access token
 let cachedToken: { value: string; exp: number } | null = null;
 
+// Cache for GoPlus API responses (1 hour TTL)
+const apiResponseCache = new Map<string, { data: any; timestamp: number }>();
+const API_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
 // Get GoPlus access token with comprehensive error handling and debugging
 async function getGoPlusAccessToken(): Promise<string> {
   // Use UNIX timestamp in seconds as NUMBER for API call, but STRING for signature
@@ -277,12 +281,20 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
   console.log(`[GOPLUS] API Health Stats:`, goplusApiHealthStats);
   
   goplusApiHealthStats.totalRequests++;
-  
+
   // Check upfront for non-retryable failures
   const chainConfig = getChainConfigByMoralisId(chainId);
   if (!chainConfig) {
     console.error(`[GOPLUS] FAILED - Unsupported chain: ${chainId}`);
     return null;
+  }
+
+  // Check API response cache first
+  const cacheKey = `${chainId}:${tokenAddress.toLowerCase()}`;
+  const cached = apiResponseCache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp < API_CACHE_TTL)) {
+    console.log(`[GOPLUS] Using cached API response (age: ${Math.round((Date.now() - cached.timestamp) / 1000)}s)`);
+    return cached.data;
   }
 
   for (let attempt = 0; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
@@ -477,7 +489,14 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
       goplusApiHealthStats.successfulRequests++;
       goplusApiHealthStats.lastSuccessTime = Date.now();
       console.log(`[GOPLUS] API Health - Success rate: ${((goplusApiHealthStats.successfulRequests / goplusApiHealthStats.totalRequests) * 100).toFixed(1)}%`);
-      
+
+      // Cache the successful response
+      apiResponseCache.set(cacheKey, {
+        data: securityData,
+        timestamp: Date.now()
+      });
+      console.log(`[GOPLUS] Cached API response for future requests (TTL: ${API_CACHE_TTL / 1000}s)`);
+
       return securityData;
       
     } catch (error) {
