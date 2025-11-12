@@ -16,6 +16,31 @@ interface MoralisTokenMetadata {
   possible_spam?: boolean;
 }
 
+interface CoinGeckoCoin {
+  id: string;
+  name: string;
+  symbol: string;
+  market_cap_rank: number | null;
+  thumb: string;
+  large: string;
+}
+
+interface CoinGeckoSearchResponse {
+  coins: CoinGeckoCoin[];
+}
+
+interface CoinGeckoCoinDetail {
+  id: string;
+  symbol: string;
+  name: string;
+  platforms: Record<string, string>; // platform name -> contract address
+  image?: {
+    thumb?: string;
+    small?: string;
+    large?: string;
+  };
+}
+
 interface TokenResult {
   id: string;
   name: string;
@@ -30,6 +55,14 @@ interface TokenResult {
   subtitle: string;
   value: string;
 }
+
+// Server-side cache for search results (5-minute TTL)
+const searchCache = new Map<string, { results: TokenResult[]; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Rate limiting for CoinGecko (conservative for free tier: 10-30 calls/min)
+let lastCoinGeckoCall = 0;
+const COINGECKO_RATE_LIMIT = 3000; // 3 seconds between calls (20 calls/min max)
 
 // Chain configuration for parallel searches
 const CHAIN_CONFIG = [
@@ -57,6 +90,16 @@ const CHAIN_LOGOS: Record<string, string> = {
   'fantom': 'https://cryptologos.cc/logos/fantom-ftm-logo.png'
 };
 
+// Map CoinGecko platform names to our chain IDs
+const COINGECKO_PLATFORM_MAP: Record<string, string> = {
+  'ethereum': 'eth',
+  'polygon-pos': '0x89',
+  'binance-smart-chain': 'bsc',
+  'arbitrum-one': '0xa4b1',
+  'optimistic-ethereum': '0xa',
+  'base': '0x2105'
+};
+
 // Known token addresses for testing and fallback
 const KNOWN_TOKENS: Record<string, Record<string, string>> = {
   'PENDLE': {
@@ -70,6 +113,128 @@ const KNOWN_TOKENS: Record<string, Record<string, string>> = {
   }
 };
 
+// CoinGecko search with rate limiting
+async function searchCoinGecko(query: string, apiKey: string): Promise<TokenResult[]> {
+  // Apply rate limiting
+  const now = Date.now();
+  const timeSinceLastCall = now - lastCoinGeckoCall;
+  if (timeSinceLastCall < COINGECKO_RATE_LIMIT) {
+    const waitTime = COINGECKO_RATE_LIMIT - timeSinceLastCall;
+    console.log(`[COINGECKO] Rate limiting: waiting ${waitTime}ms`);
+    await new Promise(resolve => setTimeout(resolve, waitTime));
+  }
+  lastCoinGeckoCall = Date.now();
+
+  try {
+    console.log(`[COINGECKO] Searching for: "${query}"`);
+
+    // Step 1: Search for the token
+    const searchUrl = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(query)}`;
+    const searchHeaders: HeadersInit = {
+      'Accept': 'application/json'
+    };
+
+    // Add API key if available (for higher rate limits)
+    if (apiKey && apiKey !== '') {
+      searchHeaders['x-cg-demo-api-key'] = apiKey;
+    }
+
+    const searchResponse = await fetch(searchUrl, {
+      method: 'GET',
+      headers: searchHeaders
+    });
+
+    if (!searchResponse.ok) {
+      console.error(`[COINGECKO] Search failed:`, searchResponse.status);
+      return [];
+    }
+
+    const searchData: CoinGeckoSearchResponse = await searchResponse.json();
+
+    if (!searchData.coins || searchData.coins.length === 0) {
+      console.log(`[COINGECKO] No results found`);
+      return [];
+    }
+
+    console.log(`[COINGECKO] Found ${searchData.coins.length} tokens`);
+
+    // Take the top result (most relevant by market cap)
+    const topCoin = searchData.coins[0];
+
+    // Step 2: Get detailed info including platform addresses
+    // Apply rate limiting again for the second call
+    await new Promise(resolve => setTimeout(resolve, COINGECKO_RATE_LIMIT));
+    lastCoinGeckoCall = Date.now();
+
+    const detailUrl = `https://api.coingecko.com/api/v3/coins/${topCoin.id}`;
+    const detailResponse = await fetch(detailUrl, {
+      method: 'GET',
+      headers: searchHeaders
+    });
+
+    if (!detailResponse.ok) {
+      console.error(`[COINGECKO] Detail fetch failed:`, detailResponse.status);
+      return [];
+    }
+
+    const coinDetail: CoinGeckoCoinDetail = await detailResponse.json();
+
+    // Transform to TokenResult for each platform/chain
+    const results: TokenResult[] = [];
+
+    for (const [platformName, contractAddress] of Object.entries(coinDetail.platforms || {})) {
+      if (!contractAddress || contractAddress === '') continue;
+
+      const chainId = COINGECKO_PLATFORM_MAP[platformName];
+      if (!chainId) {
+        console.log(`[COINGECKO] Skipping unmapped platform: ${platformName}`);
+        continue;
+      }
+
+      const chainConfig = CHAIN_CONFIG.find(c => c.id === chainId);
+      if (!chainConfig) continue;
+
+      results.push({
+        id: `${chainId}-${contractAddress}`,
+        name: coinDetail.name,
+        symbol: coinDetail.symbol.toUpperCase(),
+        address: contractAddress,
+        chain: chainId,
+        logo: coinDetail.image?.large || coinDetail.image?.small || topCoin.large || topCoin.thumb || '',
+        chainLogo: CHAIN_LOGOS[chainId] || chainConfig.logo,
+        verified: true, // CoinGecko tokens are generally verified
+        decimals: 18, // Default, would need another API call for exact value
+        title: `${coinDetail.symbol.toUpperCase()} — ${coinDetail.name}`,
+        subtitle: chainConfig.name,
+        value: `${chainId}/${contractAddress}`
+      });
+    }
+
+    // Sort by chain priority
+    const chainPriority: Record<string, number> = {
+      'eth': 1,
+      '0xa4b1': 2,
+      'bsc': 3,
+      '0x89': 4,
+      '0x2105': 5,
+      '0xa': 6,
+    };
+
+    results.sort((a, b) => {
+      const priorityA = chainPriority[a.chain] || 999;
+      const priorityB = chainPriority[b.chain] || 999;
+      return priorityA - priorityB;
+    });
+
+    console.log(`[COINGECKO] Returning ${results.length} tokens across ${results.length} chains`);
+    return results;
+
+  } catch (error: any) {
+    console.error(`[COINGECKO] Search error:`, error);
+    return [];
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -78,7 +243,7 @@ serve(async (req) => {
 
   try {
     const { searchTerm, limit = 10 } = await req.json();
-    
+
     if (!searchTerm || searchTerm.trim() === '') {
       return new Response(
         JSON.stringify({ error: 'Search term is required' }),
@@ -86,7 +251,30 @@ serve(async (req) => {
       );
     }
 
+    const cacheKey = searchTerm.toLowerCase().trim();
+
+    // Check server-side cache first
+    const cached = searchCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+      console.log(`[SEARCH] Returning cached results for: "${searchTerm}"`);
+      return new Response(
+        JSON.stringify({
+          tokens: cached.results.slice(0, limit),
+          count: cached.results.length,
+          source: 'cache'
+        }),
+        {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    }
+
     const moralisApiKey = Deno.env.get('MORALIS_API_KEY');
+    const coinGeckoApiKey = Deno.env.get('COINGECKO_API_KEY') || '';
+
     if (!moralisApiKey) {
       console.error('MORALIS_API_KEY not found in environment');
       return new Response(
@@ -95,55 +283,85 @@ serve(async (req) => {
       );
     }
 
-    console.log(`[MORALIS-SEARCH] Searching for: "${searchTerm}"`);
-    console.log(`[MORALIS-SEARCH] Using API key: ${moralisApiKey.substring(0, 8)}...`);
+    console.log(`[SEARCH] Searching for: "${searchTerm}"`);
 
     // Check if input is an address
     const isAddress = /^(0x)?[0-9a-fA-F]{40}$/i.test(searchTerm.trim());
-    
+
     let results: TokenResult[] = [];
-    
+    let source = 'unknown';
+
     if (isAddress) {
-      console.log(`[MORALIS-SEARCH] Address search for: ${searchTerm}`);
+      // For address searches, use Moralis directly (more reliable for contract addresses)
+      console.log(`[SEARCH] Address search via Moralis for: ${searchTerm}`);
       results = await searchByAddress(searchTerm.trim(), moralisApiKey);
+      source = 'moralis';
     } else {
-      console.log(`[MORALIS-SEARCH] Symbol search for: ${searchTerm}`);
-      results = await searchBySymbolParallel(searchTerm.trim(), moralisApiKey, limit);
+      // For symbol/name searches, try CoinGecko first, then fallback to Moralis
+      console.log(`[SEARCH] Symbol search - trying CoinGecko first for: ${searchTerm}`);
+
+      try {
+        results = await searchCoinGecko(searchTerm.trim(), coinGeckoApiKey);
+        if (results.length > 0) {
+          source = 'coingecko';
+          console.log(`[SEARCH] CoinGecko found ${results.length} results`);
+        }
+      } catch (error) {
+        console.error(`[SEARCH] CoinGecko error:`, error);
+      }
+
+      // Fallback to Moralis if CoinGecko returned no results
+      if (results.length === 0) {
+        console.log(`[SEARCH] Falling back to Moralis for: ${searchTerm}`);
+        results = await searchBySymbolParallel(searchTerm.trim(), moralisApiKey, limit);
+        source = 'moralis';
+      }
     }
 
-    console.log(`[MORALIS-SEARCH] Total results found: ${results.length}`);
+    // Cache the results
+    if (results.length > 0) {
+      searchCache.set(cacheKey, {
+        results: results,
+        timestamp: Date.now()
+      });
+      console.log(`[SEARCH] Cached ${results.length} results for future requests`);
+    }
+
+    console.log(`[SEARCH] Total results found: ${results.length} (source: ${source})`);
 
     if (results.length === 0) {
       return new Response(
         JSON.stringify({
           tokens: [],
           count: 0,
-          message: isAddress 
+          message: isAddress
             ? `No verified token found for address "${searchTerm}" across supported chains.`
-            : `No verified tokens found for "${searchTerm}". Try searching for a different token or paste a contract address.`
+            : `No verified tokens found for "${searchTerm}". Try searching for a different token or paste a contract address.`,
+          source: source
         }),
-        { 
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json' 
-          } 
+        {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
         }
       );
     }
 
     const tokensWithLogos = results.filter(t => t.logo).length;
-    console.log(`[MORALIS-SEARCH] Returning ${results.length} verified tokens, ${tokensWithLogos} with logos`);
+    console.log(`[SEARCH] Returning ${results.length} verified tokens, ${tokensWithLogos} with logos from ${source}`);
 
     return new Response(
       JSON.stringify({
-        tokens: results,
-        count: results.length
+        tokens: results.slice(0, limit),
+        count: results.length,
+        source: source
       }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
     );
 
