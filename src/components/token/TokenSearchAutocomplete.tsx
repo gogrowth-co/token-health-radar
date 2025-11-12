@@ -21,18 +21,29 @@ interface TokenSearchResult {
   value: string;
 }
 
+interface CachedSearchResult {
+  results: TokenSearchResult[];
+  message: string;
+  timestamp: number;
+}
+
+// Simple in-memory cache with 5-minute TTL
+const searchCache = new Map<string, CachedSearchResult>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 interface TokenSearchAutocompleteProps {
   placeholder?: string;
   onSelect?: (token: TokenSearchResult) => void;
   className?: string;
 }
 
-// Chain priority for sorting
+// Chain priority for sorting (matches backend)
 const CHAIN_PRIORITY: Record<string, number> = {
   'eth': 1,
   '0xa4b1': 2, // Arbitrum
   'arbitrum': 2,
   'bsc': 3,
+  '0x89': 4, // Polygon
   'polygon': 4,
   '0x2105': 5, // Base
   'base': 5,
@@ -46,6 +57,7 @@ const getChainDisplayName = (chain: string) => {
   const chainNames: Record<string, string> = {
     'eth': 'Ethereum',
     'polygon': 'Polygon',
+    '0x89': 'Polygon',
     'bsc': 'BSC',
     'arbitrum': 'Arbitrum',
     '0xa4b1': 'Arbitrum',
@@ -64,6 +76,7 @@ const getChainBadgeVariant = (chain: string): "default" | "secondary" | "destruc
   const chainColors: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
     'eth': 'default',
     'polygon': 'secondary',
+    '0x89': 'secondary', // Polygon
     'bsc': 'outline',
     'arbitrum': 'secondary',
     '0xa4b1': 'secondary', // Arbitrum
@@ -147,6 +160,19 @@ export default function TokenSearchAutocomplete({
     setSearchMessage("");
 
     try {
+      const cacheKey = query.toLowerCase().trim();
+
+      // Check cache first
+      const cached = searchCache.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+        console.log(`[TOKEN-AUTOCOMPLETE] Using cached results for: "${query}"`);
+        setResults(cached.results);
+        setSearchMessage(cached.message);
+        setIsOpen(cached.results.length > 0 || cached.message.length > 0);
+        setIsLoading(false);
+        return;
+      }
+
       console.log(`[TOKEN-AUTOCOMPLETE] dd.xyz-style search for: "${query}"`);
 
       const { data, error } = await supabase.functions.invoke('moralis-token-search', {
@@ -165,12 +191,19 @@ export default function TokenSearchAutocomplete({
 
       const tokens = data?.tokens || [];
       const message = data?.message || "";
-      
+
       console.log(`[TOKEN-AUTOCOMPLETE] Found ${tokens.length} tokens across chains`);
-      
+
       // Sort tokens by updated chain priority
       const sortedTokens = sortTokensByChain(tokens);
-      
+
+      // Cache the results
+      searchCache.set(cacheKey, {
+        results: sortedTokens,
+        message: message,
+        timestamp: Date.now()
+      });
+
       setResults(sortedTokens);
       setSearchMessage(message);
       setIsOpen(sortedTokens.length > 0 || message.length > 0);
