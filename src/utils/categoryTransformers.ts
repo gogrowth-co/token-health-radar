@@ -363,60 +363,216 @@ export const transformTokenomicsData = (data: TokenomicsData | null, tokenDataCa
 
   // Enhanced supply analysis with real vs total supply - prioritize token_data_cache
   const totalSupply = safeNumberAccess(data, 'total_supply');
-  const circulatingSupply = safeNumberAccess(tokenDataCache, 'circulating_supply') || 
-                          safeNumberAccess(data, 'actual_circulating_supply') || 
+  const circulatingSupply = safeNumberAccess(tokenDataCache, 'circulating_supply') ||
+                          safeNumberAccess(data, 'actual_circulating_supply') ||
                           safeNumberAccess(data, 'circulating_supply');
   const supplyCap = safeNumberAccess(data, 'supply_cap');
-  
+
   console.log('[TRANSFORM-TOKENOMICS] Circulating supply sources:', {
     fromTokenDataCache: safeNumberAccess(tokenDataCache, 'circulating_supply'),
     fromActualCirculating: safeNumberAccess(data, 'actual_circulating_supply'),
     fromRegularCirculating: safeNumberAccess(data, 'circulating_supply'),
     finalValue: circulatingSupply
   });
-  
+
   // Enhanced liquidity from DEX pairs
   const dexLiquidityUsd = safeNumberAccess(data, 'dex_liquidity_usd');
   const treasuryUsd = safeNumberAccess(data, 'treasury_usd');
   const burnMechanism = safeBooleanAccess(data, 'burn_mechanism');
-  
+  const burnEventsDetected = safeBooleanAccess(data, 'burn_events_detected');
+  const inflationRate = safeNumberAccess(data, 'inflation_rate');
+
   // Enhanced distribution metrics
   const distributionScore = safeAccess(data, 'distribution_score', 'Unknown');
   const concentrationRisk = safeAccess(data, 'holder_concentration_risk', 'Unknown');
   const giniCoefficient = safeNumberAccess(data, 'distribution_gini_coefficient');
   const topHoldersCount = safeNumberAccess(data, 'top_holders_count');
-  
+
   // Data quality indicators
   const confidenceScore = safeNumberAccess(data, 'data_confidence_score');
 
+  // Build comprehensive metrics list
+  const metrics: CategoryFeature[] = [];
+
+  // 1. Total Supply (if available)
+  if (totalSupply > 0 || supplyCap > 0) {
+    const supply = totalSupply > 0 ? totalSupply : supplyCap;
+    const isCapped = supplyCap > 0;
+    metrics.push({
+      icon: Coins,
+      title: "Total Supply",
+      description: isCapped
+        ? "Maximum supply is capped at " + formatTokensCompact(supply) + " tokens"
+        : "Current total supply - may increase if minting is enabled",
+      badgeLabel: formatTokensCompact(supply) + " Tokens",
+      badgeVariant: isCapped ? "green" : "yellow"
+    });
+  }
+
+  // 2. Circulating Supply (with context of total)
+  if (circulatingSupply > 0) {
+    const ratio = totalSupply > 0 ? (circulatingSupply / totalSupply) * 100 : null;
+    const description = ratio
+      ? `${ratio.toFixed(1)}% of total supply in circulation (${formatTokensCompact(circulatingSupply)} / ${formatTokensCompact(totalSupply)})`
+      : "Tokens currently in circulation";
+
+    metrics.push({
+      icon: Coins,
+      title: "Circulating Supply",
+      description,
+      badgeLabel: formatTokensCompact(circulatingSupply) + " Tokens",
+      badgeVariant: ratio && ratio > 90 ? "green" : ratio && ratio > 50 ? "blue" : "orange"
+    });
+  }
+
+  // 3. Inflation Rate (if available and meaningful)
+  if (inflationRate !== 0 && inflationRate !== null) {
+    const isInflationary = inflationRate > 0;
+    const absRate = Math.abs(inflationRate);
+    const description = isInflationary
+      ? `Token supply is increasing at ${absRate.toFixed(2)}% per year - dilution risk`
+      : `Deflationary: supply decreasing at ${absRate.toFixed(2)}% per year - scarcity increases`;
+
+    metrics.push({
+      icon: TrendingUp,
+      title: "Inflation Rate",
+      description,
+      badgeLabel: (isInflationary ? "+" : "-") + absRate.toFixed(2) + "%/year",
+      badgeVariant: isInflationary ? (absRate > 5 ? "orange" : "yellow") : "blue"
+    });
+  }
+
+  // 4. Burn Mechanism (if available)
+  if (burnMechanism !== null) {
+    const hasActiveBurns = burnEventsDetected === true;
+    const description = hasActiveBurns
+      ? "Active burn mechanism detected - tokens are being permanently removed from supply"
+      : burnMechanism
+        ? "Burn mechanism exists - tokens can be removed from supply over time"
+        : "No burn mechanism - token supply will not decrease through burns";
+
+    metrics.push({
+      icon: TrendingUp,
+      title: "Burn Mechanism",
+      description,
+      badgeLabel: hasActiveBurns ? "Active ✓" : burnMechanism ? "Exists" : "None",
+      badgeVariant: hasActiveBurns ? "green" : burnMechanism ? "green" : "yellow"
+    });
+  }
+
+  // 5. Holder Distribution
+  if (giniCoefficient > 0 || distributionScore !== "Unknown" || concentrationRisk !== "Unknown") {
+    let distributionText = "";
+    if (giniCoefficient > 0) {
+      if (giniCoefficient < 0.4) distributionText = "very well distributed";
+      else if (giniCoefficient < 0.6) distributionText = "moderately distributed";
+      else if (giniCoefficient < 0.8) distributionText = "concentrated";
+      else distributionText = "highly concentrated";
+    }
+
+    const description = giniCoefficient > 0
+      ? `Distribution among ${topHoldersCount || 'N/A'} holders: ${distributionText} (Gini: ${giniCoefficient.toFixed(3)})`
+      : "Token distribution among holders";
+
+    metrics.push({
+      icon: Users,
+      title: "Holder Distribution",
+      description,
+      badgeLabel: distributionScore !== "Unknown"
+        ? distributionScore
+        : concentrationRisk !== "Unknown"
+          ? `${concentrationRisk} Risk`
+          : "Unknown",
+      badgeVariant: getDistributionVariant(distributionScore, concentrationRisk)
+    });
+  }
+
+  // 6. Total Value Locked
+  if (data.tvl_usd && data.tvl_usd > 0) {
+    const tvl = data.tvl_usd;
+    const description = tvl > 100000000
+      ? `Strong TVL of ${formatCurrency(tvl)} indicates significant DeFi integration`
+      : tvl > 10000000
+        ? `Moderate TVL of ${formatCurrency(tvl)} from DeFiLlama`
+        : `Low TVL of ${formatCurrency(tvl)} - limited DeFi usage`;
+
+    metrics.push({
+      icon: DollarSign,
+      title: "Total Value Locked",
+      description,
+      badgeLabel: formatCurrency(tvl),
+      badgeVariant: tvl > 100000000 ? "green" : tvl > 10000000 ? "blue" : "orange"
+    });
+  }
+
+  // 7. DEX Liquidity (if available)
+  if (dexLiquidityUsd > 0) {
+    const description = dexLiquidityUsd > 1000000
+      ? `High liquidity of ${formatCurrency(dexLiquidityUsd)} - easy to trade large amounts without slippage`
+      : dexLiquidityUsd > 100000
+        ? `Moderate liquidity of ${formatCurrency(dexLiquidityUsd)} - reasonable for trading`
+        : `Low liquidity of ${formatCurrency(dexLiquidityUsd)} - higher slippage risk on large trades`;
+
+    metrics.push({
+      icon: Activity,
+      title: "DEX Liquidity",
+      description,
+      badgeLabel: formatCurrency(dexLiquidityUsd),
+      badgeVariant: dexLiquidityUsd > 1000000 ? "green" : dexLiquidityUsd > 100000 ? "blue" : "orange"
+    });
+  }
+
+  // 8. Treasury Holdings
+  if (treasuryUsd > 0) {
+    const description = treasuryUsd > 1000000
+      ? `Strong treasury of ${formatCurrency(treasuryUsd)} - project is well-funded`
+      : treasuryUsd > 100000
+        ? `Moderate treasury of ${formatCurrency(treasuryUsd)} - some runway available`
+        : `Small treasury of ${formatCurrency(treasuryUsd)} - limited resources`;
+
+    metrics.push({
+      icon: TrendingUp,
+      title: "Treasury Holdings",
+      description,
+      badgeLabel: formatCurrency(treasuryUsd),
+      badgeVariant: treasuryUsd > 1000000 ? "green" : treasuryUsd > 100000 ? "blue" : "orange"
+    });
+  }
+
+  // If we have comprehensive data, return it; otherwise fall back to basic 4 metrics
+  if (metrics.length >= 4) {
+    return metrics;
+  }
+
+  // Fallback to basic metrics if insufficient data
   return [
-    { 
-      icon: Coins, 
-      title: "Circulating Supply", 
+    {
+      icon: Coins,
+      title: "Circulating Supply",
       description: circulatingSupply > 0 ? "Tokens currently in circulation" : "Number of tokens currently in circulation",
-      badgeLabel: circulatingSupply > 0 ? formatTokensCompact(circulatingSupply) : "Not Available",
+      badgeLabel: circulatingSupply > 0 ? formatTokensCompact(circulatingSupply) + " Tokens" : "Not Available",
       badgeVariant: circulatingSupply > 0 ? "blue" : "gray"
     },
-    { 
-      icon: DollarSign, 
-      title: "TVL (USD)", 
+    {
+      icon: DollarSign,
+      title: "TVL (USD)",
       description: "Total Value Locked from DeFiLlama",
       badgeLabel: data.tvl_usd && data.tvl_usd > 0 ? formatCurrency(data.tvl_usd) : "Not Available",
       badgeVariant: data.tvl_usd && data.tvl_usd > 10000000 ? "green" : data.tvl_usd && data.tvl_usd > 1000000 ? "blue" : data.tvl_usd && data.tvl_usd > 100000 ? "orange" : "gray"
     },
-    { 
-      icon: TrendingUp, 
-      title: "Treasury (USD)", 
+    {
+      icon: TrendingUp,
+      title: "Treasury (USD)",
       description: "Value held in project treasury",
-      badgeLabel: data.treasury_usd && data.treasury_usd > 0 ? formatCurrency(data.treasury_usd) : "Not Available",
-      badgeVariant: data.treasury_usd && data.treasury_usd > 500000 ? "green" : data.treasury_usd && data.treasury_usd > 50000 ? "blue" : data.treasury_usd && data.treasury_usd > 0 ? "orange" : "gray"
+      badgeLabel: treasuryUsd > 0 ? formatCurrency(treasuryUsd) : "Not Available",
+      badgeVariant: treasuryUsd > 500000 ? "green" : treasuryUsd > 50000 ? "blue" : treasuryUsd > 0 ? "orange" : "gray"
     },
-    { 
-      icon: Users, 
-      title: "Distribution Quality", 
-      description: giniCoefficient !== null ? 
-        `Token distribution among ${topHoldersCount || 'N/A'} holders (Gini: ${giniCoefficient.toFixed(3)})` :
-        "How well distributed the token supply is among holders",
+    {
+      icon: Users,
+      title: "Distribution Quality",
+      description: giniCoefficient > 0
+        ? `Token distribution among ${topHoldersCount || 'N/A'} holders (Gini: ${giniCoefficient.toFixed(3)})`
+        : "How well distributed the token supply is among holders",
       badgeLabel: distributionScore !== "Unknown" ? distributionScore : concentrationRisk !== "Unknown" ? `${concentrationRisk} Risk` : "Unknown",
       badgeVariant: getDistributionVariant(distributionScore, concentrationRisk)
     }
