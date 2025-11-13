@@ -1,5 +1,25 @@
 
 {
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.(js|css|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot|webp))",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
   "routes": [
     {
       "src": "/sitemap.xml",
@@ -55,7 +75,8 @@
       "src": "/token/(.*)",
       "dest": "/api/prerender?token=$1",
       "headers": {
-        "Content-Type": "text/html"
+        "Content-Type": "text/html",
+        "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
       },
       "continue": true,
       "check": true

@@ -10,6 +10,8 @@ interface RefreshSummary {
   successful: number;
   failed: number;
   errors: Array<{ token: string; error: string }>;
+  reportsRegenerated?: number;
+  reportsFailed?: number;
   startTime: string;
   endTime: string;
   duration: number;
@@ -96,7 +98,52 @@ Deno.serve(async (req) => {
       }
     }
 
-    // After all scans complete, trigger sitemap regeneration
+    // After all scans complete, regenerate reports with updated data
+    console.log('[WEEKLY-REFRESH] Starting report regeneration for all tokens...');
+    let reportsRegenerated = 0;
+    let reportsFailed = 0;
+
+    if (tokenReports && tokenReports.length > 0) {
+      for (const token of tokenReports) {
+        console.log(`[WEEKLY-REFRESH] Regenerating report for ${token.token_symbol}`);
+
+        try {
+          const response = await fetch(
+            `${supabaseUrl}/functions/v1/generate-token-report`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${supabaseServiceKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                tokenAddress: token.token_address,
+                chainId: token.chain_id,
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`[WEEKLY-REFRESH] Failed to regenerate report for ${token.token_symbol}: ${errorText}`);
+            reportsFailed++;
+          } else {
+            console.log(`[WEEKLY-REFRESH] Successfully regenerated report for ${token.token_symbol}`);
+            reportsRegenerated++;
+          }
+        } catch (error: any) {
+          console.error(`[WEEKLY-REFRESH] Exception regenerating report for ${token.token_symbol}:`, error);
+          reportsFailed++;
+        }
+
+        // Rate limiting - 5 seconds between report generations
+        await Delayer(5000);
+      }
+    }
+
+    console.log(`[WEEKLY-REFRESH] Report regeneration complete: ${reportsRegenerated} successful, ${reportsFailed} failed`);
+
+    // After all scans and report regeneration complete, trigger sitemap regeneration
     console.log('[WEEKLY-REFRESH] Triggering sitemap regeneration...');
     try {
       await supabase.functions.invoke('generate-sitemap', {
@@ -114,6 +161,8 @@ Deno.serve(async (req) => {
     const endTime = new Date();
     summary.endTime = endTime.toISOString();
     summary.duration = endTime.getTime() - startTime.getTime();
+    summary.reportsRegenerated = reportsRegenerated;
+    summary.reportsFailed = reportsFailed;
 
     console.log('[WEEKLY-REFRESH] Refresh complete:', summary);
 
@@ -121,7 +170,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         summary,
-        message: `Refreshed ${summary.successful}/${summary.total} tokens successfully`,
+        message: `Refreshed ${summary.successful}/${summary.total} tokens and regenerated ${reportsRegenerated}/${summary.total} reports successfully`,
       }),
       {
         status: 200,
