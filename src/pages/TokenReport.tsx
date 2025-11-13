@@ -268,7 +268,8 @@ export default function TokenReport() {
     return categoryMap[category] || { description: '', whyMatters: '', keyIndicators: [] };
   };
 
-  if (isLoading) {
+  // Guard: Show loading state until symbol param is available and data is loaded
+  if (isLoading || !symbol) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
