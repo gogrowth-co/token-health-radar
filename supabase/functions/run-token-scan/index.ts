@@ -2836,12 +2836,43 @@ Deno.serve(async (req) => {
             .select();
 
           if (error) {
-            console.error(`[CACHE] ❌ ERROR upserting ${categoryName}:`, {
-              message: error.message,
-              details: error.details,
-              hint: error.hint,
-              code: error.code
-            });
+            // Handle schema mismatch for development cache - retry with minimal fields
+            if (operation.table === 'token_development_cache' && 
+                (error.code === '42703' || error.message?.includes('column') || error.message?.includes('does not exist'))) {
+              console.warn(`[CACHE] ⚠️ Schema mismatch detected for ${categoryName}, retrying with minimal fields...`);
+              
+              const minimalData = {
+                token_address: operation.data.token_address,
+                chain_id: operation.data.chain_id,
+                score: operation.data.score,
+                github_repo: operation.data.github_repo,
+                contributors_count: operation.data.contributors_count,
+                commits_30d: operation.data.commits_30d,
+                last_commit: operation.data.last_commit,
+                is_open_source: operation.data.is_open_source,
+                roadmap_progress: operation.data.roadmap_progress
+              };
+              
+              const { error: retryError, data: retryData } = await supabase
+                .from(operation.table)
+                .upsert(minimalData, {
+                  onConflict: 'token_address,chain_id'
+                })
+                .select();
+              
+              if (retryError) {
+                console.error(`[CACHE] ❌ RETRY FAILED for ${categoryName}:`, retryError);
+              } else {
+                console.log(`[CACHE] ✅ Successfully upserted ${categoryName} with minimal fields (score: ${minimalData.score})`);
+              }
+            } else {
+              console.error(`[CACHE] ❌ ERROR upserting ${categoryName}:`, {
+                message: error.message,
+                details: error.details,
+                hint: error.hint,
+                code: error.code
+              });
+            }
           } else {
             console.log(`[CACHE] ✅ Successfully upserted ${categoryName} data with score: ${operation.data.score}`);
             if (upsertedData && upsertedData.length > 0) {
