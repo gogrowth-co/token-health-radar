@@ -53,6 +53,17 @@ export const getFirstValidEvmAddress = (platforms: Record<string, string> | unde
 };
 
 /**
+ * Normalize token address to lowercase for consistent database storage
+ * CRITICAL: Always use this before ANY database operation to ensure case-insensitive matching
+ * @param address - Token address to normalize
+ * @returns Lowercase address or empty string
+ */
+export const normalizeAddress = (address: string | undefined | null): string => {
+  if (!address || typeof address !== 'string') return "";
+  return address.toLowerCase().trim();
+};
+
+/**
  * Shortens an Ethereum address for display
  * @param address - Full Ethereum address
  * @returns Shortened address (e.g., 0x1234...5678)
