@@ -76,14 +76,15 @@ async function fetchTokenReport(symbol: string): Promise<TokenReportResponse> {
     .from('token_reports')
     .select('*')
     .eq('token_symbol', normalizedSymbol) // Use exact match since DB triggers enforce lowercase
-    .single();
+    .maybeSingle();
 
   if (reportError) {
     console.error('Error loading report:', reportError);
-    if (reportError.code === 'PGRST116') {
-      throw new Error('not_found');
-    }
     throw new Error('Failed to load report');
+  }
+
+  if (!reportResult) {
+    throw new Error('not_found');
   }
 
   let tokenCacheData: TokenCacheData | null = null;
