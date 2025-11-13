@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { normalizeAddress } from '@/utils/addressUtils';
 
 interface TokenCacheData {
   name?: string;
@@ -67,11 +68,14 @@ async function fetchTokenReport(symbol: string): Promise<TokenReportResponse> {
     throw new Error('No token symbol provided');
   }
 
+  // Normalize symbol to lowercase for consistent lookups
+  const normalizedSymbol = symbol.toLowerCase().trim();
+
   // Load report data
   const { data: reportResult, error: reportError } = await supabase
     .from('token_reports')
     .select('*')
-    .ilike('token_symbol', symbol)
+    .eq('token_symbol', normalizedSymbol) // Use exact match since DB triggers enforce lowercase
     .single();
 
   if (reportError) {
@@ -85,11 +89,14 @@ async function fetchTokenReport(symbol: string): Promise<TokenReportResponse> {
   let tokenCacheData: TokenCacheData | null = null;
 
   if (reportResult) {
+    // Normalize token address for consistent cache lookup
+    const normalizedAddress = normalizeAddress(reportResult.token_address);
+    
     // Load additional token cache data for SEO
     const { data: cacheResult } = await supabase
       .from('token_data_cache')
       .select('name, symbol, logo_url, description, website_url, twitter_handle, coingecko_id, current_price_usd, market_cap_usd')
-      .eq('token_address', reportResult.token_address)
+      .eq('token_address', normalizedAddress)
       .eq('chain_id', reportResult.chain_id)
       .maybeSingle();
 
