@@ -1,18 +1,22 @@
 
 import { formatCurrency, formatNumber, formatTokensCompact } from "./formattingUtils";
-import { 
-  Shield, 
-  Lock, 
-  AlertCircle, 
-  Activity, 
-  DollarSign, 
-  TrendingUp, 
-  Users, 
-  Coins, 
-  BarChart3, 
-  Github, 
-  Code, 
+import {
+  Shield,
+  Lock,
+  AlertCircle,
+  Activity,
+  DollarSign,
+  TrendingUp,
+  Users,
+  Coins,
+  BarChart3,
+  Github,
+  Code,
   GitCommit,
+  Star,
+  GitFork,
+  AlertOctagon,
+  FileCode,
   LucideIcon
 } from "lucide-react";
 
@@ -102,6 +106,12 @@ export interface DevelopmentData {
   contributors_count: number | null;
   commits_30d: number | null;
   last_commit: string | null;
+  stars: number | null;
+  forks: number | null;
+  open_issues: number | null;
+  language: string | null;
+  is_archived: boolean | null;
+  repo_created_at: string | null;
   roadmap_progress: string | null;
   score: number | null;
 }
@@ -908,11 +918,14 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
 export const transformDevelopmentData = (data: DevelopmentData | null): CategoryFeature[] => {
   if (!data) {
     return [
-      { icon: Github, title: "Open Source", description: "Code is publicly available for review", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Users, title: "Contributors", description: "Number of active code contributors", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: GitCommit, title: "Commits (30d)", description: "Code commits in the last 30 days", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Activity, title: "Last Commit", description: "When the last code update was made", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Code, title: "Roadmap Progress", description: "Progress on the development roadmap", badgeLabel: "Unknown", badgeVariant: "gray" }
+      { icon: Github, title: "Repository", description: "Project's GitHub repository and visibility status", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Star, title: "GitHub Stars", description: "Community recognition and project popularity", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Users, title: "Contributors", description: "Active developers contributing code to the project", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: GitCommit, title: "Recent Activity", description: "Code commits in the last 30 days - indicates active development", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Activity, title: "Last Commit", description: "How recently the codebase was updated", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: GitFork, title: "Forks", description: "Number of times the repository has been forked", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: AlertOctagon, title: "Open Issues", description: "Unresolved bug reports and feature requests", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: FileCode, title: "Language", description: "Primary programming language used in the codebase", badgeLabel: "Unknown", badgeVariant: "gray" }
     ];
   }
 
@@ -920,47 +933,99 @@ export const transformDevelopmentData = (data: DevelopmentData | null): Category
   const contributorsCount = safeNumberAccess(data, 'contributors_count');
   const commits30d = safeNumberAccess(data, 'commits_30d');
   const lastCommit = safeAccess(data, 'last_commit', null);
-  const roadmapProgress = safeAccess(data, 'roadmap_progress', 'Unknown');
+  const stars = safeNumberAccess(data, 'stars');
+  const forks = safeNumberAccess(data, 'forks');
+  const openIssues = safeNumberAccess(data, 'open_issues');
+  const language = safeAccess(data, 'language', null);
+  const isArchived = safeBooleanAccess(data, 'is_archived');
+  const githubRepo = safeAccess(data, 'github_repo', null);
 
   // Calculate days since last commit
   const daysSinceCommit = lastCommit ? Math.floor((Date.now() - new Date(lastCommit).getTime()) / (1000 * 60 * 60 * 24)) : null;
 
+  // Format repository badge
+  let repoBadgeLabel = "Unknown";
+  let repoBadgeVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
+
+  if (githubRepo) {
+    repoBadgeLabel = isArchived ? "Archived" : "Public";
+    repoBadgeVariant = isArchived ? "red" : "green";
+  } else if (isOpenSource) {
+    repoBadgeLabel = "Public";
+    repoBadgeVariant = "green";
+  } else {
+    repoBadgeLabel = "Not Found";
+    repoBadgeVariant = "orange";
+  }
+
   return [
     {
       icon: Github,
-      title: "Open Source",
-      description: "Code is publicly available for review",
-      badgeLabel: getSecurityBadgeLabel(isOpenSource),
-      badgeVariant: getSecurityBadgeVariant(isOpenSource, true)
+      title: "Repository",
+      description: "Project's GitHub repository and visibility status",
+      badgeLabel: repoBadgeLabel,
+      badgeVariant: repoBadgeVariant
     },
-    { 
-      icon: Users, 
-      title: "Contributors", 
-      description: "Number of active code contributors",
+    {
+      icon: Star,
+      title: "GitHub Stars",
+      description: "Community recognition and project popularity",
+      badgeLabel: stars >= 1000 ? `${(stars / 1000).toFixed(1)}k` : stars.toString(),
+      badgeVariant: stars >= 1000 ? "green" : stars >= 100 ? "blue" : stars >= 10 ? "orange" : "gray"
+    },
+    {
+      icon: Users,
+      title: "Contributors",
+      description: "Active developers contributing code to the project",
       badgeLabel: contributorsCount.toString(),
-      badgeVariant: contributorsCount >= 10 ? "green" : contributorsCount >= 3 ? "blue" : contributorsCount >= 1 ? "orange" : "gray"
+      badgeVariant: contributorsCount >= 50 ? "green" : contributorsCount >= 10 ? "blue" : contributorsCount >= 3 ? "orange" : contributorsCount >= 1 ? "yellow" : "gray"
     },
-    { 
-      icon: GitCommit, 
-      title: "Commits (30d)", 
-      description: "Code commits in the last 30 days",
-      badgeLabel: commits30d.toString(),
-      badgeVariant: commits30d >= 20 ? "green" : commits30d >= 5 ? "blue" : commits30d >= 1 ? "orange" : "gray"
+    {
+      icon: GitCommit,
+      title: "Recent Activity",
+      description: "Code commits in the last 30 days - indicates active development",
+      badgeLabel: commits30d === 0 ? "No commits" : `${commits30d} commits`,
+      badgeVariant: commits30d >= 20 ? "green" : commits30d >= 10 ? "blue" : commits30d >= 5 ? "orange" : commits30d >= 1 ? "yellow" : "red"
     },
-    { 
-      icon: Activity, 
-      title: "Last Commit", 
-      description: "When the last code update was made",
-      badgeLabel: daysSinceCommit !== null ? `${daysSinceCommit} days ago` : "Unknown",
-      badgeVariant: daysSinceCommit !== null ? 
-        (daysSinceCommit <= 7 ? "green" : daysSinceCommit <= 30 ? "blue" : daysSinceCommit <= 90 ? "orange" : "red") : "gray"
+    {
+      icon: Activity,
+      title: "Last Commit",
+      description: "How recently the codebase was updated",
+      badgeLabel: daysSinceCommit !== null ?
+        (daysSinceCommit === 0 ? "Today" :
+         daysSinceCommit === 1 ? "Yesterday" :
+         daysSinceCommit < 30 ? `${daysSinceCommit} days ago` :
+         daysSinceCommit < 365 ? `${Math.floor(daysSinceCommit / 30)} months ago` :
+         `${Math.floor(daysSinceCommit / 365)} years ago`) : "Unknown",
+      badgeVariant: daysSinceCommit !== null ?
+        (daysSinceCommit <= 7 ? "green" :
+         daysSinceCommit <= 30 ? "blue" :
+         daysSinceCommit <= 90 ? "orange" :
+         daysSinceCommit <= 180 ? "yellow" : "red") : "gray"
     },
-    { 
-      icon: Code, 
-      title: "Roadmap Progress", 
-      description: "Progress on the development roadmap",
-      badgeLabel: roadmapProgress,
-      badgeVariant: roadmapProgress === "Unknown" ? "gray" : roadmapProgress === "On Track" ? "green" : roadmapProgress === "Delayed" ? "orange" : roadmapProgress === "Stalled" ? "red" : "gray"
+    {
+      icon: GitFork,
+      title: "Forks",
+      description: "Number of times the repository has been forked",
+      badgeLabel: forks >= 1000 ? `${(forks / 1000).toFixed(1)}k` : forks.toString(),
+      badgeVariant: forks >= 100 ? "green" : forks >= 20 ? "blue" : forks >= 5 ? "orange" : forks >= 1 ? "yellow" : "gray"
+    },
+    {
+      icon: AlertOctagon,
+      title: "Open Issues",
+      description: "Unresolved bug reports and feature requests",
+      badgeLabel: openIssues === 0 ? "None" : openIssues.toString(),
+      badgeVariant: openIssues === 0 ? "green" : openIssues <= 10 ? "blue" : openIssues <= 50 ? "orange" : "red"
+    },
+    {
+      icon: FileCode,
+      title: "Language",
+      description: "Primary programming language used in the codebase",
+      badgeLabel: language || "Unknown",
+      badgeVariant: language ?
+        (language === "Solidity" || language === "Rust" || language === "Go" ? "blue" :
+         language === "TypeScript" || language === "JavaScript" ? "green" :
+         language === "Python" ? "orange" : "gray") : "gray"
     }
   ];
 };
