@@ -412,9 +412,9 @@ export const transformTokenomicsData = (data: TokenomicsData | null, tokenDataCa
       icon: Coins,
       title: "Total Supply",
       description: isCapped
-        ? "Maximum supply is capped at " + formatTokensCompact(supply) + " tokens"
+        ? `Maximum supply is capped (${formatTokensCompact(supply)} total)`
         : "Current total supply - may increase if minting is enabled",
-      badgeLabel: formatTokensCompact(supply) + " Tokens",
+      badgeLabel: formatTokensCompact(supply),
       badgeVariant: isCapped ? "green" : "yellow"
     });
   }
@@ -423,14 +423,14 @@ export const transformTokenomicsData = (data: TokenomicsData | null, tokenDataCa
   if (circulatingSupply > 0) {
     const ratio = totalSupply > 0 ? (circulatingSupply / totalSupply) * 100 : null;
     const description = ratio
-      ? `${ratio.toFixed(1)}% of total supply in circulation (${formatTokensCompact(circulatingSupply)} / ${formatTokensCompact(totalSupply)})`
-      : "Tokens currently in circulation";
+      ? `${ratio.toFixed(1)}% of total supply in circulation (${formatTokensCompact(circulatingSupply)} of ${formatTokensCompact(totalSupply)})`
+      : "Number of tokens currently in circulation";
 
     metrics.push({
       icon: Coins,
       title: "Circulating Supply",
       description,
-      badgeLabel: formatTokensCompact(circulatingSupply) + " Tokens",
+      badgeLabel: formatTokensCompact(circulatingSupply),
       badgeVariant: ratio && ratio > 90 ? "green" : ratio && ratio > 50 ? "blue" : "orange"
     });
   }
@@ -481,8 +481,8 @@ export const transformTokenomicsData = (data: TokenomicsData | null, tokenDataCa
     }
 
     const description = giniCoefficient > 0
-      ? `Distribution among ${topHoldersCount || 'N/A'} holders: ${distributionText} (Gini: ${giniCoefficient.toFixed(3)})`
-      : "Token distribution among holders";
+      ? `Supply is ${distributionText} among ${topHoldersCount || 'top'} holders (Gini coefficient: ${giniCoefficient.toFixed(2)})`
+      : "How well tokens are distributed among holders - lower concentration is better";
 
     metrics.push({
       icon: Users,
@@ -559,8 +559,8 @@ export const transformTokenomicsData = (data: TokenomicsData | null, tokenDataCa
     {
       icon: Coins,
       title: "Circulating Supply",
-      description: circulatingSupply > 0 ? "Tokens currently in circulation" : "Number of tokens currently in circulation",
-      badgeLabel: circulatingSupply > 0 ? formatTokensCompact(circulatingSupply) + " Tokens" : "Not Available",
+      description: circulatingSupply > 0 ? "Number of tokens currently in circulation" : "Circulating supply information not available",
+      badgeLabel: circulatingSupply > 0 ? formatTokensCompact(circulatingSupply) : "Not Available",
       badgeVariant: circulatingSupply > 0 ? "blue" : "gray"
     },
     {
@@ -581,7 +581,7 @@ export const transformTokenomicsData = (data: TokenomicsData | null, tokenDataCa
       icon: Users,
       title: "Distribution Quality",
       description: giniCoefficient > 0
-        ? `Token distribution among ${topHoldersCount || 'N/A'} holders (Gini: ${giniCoefficient.toFixed(3)})`
+        ? `Supply distribution among ${topHoldersCount || 'top'} holders (Gini: ${giniCoefficient.toFixed(2)})`
         : "How well distributed the token supply is among holders",
       badgeLabel: distributionScore !== "Unknown" ? distributionScore : concentrationRisk !== "Unknown" ? `${concentrationRisk} Risk` : "Unknown",
       badgeVariant: getDistributionVariant(distributionScore, concentrationRisk)

@@ -130,6 +130,20 @@ export default function TokenProfile({
     return `$${v.toFixed(2)}`;
   };
 
+  // Format price for display (handles very small prices)
+  const formatPrice = (p: number) => {
+    if (p >= 1) {
+      return p.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    } else if (p >= 0.01) {
+      return p.toFixed(4);
+    } else if (p >= 0.0001) {
+      return p.toFixed(6);
+    } else if (p > 0) {
+      return p.toFixed(8);
+    }
+    return "0.00";
+  };
+
   if (isMobile) {
     return (
       <Card
@@ -198,7 +212,7 @@ export default function TokenProfile({
             <div className="flex flex-col">
               <div className="flex flex-col mb-3">
                 <span className="text-xl font-bold leading-none text-[#000] dark:text-[#fff]">
-                  ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ${formatPrice(price)}
                 </span>
                 <span
                   className="text-sm font-medium mt-0.5"
@@ -391,7 +405,7 @@ export default function TokenProfile({
             {/* Price + Change */}
             <div className="flex flex-col items-start">
               <span className="text-[28px] font-bold leading-[36px] text-[#000] dark:text-[#fff]">
-                ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${formatPrice(price)}
               </span>
               <span
                 className="text-[16px] font-medium"
