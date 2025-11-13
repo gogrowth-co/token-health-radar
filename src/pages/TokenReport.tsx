@@ -138,6 +138,67 @@ export default function TokenReport() {
   const reportData = data?.reportData;
   const tokenCacheData = data?.tokenCacheData;
 
+  // Create safe metadata with defaults to ensure consistent hook calls
+  const safeMetadata = useMemo(() => ({
+    tokenAddress: reportData?.metadata?.tokenAddress || "",
+    chainId: reportData?.metadata?.chainId || "0x1",
+    tokenName: tokenCacheData?.name || reportData?.metadata?.tokenName || symbol?.toUpperCase() || "",
+    tokenSymbol: tokenCacheData?.symbol || reportData?.metadata?.tokenSymbol || symbol || "",
+    currentPrice: tokenCacheData?.current_price_usd ?? reportData?.metadata?.currentPrice ?? 0,
+    marketCap: tokenCacheData?.market_cap_usd ?? reportData?.metadata?.marketCap ?? 0,
+    overallScore: reportData?.metadata?.overallScore ?? 0,
+    scores: reportData?.metadata?.scores || { security: 0, tokenomics: 0, liquidity: 0, community: 0, development: 0 },
+    generatedAt: reportData?.metadata?.generatedAt || new Date().toISOString()
+  }), [reportData, tokenCacheData, symbol]);
+
+  // Memoize report URL - always compute consistently
+  const reportUrl = useMemo(() => symbol ? generateCanonicalUrl(symbol) : "https://tokenhealthscan.com/token", [symbol]);
+
+  // Memoize SEO data with safe defaults
+  const seoData = useMemo(() => ({
+    name: tokenCacheData?.name || safeMetadata.tokenName,
+    symbol: tokenCacheData?.symbol || safeMetadata.tokenSymbol,
+    logo_url: tokenCacheData?.logo_url,
+    description: tokenCacheData?.description,
+    website_url: tokenCacheData?.website_url,
+    twitter_handle: tokenCacheData?.twitter_handle,
+    coingecko_id: tokenCacheData?.coingecko_id,
+    current_price_usd: tokenCacheData?.current_price_usd || safeMetadata.currentPrice,
+    market_cap_usd: tokenCacheData?.market_cap_usd || safeMetadata.marketCap,
+    overall_score: safeMetadata.overallScore,
+    token_address: safeMetadata.tokenAddress,
+    chain_id: safeMetadata.chainId
+  }), [tokenCacheData, safeMetadata]);
+
+  // Memoize SEO meta tags - always compute consistently
+  const pageTitle = useMemo(() => generateTokenTitle(seoData), [seoData]);
+  const pageDescription = useMemo(() => generateTokenDescription(seoData), [seoData]);
+  const pageKeywords = useMemo(() => generateTokenKeywords(seoData), [seoData]);
+  const imageUrl = useMemo(() => getTokenImageUrl(seoData), [seoData]);
+
+  // Memoize image URLs with safe conditionals
+  const imageUrls = useMemo(() => {
+    const chainStr = safeMetadata.chainId === '0x1' ? 'ethereum' : safeMetadata.chainId;
+    
+    // Only compute URLs if we have a valid token address
+    if (safeMetadata.tokenAddress) {
+      const heroUrl = storagePublicUrl(supabase, pathHero(chainStr, safeMetadata.tokenAddress));
+      const scoreUrl = storagePublicUrl(supabase, pathScore(chainStr, safeMetadata.tokenAddress));
+      const priceUrl = storagePublicUrl(supabase, pathChartPrice(chainStr, safeMetadata.tokenAddress));
+      const ogImage = heroUrl || scoreUrl || priceUrl || imageUrl;
+      
+      return { chainStr, heroUrl, scoreUrl, priceUrl, ogImage };
+    }
+    
+    // Return safe defaults when no address available
+    return { 
+      chainStr, 
+      heroUrl: undefined, 
+      scoreUrl: undefined, 
+      priceUrl: undefined, 
+      ogImage: imageUrl 
+    };
+  }, [safeMetadata.chainId, safeMetadata.tokenAddress, imageUrl]);
 
   // Memoize helper functions for performance
   const getScoreColor = useMemo(() => (score: number) => {
@@ -239,19 +300,19 @@ export default function TokenReport() {
   const getCategoryInfo = (category: string) => {
     const categoryMap = {
       'Security': {
-        description: 'Evaluates smart contract safety, ownership status, and potential security vulnerabilities.',
-        whyMatters: 'Security risks can lead to total loss of funds through exploits, rug pulls, or malicious contract functions.',
-        keyIndicators: ['Contract verification', 'Ownership renouncement', 'Mint functions', 'Honeypot detection', 'Liquidity locks']
+        description: 'Evaluates smart contract security, audit status, and potential vulnerabilities.',
+        whyMatters: 'Security flaws can lead to total loss of funds through hacks, exploits, or rug pulls.',
+        keyIndicators: ['Smart contract audit', 'Code verification', 'Owner privileges', 'Liquidity locks', 'Honeypot detection']
       },
       'Liquidity': {
-        description: 'Measures trading accessibility, market depth, and how easily tokens can be bought or sold.',
-        whyMatters: 'Poor liquidity can trap investors, cause extreme price volatility, and prevent exit during market downturns.',
-        keyIndicators: ['Trading volume', 'Exchange listings', 'Market depth', 'Liquidity pools', 'Price impact']
+        description: 'Analyzes trading volume, market depth, and ease of buying/selling the token.',
+        whyMatters: 'Poor liquidity can trap investors, prevent exits, and indicate market manipulation.',
+        keyIndicators: ['Trading volume', 'Market depth', 'Exchange listings', 'Slippage tolerance', 'Price impact']
       },
       'Tokenomics': {
-        description: 'Analyzes token supply mechanics, distribution, and economic incentive structures.',
-        whyMatters: 'Poor tokenomics can lead to inflation, unfair distribution, or economic models that favor insiders over retail investors.',
-        keyIndicators: ['Supply mechanics', 'Holder distribution', 'Burn mechanisms', 'Inflation rate', 'Vesting schedules']
+        description: 'Reviews token distribution, supply mechanics, and economic incentives.',
+        whyMatters: 'Poor tokenomics can lead to inflation, unfair distribution, and unsustainable price dynamics.',
+        keyIndicators: ['Total supply', 'Circulating supply', 'Token distribution', 'Inflation rate', 'Utility mechanics']
       },
       'Community': {
         description: 'Assesses social media presence, engagement levels, and community growth metrics.',
@@ -323,40 +384,7 @@ export default function TokenReport() {
     );
   }
 
-  const { metadata } = reportData;
-  const reportUrl = generateCanonicalUrl(symbol!);
-
-  // Memoize SEO data to prevent recalculation on every render
-  const seoData = useMemo(() => ({
-    name: tokenCacheData?.name || metadata.tokenName,
-    symbol: tokenCacheData?.symbol || metadata.tokenSymbol,
-    logo_url: tokenCacheData?.logo_url,
-    description: tokenCacheData?.description,
-    website_url: tokenCacheData?.website_url,
-    twitter_handle: tokenCacheData?.twitter_handle,
-    coingecko_id: tokenCacheData?.coingecko_id,
-    current_price_usd: tokenCacheData?.current_price_usd || metadata.currentPrice,
-    market_cap_usd: tokenCacheData?.market_cap_usd || metadata.marketCap,
-    overall_score: reportData.metadata.overallScore,
-    token_address: metadata.tokenAddress,
-    chain_id: metadata.chainId
-  }), [tokenCacheData, metadata, reportData.metadata.overallScore]);
-
-  const pageTitle = useMemo(() => generateTokenTitle(seoData), [seoData]);
-  const pageDescription = useMemo(() => generateTokenDescription(seoData), [seoData]);
-  const pageKeywords = useMemo(() => generateTokenKeywords(seoData), [seoData]);
-  const imageUrl = useMemo(() => getTokenImageUrl(seoData), [seoData]);
-
-  // Memoize image URLs
-  const imageUrls = useMemo(() => {
-    const chainStr = metadata.chainId === '0x1' ? 'ethereum' : metadata.chainId;
-    const heroUrl = storagePublicUrl(supabase, pathHero(chainStr, metadata.tokenAddress));
-    const scoreUrl = storagePublicUrl(supabase, pathScore(chainStr, metadata.tokenAddress));
-    const priceUrl = storagePublicUrl(supabase, pathChartPrice(chainStr, metadata.tokenAddress));
-    const ogImage = heroUrl || scoreUrl || priceUrl || imageUrl;
-
-    return { chainStr, heroUrl, scoreUrl, priceUrl, ogImage };
-  }, [metadata.chainId, metadata.tokenAddress, imageUrl]);
+  const metadata = safeMetadata;
 
   const { chainStr, heroUrl, scoreUrl, priceUrl, ogImage } = imageUrls;
 
