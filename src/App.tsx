@@ -59,6 +59,16 @@ const StaticFileRoute = ({ filePath }: { filePath: string }) => {
   return null;
 };
 
+// Component that redirects to the RSS feed from Supabase Edge Function
+const RSSFeedRoute = () => {
+  useEffect(() => {
+    // Redirect to the RSS feed Edge Function
+    window.location.replace('https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/rss-feed');
+  }, []);
+
+  return null;
+};
+
 const App = () => {
   return (
     <ErrorBoundary>
@@ -74,7 +84,9 @@ const App = () => {
                     {/* Static file routes - handle these first to prevent React rendering */}
                     <Route path="/sitemap.xml" element={<StaticFileRoute filePath="/sitemap.xml" />} />
                     <Route path="/robots.txt" element={<StaticFileRoute filePath="/robots.txt" />} />
-                    
+                    <Route path="/rss.xml" element={<RSSFeedRoute />} />
+                    <Route path="/feed.xml" element={<RSSFeedRoute />} />
+
                     {/* Regular app routes */}
                     <Route path="/" element={<Landing />} />
                     <Route path="/auth" element={
