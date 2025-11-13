@@ -27,6 +27,41 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
+// Retry utility for external API calls with exponential backoff
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000,
+  context: string = 'operation'
+): Promise<T | null> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      console.log(`[RETRY] ${context} - Attempt ${attempt + 1}/${maxRetries}`);
+      const result = await fn();
+      if (attempt > 0) {
+        console.log(`[RETRY] ${context} - SUCCESS after ${attempt + 1} attempts`);
+      }
+      return result;
+    } catch (error) {
+      lastError = error as Error;
+      const isLastAttempt = attempt === maxRetries - 1;
+
+      if (isLastAttempt) {
+        console.error(`[RETRY] ${context} - FAILED after ${maxRetries} attempts:`, error);
+        break;
+      }
+
+      const delay = initialDelay * Math.pow(2, attempt);
+      console.warn(`[RETRY] ${context} - Attempt ${attempt + 1} failed, retrying in ${delay}ms:`, error);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+
+  return null;
+}
+
 // Discord URL validation helper
 function isValidDiscordUrl(url: string): boolean {
   if (!url || typeof url !== 'string') return false;
@@ -1507,9 +1542,15 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
     if (github_url) {
       console.log(`[GITHUB] === FETCHING GITHUB DATA ===`);
       console.log(`[GITHUB] URL: ${github_url}`);
-      const githubResult = await Promise.allSettled([fetchGitHubRepoData(github_url)]);
-      githubData = githubResult[0].status === 'fulfilled' ? githubResult[0].value : null;
-      console.log(`[GITHUB] Data fetch result: ${githubData ? 'SUCCESS' : 'FAILED'}`);
+
+      // Use retry logic for GitHub API calls
+      githubData = await retryWithBackoff(
+        () => fetchGitHubRepoData(github_url),
+        3,
+        2000,
+        `GitHub data fetch for ${github_url}`
+      );
+
       if (githubData) {
         console.log(`[GITHUB] === REPOSITORY METRICS ===`);
         console.log(`[GITHUB] Repository: ${githubData.repository || 'Unknown'}`);
@@ -1520,10 +1561,14 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
         console.log(`[GITHUB] Last Commit: ${githubData.lastCommitDate}`);
         console.log(`[GITHUB] === REPOSITORY SELECTION VERIFIED ===`);
       } else {
-        console.warn(`[GITHUB] Failed to fetch data for ${github_url}`);
+        console.error(`[GITHUB] ❌ CRITICAL: Failed to fetch data for ${github_url} after 3 retry attempts`);
+        console.error(`[GITHUB] This will result in Development Score = 0 and missing metrics`);
+        console.error(`[GITHUB] Possible causes: Rate limit, invalid URL, network issues, or repo doesn't exist`);
       }
     } else {
-      console.log(`[GITHUB] No GitHub URL available - skipping GitHub data fetch`);
+      console.warn(`[GITHUB] ⚠️ WARNING: No GitHub URL available - Development score will be 0`);
+      console.log(`[GITHUB] Checked sources: CoinGecko metadata, CoinMarketCap API fallback`);
+      console.log(`[GITHUB] This is expected for tokens without public GitHub repositories`);
     }
     
     // Try to get existing Twitter handle from database if not found in metadata
@@ -1942,27 +1987,57 @@ function generateCategoryData(apiData: any) {
   console.log(`[TOKENOMICS] DeFiLlama TVL response:`, apiData.tvlData);
   console.log(`[TOKENOMICS] Pairs liquidity response:`, apiData.pairsData?.total_liquidity_usd);
 
+  // Enhanced security data with better null handling and logging
+  const securityData = apiData.securityData;
+  const hasSecurityData = securityData && Object.keys(securityData).length > 0;
+
+  console.log(`[SECURITY] === SECURITY DATA ANALYSIS ===`);
+  console.log(`[SECURITY] GoPlus data available: ${hasSecurityData ? 'YES' : 'NO'}`);
+
+  if (!hasSecurityData) {
+    console.warn(`[SECURITY] ⚠️ WARNING: No security data from GoPlus API`);
+    console.log(`[SECURITY] All security fields will be NULL - results will show "Unknown"`);
+  } else {
+    // Log which fields are missing from GoPlus
+    const criticalFields = ['ownership_renounced', 'can_mint', 'honeypot_detected', 'freeze_authority'];
+    const missingFields = criticalFields.filter(field =>
+      securityData[field] === null || securityData[field] === undefined
+    );
+
+    if (missingFields.length > 0) {
+      console.warn(`[SECURITY] ⚠️ WARNING: Missing critical security fields from GoPlus:`, missingFields);
+      console.log(`[SECURITY] These will show as "Unknown" in the UI`);
+    } else {
+      console.log(`[SECURITY] ✅ All critical security fields present`);
+    }
+  }
+
+  // Use Webacy data for additional context
+  if (apiData.webacyData?.riskScore) {
+    console.log(`[SECURITY] Webacy risk score available: ${apiData.webacyData.riskScore} (${apiData.webacyData.severity})`);
+  }
+
   return {
     security: {
-      ownership_renounced: apiData.securityData?.ownership_renounced || null,
-      can_mint: apiData.securityData?.can_mint || null,
-      honeypot_detected: apiData.securityData?.honeypot_detected || null,
-      freeze_authority: apiData.securityData?.freeze_authority || null,
-      audit_status: apiData.securityData?.audit_status || 'unverified',
+      ownership_renounced: securityData?.ownership_renounced ?? null,
+      can_mint: securityData?.can_mint ?? null,
+      honeypot_detected: securityData?.honeypot_detected ?? null,
+      freeze_authority: securityData?.freeze_authority ?? null,
+      audit_status: securityData?.audit_status || 'unverified',
       multisig_status: 'unknown',
       score: securityScore,
       // Webacy-specific fields for enhanced security analysis
-      webacy_risk_score: apiData.webacyData?.riskScore || null,
-      webacy_severity: apiData.webacyData?.severity || null,
+      webacy_risk_score: apiData.webacyData?.riskScore ?? null,
+      webacy_severity: apiData.webacyData?.severity ?? null,
       webacy_flags: apiData.webacyData?.flags || [],
-      is_proxy: apiData.securityData?.is_proxy || null,
-      is_blacklisted: apiData.securityData?.is_blacklisted || null,
-      access_control: apiData.securityData?.access_control || null,
-      contract_verified: apiData.securityData?.contract_verified || null,
+      is_proxy: securityData?.is_proxy ?? null,
+      is_blacklisted: securityData?.is_blacklisted ?? null,
+      access_control: securityData?.access_control ?? null,
+      contract_verified: securityData?.contract_verified ?? null,
       // CRITICAL: Include liquidity lock fields from GoPlus API
-      is_liquidity_locked: apiData.securityData?.is_liquidity_locked || null,
-      liquidity_lock_info: apiData.securityData?.liquidity_lock_info || null,
-      liquidity_percentage: apiData.securityData?.liquidity_percentage || null
+      is_liquidity_locked: securityData?.is_liquidity_locked ?? null,
+      liquidity_lock_info: securityData?.liquidity_lock_info ?? null,
+      liquidity_percentage: securityData?.liquidity_percentage ?? null
     },
     tokenomics: {
       // Enhanced supply data with better zero handling
@@ -2712,24 +2787,124 @@ Deno.serve(async (req) => {
       ];
 
       // Execute all cache operations using UPSERT
+      console.log(`[CACHE] === STARTING CACHE OPERATIONS ===`);
+      console.log(`[CACHE] Total operations: ${cacheOperations.length}`);
+
       for (const operation of cacheOperations) {
+        const categoryName = operation.table.replace('token_', '').replace('_cache', '');
+
         try {
-          const { error } = await supabase
+          console.log(`[CACHE] Upserting ${categoryName} data...`);
+          console.log(`[CACHE] Data keys: ${Object.keys(operation.data).join(', ')}`);
+
+          // Log critical fields for debugging
+          if (operation.table === 'token_development_cache') {
+            console.log(`[CACHE] Development data details:`, {
+              github_repo: operation.data.github_repo || '(empty)',
+              contributors_count: operation.data.contributors_count,
+              commits_30d: operation.data.commits_30d,
+              score: operation.data.score,
+              has_data: !!operation.data.github_repo
+            });
+          }
+
+          if (operation.table === 'token_security_cache') {
+            console.log(`[CACHE] Security data details:`, {
+              ownership_renounced: operation.data.ownership_renounced,
+              can_mint: operation.data.can_mint,
+              honeypot_detected: operation.data.honeypot_detected,
+              freeze_authority: operation.data.freeze_authority,
+              score: operation.data.score
+            });
+          }
+
+          const { error, data: upsertedData } = await supabase
             .from(operation.table)
             .upsert(operation.data, {
               onConflict: 'token_address,chain_id'
-            });
+            })
+            .select();
 
           if (error) {
-            console.error(`[SCAN] Error upserting ${operation.table}:`, error);
+            console.error(`[CACHE] ❌ ERROR upserting ${categoryName}:`, {
+              message: error.message,
+              details: error.details,
+              hint: error.hint,
+              code: error.code
+            });
           } else {
-            const categoryName = operation.table.replace('token_', '').replace('_cache', '');
-            console.log(`[SCAN] Successfully upserted ${categoryName} data with score: ${operation.data.score}`);
+            console.log(`[CACHE] ✅ Successfully upserted ${categoryName} data with score: ${operation.data.score}`);
+            if (upsertedData && upsertedData.length > 0) {
+              console.log(`[CACHE] Verified record exists in database for ${categoryName}`);
+            }
           }
         } catch (error) {
-          console.error(`[SCAN] Exception upserting ${operation.table}:`, error);
+          console.error(`[CACHE] ❌ EXCEPTION upserting ${categoryName}:`, {
+            error: error,
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+          });
         }
       }
+
+      console.log(`[CACHE] === CACHE OPERATIONS COMPLETE ===`);
+
+      // Verify all cache records were created successfully
+      console.log(`[VERIFY] === VERIFYING CACHE RECORDS ===`);
+      const cacheVerifications = [
+        'token_data_cache',
+        'token_security_cache',
+        'token_tokenomics_cache',
+        'token_liquidity_cache',
+        'token_community_cache',
+        'token_development_cache'
+      ];
+
+      for (const tableName of cacheVerifications) {
+        try {
+          const { data, error } = await supabase
+            .from(tableName)
+            .select('*')
+            .eq('token_address', token_address.toLowerCase())
+            .eq('chain_id', normalizedChainId)
+            .single();
+
+          if (error) {
+            console.error(`[VERIFY] ❌ CRITICAL: No record found in ${tableName}:`, error.message);
+          } else if (data) {
+            const categoryName = tableName.replace('token_', '').replace('_cache', '');
+            console.log(`[VERIFY] ✅ Record confirmed in ${tableName} (score: ${data.score})`);
+
+            // Special verification for development cache
+            if (tableName === 'token_development_cache') {
+              if (!data.github_repo || data.github_repo === '') {
+                console.warn(`[VERIFY] ⚠️ WARNING: Development cache has empty github_repo - Development Score will be 0`);
+              } else {
+                console.log(`[VERIFY] ✅ Development cache has GitHub repo: ${data.github_repo}`);
+              }
+            }
+
+            // Special verification for security cache
+            if (tableName === 'token_security_cache') {
+              const nullFields = [];
+              if (data.ownership_renounced === null) nullFields.push('ownership_renounced');
+              if (data.can_mint === null) nullFields.push('can_mint');
+              if (data.honeypot_detected === null) nullFields.push('honeypot_detected');
+              if (data.freeze_authority === null) nullFields.push('freeze_authority');
+
+              if (nullFields.length > 0) {
+                console.warn(`[VERIFY] ⚠️ WARNING: Security cache has NULL fields (will show as "Unknown"):`, nullFields);
+              } else {
+                console.log(`[VERIFY] ✅ Security cache has all critical fields populated`);
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`[VERIFY] ❌ Exception verifying ${tableName}:`, error);
+        }
+      }
+
+      console.log(`[VERIFY] === VERIFICATION COMPLETE ===`);
 
     // Record the scan with proper chain_id validation
     if (user_id) {
