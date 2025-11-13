@@ -1,24 +1,27 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState, useMemo, lazy, Suspense } from "react";
+import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useTokenReport } from "@/hooks/useTokenReport";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 import SeoHead from "@/components/seo/SeoHead";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
+import { Button } from "@/components/ui/button";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { 
-  Shield, 
-  DollarSign, 
-  TrendingUp, 
-  Users, 
-  Code, 
+import {
+  Shield,
+  DollarSign,
+  TrendingUp,
+  Users,
+  Code,
   ExternalLink,
   ChevronRight,
   CheckCircle,
@@ -26,7 +29,8 @@ import {
   AlertTriangle,
   Info,
   Wallet,
-  ArrowRight
+  ArrowRight,
+  RefreshCw
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import {
@@ -99,77 +103,60 @@ interface TokenCacheData {
 
 export default function TokenReport() {
   const { symbol } = useParams<{ symbol: string }>();
-  const [reportData, setReportData] = useState<ReportData | null>(null);
-  const [tokenCacheData, setTokenCacheData] = useState<TokenCacheData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error, refetch, isError } = useTokenReport(symbol);
 
+  // Real-time updates - subscribe to report changes
   useEffect(() => {
-    const loadReport = async () => {
-      if (!symbol) {
-        setError("No token symbol provided");
-        setLoading(false);
-        return;
-      }
+    if (!symbol) return;
 
-      try {
-        // Load report data
-        const { data: reportResult, error: reportError } = await supabase
-          .from('token_reports')
-          .select('*')
-          .ilike('token_symbol', symbol)
-          .single();
-
-        if (reportError) {
-          console.error("Error loading report:", reportError);
-          setError("Report not found");
-          return;
+    const channel = supabase
+      .channel(`token-report-${symbol}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'token_reports',
+          filter: `token_symbol=ilike.${symbol}`,
+        },
+        (payload) => {
+          console.log('Report updated via real-time:', payload);
+          toast.success('Report updated with latest data!', {
+            description: 'The token report has been refreshed with new information.',
+          });
+          // Trigger refetch to update the UI
+          refetch();
         }
+      )
+      .subscribe();
 
-        if (reportResult) {
-          setReportData(reportResult.report_content as unknown as ReportData);
-
-          // Load additional token cache data for SEO
-          const { data: cacheResult } = await supabase
-            .from('token_data_cache')
-            .select('name, symbol, logo_url, description, website_url, twitter_handle, coingecko_id, current_price_usd, market_cap_usd')
-            .eq('token_address', reportResult.token_address)
-            .eq('chain_id', reportResult.chain_id)
-            .maybeSingle();
-
-          if (cacheResult) {
-            setTokenCacheData(cacheResult);
-          }
-        }
-      } catch (err) {
-        console.error("Error loading report:", err);
-        setError("Failed to load report");
-      } finally {
-        setLoading(false);
-      }
+    return () => {
+      supabase.removeChannel(channel);
     };
+  }, [symbol, refetch]);
 
-    loadReport();
-  }, [symbol]);
+  const reportData = data?.reportData;
+  const tokenCacheData = data?.tokenCacheData;
 
 
-  const getScoreColor = (score: number) => {
+  // Memoize helper functions for performance
+  const getScoreColor = useMemo(() => (score: number) => {
     if (score >= 80) return "text-green-600 dark:text-green-400";
     if (score >= 60) return "text-yellow-600 dark:text-yellow-400";
     return "text-red-600 dark:text-red-400";
-  };
+  }, []);
 
-  const getScoreIcon = (score: number) => {
+  const getScoreIcon = useMemo(() => (score: number) => {
     if (score >= 80) return <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />;
     if (score >= 60) return <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />;
     return <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />;
-  };
+  }, []);
 
-  const getScoreDescription = (score: number) => {
+  const getScoreDescription = useMemo(() => (score: number) => {
     if (score >= 80) return "Excellent";
     if (score >= 60) return "Moderate";
     return "High Risk";
-  };
+  }, []);
 
   const renderAnalysisContent = (content: string | AnalysisSection) => {
     if (!content) return null;
@@ -281,7 +268,7 @@ export default function TokenReport() {
     return categoryMap[category] || { description: '', whyMatters: '', keyIndicators: [] };
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -289,6 +276,7 @@ export default function TokenReport() {
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
             <p className="text-muted-foreground">Loading token report...</p>
+            <p className="text-xs text-muted-foreground mt-2">Please wait while we fetch the latest data</p>
           </div>
         </div>
         <Footer />
@@ -296,16 +284,37 @@ export default function TokenReport() {
     );
   }
 
-  if (error || !reportData) {
+  if (isError || !reportData) {
+    const errorMessage = error as any;
+    const isNotFound = errorMessage?.message === 'not_found';
+
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Report Not Found</h1>
-            <p className="text-muted-foreground">
-              The token report you're looking for doesn't exist or hasn't been generated yet.
+        <div className="flex items-center justify-center min-h-[400px] px-4">
+          <div className="text-center max-w-md">
+            <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold mb-4">
+              {isNotFound ? 'Report Not Found' : 'Failed to Load Report'}
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              {isNotFound
+                ? "The token report you're looking for doesn't exist or hasn't been generated yet."
+                : "We encountered an issue loading this report. This might be a temporary network problem."
+              }
             </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button onClick={() => refetch()} variant="default">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Try Again
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/token">
+                  <ArrowRight className="mr-2 h-4 w-4" />
+                  Browse All Tokens
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
         <Footer />
@@ -315,9 +324,9 @@ export default function TokenReport() {
 
   const { metadata } = reportData;
   const reportUrl = generateCanonicalUrl(symbol!);
-  
-  // Combine report metadata with cache data for comprehensive SEO
-  const seoData = {
+
+  // Memoize SEO data to prevent recalculation on every render
+  const seoData = useMemo(() => ({
     name: tokenCacheData?.name || metadata.tokenName,
     symbol: tokenCacheData?.symbol || metadata.tokenSymbol,
     logo_url: tokenCacheData?.logo_url,
@@ -330,19 +339,25 @@ export default function TokenReport() {
     overall_score: reportData.metadata.overallScore,
     token_address: metadata.tokenAddress,
     chain_id: metadata.chainId
-  };
+  }), [tokenCacheData, metadata, reportData.metadata.overallScore]);
 
-  const pageTitle = generateTokenTitle(seoData);
-  const pageDescription = generateTokenDescription(seoData);
-  const pageKeywords = generateTokenKeywords(seoData);
-  const imageUrl = getTokenImageUrl(seoData);
+  const pageTitle = useMemo(() => generateTokenTitle(seoData), [seoData]);
+  const pageDescription = useMemo(() => generateTokenDescription(seoData), [seoData]);
+  const pageKeywords = useMemo(() => generateTokenKeywords(seoData), [seoData]);
+  const imageUrl = useMemo(() => getTokenImageUrl(seoData), [seoData]);
 
-  // Build Storage-based hero/share URLs with fallbacks
-  const chainStr = metadata.chainId === '0x1' ? 'ethereum' : metadata.chainId;
-  const heroUrl = storagePublicUrl(supabase, pathHero(chainStr, metadata.tokenAddress));
-  const scoreUrl = storagePublicUrl(supabase, pathScore(chainStr, metadata.tokenAddress));
-  const priceUrl = storagePublicUrl(supabase, pathChartPrice(chainStr, metadata.tokenAddress));
-  const ogImage = heroUrl || scoreUrl || priceUrl || imageUrl;
+  // Memoize image URLs
+  const imageUrls = useMemo(() => {
+    const chainStr = metadata.chainId === '0x1' ? 'ethereum' : metadata.chainId;
+    const heroUrl = storagePublicUrl(supabase, pathHero(chainStr, metadata.tokenAddress));
+    const scoreUrl = storagePublicUrl(supabase, pathScore(chainStr, metadata.tokenAddress));
+    const priceUrl = storagePublicUrl(supabase, pathChartPrice(chainStr, metadata.tokenAddress));
+    const ogImage = heroUrl || scoreUrl || priceUrl || imageUrl;
+
+    return { chainStr, heroUrl, scoreUrl, priceUrl, ogImage };
+  }, [metadata.chainId, metadata.tokenAddress, imageUrl]);
+
+  const { chainStr, heroUrl, scoreUrl, priceUrl, ogImage } = imageUrls;
 
   // Debug logging for URL construction
   if (process.env.NODE_ENV !== 'production') {

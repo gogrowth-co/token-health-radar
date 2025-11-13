@@ -38,9 +38,12 @@ const queryClient = new QueryClient({
         if (error?.status >= 400 && error?.status < 500) {
           return false;
         }
-        return failureCount < 2;
+        return failureCount < 3;
       },
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 60 * 60 * 1000, // 1 hour - token reports don't change frequently
+      cacheTime: 24 * 60 * 60 * 1000, // 24 hours - keep in cache longer
+      refetchOnWindowFocus: false, // Don't refetch when user returns to tab
+      refetchOnReconnect: true, // Refetch on network reconnection
     },
   },
 });

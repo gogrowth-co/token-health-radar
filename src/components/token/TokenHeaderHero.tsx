@@ -56,7 +56,15 @@ export default function TokenHeaderHero({ symbol, name, heroUrl, logoUrl, overal
       <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 flex items-center gap-3">
         <div className="h-12 w-12 rounded-xl bg-white/90 overflow-hidden flex items-center justify-center">
           {logoUrl
-            ? <img src={logoUrl} alt={`${symbol} logo`} className="h-full w-full object-cover" />
+            ? <img
+                src={logoUrl}
+                alt={`${symbol} logo`}
+                className="h-full w-full object-cover"
+                loading="eager"
+                decoding="async"
+                width={48}
+                height={48}
+              />
             : <span className="text-sm font-semibold">{symbol.slice(0,4).toUpperCase()}</span>}
         </div>
         <div className="flex-1">
