@@ -41,7 +41,7 @@ const queryClient = new QueryClient({
         return failureCount < 3;
       },
       staleTime: 60 * 60 * 1000, // 1 hour - token reports don't change frequently
-      cacheTime: 24 * 60 * 60 * 1000, // 24 hours - keep in cache longer
+      gcTime: 24 * 60 * 60 * 1000, // 24 hours - keep in cache longer
       refetchOnWindowFocus: false, // Don't refetch when user returns to tab
       refetchOnReconnect: true, // Refetch on network reconnection
     },

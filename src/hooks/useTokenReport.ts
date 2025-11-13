@@ -105,12 +105,12 @@ async function fetchTokenReport(symbol: string): Promise<TokenReportResponse> {
 }
 
 export function useTokenReport(symbol: string | undefined) {
-  return useQuery({
+  return useQuery<TokenReportResponse>({
     queryKey: ['token-report', symbol],
     queryFn: () => fetchTokenReport(symbol!),
     enabled: !!symbol,
     staleTime: 60 * 60 * 1000, // 1 hour
-    cacheTime: 24 * 60 * 60 * 1000, // 24 hours
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours
     retry: (failureCount, error: any) => {
       // Don't retry on not found errors
       if (error?.message === 'not_found') {
