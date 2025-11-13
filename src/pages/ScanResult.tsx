@@ -21,6 +21,7 @@ import { checkUserHasProAccess } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUserRole } from "@/hooks/useUserRole";
 import { normalizeChainId } from "@/utils/tokenCacheUtils";
+import { normalizeAddress } from "@/utils/addressUtils";
 import { getChainConfigByMoralisId } from "../../supabase/functions/_shared/chainConfig";
 
 enum ScanCategory {
@@ -47,7 +48,8 @@ export default function ScanResult() {
   // Get parameters from URL - support both formats and chain with normalization
   const tokenFromParam = searchParams.get("token") || "";
   const addressFromParam = searchParams.get("address") || "";
-  const tokenAddress = tokenFromParam || addressFromParam; // Use token param first, fallback to address
+  const rawTokenAddress = tokenFromParam || addressFromParam; // Use token param first, fallback to address
+  const tokenAddress = normalizeAddress(rawTokenAddress); // CRITICAL: Normalize to lowercase
   const chainId = normalizeChainId(searchParams.get("chain") || "0x1"); // Normalize chain ID
   const coinGeckoId = searchParams.get("id") || "";
   const isLimited = searchParams.get("limited") === "true";
@@ -55,7 +57,8 @@ export default function ScanResult() {
   console.log("ScanResult: URL params:", {
     token: tokenFromParam,
     address: addressFromParam,
-    finalTokenAddress: tokenAddress,
+    rawTokenAddress,
+    normalizedTokenAddress: tokenAddress,
     rawChain: searchParams.get("chain"),
     normalizedChainId: chainId,
     coinGeckoId,

@@ -2482,8 +2482,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { token_address, chain_id, user_id, force_refresh = true } = requestBody;
-    console.log(`[${requestId}] Request parameters:`, { token_address, chain_id, user_id, force_refresh });
+    const { token_address: rawTokenAddress, chain_id, user_id, force_refresh = true } = requestBody;
+    
+    // CRITICAL: Normalize address to lowercase for consistent database storage
+    const token_address = rawTokenAddress?.toLowerCase().trim();
+    
+    console.log(`[${requestId}] Request parameters:`, { 
+      raw_address: rawTokenAddress,
+      normalized_address: token_address,
+      chain_id, 
+      user_id, 
+      force_refresh 
+    });
     
     // Validate required parameters
     if (!token_address || typeof token_address !== 'string') {
