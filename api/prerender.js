@@ -495,5 +495,29 @@ function generateAllTokenSchemas(tokenData, reportUrl, reportContent) {
     ]
   });
   
+  // SoftwareApplication schema
+  schemas.push({
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Token Health Scan",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Web Browser",
+    "url": "https://tokenhealthscan.com",
+    "description": "AI-powered cryptocurrency risk analysis platform providing comprehensive token security and risk assessments across security, liquidity, tokenomics, community, and development.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock"
+    },
+    "provider": {
+      "@type": "Organization",
+      "name": "Token Health Scan",
+      "url": "https://tokenhealthscan.com"
+    },
+    "featureList": "Token risk scoring, Security analysis, Liquidity analysis, Tokenomics review, Community metrics, Development activity tracking",
+    "screenshot": "https://tokenhealthscan.com/tokenhealthscan-og.png"
+  });
+  
   return schemas;
 }

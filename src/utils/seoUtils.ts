@@ -91,6 +91,31 @@ export const generateOrganizationSchema = () => {
   };
 };
 
+export const generateSoftwareApplicationSchema = () => {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Token Health Scan",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Web Browser",
+    "url": "https://tokenhealthscan.com",
+    "description": "AI-powered cryptocurrency risk analysis platform providing comprehensive token security and risk assessments across security, liquidity, tokenomics, community, and development.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock"
+    },
+    "provider": {
+      "@type": "Organization",
+      "name": "Token Health Scan",
+      "url": "https://tokenhealthscan.com"
+    },
+    "featureList": "Token risk scoring, Security analysis, Liquidity analysis, Tokenomics review, Community metrics, Development activity tracking",
+    "screenshot": "https://tokenhealthscan.com/tokenhealthscan-og.png"
+  };
+};
+
 export const generateFAQSchema = (reportContent: any) => {
   if (!reportContent?.faq) return null;
   
@@ -203,6 +228,9 @@ export const generateAllTokenSchemas = (token: TokenSEOData, reportUrl: string, 
   
   // Always include organization schema
   schemas.push(generateOrganizationSchema());
+  
+  // Always include software application schema
+  schemas.push(generateSoftwareApplicationSchema());
   
   return schemas.filter(Boolean);
 };
