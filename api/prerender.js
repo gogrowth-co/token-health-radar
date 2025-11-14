@@ -223,7 +223,8 @@ function generateGuidePageHTML(guideData) {
 }
 
 function generateStaticHTML(tokenData, reportContent) {
-  const title = `${tokenData.name} (${tokenData.symbol.toUpperCase()}) Risk Report | Token Health Scan`;
+  const currentYear = new Date().getFullYear();
+  const title = `${tokenData.name} Risk Score & Audit (${currentYear}) | Token Health Scan`;
   const description = `Comprehensive risk analysis and security report for ${tokenData.name} (${tokenData.symbol.toUpperCase()}). Get detailed insights on security, tokenomics, liquidity, community, and development${tokenData.overall_score ? ` with an overall risk score of ${tokenData.overall_score}/100` : ''}.`;
   const canonicalUrl = `https://tokenhealthscan.com/token/${tokenData.symbol.toLowerCase()}`;
   const imageUrl = tokenData.logo_url || "https://tokenhealthscan.com/tokenhealthscan-og.png";

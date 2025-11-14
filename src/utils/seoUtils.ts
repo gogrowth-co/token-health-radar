@@ -15,7 +15,8 @@ interface TokenSEOData {
 }
 
 export const generateTokenTitle = (token: TokenSEOData): string => {
-  return `${token.name} (${token.symbol.toUpperCase()}) Risk Report | Token Health Scan`;
+  const currentYear = new Date().getFullYear();
+  return `${token.name} Risk Score & Audit (${currentYear}) | Token Health Scan`;
 };
 
 export const generateTokenDescription = (token: TokenSEOData): string => {
