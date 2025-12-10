@@ -359,12 +359,12 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
       }
 
       const responseText = await response.text();
-      console.log(`[GOPLUS] Raw response text (first 1000 chars):`, responseText.substring(0, 1000));
       
       try {
         data = JSON.parse(responseText);
-        console.log(`[GOPLUS] === FULL RAW API RESPONSE ===`);
-        console.log(`[GOPLUS] Response JSON:`, JSON.stringify(data, null, 2));
+        // Log minimal summary to reduce memory usage
+        const resultKeys = data.result ? Object.keys(data.result) : [];
+        console.log(`[GOPLUS] Response: code=${data.code}, message=${data.message}, tokens=${resultKeys.length}`);
       } catch (jsonError) {
         console.error(`[GOPLUS] Invalid JSON response:`, jsonError);
         console.error(`[GOPLUS] Response text was:`, responseText);
@@ -426,14 +426,9 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
         throw new Error(`No token data found in GoPlus response for ${tokenAddress}`);
       }
       
-      console.log(`[GOPLUS] Raw token data:`, JSON.stringify(tokenData, null, 2));
-      
-      // CRITICAL DEBUGGING: Log LP holders data for liquidity lock analysis
-      console.log(`[GOPLUS] === LIQUIDITY LOCK DEBUGGING ===`);
-      console.log(`[GOPLUS] tokenData.lp_holders:`, JSON.stringify(tokenData.lp_holders, null, 2));
-      console.log(`[GOPLUS] LP holders count:`, Array.isArray(tokenData.lp_holders) ? tokenData.lp_holders.length : 'Not an array');
-      console.log(`[GOPLUS] Raw tokenData keys:`, Object.keys(tokenData));
-      console.log(`[GOPLUS] === END LIQUIDITY LOCK DEBUGGING ===`);
+      // Log minimal summary to avoid memory issues
+      console.log(`[GOPLUS] Token data keys:`, Object.keys(tokenData).slice(0, 15).join(', '));
+      console.log(`[GOPLUS] LP holders count:`, Array.isArray(tokenData.lp_holders) ? tokenData.lp_holders.length : 'N/A');
       
       // Enhanced data mapping based on GoPlus API documentation with proper null handling
       const securityData = {
@@ -464,26 +459,7 @@ export async function fetchGoPlusSecurity(tokenAddress: string, chainId: string)
         multisig_status: tokenData.owner_address && tokenData.owner_address !== '0x0000000000000000000000000000000000000000' ? 'unknown' : 'renounced'
       };
 
-      console.log(`[GOPLUS] Data field mapping:`, {
-        raw_owner_address: tokenData.owner_address,
-        raw_is_mintable: tokenData.is_mintable,
-        raw_is_honeypot: tokenData.is_honeypot,
-        raw_can_take_back_ownership: tokenData.can_take_back_ownership,
-        raw_trust_list: tokenData.trust_list,
-        raw_is_proxy: tokenData.is_proxy,
-        raw_is_blacklisted: tokenData.is_blacklisted,
-        raw_is_open_source: tokenData.is_open_source,
-        mapped_data: securityData
-      });
-      
-      console.log(`[GOPLUS] Liquidity Lock Data:`, {
-        raw_lp_holders: tokenData.lp_holders,
-        mapped_is_locked: securityData.is_liquidity_locked,
-        mapped_lock_info: securityData.liquidity_lock_info,
-        mapped_percentage: securityData.liquidity_percentage
-      });
-      
-      console.log(`[GOPLUS] SUCCESS - Extracted security data:`, securityData);
+      console.log(`[GOPLUS] SUCCESS - Security extracted: ownership=${securityData.ownership_renounced}, honeypot=${securityData.honeypot_detected}, locked=${securityData.is_liquidity_locked}`);
       
       // Update success stats
       goplusApiHealthStats.successfulRequests++;

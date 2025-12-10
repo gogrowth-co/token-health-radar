@@ -18,21 +18,21 @@ export type Database = {
         Row: {
           attempted_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           success: boolean | null
           token_address: string | null
         }
         Insert: {
           attempted_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           success?: boolean | null
           token_address?: string | null
         }
         Update: {
           attempted_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           success?: boolean | null
           token_address?: string | null
         }
@@ -730,7 +730,7 @@ export type Database = {
     }
     Functions: {
       get_admin_hubspot_data: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           email: string
           last_scan_date: string
@@ -760,10 +760,7 @@ export type Database = {
           status: string
         }[]
       }
-      get_user_email_for_hubspot: {
-        Args: { user_id: string }
-        Returns: string
-      }
+      get_user_email_for_hubspot: { Args: { user_id: string }; Returns: string }
       get_user_hubspot_data: {
         Args: { target_user_id: string }
         Returns: {
@@ -790,18 +787,9 @@ export type Database = {
         }
         Returns: boolean
       }
-      refresh_token_sitemap: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      sync_all_users_to_hubspot: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      sync_all_users_to_hubspot_debug: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      refresh_token_sitemap: { Args: never; Returns: undefined }
+      sync_all_users_to_hubspot: { Args: never; Returns: undefined }
+      sync_all_users_to_hubspot_debug: { Args: never; Returns: Json }
       upsert_subscriber_by_email: {
         Args: {
           user_email: string

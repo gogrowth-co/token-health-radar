@@ -1255,70 +1255,32 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       console.error(`[SCAN] DeFiLlama TVL API failed:`, tvlData.reason);
     }
 
-    // Enhanced security data merging with detailed logging
+    // Enhanced security data merging
     const security = {};
-    console.log(`[SCAN] === SECURITY DATA MERGING ===`);
     
     if (webacySecurity) {
-      console.log(`[SCAN] Adding Webacy security data:`, JSON.stringify(webacySecurity, null, 2));
       Object.assign(security, webacySecurity);
-    } else {
-      console.log(`[SCAN] No Webacy security data available`);
     }
     
     if (goplusSecurity) {
-      console.log(`[SCAN] Adding GoPlus security data:`, JSON.stringify(goplusSecurity, null, 2));
       Object.assign(security, goplusSecurity);
-    } else {
-      console.log(`[SCAN] No GoPlus security data available`);
     }
     
-    console.log(`[SCAN] Final merged security data:`, JSON.stringify(security, null, 2));
-    console.log(`[SCAN] Merged security has ${Object.keys(security).length} properties`);
+    console.log(`[SCAN] Security merged: ${Object.keys(security).length} properties`);
 
-    console.log(`[SCAN] API Data Summary:`, {
-      webacySecurity: webacySecurity ? 'available' : 'unavailable',
-      goplusSecurity: goplusSecurity ? 'available' : 'unavailable',
-      mergedSecurity: Object.keys(security).length > 0 ? 'available' : 'unavailable',
-      priceData: priceDataResult ? 'available' : 'unavailable', 
-      metadata: metadata ? 'available' : 'unavailable',
-      enhancedTokenomics: {
-        stats: stats ? 'available' : 'unavailable',
-        pairs: pairs ? 'available' : 'unavailable',
-        owners: owners ? 'available' : 'unavailable',
-        tvl: tvl ? 'available' : 'unavailable'
-      },
-      totalApiTime: `${apiEndTime - apiStartTime}ms`
-    });
+    console.log(`[SCAN] API Data Summary: webacy=${webacySecurity ? 'ok' : 'fail'}, goplus=${goplusSecurity ? 'ok' : 'fail'}, price=${priceDataResult ? 'ok' : 'fail'}, meta=${metadata ? 'ok' : 'fail'}, time=${apiEndTime - apiStartTime}ms`);
 
-    // Enhanced logging for debugging
-    console.log(`[SCAN] === SECURITY DATA MERGE ANALYSIS ===`);
-    console.log(`[SCAN] Webacy data:`, webacySecurity ? JSON.stringify(webacySecurity, null, 2) : 'null');
-    console.log(`[SCAN] GoPlus data:`, goplusSecurity ? JSON.stringify(goplusSecurity, null, 2) : 'null');
-    console.log(`[SCAN] Merged security data:`, JSON.stringify(security, null, 2));
-
-    // GitHub data will be fetched later after CoinMarketCap fallback
+    // Extract social links from Moralis metadata
     let githubData = null;
-
-    // Extract social links from Moralis metadata first
-    console.log(`[SCAN] === SOCIAL LINKS EXTRACTION ===`);
-    console.log(`[SCAN] Raw metadata object:`, JSON.stringify(metadata, null, 2));
-    console.log(`[SCAN] Raw metadata.links:`, metadata?.links);
-    console.log(`[SCAN] Links type:`, typeof metadata?.links);
-    console.log(`[SCAN] Links is array:`, Array.isArray(metadata?.links));
-    
-    // Extract social links from metadata.links array OR object
     const links = metadata?.links || [];
     let website_url = '';
     let twitter_handle = '';
     let github_url = '';
     let discord_url = '';
-    let telegram_url = ''; // Declare telegram_url in proper scope
+    let telegram_url = '';
     
     // Handle both array and object formats for links
     if (Array.isArray(links)) {
-      console.log(`[SCAN] Processing ${links.length} links from metadata array`);
-      
       // Find website (first non-social media HTTP link)
       website_url = links.find(link => 
         typeof link === 'string' && 
@@ -1332,57 +1294,38 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       
       // Find Twitter link
       const twitterLink = links.find(link => 
-        typeof link === 'string' && (
-          link.includes('twitter.com') || 
-          link.includes('x.com')
-        )
+        typeof link === 'string' && (link.includes('twitter.com') || link.includes('x.com'))
       );
       
       if (twitterLink) {
         const match = twitterLink.match(/(?:twitter\.com\/|x\.com\/)([^\/\?]+)/);
         if (match && match[1]) {
           twitter_handle = match[1].replace('@', '');
-          console.log(`[SCAN] Extracted Twitter handle from metadata: @${twitter_handle}`);
         }
       }
       
       // Find GitHub link
-      github_url = links.find(link => 
-        typeof link === 'string' && link.includes('github.com')
-      ) || '';
+      github_url = links.find(link => typeof link === 'string' && link.includes('github.com')) || '';
       
-      // Find Discord URL (contains discord.gg or discord.com/invite)
+      // Find Discord URL
       discord_url = links.find(link => 
-        typeof link === 'string' && 
-        (link.toLowerCase().includes('discord.gg') || link.toLowerCase().includes('discord.com/invite'))
+        typeof link === 'string' && (link.toLowerCase().includes('discord.gg') || link.toLowerCase().includes('discord.com/invite'))
       ) || '';
       
-      // Validate Discord URL
       if (discord_url && !isValidDiscordUrl(discord_url)) {
-        console.log(`[SCAN] Invalid Discord URL format found: ${discord_url}`);
         discord_url = '';
       }
       
-      // Find Telegram URL (contains t.me, telegram.me, or telegram.dog)
+      // Find Telegram URL
       const telegramLink = links.find(link => 
-        typeof link === 'string' && 
-        (link.toLowerCase().includes('t.me') || 
-         link.toLowerCase().includes('telegram.me') || 
-         link.toLowerCase().includes('telegram.dog'))
-       ) || '';
+        typeof link === 'string' && (link.toLowerCase().includes('t.me') || link.toLowerCase().includes('telegram.me') || link.toLowerCase().includes('telegram.dog'))
+      ) || '';
        
-       // Validate Telegram URL
-       if (telegramLink && isValidTelegramUrl(telegramLink)) {
-         telegram_url = telegramLink;
-         console.log(`[SCAN] Valid Telegram URL found: ${telegram_url}`);
-       } else if (telegramLink) {
-         console.log(`[SCAN] Invalid Telegram URL format found: ${telegramLink}`);
-       }
+      if (telegramLink && isValidTelegramUrl(telegramLink)) {
+        telegram_url = telegramLink;
+      }
       
     } else if (links && typeof links === 'object') {
-      console.log(`[SCAN] Processing links from metadata object`);
-      
-      // Handle object format: { website: "...", twitter: "...", github: "..." }
       website_url = links.website || links.homepage || '';
       
       if (links.twitter) {
@@ -1391,30 +1334,23 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
           const match = twitterUrl.match(/(?:twitter\.com\/|x\.com\/)([^\/\?]+)/);
           if (match && match[1]) {
             twitter_handle = match[1].replace('@', '');
-            console.log(`[SCAN] Extracted Twitter handle from object: @${twitter_handle}`);
           }
         } else {
-          // Assume it's already a handle
           twitter_handle = twitterUrl.replace('@', '');
-          console.log(`[SCAN] Using Twitter handle from object: @${twitter_handle}`);
         }
       }
        
-       github_url = links.github || '';
-       discord_url = links.discord || '';
-       telegram_url = links.telegram || '';
+      github_url = links.github || '';
+      discord_url = links.discord || '';
+      telegram_url = links.telegram || '';
        
-       // Validate Discord URL from object
-       if (discord_url && !isValidDiscordUrl(discord_url)) {
-         console.log(`[SCAN] Invalid Discord URL format found in object: ${discord_url}`);
-         discord_url = '';
-       }
+      if (discord_url && !isValidDiscordUrl(discord_url)) {
+        discord_url = '';
+      }
        
-       // Validate Telegram URL from object
-       if (telegram_url && !isValidTelegramUrl(telegram_url)) {
-         console.log(`[SCAN] Invalid Telegram URL format found in object: ${telegram_url}`);
-         telegram_url = '';
-       }
+      if (telegram_url && !isValidTelegramUrl(telegram_url)) {
+        telegram_url = '';
+      }
     }
     
     // Additional extraction from other metadata fields if not found in links
