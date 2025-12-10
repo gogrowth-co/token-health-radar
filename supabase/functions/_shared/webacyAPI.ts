@@ -138,16 +138,13 @@ export async function fetchWebacySecurity(tokenAddress: string, chainId: string)
     }
     
     const responseText = await response.text();
-    console.log(`[WEBACY] Raw response (first 500 chars):`, responseText.substring(0, 500));
     
     let data;
     try {
       data = JSON.parse(responseText);
-      console.log(`[WEBACY] Parsed JSON response structure:`, Object.keys(data));
-      console.log(`[WEBACY] Full parsed response:`, JSON.stringify(data, null, 2));
+      console.log(`[WEBACY] Response keys:`, Object.keys(data).join(', '));
     } catch (jsonError) {
-      console.error(`[WEBACY] FAILED - Invalid JSON response:`, jsonError);
-      console.error(`[WEBACY] Response text was:`, responseText);
+      console.error(`[WEBACY] Invalid JSON response`);
       return null;
     }
     
