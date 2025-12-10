@@ -21,6 +21,7 @@ interface CopilotPanelProps {
     coingeckoId?: string;
     symbol: string;
   };
+  standalone?: boolean;
 }
 
 interface ChatMessage {
@@ -58,7 +59,7 @@ interface ChatMessage {
   timestamp: Date;
 }
 
-export default function CopilotPanel({ token }: CopilotPanelProps) {
+export default function CopilotPanel({ token, standalone = false }: CopilotPanelProps) {
   const [loading, setLoading] = useState(false);
   const [currentInput, setCurrentInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -280,7 +281,7 @@ export default function CopilotPanel({ token }: CopilotPanelProps) {
 
       <CardContent className="space-y-4 p-0">
         {/* Messages Area */}
-        <ScrollArea className="h-96 px-6 pt-6">
+        <ScrollArea className={`${standalone ? 'h-[500px]' : 'h-96'} px-6 pt-6`}>
           <div className="space-y-4">
             {messages.map(renderMessageBubble)}
             <div ref={messagesEndRef} />

@@ -25,6 +25,7 @@ import SolanaLaunchpads from "./pages/SolanaLaunchpads";
 import EthereumLaunchpads from "./pages/EthereumLaunchpads";
 import TokenReport from "./pages/TokenReport";
 import TokenDirectory from "./pages/TokenDirectory";
+import Copilot from "./pages/Copilot";
 import NotFound from "./pages/NotFound";
 import AdminUsers from "./pages/AdminUsers";
 import AdminRoute from "./components/admin/AdminRoute";
@@ -99,6 +100,7 @@ const App = () => {
                     <Route path="/scan-loading" element={<ScanLoading />} />
                     <Route path="/scan-result" element={<ScanResult />} />
                     <Route path="/pricing" element={<Pricing />} />
+                    <Route path="/copilot" element={<Copilot />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/ltd" element={<LTD />} />
                     <Route path="/ltd-thank-you" element={<LTDThankYou />} />
