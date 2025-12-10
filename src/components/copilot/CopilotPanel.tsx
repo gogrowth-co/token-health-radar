@@ -12,6 +12,7 @@ import MetricCards from "./blocks/MetricCards";
 import PriceSparkline from "./blocks/PriceSparkline";
 import PoolsTable from "./blocks/PoolsTable";
 import CategoryTags from "./blocks/CategoryTags";
+import HoldersTable from "./blocks/HoldersTable";
 import { ChangeCard } from "./blocks/ChangeCard";
 
 interface CopilotPanelProps {
@@ -52,6 +53,17 @@ interface ChatMessage {
       ageDays: number;
     }>;
     categories?: string[];
+    holders?: {
+      totalHolders: number;
+      topHolders: Array<{
+        address: string;
+        percentage: number;
+        balance?: number;
+      }>;
+      top10Percentage: number;
+      concentrationRisk: string;
+      giniCoefficient?: number;
+    };
   };
   available?: string[];
   limited?: boolean;
@@ -232,6 +244,10 @@ export default function CopilotPanel({ token, standalone = false }: CopilotPanel
 
             {message.data.categories && message.data.categories.length > 0 && (
               <CategoryTags categories={message.data.categories} />
+            )}
+
+            {message.data.holders && (
+              <HoldersTable holders={message.data.holders} />
             )}
           </div>
         )}

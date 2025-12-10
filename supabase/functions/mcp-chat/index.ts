@@ -31,6 +31,13 @@ interface ChatResponse {
       ageDays: number;
     }>;
     categories?: string[];
+    holders?: {
+      totalHolders: number;
+      topHolders: Array<{ address: string; percentage: number; balance?: number }>;
+      top10Percentage: number;
+      concentrationRisk: string;
+      giniCoefficient?: number;
+    };
   };
   available: string[];
   limited: boolean;
@@ -38,7 +45,7 @@ interface ChatResponse {
 }
 
 interface ParsedIntent {
-  type: 'price' | 'chart' | 'pools' | 'metadata' | 'summary' | 'unknown';
+  type: 'price' | 'chart' | 'pools' | 'metadata' | 'summary' | 'holders' | 'unknown';
   window?: string;
   needsExplanation?: boolean;
 }
@@ -73,6 +80,7 @@ Intent types:
 - pools: DEX liquidity pools (e.g., "liquidity", "pools", "where to trade", "dex")
 - metadata: Token categories/sector (e.g., "what type?", "category", "sector")
 - summary: General overview (e.g., "tell me about", "what is", "overview", "explain", "info")
+- holders: Token holder distribution (e.g., "holders", "who owns", "whale", "distribution", "top wallets", "concentration")
 - unknown: Cannot determine intent
 
 Timeframes (for chart intent):
@@ -107,10 +115,10 @@ Consider conversation context for follow-ups like "and the 30 day?" or "what abo
               properties: {
                 intent_type: { 
                   type: 'string', 
-                  enum: ['price', 'chart', 'pools', 'metadata', 'summary', 'unknown'],
+                  enum: ['price', 'chart', 'pools', 'metadata', 'summary', 'holders', 'unknown'],
                   description: 'The type of information the user wants'
                 },
-                timeframe: { 
+                timeframe: {
                   type: 'string', 
                   enum: ['1', '7', '30', '90', '365', 'none'],
                   description: 'Timeframe for chart data if applicable'
@@ -183,6 +191,10 @@ function parseIntentFallback(message: string): ParsedIntent {
   }
   
   // Check for specific intents
+  if (lower.includes('holder') || lower.includes('who owns') || lower.includes('whale') || 
+      lower.includes('distribution') || lower.includes('top wallet') || lower.includes('concentration')) {
+    return { type: 'holders' };
+  }
   if (lower.includes('pool') || lower.includes('liquidity') || lower.includes('dex') || lower.includes('trade')) {
     return { type: 'pools' };
   }
@@ -381,6 +393,128 @@ async function fetchMetadata(coingeckoId: string): Promise<string[] | null> {
     console.log('[MCP-CHAT] Metadata fetch failed:', err);
     return null;
   }
+}
+
+// Fetch token holders from Moralis API
+async function fetchHolders(address: string, chain: string): Promise<{
+  totalHolders: number;
+  topHolders: Array<{ address: string; percentage: number; balance: number }>;
+  top10Percentage: number;
+  concentrationRisk: string;
+  giniCoefficient: number;
+} | null> {
+  try {
+    const MORALIS_API_KEY = Deno.env.get('MORALIS_API_KEY');
+    if (!MORALIS_API_KEY) {
+      console.log('[MCP-CHAT] No MORALIS_API_KEY configured');
+      return null;
+    }
+
+    // Map chain to Moralis chain format
+    const chainMap: Record<string, string> = {
+      'eth': '0x1',
+      'ethereum': '0x1',
+      '0x1': '0x1',
+      'polygon': '0x89',
+      '0x89': '0x89',
+      'bsc': '0x38',
+      '0x38': '0x38',
+      'arbitrum': '0xa4b1',
+      '0xa4b1': '0xa4b1',
+      'base': '0x2105',
+      '0x2105': '0x2105',
+    };
+
+    const moralisChain = chainMap[chain.toLowerCase()] || '0x1';
+    
+    // Fetch token owners
+    const ownersUrl = `https://deep-index.moralis.io/api/v2.2/erc20/${address}/owners?chain=${moralisChain}&limit=50&order=DESC`;
+    
+    const ownersRes = await fetch(ownersUrl, {
+      headers: { 'X-API-Key': MORALIS_API_KEY },
+      signal: AbortSignal.timeout(10000)
+    });
+
+    if (!ownersRes.ok) {
+      console.log('[MCP-CHAT] Moralis owners fetch failed:', ownersRes.status);
+      return null;
+    }
+
+    const ownersData = await ownersRes.json();
+    
+    if (!ownersData.result || !Array.isArray(ownersData.result)) {
+      console.log('[MCP-CHAT] No holder data returned from Moralis');
+      return null;
+    }
+
+    // Calculate percentages and stats
+    const holders = ownersData.result;
+    const totalHolders = ownersData.page_size || holders.length;
+    
+    // Get total supply for percentage calculation
+    let totalSupply = 0;
+    holders.forEach((h: any) => {
+      const balance = parseFloat(h.balance_formatted || h.balance || '0');
+      totalSupply += balance;
+    });
+
+    // Map top holders with percentages
+    const topHolders = holders.slice(0, 10).map((h: any) => {
+      const balance = parseFloat(h.balance_formatted || h.balance || '0');
+      const percentage = totalSupply > 0 ? (balance / totalSupply) * 100 : 0;
+      return {
+        address: h.owner_address,
+        percentage,
+        balance
+      };
+    });
+
+    // Calculate top 10 percentage
+    const top10Percentage = topHolders.reduce((sum: number, h: any) => sum + h.percentage, 0);
+
+    // Calculate Gini coefficient
+    const balances = holders.map((h: any) => parseFloat(h.balance_formatted || h.balance || '0')).filter((b: number) => b > 0);
+    const giniCoefficient = calculateGiniCoefficient(balances);
+
+    // Determine concentration risk
+    let concentrationRisk = 'Low';
+    if (top10Percentage > 80 || giniCoefficient > 0.9) {
+      concentrationRisk = 'High';
+    } else if (top10Percentage > 50 || giniCoefficient > 0.7) {
+      concentrationRisk = 'Medium';
+    }
+
+    console.log('[MCP-CHAT] Holders data fetched:', { totalHolders, top10Percentage, giniCoefficient, concentrationRisk });
+
+    return {
+      totalHolders,
+      topHolders,
+      top10Percentage,
+      concentrationRisk,
+      giniCoefficient
+    };
+  } catch (err) {
+    console.log('[MCP-CHAT] Holders fetch failed:', err);
+    return null;
+  }
+}
+
+// Calculate Gini coefficient for wealth distribution
+function calculateGiniCoefficient(values: number[]): number {
+  if (values.length === 0) return 0;
+  
+  const sorted = [...values].sort((a, b) => a - b);
+  const n = sorted.length;
+  const sum = sorted.reduce((a, b) => a + b, 0);
+  
+  if (sum === 0) return 0;
+  
+  let giniSum = 0;
+  for (let i = 0; i < n; i++) {
+    giniSum += (2 * (i + 1) - n - 1) * sorted[i];
+  }
+  
+  return giniSum / (n * sum);
 }
 
 // Format number for display
@@ -679,6 +813,35 @@ Deno.serve(async (req) => {
             response.text = naturalResponse || `${tokenSymbol} belongs to: ${categories.join(', ')}. Source: CoinGecko.`;
           } else {
             response.text = `No category data available for ${tokenSymbol}.`;
+          }
+          break;
+        }
+
+        case 'holders': {
+          const [price, holders] = await Promise.all([
+            fetchPrice(coingeckoId),
+            fetchHolders(token.address, token.chain)
+          ]);
+
+          if (price) {
+            response.data.price = price;
+            response.available.push('price');
+          }
+
+          if (holders) {
+            response.data.holders = holders;
+            response.available.push('holders');
+
+            // Try natural response
+            const naturalResponse = await generateNaturalResponse(intent, response.data, tokenSymbol, lastMessage);
+            if (naturalResponse) {
+              response.text = naturalResponse;
+            } else {
+              response.text = `${tokenSymbol} has ${holders.totalHolders.toLocaleString()} holders. Top 10 wallets hold ${holders.top10Percentage.toFixed(1)}% of supply. Concentration risk: ${holders.concentrationRisk}. Source: Moralis.`;
+            }
+          } else {
+            response.text = `Unable to fetch holder data for ${tokenSymbol}. The Moralis API may be unavailable or the token may not be indexed.`;
+            response.limited = true;
           }
           break;
         }
