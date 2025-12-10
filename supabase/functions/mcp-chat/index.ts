@@ -203,6 +203,36 @@ function formatPct(pct: number): string {
   return `${sign}${pct.toFixed(2)}%`;
 }
 
+// Resolve CoinGecko ID by searching their API (fallback when coingeckoId is missing or invalid)
+async function resolveCoingeckoId(symbol: string, name: string): Promise<string | null> {
+  try {
+    console.log(`[MCP-CHAT] Resolving CoinGecko ID for: ${symbol} (${name})`);
+    const query = encodeURIComponent(symbol);
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/search?query=${query}`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) {
+      console.log(`[MCP-CHAT] CoinGecko search failed: ${res.status}`);
+      return null;
+    }
+    const data = await res.json();
+    if (data.coins && data.coins.length > 0) {
+      // Find best match by symbol (case insensitive)
+      const exactMatch = data.coins.find((c: any) => 
+        c.symbol.toLowerCase() === symbol.toLowerCase()
+      );
+      const resolvedId = exactMatch?.id || data.coins[0].id;
+      console.log(`[MCP-CHAT] Resolved CoinGecko ID: ${resolvedId}`);
+      return resolvedId;
+    }
+    return null;
+  } catch (err) {
+    console.log('[MCP-CHAT] CoinGecko ID resolution failed:', err);
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -210,9 +240,15 @@ Deno.serve(async (req) => {
 
   try {
     const { messages, token, mode }: ChatRequest = await req.json();
-    console.log('[MCP-CHAT] Request:', { messageCount: messages?.length, token: token?.coingeckoId, mode });
+    console.log('[MCP-CHAT] Request:', { 
+      messageCount: messages?.length, 
+      coingeckoId: token?.coingeckoId,
+      address: token?.address,
+      chain: token?.chain,
+      mode 
+    });
 
-    if (!messages || !token?.coingeckoId) {
+    if (!messages || !token) {
       return new Response(
         JSON.stringify({
           text: "Missing token information. Please select a token first.",
@@ -224,6 +260,28 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Resolve CoinGecko ID if not provided or if it looks like an internal ID
+    let coingeckoId = token.coingeckoId;
+    if (!coingeckoId || coingeckoId.includes('-0x') || coingeckoId.startsWith('eth-') || coingeckoId.startsWith('0x')) {
+      console.log('[MCP-CHAT] Invalid coingeckoId, attempting resolution...');
+      // Extract symbol from the provided data or try to resolve
+      const symbol = token.address ? token.address.split('-').pop()?.slice(0, 5) : '';
+      coingeckoId = await resolveCoingeckoId(symbol || 'unknown', '');
+      if (!coingeckoId) {
+        return new Response(
+          JSON.stringify({
+            text: `Unable to find this token on CoinGecko. Try searching for a different token.`,
+            data: {},
+            available: [],
+            limited: true,
+            errors: ["Token not found on CoinGecko"]
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    console.log('[MCP-CHAT] Using coingeckoId:', coingeckoId);
 
     const response: ChatResponse = {
       text: '',
@@ -241,10 +299,10 @@ Deno.serve(async (req) => {
     // Handle auto_insights mode
     if (mode === 'auto_insights') {
       const [price, ohlc, pools, categories] = await Promise.all([
-        fetchPrice(token.coingeckoId),
-        fetchOHLC(token.coingeckoId, '7'),
+        fetchPrice(coingeckoId),
+        fetchOHLC(coingeckoId, '7'),
         fetchPools(token.address, token.chain),
-        fetchMetadata(token.coingeckoId)
+        fetchMetadata(coingeckoId)
       ]);
 
       if (price) {
@@ -265,8 +323,8 @@ Deno.serve(async (req) => {
       }
 
       response.text = price 
-        ? `${token.coingeckoId.toUpperCase()} is trading at ${formatNumber(price.usd)} (${formatPct(price.change24hPct)} 24h). Source: CoinGecko.`
-        : `Unable to fetch live data for ${token.coingeckoId}. Try again soon.`;
+        ? `${coingeckoId.toUpperCase()} is trading at ${formatNumber(price.usd)} (${formatPct(price.change24hPct)} 24h). Source: CoinGecko.`
+        : `Unable to fetch live data for ${coingeckoId}. Try again soon.`;
       
       if (response.available.length === 0) {
         response.limited = true;
@@ -279,8 +337,8 @@ Deno.serve(async (req) => {
         case 'chart': {
           const days = intent.window || '7';
           const [price, ohlc] = await Promise.all([
-            fetchPrice(token.coingeckoId),
-            fetchOHLC(token.coingeckoId, days)
+            fetchPrice(coingeckoId),
+            fetchOHLC(coingeckoId, days)
           ]);
 
           if (price) {
@@ -309,14 +367,14 @@ Deno.serve(async (req) => {
           } else {
             response.text = price 
               ? `Current price: ${formatNumber(price.usd)} (${formatPct(price.change24hPct)} 24h). Chart data unavailable. Source: CoinGecko.`
-              : `Unable to fetch data for ${token.coingeckoId}. Try again soon.`;
+              : `Unable to fetch data for ${coingeckoId}. Try again soon.`;
           }
           break;
         }
 
         case 'pools': {
           const [price, pools] = await Promise.all([
-            fetchPrice(token.coingeckoId),
+            fetchPrice(coingeckoId),
             fetchPools(token.address, token.chain)
           ]);
 
@@ -339,8 +397,8 @@ Deno.serve(async (req) => {
 
         case 'metadata': {
           const [price, categories] = await Promise.all([
-            fetchPrice(token.coingeckoId),
-            fetchMetadata(token.coingeckoId)
+            fetchPrice(coingeckoId),
+            fetchMetadata(coingeckoId)
           ]);
 
           if (price) {
@@ -360,7 +418,7 @@ Deno.serve(async (req) => {
 
         case 'price':
         default: {
-          const price = await fetchPrice(token.coingeckoId);
+          const price = await fetchPrice(coingeckoId);
 
           if (price) {
             response.data.price = price;
@@ -369,7 +427,7 @@ Deno.serve(async (req) => {
             const mcapStr = price.mcap ? ` Market cap: ${formatNumber(price.mcap)}.` : '';
             response.text = `Current price: ${formatNumber(price.usd)} (${formatPct(price.change24hPct)} 24h).${mcapStr} Source: CoinGecko.`;
           } else {
-            response.text = `Unable to fetch price for ${token.coingeckoId}. Try again soon.`;
+            response.text = `Unable to fetch price for ${coingeckoId}. Try again soon.`;
             response.limited = true;
           }
           break;

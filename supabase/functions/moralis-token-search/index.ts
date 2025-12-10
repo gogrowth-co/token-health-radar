@@ -54,6 +54,7 @@ interface TokenResult {
   title: string;
   subtitle: string;
   value: string;
+  coingeckoId?: string; // CoinGecko slug for API calls (e.g., "uniswap", "ethereum")
 }
 
 // Server-side cache for search results (5-minute TTL)
@@ -206,7 +207,8 @@ async function searchCoinGecko(query: string, apiKey: string): Promise<TokenResu
         decimals: 18, // Default, would need another API call for exact value
         title: `${coinDetail.symbol.toUpperCase()} — ${coinDetail.name}`,
         subtitle: chainConfig.name,
-        value: `${chainId}/${contractAddress}`
+        value: `${chainId}/${contractAddress}`,
+        coingeckoId: coinDetail.id // The actual CoinGecko slug (e.g., "uniswap")
       });
     }
 
