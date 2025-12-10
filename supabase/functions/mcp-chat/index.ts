@@ -1,9 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts';
 
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-
 interface ChatMessage {
-  role: 'user' | 'assistant' | 'tool';
+  role: 'user' | 'assistant';
   content: string;
 }
 
@@ -37,327 +35,372 @@ interface ChatResponse {
   errors: string[];
 }
 
-const SYSTEM_PROMPT = `You are **Token Health Copilot**, embedded INSIDE the Token Scan Result page of TokenHealthScan.
-Primary data path: **CoinGecko MCP – Public Remote** (keyless). Do NOT ask the user to authenticate.
-This is NOT financial advice.
+// Parse user intent from message
+function parseIntent(message: string): { type: string; window?: string } {
+  const lower = message.toLowerCase();
+  
+  // Check for timeframe-specific requests
+  if (lower.includes('365d') || lower.includes('1y') || lower.includes('1 y') || lower.includes('year')) {
+    return { type: 'chart', window: '365' };
+  }
+  if (lower.includes('90d') || lower.includes('90 d') || lower.includes('3 month') || lower.includes('quarter')) {
+    return { type: 'chart', window: '90' };
+  }
+  if (lower.includes('30d') || lower.includes('30 d') || lower.includes('30 day') || lower.includes('month')) {
+    return { type: 'chart', window: '30' };
+  }
+  if (lower.includes('7d') || lower.includes('7 d') || lower.includes('week') || lower.includes('7 day')) {
+    return { type: 'chart', window: '7' };
+  }
+  if (lower.includes('24h') || lower.includes('today') || lower.includes('1d')) {
+    return { type: 'chart', window: '1' };
+  }
+  
+  // Check for specific intents
+  if (lower.includes('pool') || lower.includes('liquidity') || lower.includes('dex')) {
+    return { type: 'pools' };
+  }
+  if (lower.includes('trend') || lower.includes('chart') || lower.includes('history')) {
+    return { type: 'chart', window: '7' };
+  }
+  if (lower.includes('price') || lower.includes('cost') || lower.includes('worth')) {
+    return { type: 'price' };
+  }
+  if (lower.includes('categor') || lower.includes('sector') || lower.includes('type')) {
+    return { type: 'metadata' };
+  }
+  
+  // Default to price
+  return { type: 'price' };
+}
 
-HOST CONTEXT (always provided by the app)
-- token = { address, chain, coingeckoId?, symbol?, name? }
-- mcpPublicMode = true
-- UI renders short text followed by structured "blocks" (JSON) into cards/tables/sparklines.
+// Fetch price data from CoinGecko
+async function fetchPrice(coingeckoId: string): Promise<{ usd: number; change24hPct: number; mcap: number | null } | null> {
+  try {
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${coingeckoId}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const tokenData = data[coingeckoId];
+    if (!tokenData) return null;
+    return {
+      usd: tokenData.usd || 0,
+      change24hPct: tokenData.usd_24h_change || 0,
+      mcap: tokenData.usd_market_cap || null
+    };
+  } catch (err) {
+    console.log('[MCP-CHAT] Price fetch failed:', err);
+    return null;
+  }
+}
 
-YOUR GOAL
-Understand natural-language crypto questions and use CoinGecko MCP tools to answer concisely.
-Return a short sentence summary + structured blocks the UI can render.
+// Fetch OHLC chart data from CoinGecko
+async function fetchOHLC(coingeckoId: string, days: string): Promise<Array<{ t: number; v: number }> | null> {
+  try {
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coingeckoId}/ohlc?vs_currency=usd&days=${days}`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return null;
+    
+    // Return closing prices as sparkline
+    return data.map(([t, , , , c]: [number, number, number, number, number]) => ({
+      t: Math.floor(t / 1000),
+      v: c
+    }));
+  } catch (err) {
+    console.log('[MCP-CHAT] OHLC fetch failed:', err);
+    return null;
+  }
+}
 
-TOOL POLICY (MCP)
-- Discover tools at runtime (do not hardcode names).
-- Prefer ≤2 tool calls per turn (≤3 only if strictly necessary).
-- If coingeckoId is missing, do ONE MCP coin search, pick the best match, then proceed.
-- If a tool 429s/partially responds, return what you have, set limited=true, and include a one-line note:
-  "Public MCP is rate-limited. Showing partial data."
+// Fetch pools from GeckoTerminal
+async function fetchPools(address: string, chain: string): Promise<Array<{
+  name: string;
+  dex: string;
+  liquidityUsd: number;
+  vol24hUsd: number;
+  ageDays: number;
+}> | null> {
+  try {
+    // Map chain to GeckoTerminal network ID
+    const networkMap: Record<string, string> = {
+      'eth': 'eth',
+      '0x1': 'eth',
+      'polygon': 'polygon_pos',
+      '0x89': 'polygon_pos',
+      'bsc': 'bsc',
+      '0x38': 'bsc',
+      'arbitrum': 'arbitrum',
+      '0xa4b1': 'arbitrum',
+      'base': 'base',
+      '0x2105': 'base',
+      'optimism': 'optimism',
+      '0xa': 'optimism'
+    };
+    
+    const network = networkMap[chain.toLowerCase()] || 'eth';
+    
+    const res = await fetch(
+      `https://api.geckoterminal.com/api/v2/networks/${network}/tokens/${address}/pools?page=1`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    
+    if (!data.data || !Array.isArray(data.data)) return null;
+    
+    return data.data.slice(0, 5).map((pool: any) => ({
+      name: pool.attributes?.name || 'Unknown',
+      dex: pool.relationships?.dex?.data?.id || 'Unknown',
+      liquidityUsd: parseFloat(pool.attributes?.reserve_in_usd || '0'),
+      vol24hUsd: parseFloat(pool.attributes?.volume_usd?.h24 || '0'),
+      ageDays: pool.attributes?.pool_created_at 
+        ? Math.floor((Date.now() - new Date(pool.attributes.pool_created_at).getTime()) / 86400000)
+        : 0
+    }));
+  } catch (err) {
+    console.log('[MCP-CHAT] Pools fetch failed:', err);
+    return null;
+  }
+}
 
-INTENT → TOOL ROUTER (examples; you must match by meaning, not exact words)
-- price / 24h / market cap / volume → coin price/markets tools
-- "last 7d/30d/90d/365d", "trend", "chart", "history" → market chart / OHLC for that window
-- categories / sector / tags → coin metadata/categories
-- trending / top gainers / losers → trending & gainers/losers
-- exchanges / tickers → exchange tickers by coin
-- ON-CHAIN (GeckoTerminal via MCP):
-  - top pools for token / network / dex
-  - new or trending pools
-  - pool/ token OHLCV
-  - past 24h trades for token/pool
-  - top token holders (+ holders chart)
-  - advanced filters (liquidity/volume/fee/tax) via "megafilter" style tools
+// Fetch token metadata (categories) from CoinGecko
+async function fetchMetadata(coingeckoId: string): Promise<string[] | null> {
+  try {
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coingeckoId}`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    
+    if (data.categories && Array.isArray(data.categories)) {
+      return data.categories.filter(Boolean).slice(0, 5);
+    }
+    return null;
+  } catch (err) {
+    console.log('[MCP-CHAT] Metadata fetch failed:', err);
+    return null;
+  }
+}
 
-TIMEFRAME RESOLVER (MANDATORY)
-- Parse natural phrases: "last 30 days", "30d", "past month", "7d", "90d", "1y/365d", "24h", "YTD".
-- When a timeframe exists, you MUST fetch a historical series for that window and COMPUTE % change yourself:
-  pct = (last_close - first_close) / first_close * 100.
-- Label the exact window in output (e.g., "30d").
-- If the exact window isn't available, pick the closest and say so ("used 31d series due to availability").
+// Format number for display
+function formatNumber(num: number): string {
+  if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
+  if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
+  if (num >= 1e3) return `$${(num / 1e3).toFixed(2)}K`;
+  return `$${num.toFixed(2)}`;
+}
 
-OUTPUT CONTRACT (YOU MUST FOLLOW)
-1) \`text\` – 1–2 sentences. Mention timeframe explicitly when relevant. End with:
-   \`Source: CoinGecko MCP (public).\`
-   Use plain English, no code fences.
-
-2) \`blocks\` – JSON objects the UI renders. Include only those you actually have.
-   - price:        { usd, change24hPct, mcap }
-   - change:       { window: "24h"|"7d"|"30d"|"90d"|"365d"|"ytd", pct, from, to }
-   - sparkline:    [ { t, v } ... ]  // 7–30 points max, unix seconds + close
-   - ohlc:         [ { t, o, h, l, c } ... ] // only if needed
-   - topPools:     [ { name, dex, liquidityUsd, vol24hUsd, ageDays } ... ]
-   - newPools:     [ { name, dex, liquidityUsd, vol24hUsd, createdAt } ... ]
-   - trades24h:    [ { side:"buy"|"sell", amountUsd, priceUsd, txHash, timestamp } ... ]
-   - holders:      [ { address, balance, pct } ... ]
-   - holdersChart: [ { t, holders } ... ]
-   - categories:   [ "DeFi", "L1", "RWA" ... ]
-   - exchanges:    [ { name, pair, priceUsd, vol24hUsd } ... ]
-   - gainersLosers:[ { id, symbol, change24hPct, priceUsd } ... ]
-   - global:       { totalMcapUsd, vol24hUsd, btcDominancePct }
-
-3) \`available\` – array of block names you populated (e.g., ["price","change","sparkline"]).
-4) \`limited\` – boolean (true if any tool was rate-limited or partial).
-5) \`errors\` – short strings; keep minimal.
-
-FORMAT & STYLE
-- Numbers: human friendly (e.g., $1.56M, $2.4K). Percent: one decimal if |pct|≥1; two decimals otherwise.
-- Keep answers tight. No tutorials. No links. No code blocks.
-- Never reveal tool names/endpoints; just use them.
-
-FEW-SHOT BEHAVIOR (guidance, not templates)
-- User: "price change last 30 days"
-  Plan: need a 30d series → call market chart/ohlc → compute Δ from closes.
-  Output: short sentence + blocks: { change (30d), sparkline, price }.
-
-- User: "top pools for this token on base"
-  Plan: on-chain top pools by token or network=base → return table of 3–5 pools.
-  Output: one sentence + \`topPools\`.
-
-- User: "who are the top holders?"
-  Plan: token holders tool + optional holders chart.
-  Output: one sentence + \`holders\` (+ \`holdersChart\` if available).
-
-- User: "trending today?"
-  Plan: trending list / gainers & losers.
-  Output: one sentence + \`gainersLosers\` (top 5).
-
-IF NOTHING USEFUL RETURNS
-- Reply with one line: "Couldn't fetch live data from the public MCP right now. Try again soon."
-- Set limited=true and include a single clear reason in \`errors\`.`;
+// Format percentage for display
+function formatPct(pct: number): string {
+  const sign = pct >= 0 ? '+' : '';
+  return `${sign}${pct.toFixed(2)}%`;
+}
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
     const { messages, token, mode }: ChatRequest = await req.json();
-    console.log('[MCP-CHAT] Processing messages:', messages.length, 'for token:', token, 'mode:', mode);
+    console.log('[MCP-CHAT] Request:', { messageCount: messages?.length, token: token?.coingeckoId, mode });
 
     if (!messages || !token?.coingeckoId) {
       return new Response(
         JSON.stringify({
-          text: "Missing messages or token information",
+          text: "Missing token information. Please select a token first.",
           data: {},
           available: [],
-          limited: true,
-          errors: ["Invalid request parameters"]
+          limited: false,
+          errors: ["Invalid request"]
         }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Mock MCP response based on mode
-    let mockResponse: ChatResponse;
-    
+    const response: ChatResponse = {
+      text: '',
+      data: {},
+      available: [],
+      limited: false,
+      errors: []
+    };
+
+    // Get the last user message to understand intent
+    const lastMessage = messages[messages.length - 1]?.content || '';
+    const intent = parseIntent(lastMessage);
+    console.log('[MCP-CHAT] Parsed intent:', intent);
+
+    // Handle auto_insights mode
     if (mode === 'auto_insights') {
-      mockResponse = {
-        text: "Current token showing positive momentum with 2.45% gain in 24h. 7-day trend shows steady growth. Source: CoinGecko MCP (public).",
-        data: {
-          price: {
-            usd: 0.5234,
-            change24hPct: 2.45,
-            mcap: 156789000,
-            change30dPct: -1.23
-          },
-          sparkline: Array.from({ length: 7 }, (_, i) => ({
-            t: Date.now() - (6 - i) * 24 * 60 * 60 * 1000,
-            v: 0.5 + Math.random() * 0.1
-          })),
-          topPools: [
-            {
-              name: "USDC/ETH",
-              dex: "Uniswap V3",
-              liquidityUsd: 2450000,
-              vol24hUsd: 890000,
-              ageDays: 180
-            },
-            {
-              name: "WETH/USDT",
-              dex: "SushiSwap",
-              liquidityUsd: 1200000,
-              vol24hUsd: 450000,
-              ageDays: 95
-            }
-          ],
-          categories: ["DeFi", "Ethereum", "Trading"]
-        },
-        available: ["price", "sparkline", "topPools", "categories"],
-        limited: false,
-        errors: []
-      };
-    } else {
-      // Simple chat response
-      const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || '';
+      const [price, ohlc, pools, categories] = await Promise.all([
+        fetchPrice(token.coingeckoId),
+        fetchOHLC(token.coingeckoId, '7'),
+        fetchPools(token.address, token.chain),
+        fetchMetadata(token.coingeckoId)
+      ]);
+
+      if (price) {
+        response.data.price = price;
+        response.available.push('price');
+      }
+      if (ohlc) {
+        response.data.sparkline = ohlc;
+        response.available.push('sparkline');
+      }
+      if (pools && pools.length > 0) {
+        response.data.topPools = pools;
+        response.available.push('topPools');
+      }
+      if (categories && categories.length > 0) {
+        response.data.categories = categories;
+        response.available.push('categories');
+      }
+
+      response.text = price 
+        ? `${token.coingeckoId.toUpperCase()} is trading at ${formatNumber(price.usd)} (${formatPct(price.change24hPct)} 24h). Source: CoinGecko.`
+        : `Unable to fetch live data for ${token.coingeckoId}. Try again soon.`;
       
-      // Check for timeframe-specific requests FIRST
-      if (lastMessage.includes('30d') || lastMessage.includes('30 d') || lastMessage.includes('30 day') || lastMessage.includes('last 30') || lastMessage.includes('past month')) {
-        mockResponse = {
-          text: "30d price change is -8.2% from $0.57 to $0.52. Source: CoinGecko MCP (public).",
-          data: {
-            change: {
-              window: "30d",
-              pct: -8.2,
-              from: 0.57,
-              to: 0.5234
-            },
-            sparkline: Array.from({ length: 30 }, (_, i) => ({
-              t: Date.now() - (29 - i) * 24 * 60 * 60 * 1000,
-              v: 0.57 - (i / 29) * 0.0466 + Math.random() * 0.02 - 0.01
-            }))
-          },
-          available: ["change", "sparkline"],
-          limited: false,
-          errors: []
-        };
-      } else if (lastMessage.includes('7d') || lastMessage.includes('7 d') || lastMessage.includes('7 day') || lastMessage.includes('last 7') || lastMessage.includes('last week')) {
-        mockResponse = {
-          text: "7d price change is +3.8% from $0.50 to $0.52. Source: CoinGecko MCP (public).",
-          data: {
-            change: {
-              window: "7d",
-              pct: 3.8,
-              from: 0.50,
-              to: 0.5234
-            },
-            sparkline: Array.from({ length: 7 }, (_, i) => ({
-              t: Date.now() - (6 - i) * 24 * 60 * 60 * 1000,
-              v: 0.50 + (i / 6) * 0.0234 + Math.random() * 0.01 - 0.005
-            }))
-          },
-          available: ["change", "sparkline"],
-          limited: false,
-          errors: []
-        };
-      } else if (lastMessage.includes('90d') || lastMessage.includes('90 d') || lastMessage.includes('90 day') || lastMessage.includes('3 month') || lastMessage.includes('quarter')) {
-        mockResponse = {
-          text: "90d price change is +15.4% from $0.45 to $0.52. Source: CoinGecko MCP (public).",
-          data: {
-            change: {
-              window: "90d",
-              pct: 15.4,
-              from: 0.45,
-              to: 0.5234
-            },
-            sparkline: Array.from({ length: 90 }, (_, i) => ({
-              t: Date.now() - (89 - i) * 24 * 60 * 60 * 1000,
-              v: 0.45 + (i / 89) * 0.0734 + Math.random() * 0.03 - 0.015
-            }))
-          },
-          available: ["change", "sparkline"],
-          limited: false,
-          errors: []
-        };
-      } else if (lastMessage.includes('365d') || lastMessage.includes('1y') || lastMessage.includes('1 y') || lastMessage.includes('year') || lastMessage.includes('12 month')) {
-        mockResponse = {
-          text: "365d price change is +42.7% from $0.37 to $0.52. Source: CoinGecko MCP (public).",
-          data: {
-            change: {
-              window: "365d",
-              pct: 42.7,
-              from: 0.37,
-              to: 0.5234
-            },
-            sparkline: Array.from({ length: 30 }, (_, i) => ({
-              t: Date.now() - (29 - i) * 12 * 24 * 60 * 60 * 1000,
-              v: 0.37 + (i / 29) * 0.1534 + Math.random() * 0.05 - 0.025
-            }))
-          },
-          available: ["change", "sparkline"],
-          limited: false,
-          errors: []
-        };
-      } else if (lastMessage.includes('price') || lastMessage.includes('cost')) {
-        mockResponse = {
-          text: "Current price is $0.5234 with a 2.45% increase in the last 24 hours. Source: CoinGecko MCP (public).",
-          data: {
-            price: {
-              usd: 0.5234,
-              change24hPct: 2.45,
-              mcap: 156789000
-            }
-          },
-          available: ["price"],
-          limited: false,
-          errors: []
-        };
-      } else if (lastMessage.includes('trend') || lastMessage.includes('chart')) {
-        mockResponse = {
-          text: "7-day trend shows steady growth with minor fluctuations. Overall positive momentum. Source: CoinGecko MCP (public).",
-          data: {
-            sparkline: Array.from({ length: 7 }, (_, i) => ({
-              t: Date.now() - (6 - i) * 24 * 60 * 60 * 1000,
-              v: 0.5 + Math.random() * 0.1
-            }))
-          },
-          available: ["sparkline"],
-          limited: false,
-          errors: []
-        };
-      } else if (lastMessage.includes('pool') || lastMessage.includes('liquidity')) {
-        mockResponse = {
-          text: "Top pools show healthy liquidity across major DEXs. Uniswap V3 leads with $2.45M liquidity. Source: CoinGecko MCP (public).",
-          data: {
-            topPools: [
-              {
-                name: "USDC/ETH",
-                dex: "Uniswap V3",
-                liquidityUsd: 2450000,
-                vol24hUsd: 890000,
-                ageDays: 180
-              }
-            ]
-          },
-          available: ["topPools"],
-          limited: false,
-          errors: []
-        };
-      } else {
-        mockResponse = {
-          text: "I can help you with price data, 7-day trends, or liquidity pool information. What would you like to know? Source: CoinGecko MCP (public).",
-          data: {},
-          available: [],
-          limited: false,
-          errors: []
-        };
+      if (response.available.length === 0) {
+        response.limited = true;
+        response.errors.push('CoinGecko API unavailable');
+      }
+    }
+    // Handle chat mode
+    else {
+      switch (intent.type) {
+        case 'chart': {
+          const days = intent.window || '7';
+          const [price, ohlc] = await Promise.all([
+            fetchPrice(token.coingeckoId),
+            fetchOHLC(token.coingeckoId, days)
+          ]);
+
+          if (price) {
+            response.data.price = price;
+            response.available.push('price');
+          }
+
+          if (ohlc && ohlc.length >= 2) {
+            response.data.sparkline = ohlc;
+            response.available.push('sparkline');
+
+            // Calculate change
+            const firstPrice = ohlc[0].v;
+            const lastPrice = ohlc[ohlc.length - 1].v;
+            const pctChange = ((lastPrice - firstPrice) / firstPrice) * 100;
+
+            response.data.change = {
+              window: `${days}d`,
+              pct: pctChange,
+              from: firstPrice,
+              to: lastPrice
+            };
+            response.available.push('change');
+
+            response.text = `${days}-day change: ${formatPct(pctChange)} (${formatNumber(firstPrice)} → ${formatNumber(lastPrice)}). Source: CoinGecko.`;
+          } else {
+            response.text = price 
+              ? `Current price: ${formatNumber(price.usd)} (${formatPct(price.change24hPct)} 24h). Chart data unavailable. Source: CoinGecko.`
+              : `Unable to fetch data for ${token.coingeckoId}. Try again soon.`;
+          }
+          break;
+        }
+
+        case 'pools': {
+          const [price, pools] = await Promise.all([
+            fetchPrice(token.coingeckoId),
+            fetchPools(token.address, token.chain)
+          ]);
+
+          if (price) {
+            response.data.price = price;
+            response.available.push('price');
+          }
+
+          if (pools && pools.length > 0) {
+            response.data.topPools = pools;
+            response.available.push('topPools');
+
+            const topPool = pools[0];
+            response.text = `Found ${pools.length} pools. Top pool: ${topPool.name} on ${topPool.dex} with ${formatNumber(topPool.liquidityUsd)} liquidity. Source: GeckoTerminal.`;
+          } else {
+            response.text = `No pools found for this token on ${token.chain}. The token may not have liquidity pools yet.`;
+          }
+          break;
+        }
+
+        case 'metadata': {
+          const [price, categories] = await Promise.all([
+            fetchPrice(token.coingeckoId),
+            fetchMetadata(token.coingeckoId)
+          ]);
+
+          if (price) {
+            response.data.price = price;
+            response.available.push('price');
+          }
+
+          if (categories && categories.length > 0) {
+            response.data.categories = categories;
+            response.available.push('categories');
+            response.text = `This token belongs to: ${categories.join(', ')}. Source: CoinGecko.`;
+          } else {
+            response.text = `No category data available for this token.`;
+          }
+          break;
+        }
+
+        case 'price':
+        default: {
+          const price = await fetchPrice(token.coingeckoId);
+
+          if (price) {
+            response.data.price = price;
+            response.available.push('price');
+
+            const mcapStr = price.mcap ? ` Market cap: ${formatNumber(price.mcap)}.` : '';
+            response.text = `Current price: ${formatNumber(price.usd)} (${formatPct(price.change24hPct)} 24h).${mcapStr} Source: CoinGecko.`;
+          } else {
+            response.text = `Unable to fetch price for ${token.coingeckoId}. Try again soon.`;
+            response.limited = true;
+          }
+          break;
+        }
       }
     }
 
-    // TODO: Add actual MCP connection logic here
-    // For now, return mock data with proper structure
+    // Fallback message if nothing was fetched
+    if (response.available.length === 0 && !response.text) {
+      response.text = "I can help you with price data, trends (7d, 30d, 90d), or liquidity pools. What would you like to know?";
+    }
+
+    console.log('[MCP-CHAT] Response:', { available: response.available, errors: response.errors });
 
     return new Response(
-      JSON.stringify(mockResponse),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
+      JSON.stringify(response),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('[MCP-CHAT] Error:', error);
     
-    const errorResponse: ChatResponse = {
-      text: "Couldn't fetch live data from the public MCP right now. Try again soon.",
-      data: {},
-      available: [],
-      limited: true,
-      errors: [error instanceof Error ? error.message : 'Unknown error']
-    };
-
     return new Response(
-      JSON.stringify(errorResponse),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
+      JSON.stringify({
+        text: "Something went wrong. Please try again.",
+        data: {},
+        available: [],
+        limited: true,
+        errors: [error instanceof Error ? error.message : 'Unknown error']
+      }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

@@ -26,6 +26,9 @@ export default function Navbar() {
             <Link to="/" className="text-sm font-medium transition-colors hover:text-primary">
               Home
             </Link>
+            <Link to="/copilot" className="text-sm font-medium transition-colors hover:text-primary">
+              Copilot
+            </Link>
             <Link to="/token" className="text-sm font-medium transition-colors hover:text-primary">
               Token Reports
             </Link>
