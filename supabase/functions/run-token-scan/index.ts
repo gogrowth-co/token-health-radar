@@ -1135,43 +1135,38 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
   }
 
   try {
-    // Fetch data from APIs - reduced parallel calls to save memory
-    console.log(`[SCAN] Calling APIs...`);
+    // Fetch data from APIs - SEQUENTIAL to minimize peak memory usage
+    console.log(`[SCAN] Calling APIs sequentially to minimize memory...`);
     const apiStartTime = Date.now();
     
-    // Phase 1: Core security + price (essential only)
-    const [webacySecurityData, goplusSecurityData, priceData, metadataData] = await Promise.allSettled([
-      fetchWebacySecurity(tokenAddress, chainId),
-      fetchGoPlusSecurity(tokenAddress, chainId),
-      fetchMoralisPriceData(tokenAddress, chainId),
-      fetchMoralisMetadata(tokenAddress, chainId)
-    ]);
-
-    // Phase 2: Enhanced tokenomics - only stats and pairs (skip owners to save memory)
-    const [statsData, pairsData, tvlData] = await Promise.allSettled([
-      fetchMoralisTokenStats(tokenAddress, chainId),
-      fetchMoralisTokenPairs(tokenAddress, chainId),
-      fetchDeFiLlamaTVL(tokenAddress)
-    ]);
+    // Step 1: Security + Metadata (essential)
+    let webacySecurity = null;
+    let goplusSecurity = null;
+    let metadata = null;
+    let priceDataResult = null;
+    
+    try { webacySecurity = await fetchWebacySecurity(tokenAddress, chainId); } catch (e) { console.log(`[SCAN] Webacy failed`); }
+    try { goplusSecurity = await fetchGoPlusSecurity(tokenAddress, chainId); } catch (e) { console.log(`[SCAN] GoPlus failed`); }
+    try { metadata = await fetchMoralisMetadata(tokenAddress, chainId); } catch (e) { console.log(`[SCAN] Metadata failed`); }
+    try { priceDataResult = await fetchMoralisPriceData(tokenAddress, chainId); } catch (e) { console.log(`[SCAN] Price failed`); }
+    
+    // Step 2: Tokenomics (secondary)
+    let stats = null;
+    let pairs = null;
+    let tvl = null;
+    
+    try { stats = await fetchMoralisTokenStats(tokenAddress, chainId); } catch (e) { console.log(`[SCAN] Stats failed`); }
+    try { pairs = await fetchMoralisTokenPairs(tokenAddress, chainId); } catch (e) { console.log(`[SCAN] Pairs failed`); }
+    try { tvl = await fetchDeFiLlamaTVL(tokenAddress); } catch (e) { console.log(`[SCAN] TVL failed`); }
 
     const apiEndTime = Date.now();
-
-    // Extract results with minimal logging
-    const webacySecurity = webacySecurityData.status === 'fulfilled' ? webacySecurityData.value : null;
-    const goplusSecurity = goplusSecurityData.status === 'fulfilled' ? goplusSecurityData.value : null;
-    const priceDataResult = priceData.status === 'fulfilled' ? priceData.value : null;
-    const metadata = metadataData.status === 'fulfilled' ? metadataData.value : null;
-    
-    const stats = statsData.status === 'fulfilled' ? statsData.value : null;
-    const pairs = pairsData.status === 'fulfilled' ? pairsData.value : null;
-    const tvl = tvlData.status === 'fulfilled' ? tvlData.value : null;
 
     // Merge security data
     const security = {};
     if (webacySecurity) Object.assign(security, webacySecurity);
     if (goplusSecurity) Object.assign(security, goplusSecurity);
 
-    console.log(`[SCAN] APIs done in ${apiEndTime - apiStartTime}ms: webacy=${!!webacySecurity}, goplus=${!!goplusSecurity}, price=${!!priceDataResult}, meta=${!!metadata}`);
+    console.log(`[SCAN] APIs done in ${apiEndTime - apiStartTime}ms`);
 
     // Extract social links from Moralis metadata
     let githubData = null;
