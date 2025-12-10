@@ -619,10 +619,7 @@ async function fetchCoinMarketCapLogoUrl(tokenAddress: string): Promise<string> 
 
 // Check if description is generic/template-based
 function isGenericDescription(description: string): boolean {
-  if (!description || description.length < 80) {
-    console.log(`[DESCRIPTION-DEBUG] isGenericDescription: REJECT - too short (${description?.length || 0} chars)`);
-    return true;
-  }
+  if (!description || description.length < 80) return true;
 
   const genericPatterns = [
     /is a cryptocurrency launched in \d{4}/i,
@@ -632,20 +629,17 @@ function isGenericDescription(description: string): boolean {
     /is currently trading on \d+ active market/i,
     /the last known price/i,
     /is a (token|cryptocurrency|digital asset|crypto token)/i,
-    /^[^.]+\s+(token|coin)\s+on\s+\w+\.?$/i, // "Token X on Ethereum"
+    /^[^.]+\s+(token|coin)\s+on\s+\w+\.?$/i,
     /is a digital (currency|asset|token)/i,
     /cryptocurrency\s+token\.?$/i,
     /No description available/i,
     /token description not found/i,
-    /^[A-Z0-9]+\s+is\s+the\s+native\s+token/i, // "XXX is the native token"
-    /is\s+an?\s+(ERC-20|BEP-20|token)\s+on\s+/i, // "is an ERC-20 on..."
+    /^[A-Z0-9]+\s+is\s+the\s+native\s+token/i,
+    /is\s+an?\s+(ERC-20|BEP-20|token)\s+on\s+/i,
   ];
 
-  // Check if it matches any generic patterns
-  const matchingPatterns = genericPatterns.filter(pattern => pattern.test(description));
-  const matchesGeneric = matchingPatterns.length > 0;
-
-  // Check for technical keywords that indicate quality content
+  const matchesGeneric = genericPatterns.some(pattern => pattern.test(description));
+  
   const technicalKeywords = [
     'protocol', 'blockchain', 'smart contract', 'defi', 'dao', 'nft',
     'consensus', 'validator', 'governance', 'staking', 'yield', 'liquidity',
@@ -656,31 +650,14 @@ function isGenericDescription(description: string): boolean {
     'flash loan', 'automated market maker', 'amm', 'liquidity pool'
   ];
 
-  const foundKeywords = technicalKeywords.filter(keyword =>
+  const technicalScore = technicalKeywords.filter(keyword =>
     description.toLowerCase().includes(keyword)
-  );
-  const technicalScore = foundKeywords.length;
+  ).length;
 
-  // Calculate uniqueness - check if description has specific details
   const hasNumbers = /\d+/.test(description);
-  const hasSpecificFeatures = description.split(' ').length > 20; // More than 20 words suggests detail
+  const hasSpecificFeatures = description.split(' ').length > 20;
 
-  const isGeneric = matchesGeneric || (technicalScore < 1 && !hasNumbers && !hasSpecificFeatures);
-
-  console.log(`[DESCRIPTION-DEBUG] isGenericDescription analysis:`, {
-    length: description.length,
-    matchesGeneric,
-    matchingPatterns: matchingPatterns.length,
-    technicalScore,
-    foundKeywords,
-    hasNumbers,
-    hasSpecificFeatures,
-    isGeneric,
-    preview: description.substring(0, 150)
-  });
-
-  // Generic if matches template patterns or has low technical content
-  return isGeneric;
+  return matchesGeneric || (technicalScore < 1 && !hasNumbers && !hasSpecificFeatures);
 }
 
 // Additional quality check for marketing/tagline-style descriptions
@@ -709,20 +686,10 @@ function composeFormalDescription(opts: {
   name: string; symbol: string; chainName: string; contract: string;
   security?: any; stats?: any; price?: any; marketCap?: number; website?: string;
 }): string {
-  // Handle null values by providing safe defaults
-  const { name, symbol, chainName, contract, marketCap, website } = opts;
+  const { name, symbol, chainName, marketCap } = opts;
   const security = opts.security || {};
   const stats = opts.stats || {};
   const price = opts.price || {};
-  
-  console.log(`[DESCRIPTION-DEBUG] composeFormalDescription called with:`, {
-    hasStats: !!opts.stats,
-    hasSecurity: !!opts.security,
-    hasPrice: !!opts.price,
-    statsType: typeof opts.stats,
-    securityType: typeof opts.security,
-    priceType: typeof opts.price
-  });
   
   const parts: string[] = [];
   // First sentence: identity
@@ -1168,27 +1135,11 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
   }
 
   try {
-    // Fetch data from all APIs in parallel - prioritize Webacy for security
-    console.log(`[SCAN] Calling external APIs for fresh data...`);
+    // Fetch data from APIs - reduced parallel calls to save memory
+    console.log(`[SCAN] Calling APIs...`);
     const apiStartTime = Date.now();
     
-    // Add detailed API key debugging BEFORE making calls
-    console.log(`[SCAN] === API KEY STATUS CHECK ===`);
-    console.log(`[SCAN] WEBACY_API_KEY configured: ${!!Deno.env.get('WEBACY_API_KEY')}`);
-    console.log(`[SCAN] GOPLUS_APP_KEY configured: ${!!Deno.env.get('GOPLUS_APP_KEY')}`);
-    console.log(`[SCAN] GOPLUS_APP_SECRET configured: ${!!Deno.env.get('GOPLUS_APP_SECRET')}`);
-    console.log(`[SCAN] MORALIS_API_KEY configured: ${!!Deno.env.get('MORALIS_API_KEY')}`);
-    console.log(`[SCAN] COINGECKO_API_KEY configured: ${!!Deno.env.get('COINGECKO_API_KEY')}`);
-    if (Deno.env.get('WEBACY_API_KEY')) {
-      const key = Deno.env.get('WEBACY_API_KEY')!;
-      console.log(`[SCAN] WEBACY_API_KEY length: ${key.length}, starts with: ${key.substring(0, 8)}...`);
-    }
-    if (Deno.env.get('GOPLUS_APP_KEY')) {
-      const key = Deno.env.get('GOPLUS_APP_KEY')!;
-      console.log(`[SCAN] GOPLUS_APP_KEY length: ${key.length}, starts with: ${key.substring(0, 8)}...`);
-    }
-    
-    // Phase 1: Core data APIs (always needed)
+    // Phase 1: Core security + price (essential only)
     const [webacySecurityData, goplusSecurityData, priceData, metadataData] = await Promise.allSettled([
       fetchWebacySecurity(tokenAddress, chainId),
       fetchGoPlusSecurity(tokenAddress, chainId),
@@ -1196,79 +1147,31 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       fetchMoralisMetadata(tokenAddress, chainId)
     ]);
 
-    // Phase 2: Enhanced tokenomics APIs (new features)
-    console.log(`[SCAN] Fetching enhanced tokenomics data...`);
-    const [statsData, pairsData, ownersData, tvlData] = await Promise.allSettled([
+    // Phase 2: Enhanced tokenomics - only stats and pairs (skip owners to save memory)
+    const [statsData, pairsData, tvlData] = await Promise.allSettled([
       fetchMoralisTokenStats(tokenAddress, chainId),
       fetchMoralisTokenPairs(tokenAddress, chainId),
-      fetchMoralisTokenOwners(tokenAddress, chainId),
       fetchDeFiLlamaTVL(tokenAddress)
     ]);
 
-    // Phase 3: CEX listings data
-    console.log(`[SCAN] Fetching CEX listings data...`);
-    const [cexData] = await Promise.allSettled([
-      fetchCoinGeckoCexCount(tokenAddress, chainId)
-    ]);
-
     const apiEndTime = Date.now();
-    console.log(`[SCAN] API calls completed in ${apiEndTime - apiStartTime}ms`);
 
-    // Log detailed API results for debugging
+    // Extract results with minimal logging
     const webacySecurity = webacySecurityData.status === 'fulfilled' ? webacySecurityData.value : null;
     const goplusSecurity = goplusSecurityData.status === 'fulfilled' ? goplusSecurityData.value : null;
     const priceDataResult = priceData.status === 'fulfilled' ? priceData.value : null;
     const metadata = metadataData.status === 'fulfilled' ? metadataData.value : null;
     
-    // Enhanced tokenomics data
     const stats = statsData.status === 'fulfilled' ? statsData.value : null;
     const pairs = pairsData.status === 'fulfilled' ? pairsData.value : null;
-    const owners = ownersData.status === 'fulfilled' ? ownersData.value : null;
     const tvl = tvlData.status === 'fulfilled' ? tvlData.value : null;
-    
-    // CEX listings data
-    const cexCount = cexData.status === 'fulfilled' ? cexData.value : 0;
 
-    // Log API failures for debugging
-    if (webacySecurityData.status === 'rejected') {
-      console.error(`[SCAN] Webacy API failed:`, webacySecurityData.reason);
-    }
-    if (goplusSecurityData.status === 'rejected') {
-      console.error(`[SCAN] GoPlus API failed:`, goplusSecurityData.reason);
-    }
-    if (priceData.status === 'rejected') {
-      console.error(`[SCAN] Moralis Price API failed:`, priceData.reason);
-    }
-    if (metadataData.status === 'rejected') {
-      console.error(`[SCAN] Moralis Metadata API failed:`, metadataData.reason);
-    }
-    if (statsData.status === 'rejected') {
-      console.error(`[SCAN] Moralis Stats API failed:`, statsData.reason);
-    }
-    if (pairsData.status === 'rejected') {
-      console.error(`[SCAN] Moralis Pairs API failed:`, pairsData.reason);
-    }
-    if (ownersData.status === 'rejected') {
-      console.error(`[SCAN] Moralis Owners API failed:`, ownersData.reason);
-    }
-    if (tvlData.status === 'rejected') {
-      console.error(`[SCAN] DeFiLlama TVL API failed:`, tvlData.reason);
-    }
-
-    // Enhanced security data merging
+    // Merge security data
     const security = {};
-    
-    if (webacySecurity) {
-      Object.assign(security, webacySecurity);
-    }
-    
-    if (goplusSecurity) {
-      Object.assign(security, goplusSecurity);
-    }
-    
-    console.log(`[SCAN] Security merged: ${Object.keys(security).length} properties`);
+    if (webacySecurity) Object.assign(security, webacySecurity);
+    if (goplusSecurity) Object.assign(security, goplusSecurity);
 
-    console.log(`[SCAN] API Data Summary: webacy=${webacySecurity ? 'ok' : 'fail'}, goplus=${goplusSecurity ? 'ok' : 'fail'}, price=${priceDataResult ? 'ok' : 'fail'}, meta=${metadata ? 'ok' : 'fail'}, time=${apiEndTime - apiStartTime}ms`);
+    console.log(`[SCAN] APIs done in ${apiEndTime - apiStartTime}ms: webacy=${!!webacySecurity}, goplus=${!!goplusSecurity}, price=${!!priceDataResult}, meta=${!!metadata}`);
 
     // Extract social links from Moralis metadata
     let githubData = null;
@@ -1750,10 +1653,10 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
       metadataData: metadata,
       statsData: stats,
       pairsData: pairs,
-      ownersData: owners,
+      ownersData: null, // Skipped to save memory
       githubData: githubData,
       tvlData: tvl,
-      cexData: cexCount,
+      cexData: 0, // Skipped to save memory
       twitterFollowers: twitterFollowers,
       discordMembers: discordMembers,
       telegramMembers: telegramMembers
@@ -1809,57 +1712,8 @@ async function fetchTokenDataFromAPIs(tokenAddress: string, chainId: string) {
 
 // Generate category data with real API integration and enhanced tokenomics
 function generateCategoryData(apiData: any) {
-  console.log(`[TOKENOMICS] === STARTING CATEGORY DATA GENERATION ===`);
-  console.log(`[TOKENOMICS] Input API data available:`, {
-    securityData: !!apiData.securityData,
-    webacyData: !!apiData.webacyData,
-    goplusData: !!apiData.goplusData,
-    priceData: !!apiData.priceData,
-    metadataData: !!apiData.metadataData,
-    statsData: !!apiData.statsData,
-    pairsData: !!apiData.pairsData,
-    ownersData: !!apiData.ownersData,
-    githubData: !!apiData.githubData,
-    tvlData: !!apiData.tvlData
-  });
-
-  console.log(`[TOKENOMICS] About to calculate security score with data:`, {
-    securityDataKeys: apiData.securityData ? Object.keys(apiData.securityData) : 'null',
-    webacyDataKeys: apiData.webacyData ? Object.keys(apiData.webacyData) : 'null', 
-    goplusDataKeys: apiData.goplusData ? Object.keys(apiData.goplusData) : 'null'
-  });
-  
   const securityScore = calculateSecurityScore(apiData.securityData, apiData.webacyData, apiData.goplusData);
-  console.log(`[TOKENOMICS] Security score calculated: ${securityScore}`);
   const liquidityScore = calculateLiquidityScore(apiData.priceData, apiData.securityData);
-  
-  // Enhanced tokenomics scoring with new data sources
-  console.log(`[TOKENOMICS] Preparing tokenomics score calculation...`);
-  console.log(`[TOKENOMICS] metadataData:`, apiData.metadataData ? {
-    total_supply: apiData.metadataData.total_supply,
-    verified_contract: apiData.metadataData.verified_contract,
-    possible_spam: apiData.metadataData.possible_spam
-  } : 'null');
-  console.log(`[TOKENOMICS] priceData:`, apiData.priceData ? {
-    current_price_usd: apiData.priceData.current_price_usd,
-    price_change_24h: apiData.priceData.price_change_24h,
-    trading_volume_24h_usd: apiData.priceData.trading_volume_24h_usd
-  } : 'null');
-  console.log(`[TOKENOMICS] statsData:`, apiData.statsData ? {
-    total_supply: apiData.statsData.total_supply,
-    holders: apiData.statsData.holders,
-    transfers: apiData.statsData.transfers
-  } : 'null');
-  console.log(`[TOKENOMICS] ownersData:`, apiData.ownersData ? {
-    gini_coefficient: apiData.ownersData.gini_coefficient,
-    concentration_risk: apiData.ownersData.concentration_risk,
-    total_holders: apiData.ownersData.total_holders
-  } : 'null');
-  console.log(`[TOKENOMICS] pairsData:`, apiData.pairsData ? {
-    total_liquidity_usd: apiData.pairsData.total_liquidity_usd,
-    total_pairs: apiData.pairsData.total_pairs,
-    major_pairs_count: apiData.pairsData.major_pairs?.length
-  } : 'null');
   
   const tokenomicsScore = calculateTokenomicsScore(
     apiData.metadataData, 
@@ -1869,90 +1723,18 @@ function generateCategoryData(apiData: any) {
     apiData.pairsData
   );
   
-  console.log(`[TOKENOMICS] Calculated scores:`, {
-    tokenomicsScore,
-    securityScore,
-    liquidityScore
-  });
-  
   const developmentScore = calculateDevelopmentScore(apiData.githubData);
   
-  // Calculate dynamic community score based on social media metrics
   const communityScore = calculateCommunityScore({
     twitterFollowers: apiData.twitterFollowers || 0,
     discordMembers: apiData.discordMembers || 0,
     telegramMembers: apiData.telegramMembers || 0
   });
 
-  console.log(`[TOKENOMICS] === FINAL TOKENOMICS DATA EXTRACTION ===`);
+  console.log(`[SCAN] Scores: sec=${securityScore}, liq=${liquidityScore}, tok=${tokenomicsScore}, dev=${developmentScore}, com=${communityScore}`);
+
+  const securityData = apiData.securityData || {};
   
-  // Log raw data before processing
-  const rawTokenomicsData = {
-    supply_cap: apiData.statsData?.total_supply || apiData.metadataData?.total_supply || null,
-    circulating_supply: apiData.statsData?.total_supply || apiData.metadataData?.total_supply || null,
-    actual_circulating_supply: apiData.statsData?.total_supply || null,
-    total_supply: apiData.statsData?.total_supply || apiData.metadataData?.total_supply || null,
-    dex_liquidity_usd: apiData.pairsData?.total_liquidity_usd || 0,
-    major_dex_pairs: apiData.pairsData?.major_pairs || [],
-    distribution_score: getDistributionScoreText(apiData.ownersData?.concentration_risk),
-    distribution_gini_coefficient: apiData.ownersData?.gini_coefficient || null,
-    holder_concentration_risk: apiData.ownersData?.concentration_risk || 'Unknown',
-    top_holders_count: apiData.ownersData?.total_holders || null,
-    burn_mechanism: null,
-    vesting_schedule: 'unknown',
-    tvl_usd: apiData.pairsData?.total_liquidity_usd || 0,
-    treasury_usd: 0,
-    data_confidence_score: calculateTokenomicsConfidence(apiData),
-    last_holder_analysis: apiData.ownersData ? new Date().toISOString() : null,
-    score: tokenomicsScore
-  };
-  
-  console.log(`[TOKENOMICS] Final processed tokenomics data:`, rawTokenomicsData);
-  console.log(`[TOKENOMICS] Data availability summary:`, {
-    hasSupplyData: !!(apiData.statsData?.total_supply || apiData.metadataData?.total_supply),
-    hasLiquidityData: !!apiData.pairsData?.total_liquidity_usd,
-    hasDistributionData: !!apiData.ownersData?.gini_coefficient,
-    hasPairsData: !!apiData.pairsData?.major_pairs?.length,
-    confidenceScore: rawTokenomicsData.data_confidence_score,
-    tvlData: apiData.tvlData
-  });
-
-  console.log(`[TOKENOMICS] === DETAILED SUPPLY DATA ANALYSIS ===`);
-  console.log(`[TOKENOMICS] Moralis Stats API response:`, apiData.statsData);
-  console.log(`[TOKENOMICS] Moralis Metadata API response supply:`, apiData.metadataData?.total_supply);
-  console.log(`[TOKENOMICS] DeFiLlama TVL response:`, apiData.tvlData);
-  console.log(`[TOKENOMICS] Pairs liquidity response:`, apiData.pairsData?.total_liquidity_usd);
-
-  // Enhanced security data with better null handling and logging
-  const securityData = apiData.securityData;
-  const hasSecurityData = securityData && Object.keys(securityData).length > 0;
-
-  console.log(`[SECURITY] === SECURITY DATA ANALYSIS ===`);
-  console.log(`[SECURITY] GoPlus data available: ${hasSecurityData ? 'YES' : 'NO'}`);
-
-  if (!hasSecurityData) {
-    console.warn(`[SECURITY] ⚠️ WARNING: No security data from GoPlus API`);
-    console.log(`[SECURITY] All security fields will be NULL - results will show "Unknown"`);
-  } else {
-    // Log which fields are missing from GoPlus
-    const criticalFields = ['ownership_renounced', 'can_mint', 'honeypot_detected', 'freeze_authority'];
-    const missingFields = criticalFields.filter(field =>
-      securityData[field] === null || securityData[field] === undefined
-    );
-
-    if (missingFields.length > 0) {
-      console.warn(`[SECURITY] ⚠️ WARNING: Missing critical security fields from GoPlus:`, missingFields);
-      console.log(`[SECURITY] These will show as "Unknown" in the UI`);
-    } else {
-      console.log(`[SECURITY] ✅ All critical security fields present`);
-    }
-  }
-
-  // Use Webacy data for additional context
-  if (apiData.webacyData?.riskScore) {
-    console.log(`[SECURITY] Webacy risk score available: ${apiData.webacyData.riskScore} (${apiData.webacyData.severity})`);
-  }
-
   return {
     security: {
       ownership_renounced: securityData?.ownership_renounced ?? null,
