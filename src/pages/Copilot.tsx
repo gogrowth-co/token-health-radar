@@ -22,10 +22,11 @@ export default function Copilot() {
 
   const handleTokenSelect = (token: any) => {
     console.log('[COPILOT-PAGE] Token selected:', token);
+    // Use the actual coingeckoId from the search result (the CoinGecko slug like "uniswap")
     setSelectedToken({
       chain: token.chain,
       address: token.address,
-      coingeckoId: token.id || token.symbol.toLowerCase(),
+      coingeckoId: token.coingeckoId || token.symbol.toLowerCase(), // Prefer actual coingeckoId
       symbol: token.symbol,
       name: token.name,
       logo: token.logo
