@@ -57,6 +57,17 @@ const CHAIN_MAP = {
   }
 };
 
+// Solana chain configuration (non-EVM)
+const SOLANA_CONFIG = {
+  name: 'Solana',
+  moralis: null,
+  goplus: null,
+  gecko: 'solana',
+  etherscan: null,
+  symbol: 'SOL',
+  isEVM: false
+};
+
 // Enhanced chain ID mapping for better normalization
 const CHAIN_ID_MAP: Record<string, string> = {
   // Decimal to hex
@@ -85,11 +96,23 @@ const CHAIN_ID_MAP: Record<string, string> = {
   'op': '0xa',
   'base': '0x2105',
   'fantom': '0xfa',
-  'ftm': '0xfa'
+  'ftm': '0xfa',
+  
+  // Solana - special non-EVM chain
+  'solana': 'solana',
+  'sol': 'solana'
+};
+
+/**
+ * Check if chain ID represents Solana
+ */
+export const isSolanaChain = (chainId: string): boolean => {
+  return chainId === 'solana' || chainId === 'sol';
 };
 
 /**
  * Normalize chain ID to hex format with enhanced mapping
+ * Returns 'solana' for Solana chain (non-EVM special case)
  */
 export const normalizeChainId = (chainId: string): string => {
   if (!chainId) return '0x1'; // Default to Ethereum
@@ -298,7 +321,11 @@ export const callWithRetry = async <T>(apiCall: () => Promise<T>, maxRetries = 2
 export const getSupportedChains = (): Record<string, string> => {
   const chains: Record<string, string> = {};
   Object.entries(CHAIN_MAP).forEach(([key, config]) => {
-    chains[config.moralis] = config.name;
+    if (config.moralis) {
+      chains[config.moralis] = config.name;
+    }
   });
+  // Add Solana as a supported chain
+  chains['solana'] = SOLANA_CONFIG.name;
   return chains;
 };

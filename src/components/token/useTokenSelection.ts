@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { TokenResult, TokenInfoEnriched } from "./types";
-import { getFirstValidEvmAddress } from "@/utils/addressUtils";
+import { getFirstValidEvmAddress, isSolanaAddress, getSolanaAddress } from "@/utils/addressUtils";
 import { saveTokenToDatabase, saveTokenToLocalStorage, isTokenScanSupported } from "@/utils/tokenStorage";
 import { checkUserHasProAccess } from "@/integrations/supabase/client";
 
@@ -133,7 +133,38 @@ export default function useTokenSelection() {
       // For supported tokens, proceed with normal flow
       console.log(`[TOKEN-SELECTION] Token ${token.name} is supported - proceeding with scan`);
       
-      // Get the first valid EVM address from any platform
+      // Check for Solana address first
+      const solanaAddress = getSolanaAddress(token.platforms);
+      if (solanaAddress) {
+        console.log(`[TOKEN-SELECTION] Detected Solana token with address: ${solanaAddress}`);
+        
+        const tokenInfoToSave = {
+          address: solanaAddress,
+          id: token.id,
+          name: token.tokenInfo?.name || token.name,
+          symbol: token.tokenInfo?.symbol || token.symbol,
+          logo: token.tokenInfo?.logo_url || token.large || token.thumb,
+          price_usd: token.tokenInfo?.current_price_usd ?? token.price_usd ?? 0,
+          price_change_24h: token.tokenInfo?.price_change_24h ?? token.price_change_24h ?? 0,
+          market_cap_usd: token.tokenInfo?.market_cap_usd ?? token.market_cap ?? 0,
+          chain: 'solana',
+          completeTokenInfo: token.tokenInfo || getComprehensiveTokenInfo(token)
+        };
+
+        localStorage.setItem("selectedToken", JSON.stringify(tokenInfoToSave));
+        
+        const urlParams = new URLSearchParams({
+          chain: 'solana',
+          address: solanaAddress,
+          id: token.id,
+          force_refresh: 'true'
+        });
+        
+        navigate(`/scan-loading?${urlParams.toString()}`);
+        return;
+      }
+      
+      // EVM flow - get the first valid EVM address from any platform
       let tokenAddress = getFirstValidEvmAddress(token.platforms);
       console.log(`[TOKEN-SELECTION] EVM address from platforms:`, tokenAddress);
       

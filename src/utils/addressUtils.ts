@@ -3,6 +3,42 @@
  * Utility functions for working with blockchain addresses
  */
 
+// Solana Base58 address pattern (32-44 chars, no 0, O, I, l)
+const SOLANA_ADDRESS_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+const EVM_ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
+
+/**
+ * Check if an address is a valid Solana (Base58) address
+ * @param address - Address to check
+ * @returns True if it's a valid Solana address
+ */
+export const isSolanaAddress = (address: string | undefined | null): boolean => {
+  if (!address || typeof address !== 'string') return false;
+  const trimmed = address.trim();
+  // Must match Base58 pattern AND not start with 0x (to exclude EVM addresses)
+  return SOLANA_ADDRESS_PATTERN.test(trimmed) && !trimmed.startsWith('0x');
+};
+
+/**
+ * Check if an address is a valid EVM (Ethereum-style) address
+ * @param address - Address to check
+ * @returns True if it's a valid EVM address
+ */
+export const isEvmAddress = (address: string | undefined | null): boolean => {
+  if (!address || typeof address !== 'string') return false;
+  return EVM_ADDRESS_PATTERN.test(address.trim());
+};
+
+/**
+ * Detect chain type from address format
+ * @param address - Address to analyze
+ * @returns 'solana' for Base58 addresses, 'ethereum' for 0x addresses
+ */
+export const detectChainFromAddress = (address: string): 'solana' | 'ethereum' => {
+  if (isSolanaAddress(address)) return 'solana';
+  return 'ethereum';
+};
+
 /**
  * Enhanced function to extract the first valid EVM address from token platforms
  * @param platforms - Object containing blockchain platforms and their addresses
@@ -37,9 +73,9 @@ export const getFirstValidEvmAddress = (platforms: Record<string, string> | unde
     }
   }
   
-  // Then check all other platforms for any valid EVM address
+  // Then check all other platforms for any valid EVM address (excluding Solana)
   for (const [network, address] of Object.entries(platforms)) {
-    if (!priorityNetworks.includes(network)) {
+    if (!priorityNetworks.includes(network) && network !== 'solana') {
       console.log(`[ADDRESS-UTILS] Checking other network ${network}: ${address}`);
       if (typeof address === 'string' && evmAddressPattern.test(address.toLowerCase())) {
         console.log(`[ADDRESS-UTILS] Found valid EVM address on ${network}: ${address}`);
@@ -50,6 +86,23 @@ export const getFirstValidEvmAddress = (platforms: Record<string, string> | unde
   
   console.log("[ADDRESS-UTILS] No valid EVM address found in platforms");
   return "";
+};
+
+/**
+ * Get Solana address from token platforms
+ * @param platforms - Object containing blockchain platforms and their addresses
+ * @returns Solana mint address or null
+ */
+export const getSolanaAddress = (platforms: Record<string, string> | undefined): string | null => {
+  if (!platforms) return null;
+  
+  const solanaAddr = platforms['solana'];
+  if (solanaAddr && isSolanaAddress(solanaAddr)) {
+    console.log(`[ADDRESS-UTILS] Found valid Solana address: ${solanaAddr}`);
+    return solanaAddr;
+  }
+  
+  return null;
 };
 
 /**
