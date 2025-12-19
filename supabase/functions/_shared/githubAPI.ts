@@ -26,83 +26,103 @@ async function findMainRepository(owner: string, headers: any) {
     }
     
     console.log(`[GITHUB] Found ${repos.length} repositories for ${owner}`);
+    const ownerLower = owner.toLowerCase();
     
     // Filter out forks and find the main repository
     const nonForkRepos = repos.filter((repo: any) => !repo.fork);
     const targetRepos = nonForkRepos.length > 0 ? nonForkRepos : repos;
     
-    // Enhanced repository selection algorithm
+    // Enhanced repository selection algorithm with keyword-based scoring
     targetRepos.sort((a: any, b: any) => {
-      // Enhanced version detection for repository names
+      const nameLowerA = a.name.toLowerCase();
+      const nameLowerB = b.name.toLowerCase();
+      const descLowerA = (a.description || '').toLowerCase();
+      const descLowerB = (b.description || '').toLowerCase();
+      
+      // Keyword-based type scoring - prioritize core protocol repos
+      const getRepoTypeScore = (name: string, description: string) => {
+        let score = 0;
+        
+        // HIGH PRIORITY: Core protocol repos
+        if (/^(core|protocol|contracts|main)$/i.test(name)) score += 5000;
+        if (/(core|protocol|contracts)/i.test(name)) score += 3000;
+        if (/-(core|protocol|contracts|main)$/i.test(name)) score += 2500;
+        
+        // MEDIUM PRIORITY: Project-specific repos (containing org name)
+        // Extract org name parts (e.g., "maple-labs" -> ["maple", "labs"])
+        const orgParts = ownerLower.split(/[-_]/).filter(p => p.length > 2);
+        for (const part of orgParts) {
+          if (name.toLowerCase().includes(part)) score += 1500;
+        }
+        
+        // Check description for main project indicators
+        if (/(main|core|primary|protocol|smart contract)/i.test(description)) score += 500;
+        
+        // PENALTY: Helper/utility repos
+        if (/^(erc20|erc721|erc1155|utils?|helpers?|libs?|common|shared)$/i.test(name)) score -= 3000;
+        if (/-(utils?|helpers?|libs?|common|shared)$/i.test(name)) score -= 2000;
+        
+        // PENALTY: Documentation/examples
+        if (/(docs?|documentation|examples?|demo|tutorial|sample|template)/i.test(name)) score -= 2500;
+        
+        // PENALTY: Testing/tooling repos
+        if (/(test|testing|scripts?|tools?|ci|infra)/i.test(name)) score -= 1500;
+        
+        // PENALTY: Deprecated/legacy
+        if (/(legacy|old|deprecated|archive|backup)/i.test(name)) score -= 4000;
+        
+        return score;
+      };
+      
+      // Version detection for repository names
       const getVersionScore = (name: string) => {
-        // Match various version patterns: v2, v1.0, LayerZero-v2, etc.
         const versionPatterns = [
           /v(\d+)\.?\d*$/i,           // v2, v1.0 at end
-          /-v(\d+)\.?\d*$/i,         // LayerZero-v2
-          /(\d+)\.?\d*$/,            // ending with number like protocol2
-          /v(\d+)\.?\d*-/i,          // v2- in middle
+          /-v(\d+)\.?\d*$/i,          // LayerZero-v2
+          /(\d+)\.?\d*$/,             // ending with number like protocol2
+          /v(\d+)\.?\d*-/i,           // v2- in middle
         ];
         
         for (const pattern of versionPatterns) {
           const match = name.match(pattern);
           if (match) {
-            const version = parseInt(match[1]);
-            console.log(`[GITHUB] Version detected in '${name}': v${version}`);
-            return version;
+            return parseInt(match[1]);
           }
         }
         
-        // Special handling for common version indicators
         if (name.toLowerCase().includes('latest') || name.toLowerCase().includes('current')) {
-          console.log(`[GITHUB] Latest/current indicator in '${name}': treating as v999`);
           return 999;
         }
         
-        console.log(`[GITHUB] No version detected in '${name}': v0`);
         return 0;
       };
       
-      // Check for recent activity (last 6 months)
+      // Activity scoring - recent commits matter more
       const getActivityScore = (repo: any) => {
-        const sixMonthsAgo = Date.now() - (6 * 30 * 24 * 60 * 60 * 1000);
+        const now = Date.now();
         const lastPush = new Date(repo.pushed_at || 0).getTime();
-        return lastPush > sixMonthsAgo ? 1 : 0;
-      };
-      
-      // Check if repo name contains common project indicators
-      const getMainProjectScore = (name: string) => {
-        const mainPatterns = /^(core|main|protocol|v\d+)$/i;
-        const legacyPatterns = /-(legacy|old|deprecated|archive)/i;
+        const daysSinceLastPush = (now - lastPush) / (24 * 60 * 60 * 1000);
         
-        if (mainPatterns.test(name)) return 2;
-        if (legacyPatterns.test(name)) return -1;
-        return 0;
+        // Higher score for more recent activity
+        if (daysSinceLastPush < 7) return 3;    // Active in last week
+        if (daysSinceLastPush < 30) return 2;   // Active in last month
+        if (daysSinceLastPush < 180) return 1;  // Active in last 6 months
+        return 0;                               // Stale
       };
       
+      const aTypeScore = getRepoTypeScore(nameLowerA, descLowerA);
+      const bTypeScore = getRepoTypeScore(nameLowerB, descLowerB);
       const aVersionScore = getVersionScore(a.name);
       const bVersionScore = getVersionScore(b.name);
       const aActivityScore = getActivityScore(a);
       const bActivityScore = getActivityScore(b);
-      const aMainScore = getMainProjectScore(a.name);
-      const bMainScore = getMainProjectScore(b.name);
       
-      // Enhanced priority scoring system - version is now dominant factor
-      const aScore = (aVersionScore * 10000) + (aActivityScore * 1000) + (aMainScore * 500) + Math.min(a.stargazers_count || 0, 1000);
-      const bScore = (bVersionScore * 10000) + (bActivityScore * 1000) + (bMainScore * 500) + Math.min(b.stargazers_count || 0, 1000);
+      // Scoring weights: Type > Version > Activity > Stars
+      const aScore = (aTypeScore) + (aVersionScore * 10000) + (aActivityScore * 1000) + Math.min(a.stargazers_count || 0, 500);
+      const bScore = (bTypeScore) + (bVersionScore * 10000) + (bActivityScore * 1000) + Math.min(b.stargazers_count || 0, 500);
       
-      console.log(`[GITHUB] === DETAILED SCORING FOR ${a.name} ===`);
-      console.log(`[GITHUB] - Version score: ${aVersionScore} × 10000 = ${aVersionScore * 10000}`);
-      console.log(`[GITHUB] - Activity score: ${aActivityScore} × 1000 = ${aActivityScore * 1000}`);
-      console.log(`[GITHUB] - Main project score: ${aMainScore} × 500 = ${aMainScore * 500}`);
-      console.log(`[GITHUB] - Stars (capped): ${Math.min(a.stargazers_count || 0, 1000)}`);
-      console.log(`[GITHUB] - TOTAL SCORE: ${aScore}`);
-      
-      console.log(`[GITHUB] === DETAILED SCORING FOR ${b.name} ===`);
-      console.log(`[GITHUB] - Version score: ${bVersionScore} × 10000 = ${bVersionScore * 10000}`);
-      console.log(`[GITHUB] - Activity score: ${bActivityScore} × 1000 = ${bActivityScore * 1000}`);
-      console.log(`[GITHUB] - Main project score: ${bMainScore} × 500 = ${bMainScore * 500}`);
-      console.log(`[GITHUB] - Stars (capped): ${Math.min(b.stargazers_count || 0, 1000)}`);
-      console.log(`[GITHUB] - TOTAL SCORE: ${bScore}`);
+      console.log(`[GITHUB] ${a.name}: type=${aTypeScore}, ver=${aVersionScore}, act=${aActivityScore}, stars=${a.stargazers_count || 0}, TOTAL=${aScore}`);
+      console.log(`[GITHUB] ${b.name}: type=${bTypeScore}, ver=${bVersionScore}, act=${bActivityScore}, stars=${b.stargazers_count || 0}, TOTAL=${bScore}`);
       
       return bScore - aScore;
     });
@@ -110,20 +130,16 @@ async function findMainRepository(owner: string, headers: any) {
     const mainRepo = targetRepos[0];
     
     console.log(`[GITHUB] === FINAL REPOSITORY SELECTION ===`);
-    console.log(`[GITHUB] ✅ SELECTED: ${mainRepo.name}`);
-    console.log(`[GITHUB] - Stars: ${mainRepo.stargazers_count || 0}`);
-    console.log(`[GITHUB] - Last updated: ${mainRepo.updated_at}`);
+    console.log(`[GITHUB] ✅ SELECTED: ${mainRepo.name} (${mainRepo.stargazers_count || 0} stars)`);
+    console.log(`[GITHUB] - Description: ${mainRepo.description || 'none'}`);
     console.log(`[GITHUB] - Last pushed: ${mainRepo.pushed_at}`);
     
     if (targetRepos.length > 1) {
-      console.log(`[GITHUB] ❌ REJECTED ALTERNATIVES:`);
-      targetRepos.slice(1, 5).forEach((repo, index) => {
-        console.log(`[GITHUB]   ${index + 1}. ${repo.name} (${repo.stargazers_count || 0} stars, updated: ${repo.updated_at})`);
+      console.log(`[GITHUB] ❌ REJECTED TOP 5:`);
+      targetRepos.slice(1, 6).forEach((repo: any, index: number) => {
+        console.log(`[GITHUB]   ${index + 1}. ${repo.name} (${repo.stargazers_count || 0} stars)`);
       });
     }
-    
-    console.log(`[GITHUB] Selection algorithm: Version-first scoring (v2 beats v1 by 10,000+ points)`);
-    console.log(`[GITHUB] This ensures latest version repositories are always prioritized`);
     
     return {
       owner: mainRepo.owner.login,
