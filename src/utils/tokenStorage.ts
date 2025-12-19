@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { TokenResult } from "@/components/token/types";
-import { getFirstValidEvmAddress } from "./addressUtils";
+import { getFirstValidEvmAddress, isSolanaAddress, getSolanaAddress } from "./addressUtils";
 
 /**
  * Utility functions for storing and retrieving token data
@@ -39,9 +39,16 @@ export const isChainSupported = (token: TokenResult): boolean => {
   console.log(`[CHAIN-SUPPORT] Checking support for ${token.name} (${token.id})`);
   console.log(`[CHAIN-SUPPORT] Platforms:`, token.platforms);
   
-  // Native L1 tokens that we can't scan (non-EVM chains)
+  // Check for Solana support first
+  const solanaAddress = getSolanaAddress(token.platforms);
+  if (solanaAddress) {
+    console.log(`[CHAIN-SUPPORT] ${token.name} is SUPPORTED on Solana with address: ${solanaAddress}`);
+    return true;
+  }
+  
+  // Native L1 tokens that we can't scan (non-EVM, non-Solana chains)
   const unsupportedNativeTokens = [
-    'hyperliquid', 'solana', 'sui', 'ton-crystal', 'sei-network',
+    'hyperliquid', 'sui', 'ton-crystal', 'sei-network',
     'aptos', 'cardano', 'polkadot', 'cosmos', 'near', 'algorand',
     'hedera-hashgraph', 'internet-computer', 'stellar', 'monero',
     'kaspa', 'cronos', 'fantom', 'klay-token', 'bitcoin', 'bitcoin-cash',

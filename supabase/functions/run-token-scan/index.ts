@@ -4,6 +4,15 @@ import { fetchMoralisPriceData, fetchMoralisTokenStats, fetchMoralisTokenPairs, 
 import { fetchGitHubRepoData } from '../_shared/githubAPI.ts'
 import { fetchTwitterFollowers, fetchTelegramMembers } from '../_shared/apifyAPI.ts'
 import { calculateSecurityScore, calculateLiquidityScore, calculateTokenomicsScore, calculateDevelopmentScore } from '../_shared/scoringUtils.ts'
+import { isSolanaChain } from '../_shared/chainConfig.ts'
+import { 
+  fetchSPLMintInfo, 
+  fetchSolanaLiquidity, 
+  fetchSolanaMarketData,
+  calculateSolanaSecurityScore,
+  calculateSolanaTokenomicsScore,
+  calculateSolanaLiquidityScore
+} from '../_shared/solanaAPI.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,7 +24,7 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
-// Chain config
+// Chain config for EVM chains
 const CHAINS: Record<string, { goplus: string; name: string; moralis: string }> = {
   '0x1': { goplus: '1', name: 'Ethereum', moralis: '0x1' },
   '0x89': { goplus: '137', name: 'Polygon', moralis: '0x89' },
@@ -27,6 +36,10 @@ const CHAINS: Record<string, { goplus: string; name: string; moralis: string }> 
 function normalizeChainId(chainId: string): string {
   if (!chainId) return '0x1'
   const clean = chainId.toLowerCase().trim()
+  
+  // Handle Solana explicitly
+  if (clean === 'solana' || clean === 'sol') return 'solana'
+  
   if (clean.startsWith('0x')) return clean
   const num = parseInt(clean)
   if (!isNaN(num)) return '0x' + num.toString(16)
@@ -238,11 +251,19 @@ Deno.serve(async (req) => {
     }
 
     const { token_address: rawAddress, chain_id, user_id, force_refresh } = JSON.parse(bodyText)
-    const token_address = rawAddress?.toLowerCase().trim()
     const chainId = normalizeChainId(chain_id || '0x1')
     
-    console.log(`[${requestId}] Token: ${token_address}, Chain: ${chainId}, Force: ${force_refresh}`)
+    console.log(`[${requestId}] Token: ${rawAddress}, Chain: ${chainId}, Force: ${force_refresh}`)
 
+    // Route to Solana scan if chain is Solana
+    if (isSolanaChain(chainId)) {
+      console.log(`[${requestId}] Routing to Solana scan path`)
+      return await scanSolanaToken(rawAddress, user_id, requestId, startTime)
+    }
+
+    // EVM scan path - normalize address to lowercase
+    const token_address = rawAddress?.toLowerCase().trim()
+    
     if (!token_address || !/^0x[a-fA-F0-9]{40}$/.test(token_address)) {
       return new Response(JSON.stringify({ success: false, error: 'Invalid token address' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -483,3 +504,188 @@ Deno.serve(async (req) => {
     })
   }
 })
+
+/**
+ * Dedicated Solana (SPL) token scan function
+ * Uses Solana RPC, GeckoTerminal, and CoinGecko - NO EVM APIs
+ */
+async function scanSolanaToken(
+  mintAddress: string, 
+  userId: string | null, 
+  requestId: string,
+  startTime: number
+): Promise<Response> {
+  try {
+    console.log(`[${requestId}] ========== SOLANA TOKEN SCAN ==========`)
+    console.log(`[${requestId}] Mint address: ${mintAddress}`)
+
+    // Validate Solana address format (Base58, 32-44 chars)
+    const solanaAddressPattern = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
+    if (!mintAddress || !solanaAddressPattern.test(mintAddress.trim())) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Invalid Solana mint address',
+        chain: 'solana'
+      }), {
+        status: 400, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    const normalizedMint = mintAddress.trim()
+
+    // Phase 1: Fetch all Solana data in parallel
+    console.log(`[${requestId}] Phase 1: Fetching Solana data...`)
+    const [mintInfo, liquidityData, marketData] = await Promise.all([
+      fetchSPLMintInfo(normalizedMint),
+      fetchSolanaLiquidity(normalizedMint),
+      fetchSolanaMarketData(normalizedMint)
+    ])
+
+    console.log(`[${requestId}] Phase 1 results: mintInfo=${!!mintInfo.isInitialized}, liquidity=$${liquidityData.totalLiquidity}, marketData=${!!marketData}`)
+
+    // Phase 2: Calculate Solana-specific scores
+    console.log(`[${requestId}] Phase 2: Calculating scores...`)
+    
+    const securityScore = calculateSolanaSecurityScore(mintInfo)
+    const tokenomicsScore = calculateSolanaTokenomicsScore(mintInfo, marketData)
+    const liquidityScore = calculateSolanaLiquidityScore(liquidityData)
+    
+    // Placeholder scores for community and development (not yet supported for Solana)
+    const communityScore = 50 // Placeholder - social data not implemented
+    const developmentScore = 50 // Placeholder - most SPL tokens don't have GitHub
+    
+    const overallScore = Math.round(
+      (securityScore + tokenomicsScore + liquidityScore + communityScore + developmentScore) / 5
+    )
+
+    console.log(`[${requestId}] Scores: Security=${securityScore}, Tokenomics=${tokenomicsScore}, Liquidity=${liquidityScore}, Overall=${overallScore}`)
+
+    // Phase 3: Prepare data for database
+    const name = marketData?.name || `SPL Token ${normalizedMint.slice(0, 8)}`
+    const symbol = marketData?.symbol || 'SPL'
+    const description = marketData?.description || `${name} is an SPL token on Solana.`
+
+    // Phase 4: Save to database with chain='solana'
+    console.log(`[${requestId}] Phase 3: Saving to database...`)
+
+    await Promise.all([
+      // Token data cache
+      supabase.from('token_data_cache').upsert({
+        token_address: normalizedMint,
+        chain_id: 'solana',
+        name,
+        symbol,
+        description,
+        logo_url: marketData?.image || '',
+        current_price_usd: marketData?.current_price || 0,
+        price_change_24h: marketData?.price_change_24h || null,
+        market_cap_usd: marketData?.market_cap || null,
+        circulating_supply: mintInfo.supply ? parseFloat(mintInfo.supply) / Math.pow(10, mintInfo.decimals || 0) : null
+      }, { onConflict: 'token_address,chain_id' }),
+
+      // Security cache with Solana-specific fields
+      supabase.from('token_security_cache').upsert({
+        token_address: normalizedMint,
+        chain_id: 'solana',
+        ownership_renounced: mintInfo.mintAuthority === null,
+        freeze_authority: mintInfo.freezeAuthority !== null,
+        can_mint: mintInfo.mintAuthority !== null,
+        contract_verified: true, // SPL tokens are always "verified" as standard
+        honeypot_detected: false, // Not applicable for SPL
+        is_proxy: false, // Not applicable for SPL
+        score: securityScore
+      }, { onConflict: 'token_address,chain_id' }),
+
+      // Tokenomics cache
+      supabase.from('token_tokenomics_cache').upsert({
+        token_address: normalizedMint,
+        chain_id: 'solana',
+        total_supply: mintInfo.supply ? parseFloat(mintInfo.supply) : null,
+        dex_liquidity_usd: liquidityData.totalLiquidity || null,
+        major_dex_pairs: liquidityData.majorPools?.length > 0 ? liquidityData.majorPools : null,
+        score: tokenomicsScore
+      }, { onConflict: 'token_address,chain_id' }),
+
+      // Liquidity cache
+      supabase.from('token_liquidity_cache').upsert({
+        token_address: normalizedMint,
+        chain_id: 'solana',
+        dex_depth_status: liquidityData.totalLiquidity > 1000000 ? 'Deep' : 
+                         liquidityData.totalLiquidity > 100000 ? 'Moderate' : 
+                         liquidityData.totalLiquidity > 10000 ? 'Shallow' : 'Very Low',
+        score: liquidityScore
+      }, { onConflict: 'token_address,chain_id' }),
+
+      // Community cache (placeholder for now)
+      supabase.from('token_community_cache').upsert({
+        token_address: normalizedMint,
+        chain_id: 'solana',
+        score: communityScore
+      }, { onConflict: 'token_address,chain_id' }),
+
+      // Development cache (placeholder for now)
+      supabase.from('token_development_cache').upsert({
+        token_address: normalizedMint,
+        chain_id: 'solana',
+        is_open_source: false,
+        score: developmentScore
+      }, { onConflict: 'token_address,chain_id' }),
+
+      // Token scan record
+      supabase.from('token_scans').insert({
+        token_address: normalizedMint,
+        chain_id: 'solana',
+        user_id: userId || null,
+        score_total: overallScore,
+        is_anonymous: !userId,
+        pro_scan: false
+      })
+    ])
+
+    const processingTime = Date.now() - startTime
+    console.log(`[${requestId}] ========== SOLANA SCAN COMPLETE in ${processingTime}ms ==========`)
+
+    return new Response(JSON.stringify({
+      success: true,
+      chain: 'solana',
+      token_address: normalizedMint,
+      overall_score: overallScore,
+      token_name: name,
+      token_symbol: symbol,
+      scores: {
+        security: securityScore,
+        liquidity: liquidityScore,
+        tokenomics: tokenomicsScore,
+        community: communityScore,
+        development: developmentScore
+      },
+      solana_specific: {
+        mint_authority_renounced: mintInfo.mintAuthority === null,
+        freeze_authority_disabled: mintInfo.freezeAuthority === null,
+        decimals: mintInfo.decimals,
+        total_supply: mintInfo.supply
+      },
+      processing_time_ms: processingTime
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+
+  } catch (error: any) {
+    console.error(`[${requestId}] Solana scan error:`, error)
+    
+    // Defensive: Never throw, return graceful error
+    return new Response(JSON.stringify({
+      success: false,
+      chain: 'solana',
+      error: 'Solana scan failed',
+      details: error.message || 'Unknown error',
+      request_id: requestId,
+      processing_time_ms: Date.now() - startTime
+    }), {
+      status: 200, // Return 200 to avoid runtime errors on client
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+  }
+}
