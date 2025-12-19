@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { normalizeChainId, getSupportedChains } from "@/utils/tokenCacheUtils";
+import { isSolanaAddress } from "@/utils/addressUtils";
 
 export default function ScanLoading() {
   const [progress, setProgress] = useState(0);
@@ -33,7 +34,7 @@ export default function ScanLoading() {
   // Get supported chains for validation and display
   const supportedChains = getSupportedChains();
 
-  const steps = [
+  const evmSteps = [
     "Initializing comprehensive scan...",
     "Fetching security data from GoPlus...",
     "Retrieving market data from GeckoTerminal...",
@@ -43,6 +44,20 @@ export default function ScanLoading() {
     "Evaluating tokenomics...",
     "Finalizing comprehensive report..."
   ];
+
+  const solanaSteps = [
+    "Initializing Solana scan...",
+    "Fetching SPL token mint data...",
+    "Checking mint authority status...",
+    "Analyzing freeze authority...",
+    "Retrieving DEX liquidity from GeckoTerminal...",
+    "Fetching market data from CoinGecko...",
+    "Calculating security score...",
+    "Finalizing comprehensive report..."
+  ];
+
+  // Use Solana-specific steps if scanning Solana chain
+  const steps = normalizedChain === 'solana' ? solanaSteps : evmSteps;
 
   const cryptoTrivia = [
     "Did you know? The first cryptocurrency transaction was 10,000 Bitcoin for 2 pizzas in 2010.",
@@ -113,7 +128,10 @@ export default function ScanLoading() {
         throw new Error(`Unsupported chain: ${rawChain || finalChainId}. Supported chains: ${supportedChainNames}`);
       }
 
-      scanParams.token_address = finalTokenAddress.toLowerCase();
+      // Preserve case for Solana addresses (Base58), lowercase EVM addresses
+      scanParams.token_address = isSolanaAddress(finalTokenAddress) 
+        ? finalTokenAddress 
+        : finalTokenAddress.toLowerCase();
       scanParams.chain_id = finalChainId;
 
       console.log('[SCAN-LOADING] Final comprehensive scan parameters:', scanParams);
