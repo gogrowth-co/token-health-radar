@@ -1,9 +1,9 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import TokenSearchAutocomplete from "@/components/token/TokenSearchAutocomplete";
+import { isSolanaAddress, isEvmAddress } from "@/utils/addressUtils";
 
 interface TokenSearchInputProps {
   large?: boolean;
@@ -20,8 +20,17 @@ export default function TokenSearchInput({
   
   const handleTokenSelect = (token: any) => {
     console.log('Token selected from autocomplete:', token);
-    // Navigate to the new scan route with chain and address
-    navigate(`/scan/${token.value}`);
+    
+    // Check if this is a Solana token
+    const isSolana = token.chain === 'solana' || token.chain === 'sol' || isSolanaAddress(token.address);
+    
+    if (isSolana) {
+      // Route Solana tokens directly to scan-loading, bypassing ScanChain validation
+      navigate(`/scan-loading?chain=solana&address=${encodeURIComponent(token.address)}`);
+    } else {
+      // Navigate to the scan route for EVM tokens
+      navigate(`/scan/${token.value}`);
+    }
   };
 
   const handleManualSubmit = (searchTerm: string) => {
@@ -36,16 +45,20 @@ export default function TokenSearchInput({
     
     console.log('Manual token search:', searchTerm);
     
-    // Check if input looks like an address
-    const isAddress = /^(0x)?[0-9a-fA-F]{40}$/.test(searchTerm);
-    
-    if (isAddress) {
-      // Direct address input - go to confirm page
-      navigate(`/confirm?address=${encodeURIComponent(searchTerm)}`);
-    } else {
-      // Search by name - go to confirm page for backwards compatibility
-      navigate(`/confirm?token=${encodeURIComponent(searchTerm)}`);
+    // Check if input is a Solana address - route directly to Solana scan
+    if (isSolanaAddress(searchTerm)) {
+      navigate(`/scan-loading?chain=solana&address=${encodeURIComponent(searchTerm)}`);
+      return;
     }
+    
+    // Check if input looks like an EVM address
+    if (isEvmAddress(searchTerm)) {
+      navigate(`/confirm?address=${encodeURIComponent(searchTerm)}`);
+      return;
+    }
+    
+    // Search by name - go to confirm page for backwards compatibility
+    navigate(`/confirm?token=${encodeURIComponent(searchTerm)}`);
   };
 
   return (

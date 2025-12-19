@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { isSolanaAddress, isEvmAddress } from "@/utils/addressUtils";
 
 export default function ScanChain() {
   const { chain, address } = useParams<{ chain: string; address: string }>();
@@ -21,10 +22,11 @@ export default function ScanChain() {
       return;
     }
 
-    // Validate address format
-    if (!/^(0x)?[0-9a-fA-F]{40}$/i.test(address)) {
+    // Validate address format - support both EVM and Solana addresses
+    const isValidAddress = isEvmAddress(address) || isSolanaAddress(address);
+    if (!isValidAddress) {
       toast.error("Invalid token address", {
-        description: "Please provide a valid token address"
+        description: "Please provide a valid EVM or Solana token address"
       });
       navigate("/");
       return;
@@ -37,7 +39,8 @@ export default function ScanChain() {
   }, [chain, address, navigate]);
 
   const supportedChains = [
-    'eth', 'ethereum', 'polygon', 'bsc', 'arbitrum', 'avalanche', 'optimism', 'base', 'fantom'
+    'eth', 'ethereum', 'polygon', 'bsc', 'arbitrum', 'avalanche', 'optimism', 'base', 'fantom',
+    'solana', 'sol'
   ];
 
   if (!chain || !supportedChains.includes(chain.toLowerCase())) {
