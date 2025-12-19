@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import TokenLogo from "./TokenLogo";
+import { isSolanaAddress } from "@/utils/addressUtils";
 
 interface TokenSearchResult {
   id: string;
@@ -37,25 +38,27 @@ interface TokenSearchAutocompleteProps {
   className?: string;
 }
 
-// Chain priority for sorting (matches backend)
+// Chain priority for sorting (matches backend) - Solana added
 const CHAIN_PRIORITY: Record<string, number> = {
   'eth': 1,
-  '0xa4b1': 2, // Arbitrum
-  'arbitrum': 2,
-  'bsc': 3,
-  '0x89': 4, // Polygon
-  'polygon': 4,
-  '0x2105': 5, // Base
-  'base': 5,
-  '0xa': 6, // Optimism
-  'optimism': 6,
-  'avalanche': 7,
+  'solana': 2, // Solana high priority
+  '0xa4b1': 3, // Arbitrum
+  'arbitrum': 3,
+  'bsc': 4,
+  '0x89': 5, // Polygon
+  'polygon': 5,
+  '0x2105': 6, // Base
+  'base': 6,
+  '0xa': 7, // Optimism
+  'optimism': 7,
+  'avalanche': 8,
 };
 
-// Enhanced chain display names with hex ID support
+// Enhanced chain display names with hex ID support and Solana
 const getChainDisplayName = (chain: string) => {
   const chainNames: Record<string, string> = {
     'eth': 'Ethereum',
+    'solana': 'Solana',
     'polygon': 'Polygon',
     '0x89': 'Polygon',
     'bsc': 'BSC',
@@ -71,10 +74,11 @@ const getChainDisplayName = (chain: string) => {
   return chainNames[chain.toLowerCase()] || chain.charAt(0).toUpperCase() + chain.slice(1);
 };
 
-// Chain colors for badges including hex IDs
+// Chain colors for badges including hex IDs and Solana
 const getChainBadgeVariant = (chain: string): "default" | "secondary" | "destructive" | "outline" => {
   const chainColors: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
     'eth': 'default',
+    'solana': 'secondary', // Purple-ish for Solana
     'polygon': 'secondary',
     '0x89': 'secondary', // Polygon
     'bsc': 'outline',
@@ -87,6 +91,11 @@ const getChainBadgeVariant = (chain: string): "default" | "secondary" | "destruc
     'avalanche': 'secondary'
   };
   return chainColors[chain.toLowerCase()] || 'outline';
+};
+
+// Check if chain is Solana
+const isSolanaChain = (chain: string): boolean => {
+  return chain.toLowerCase() === 'solana' || chain.toLowerCase() === 'sol';
 };
 
 // Text highlighting utility with improved colors
@@ -231,7 +240,13 @@ export default function TokenSearchAutocomplete({
     if (onSelect) {
       onSelect(token);
     } else {
-      navigate(`/scan/${token.value}`);
+      // Route Solana tokens to the Solana scan flow
+      if (isSolanaChain(token.chain)) {
+        console.log(`[TOKEN-AUTOCOMPLETE] Routing Solana token to scan-loading`);
+        navigate(`/scan-loading?chain=solana&address=${encodeURIComponent(token.address)}`);
+      } else {
+        navigate(`/scan/${token.value}`);
+      }
     }
   };
 
@@ -271,11 +286,19 @@ export default function TokenSearchAutocomplete({
       return;
     }
 
-    // Check if input looks like an address
-    if (/^(0x)?[0-9a-fA-F]{40}$/.test(searchTerm.trim())) {
-      console.log(`[TOKEN-AUTOCOMPLETE] Direct address input detected`);
-      navigate(`/confirm?address=${encodeURIComponent(searchTerm.trim())}`);
-    } else if (results.length > 0) {
+    const trimmedSearch = searchTerm.trim();
+
+    // Check if input looks like an EVM address
+    if (/^(0x)?[0-9a-fA-F]{40}$/.test(trimmedSearch)) {
+      console.log(`[TOKEN-AUTOCOMPLETE] Direct EVM address input detected`);
+      navigate(`/confirm?address=${encodeURIComponent(trimmedSearch)}`);
+    } 
+    // Check if input looks like a Solana address (Base58)
+    else if (isSolanaAddress(trimmedSearch)) {
+      console.log(`[TOKEN-AUTOCOMPLETE] Direct Solana address input detected`);
+      navigate(`/scan-loading?chain=solana&address=${encodeURIComponent(trimmedSearch)}`);
+    }
+    else if (results.length > 0) {
       // Select first result if available
       handleSelectToken(results[0]);
     } else {
@@ -367,12 +390,17 @@ export default function TokenSearchAutocomplete({
                     </div>
                   </div>
 
-                  {/* Chain badge with improved styling and alignment */}
+                  {/* Chain badge with improved styling and alignment - special Solana styling */}
                   <div className="flex-shrink-0 flex items-center">
                     <Badge 
                       variant={getChainBadgeVariant(token.chain)} 
-                      className="text-xs font-medium px-2 py-1 shadow-sm border border-gray-200 dark:border-gray-600"
+                      className={`text-xs font-medium px-2 py-1 shadow-sm border ${
+                        isSolanaChain(token.chain) 
+                          ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' 
+                          : 'border-gray-200 dark:border-gray-600'
+                      }`}
                     >
+                      {isSolanaChain(token.chain) && <span className="mr-1">◎</span>}
                       {getChainDisplayName(token.chain)}
                     </Badge>
                   </div>

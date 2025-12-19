@@ -75,7 +75,7 @@ const CHAIN_CONFIG = [
   { id: '0x89', name: 'Polygon', logo: 'https://cryptologos.cc/logos/polygon-matic-logo.png' }
 ];
 
-// Chain logos mapping (including hex IDs)
+// Chain logos mapping (including hex IDs and Solana)
 const CHAIN_LOGOS: Record<string, string> = {
   'eth': 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
   'polygon': 'https://cryptologos.cc/logos/polygon-matic-logo.png',
@@ -88,17 +88,19 @@ const CHAIN_LOGOS: Record<string, string> = {
   '0xa': 'https://assets.coingecko.com/coins/images/25244/small/Optimism.png',
   'base': 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png',
   '0x2105': 'https://assets.coingecko.com/coins/images/35845/small/coinbase-base-logo.png',
-  'fantom': 'https://cryptologos.cc/logos/fantom-ftm-logo.png'
+  'fantom': 'https://cryptologos.cc/logos/fantom-ftm-logo.png',
+  'solana': 'https://cryptologos.cc/logos/solana-sol-logo.png'
 };
 
-// Map CoinGecko platform names to our chain IDs
-const COINGECKO_PLATFORM_MAP: Record<string, string> = {
-  'ethereum': 'eth',
-  'polygon-pos': '0x89',
-  'binance-smart-chain': 'bsc',
-  'arbitrum-one': '0xa4b1',
-  'optimistic-ethereum': '0xa',
-  'base': '0x2105'
+// Map CoinGecko platform names to our chain IDs (including Solana)
+const COINGECKO_PLATFORM_MAP: Record<string, { chainId: string; isEVM: boolean }> = {
+  'ethereum': { chainId: 'eth', isEVM: true },
+  'polygon-pos': { chainId: '0x89', isEVM: true },
+  'binance-smart-chain': { chainId: 'bsc', isEVM: true },
+  'arbitrum-one': { chainId: '0xa4b1', isEVM: true },
+  'optimistic-ethereum': { chainId: '0xa', isEVM: true },
+  'base': { chainId: '0x2105', isEVM: true },
+  'solana': { chainId: 'solana', isEVM: false }
 };
 
 // Known token addresses for testing and fallback
@@ -186,14 +188,29 @@ async function searchCoinGecko(query: string, apiKey: string): Promise<TokenResu
     for (const [platformName, contractAddress] of Object.entries(coinDetail.platforms || {})) {
       if (!contractAddress || contractAddress === '') continue;
 
-      const chainId = COINGECKO_PLATFORM_MAP[platformName];
-      if (!chainId) {
+      const platformConfig = COINGECKO_PLATFORM_MAP[platformName];
+      if (!platformConfig) {
         console.log(`[COINGECKO] Skipping unmapped platform: ${platformName}`);
         continue;
       }
 
+      const { chainId, isEVM } = platformConfig;
+
+      // For EVM chains, validate address format
+      if (isEVM && !/^0x[a-fA-F0-9]{40}$/i.test(contractAddress)) {
+        console.log(`[COINGECKO] Skipping invalid EVM address on ${platformName}: ${contractAddress}`);
+        continue;
+      }
+
+      // For Solana, validate Base58 address format (32-44 chars, no 0, O, I, l)
+      if (!isEVM && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(contractAddress)) {
+        console.log(`[COINGECKO] Skipping invalid Solana address: ${contractAddress}`);
+        continue;
+      }
+
       const chainConfig = CHAIN_CONFIG.find(c => c.id === chainId);
-      if (!chainConfig) continue;
+      const chainName = chainConfig?.name || (chainId === 'solana' ? 'Solana' : chainId);
+      const chainLogo = CHAIN_LOGOS[chainId] || chainConfig?.logo || '';
 
       results.push({
         id: `${chainId}-${contractAddress}`,
@@ -202,24 +219,25 @@ async function searchCoinGecko(query: string, apiKey: string): Promise<TokenResu
         address: contractAddress,
         chain: chainId,
         logo: coinDetail.image?.large || coinDetail.image?.small || topCoin.large || topCoin.thumb || '',
-        chainLogo: CHAIN_LOGOS[chainId] || chainConfig.logo,
+        chainLogo: chainLogo,
         verified: true, // CoinGecko tokens are generally verified
-        decimals: 18, // Default, would need another API call for exact value
+        decimals: isEVM ? 18 : 9, // Solana tokens typically use 9 decimals
         title: `${coinDetail.symbol.toUpperCase()} — ${coinDetail.name}`,
-        subtitle: chainConfig.name,
+        subtitle: chainName,
         value: `${chainId}/${contractAddress}`,
         coingeckoId: coinDetail.id // The actual CoinGecko slug (e.g., "uniswap")
       });
     }
 
-    // Sort by chain priority
+    // Sort by chain priority (Solana after Ethereum but before other chains)
     const chainPriority: Record<string, number> = {
       'eth': 1,
-      '0xa4b1': 2,
-      'bsc': 3,
-      '0x89': 4,
-      '0x2105': 5,
-      '0xa': 6,
+      'solana': 2, // Solana high priority
+      '0xa4b1': 3,
+      'bsc': 4,
+      '0x89': 5,
+      '0x2105': 6,
+      '0xa': 7,
     };
 
     results.sort((a, b) => {
@@ -228,7 +246,7 @@ async function searchCoinGecko(query: string, apiKey: string): Promise<TokenResu
       return priorityA - priorityB;
     });
 
-    console.log(`[COINGECKO] Returning ${results.length} tokens across ${results.length} chains`);
+    console.log(`[COINGECKO] Returning ${results.length} tokens across chains (including Solana)`);
     return results;
 
   } catch (error: any) {
