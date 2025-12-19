@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { fetchMoralisPriceData, fetchMoralisTokenStats, fetchMoralisTokenPairs, fetchMoralisTokenOwners, fetchMoralisMetadata } from '../_shared/moralisAPI.ts'
 import { fetchGitHubRepoData } from '../_shared/githubAPI.ts'
 import { fetchTwitterFollowers, fetchTelegramMembers } from '../_shared/apifyAPI.ts'
+import { fetchDiscordMemberCount } from '../_shared/discordAPI.ts'
 import { calculateSecurityScore, calculateLiquidityScore, calculateTokenomicsScore, calculateDevelopmentScore } from '../_shared/scoringUtils.ts'
 import { isSolanaChain } from '../_shared/chainConfig.ts'
 import { 
@@ -299,13 +300,14 @@ Deno.serve(async (req) => {
     
     const twitterHandle = extractTwitterHandle(socialLinks.twitter || '')
     
-    const [twitterFollowers, telegramData, githubData] = await Promise.all([
+    const [twitterFollowers, telegramData, discordMembers, githubData] = await Promise.all([
       twitterHandle ? fetchTwitterFollowers(twitterHandle) : Promise.resolve(null),
       socialLinks.telegram ? fetchTelegramMembers(socialLinks.telegram) : Promise.resolve({ members: null }),
+      socialLinks.discord ? fetchDiscordMemberCount(socialLinks.discord) : Promise.resolve(null),
       socialLinks.github ? fetchGitHubRepoData(socialLinks.github) : Promise.resolve(null)
     ])
     
-    console.log(`[${requestId}] Phase 2 results: twitter=${twitterFollowers || 0}, telegram=${telegramData?.members || 0}, github=${!!githubData}`)
+    console.log(`[${requestId}] Phase 2 results: twitter=${twitterFollowers || 0}, telegram=${telegramData?.members || 0}, discord=${discordMembers || 0}, github=${!!githubData}`)
 
     // ========== PHASE 3: Calculate Scores ==========
     console.log(`[${requestId}] Phase 3: Calculating scores...`)
@@ -337,7 +339,7 @@ Deno.serve(async (req) => {
     // Community Score
     const communityData = {
       twitterFollowers: twitterFollowers || 0,
-      discordMembers: 0, // Discord requires different API
+      discordMembers: discordMembers || 0,
       telegramMembers: telegramData?.members || 0
     }
     const communityScore = calculateCommunityScore(communityData)
@@ -426,13 +428,14 @@ Deno.serve(async (req) => {
         token_address,
         chain_id: chainId,
         twitter_followers: twitterFollowers || 0,
-        discord_members: 0,
+        discord_members: discordMembers || 0,
         telegram_members: telegramData?.members || 0,
         twitter_verified: null,
         twitter_growth_7d: null,
         active_channels: [
           twitterHandle ? 'twitter' : null,
-          telegramData?.members ? 'telegram' : null
+          telegramData?.members ? 'telegram' : null,
+          discordMembers ? 'discord' : null
         ].filter(Boolean),
         score: communityScore
       }, { onConflict: 'token_address,chain_id' }),
@@ -562,14 +565,15 @@ async function scanSolanaToken(
       website: marketData?.website_url || 'none'
     })
     
-    // Fetch social metrics and GitHub data in parallel
-    const [twitterFollowers, telegramData, githubData] = await Promise.all([
+    // Fetch social metrics, Discord, and GitHub data in parallel
+    const [twitterFollowers, telegramData, discordMembers, githubData] = await Promise.all([
       twitterHandle ? fetchTwitterFollowers(twitterHandle) : Promise.resolve(null),
       marketData?.telegram_url ? fetchTelegramMembers(marketData.telegram_url) : Promise.resolve({ members: null }),
+      marketData?.discord_url ? fetchDiscordMemberCount(marketData.discord_url) : Promise.resolve(null),
       marketData?.github_url ? fetchGitHubRepoData(marketData.github_url) : Promise.resolve(null)
     ])
     
-    console.log(`[${requestId}] Phase 2 results: twitter=${twitterFollowers || 0} followers, telegram=${telegramData?.members || 0} members, github=${githubData ? `${githubData.repo} (${githubData.stars} stars)` : 'none'}`)
+    console.log(`[${requestId}] Phase 2 results: twitter=${twitterFollowers || 0} followers, telegram=${telegramData?.members || 0} members, discord=${discordMembers || 0} members, github=${githubData ? `${githubData.repo} (${githubData.stars} stars)` : 'none'}`)
 
     // Phase 3: Calculate scores
     console.log(`[${requestId}] Phase 3: Calculating scores...`)
@@ -581,7 +585,7 @@ async function scanSolanaToken(
     // Calculate REAL community score based on fetched data
     const communityData = {
       twitterFollowers: twitterFollowers || 0,
-      discordMembers: 0, // Discord API requires bot, not supported yet
+      discordMembers: discordMembers || 0,
       telegramMembers: telegramData?.members || 0
     }
     const communityScore = calculateCommunityScore(communityData)
@@ -634,36 +638,41 @@ async function scanSolanaToken(
         score: securityScore
       }, { onConflict: 'token_address,chain_id' }),
 
-      // Tokenomics cache
+      // Tokenomics cache - fix supply parsing (raw supply is already a string number)
       supabase.from('token_tokenomics_cache').upsert({
         token_address: normalizedMint,
         chain_id: 'solana',
-        total_supply: mintInfo.supply ? parseFloat(mintInfo.supply) : null,
-        dex_liquidity_usd: liquidityData.totalLiquidity || null,
+        total_supply: mintInfo.supply ? parseFloat(mintInfo.supply) / Math.pow(10, mintInfo.decimals || 0) : null,
+        circulating_supply: mintInfo.supply ? parseFloat(mintInfo.supply) / Math.pow(10, mintInfo.decimals || 0) : null,
+        dex_liquidity_usd: liquidityData.totalLiquidity > 0 ? liquidityData.totalLiquidity : null,
         major_dex_pairs: liquidityData.majorPools?.length > 0 ? liquidityData.majorPools : null,
+        tvl_usd: liquidityData.totalLiquidity > 0 ? liquidityData.totalLiquidity : null,
         score: tokenomicsScore
       }, { onConflict: 'token_address,chain_id' }),
 
-      // Liquidity cache
+      // Liquidity cache - add trading volume from major pools
       supabase.from('token_liquidity_cache').upsert({
         token_address: normalizedMint,
         chain_id: 'solana',
+        trading_volume_24h_usd: liquidityData.majorPools?.reduce((sum, pool) => sum + (pool.volume_24h || 0), 0) || null,
         dex_depth_status: liquidityData.totalLiquidity > 1000000 ? 'Deep' : 
                          liquidityData.totalLiquidity > 100000 ? 'Moderate' : 
                          liquidityData.totalLiquidity > 10000 ? 'Shallow' : 'Very Low',
+        cex_listings: 0,
         score: liquidityScore
       }, { onConflict: 'token_address,chain_id' }),
 
-      // Community cache with REAL data
+      // Community cache with REAL data including Discord
       supabase.from('token_community_cache').upsert({
         token_address: normalizedMint,
         chain_id: 'solana',
         twitter_followers: twitterFollowers || 0,
         telegram_members: telegramData?.members || 0,
-        discord_members: 0,
+        discord_members: discordMembers || 0,
         active_channels: [
           twitterHandle ? 'twitter' : null,
-          telegramData?.members ? 'telegram' : null
+          telegramData?.members ? 'telegram' : null,
+          discordMembers ? 'discord' : null
         ].filter(Boolean),
         score: communityScore
       }, { onConflict: 'token_address,chain_id' }),
@@ -716,6 +725,7 @@ async function scanSolanaToken(
         twitter_handle: twitterHandle,
         twitter_followers: twitterFollowers,
         telegram_members: telegramData?.members || null,
+        discord_members: discordMembers || null,
         github_repo: githubData ? `${githubData.owner}/${githubData.repo}` : null
       },
       solana_specific: {
