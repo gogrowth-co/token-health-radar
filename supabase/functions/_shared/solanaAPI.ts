@@ -128,7 +128,7 @@ export async function fetchSolanaLiquidity(mintAddress: string): Promise<{
 
 /**
  * Fetch Solana token market data from CoinGecko
- * Returns price, market cap, and metadata
+ * Returns price, market cap, metadata, AND social links
  */
 export async function fetchSolanaMarketData(mintAddress: string): Promise<{
   name: string | null;
@@ -138,6 +138,12 @@ export async function fetchSolanaMarketData(mintAddress: string): Promise<{
   market_cap: number | null;
   price_change_24h: number | null;
   description: string | null;
+  // Social links
+  twitter_url: string | null;
+  telegram_url: string | null;
+  discord_url: string | null;
+  github_url: string | null;
+  website_url: string | null;
 } | null> {
   try {
     console.log(`[COINGECKO-SOLANA] Fetching market data for: ${mintAddress}`);
@@ -160,6 +166,47 @@ export async function fetchSolanaMarketData(mintAddress: string): Promise<{
     const data = await response.json();
     
     console.log(`[COINGECKO-SOLANA] Market data retrieved for: ${data.name}`);
+    
+    // Extract social links from CoinGecko response
+    const links = data.links || {};
+    
+    // Twitter - check twitter_screen_name first, then homepage
+    let twitterUrl = null;
+    if (links.twitter_screen_name) {
+      twitterUrl = `https://twitter.com/${links.twitter_screen_name}`;
+    }
+    
+    // Telegram - check telegram_channel_identifier
+    let telegramUrl = null;
+    if (links.telegram_channel_identifier) {
+      telegramUrl = `https://t.me/${links.telegram_channel_identifier}`;
+    }
+    
+    // Discord - check chat_url array for discord links
+    let discordUrl = null;
+    if (links.chat_url && Array.isArray(links.chat_url)) {
+      discordUrl = links.chat_url.find((url: string) => url.includes('discord')) || null;
+    }
+    
+    // GitHub - check repos_url.github array
+    let githubUrl = null;
+    if (links.repos_url?.github && Array.isArray(links.repos_url.github) && links.repos_url.github.length > 0) {
+      githubUrl = links.repos_url.github[0];
+    }
+    
+    // Website - check homepage array
+    let websiteUrl = null;
+    if (links.homepage && Array.isArray(links.homepage) && links.homepage.length > 0) {
+      websiteUrl = links.homepage.find((url: string) => url && url.length > 0) || null;
+    }
+    
+    console.log(`[COINGECKO-SOLANA] Social links extracted:`, {
+      twitter: twitterUrl,
+      telegram: telegramUrl,
+      discord: discordUrl,
+      github: githubUrl,
+      website: websiteUrl
+    });
 
     return {
       name: data.name || null,
@@ -168,7 +215,13 @@ export async function fetchSolanaMarketData(mintAddress: string): Promise<{
       current_price: data.market_data?.current_price?.usd || null,
       market_cap: data.market_data?.market_cap?.usd || null,
       price_change_24h: data.market_data?.price_change_percentage_24h || null,
-      description: data.description?.en?.split('.')[0] || null
+      description: data.description?.en?.split('.')[0] || null,
+      // Social links
+      twitter_url: twitterUrl,
+      telegram_url: telegramUrl,
+      discord_url: discordUrl,
+      github_url: githubUrl,
+      website_url: websiteUrl
     };
   } catch (error) {
     console.error(`[COINGECKO-SOLANA] Error fetching market data:`, error);

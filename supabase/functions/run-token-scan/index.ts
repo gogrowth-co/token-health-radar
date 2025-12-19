@@ -507,7 +507,7 @@ Deno.serve(async (req) => {
 
 /**
  * Dedicated Solana (SPL) token scan function
- * Uses Solana RPC, GeckoTerminal, and CoinGecko - NO EVM APIs
+ * Uses Solana RPC, GeckoTerminal, CoinGecko, and social/GitHub APIs
  */
 async function scanSolanaToken(
   mintAddress: string, 
@@ -532,9 +532,10 @@ async function scanSolanaToken(
       })
     }
 
+    // Keep original case for Solana addresses (Base58 is case-sensitive)
     const normalizedMint = mintAddress.trim()
 
-    // Phase 1: Fetch all Solana data in parallel
+    // Phase 1: Fetch core Solana data in parallel
     console.log(`[${requestId}] Phase 1: Fetching Solana data...`)
     const [mintInfo, liquidityData, marketData] = await Promise.all([
       fetchSPLMintInfo(normalizedMint),
@@ -544,33 +545,66 @@ async function scanSolanaToken(
 
     console.log(`[${requestId}] Phase 1 results: mintInfo=${!!mintInfo.isInitialized}, liquidity=$${liquidityData.totalLiquidity}, marketData=${!!marketData}`)
 
-    // Phase 2: Calculate Solana-specific scores
-    console.log(`[${requestId}] Phase 2: Calculating scores...`)
+    // Phase 2: Fetch social and GitHub data from CoinGecko links
+    console.log(`[${requestId}] Phase 2: Fetching social & GitHub data...`)
+    
+    // Extract Twitter handle from CoinGecko twitter_url
+    let twitterHandle: string | null = null
+    if (marketData?.twitter_url) {
+      const match = marketData.twitter_url.match(/(?:twitter\.com|x\.com)\/([a-zA-Z0-9_]+)/)
+      twitterHandle = match ? match[1] : null
+    }
+    
+    console.log(`[${requestId}] Social links from CoinGecko:`, {
+      twitter: marketData?.twitter_url || 'none',
+      telegram: marketData?.telegram_url || 'none',
+      github: marketData?.github_url || 'none',
+      website: marketData?.website_url || 'none'
+    })
+    
+    // Fetch social metrics and GitHub data in parallel
+    const [twitterFollowers, telegramData, githubData] = await Promise.all([
+      twitterHandle ? fetchTwitterFollowers(twitterHandle) : Promise.resolve(null),
+      marketData?.telegram_url ? fetchTelegramMembers(marketData.telegram_url) : Promise.resolve({ members: null }),
+      marketData?.github_url ? fetchGitHubRepoData(marketData.github_url) : Promise.resolve(null)
+    ])
+    
+    console.log(`[${requestId}] Phase 2 results: twitter=${twitterFollowers || 0} followers, telegram=${telegramData?.members || 0} members, github=${githubData ? `${githubData.repo} (${githubData.stars} stars)` : 'none'}`)
+
+    // Phase 3: Calculate scores
+    console.log(`[${requestId}] Phase 3: Calculating scores...`)
     
     const securityScore = calculateSolanaSecurityScore(mintInfo)
     const tokenomicsScore = calculateSolanaTokenomicsScore(mintInfo, marketData)
     const liquidityScore = calculateSolanaLiquidityScore(liquidityData)
     
-    // Placeholder scores for community and development (not yet supported for Solana)
-    const communityScore = 50 // Placeholder - social data not implemented
-    const developmentScore = 50 // Placeholder - most SPL tokens don't have GitHub
+    // Calculate REAL community score based on fetched data
+    const communityData = {
+      twitterFollowers: twitterFollowers || 0,
+      discordMembers: 0, // Discord API requires bot, not supported yet
+      telegramMembers: telegramData?.members || 0
+    }
+    const communityScore = calculateCommunityScore(communityData)
+    
+    // Calculate REAL development score based on GitHub data
+    const developmentScore = calculateDevelopmentScore(githubData)
     
     const overallScore = Math.round(
       (securityScore + tokenomicsScore + liquidityScore + communityScore + developmentScore) / 5
     )
 
-    console.log(`[${requestId}] Scores: Security=${securityScore}, Tokenomics=${tokenomicsScore}, Liquidity=${liquidityScore}, Overall=${overallScore}`)
+    console.log(`[${requestId}] Scores: Security=${securityScore}, Tokenomics=${tokenomicsScore}, Liquidity=${liquidityScore}, Community=${communityScore}, Development=${developmentScore}, Overall=${overallScore}`)
 
-    // Phase 3: Prepare data for database
+    // Phase 4: Prepare data for database
     const name = marketData?.name || `SPL Token ${normalizedMint.slice(0, 8)}`
     const symbol = marketData?.symbol || 'SPL'
     const description = marketData?.description || `${name} is an SPL token on Solana.`
 
-    // Phase 4: Save to database with chain='solana'
-    console.log(`[${requestId}] Phase 3: Saving to database...`)
+    // Phase 5: Save to database with chain='solana'
+    console.log(`[${requestId}] Phase 4: Saving to database...`)
 
     await Promise.all([
-      // Token data cache
+      // Token data cache with social links
       supabase.from('token_data_cache').upsert({
         token_address: normalizedMint,
         chain_id: 'solana',
@@ -581,7 +615,10 @@ async function scanSolanaToken(
         current_price_usd: marketData?.current_price || 0,
         price_change_24h: marketData?.price_change_24h || null,
         market_cap_usd: marketData?.market_cap || null,
-        circulating_supply: mintInfo.supply ? parseFloat(mintInfo.supply) / Math.pow(10, mintInfo.decimals || 0) : null
+        circulating_supply: mintInfo.supply ? parseFloat(mintInfo.supply) / Math.pow(10, mintInfo.decimals || 0) : null,
+        website_url: marketData?.website_url || null,
+        twitter_handle: twitterHandle || null,
+        github_url: marketData?.github_url || null
       }, { onConflict: 'token_address,chain_id' }),
 
       // Security cache with Solana-specific fields
@@ -617,18 +654,33 @@ async function scanSolanaToken(
         score: liquidityScore
       }, { onConflict: 'token_address,chain_id' }),
 
-      // Community cache (placeholder for now)
+      // Community cache with REAL data
       supabase.from('token_community_cache').upsert({
         token_address: normalizedMint,
         chain_id: 'solana',
+        twitter_followers: twitterFollowers || 0,
+        telegram_members: telegramData?.members || 0,
+        discord_members: 0,
+        active_channels: [
+          twitterHandle ? 'twitter' : null,
+          telegramData?.members ? 'telegram' : null
+        ].filter(Boolean),
         score: communityScore
       }, { onConflict: 'token_address,chain_id' }),
 
-      // Development cache (placeholder for now)
+      // Development cache with REAL GitHub data
       supabase.from('token_development_cache').upsert({
         token_address: normalizedMint,
         chain_id: 'solana',
-        is_open_source: false,
+        github_repo: githubData ? `${githubData.owner}/${githubData.repo}` : null,
+        is_open_source: !!githubData,
+        stars: githubData?.stars || null,
+        forks: githubData?.forks || null,
+        commits_30d: githubData?.commits_30d || null,
+        contributors_count: githubData?.contributors_count || null,
+        last_commit: githubData?.last_push || null,
+        language: githubData?.language || null,
+        is_archived: githubData?.is_archived || null,
         score: developmentScore
       }, { onConflict: 'token_address,chain_id' }),
 
@@ -659,6 +711,12 @@ async function scanSolanaToken(
         tokenomics: tokenomicsScore,
         community: communityScore,
         development: developmentScore
+      },
+      social_data: {
+        twitter_handle: twitterHandle,
+        twitter_followers: twitterFollowers,
+        telegram_members: telegramData?.members || null,
+        github_repo: githubData ? `${githubData.owner}/${githubData.repo}` : null
       },
       solana_specific: {
         mint_authority_renounced: mintInfo.mintAuthority === null,
