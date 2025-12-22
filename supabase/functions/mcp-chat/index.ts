@@ -346,10 +346,15 @@ async function fetchPools(address: string, chain: string): Promise<Array<{
       'base': 'base',
       '0x2105': 'base',
       'optimism': 'optimism',
-      '0xa': 'optimism'
+      '0xa': 'optimism',
+      // Solana support
+      'solana': 'solana',
+      'sol': 'solana',
+      'spl': 'solana'
     };
     
     const network = networkMap[chain.toLowerCase()] || 'eth';
+    console.log(`[MCP-CHAT] Fetching pools for ${address} on network: ${network}`);
     
     const res = await fetch(
       `https://api.geckoterminal.com/api/v2/networks/${network}/tokens/${address}/pools?page=1`,
@@ -395,7 +400,117 @@ async function fetchMetadata(coingeckoId: string): Promise<string[] | null> {
   }
 }
 
-// Fetch token holders from Moralis API
+// Fetch Solana token holders from Helius DAS API
+async function fetchSolanaHolders(mintAddress: string): Promise<{
+  totalHolders: number;
+  topHolders: Array<{ address: string; percentage: number; balance: number }>;
+  top10Percentage: number;
+  concentrationRisk: string;
+  giniCoefficient: number;
+} | null> {
+  try {
+    const HELIUS_API_KEY = Deno.env.get('HELIUS_API_KEY');
+    if (!HELIUS_API_KEY) {
+      console.log('[MCP-CHAT] No HELIUS_API_KEY configured for Solana holders');
+      return null;
+    }
+
+    console.log(`[MCP-CHAT] Fetching Solana holders for: ${mintAddress}`);
+    
+    const url = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
+    
+    // Use getTokenAccounts to get holders
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'helius-holders',
+        method: 'getTokenAccounts',
+        params: {
+          mint: mintAddress,
+          limit: 50,
+          options: {
+            showZeroBalance: false
+          }
+        }
+      }),
+      signal: AbortSignal.timeout(10000)
+    });
+
+    if (!response.ok) {
+      console.log(`[MCP-CHAT] Helius holders fetch failed: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    
+    if (data.error) {
+      console.log('[MCP-CHAT] Helius RPC error:', data.error);
+      return null;
+    }
+
+    const tokenAccounts = data.result?.token_accounts || [];
+    
+    if (tokenAccounts.length === 0) {
+      console.log('[MCP-CHAT] No token accounts found');
+      return null;
+    }
+
+    // Calculate total supply from all accounts
+    let totalSupply = 0;
+    const holders: Array<{ owner: string; amount: number }> = [];
+    
+    for (const account of tokenAccounts) {
+      const amount = parseFloat(account.amount || '0');
+      if (amount > 0) {
+        totalSupply += amount;
+        holders.push({ owner: account.owner, amount });
+      }
+    }
+
+    // Sort by amount descending
+    holders.sort((a, b) => b.amount - a.amount);
+
+    // Map top holders with percentages
+    const topHolders = holders.slice(0, 10).map(h => ({
+      address: h.owner,
+      percentage: totalSupply > 0 ? (h.amount / totalSupply) * 100 : 0,
+      balance: h.amount
+    }));
+
+    // Calculate stats
+    const totalHolders = tokenAccounts.length;
+    const top10Percentage = topHolders.reduce((sum, h) => sum + h.percentage, 0);
+    
+    // Calculate Gini coefficient
+    const balances = holders.map(h => h.amount).filter(b => b > 0);
+    const giniCoefficient = calculateGiniCoefficient(balances);
+
+    // Determine concentration risk
+    let concentrationRisk = 'Low';
+    if (top10Percentage > 80 || giniCoefficient > 0.9) {
+      concentrationRisk = 'High';
+    } else if (top10Percentage > 50 || giniCoefficient > 0.7) {
+      concentrationRisk = 'Medium';
+    }
+
+    console.log('[MCP-CHAT] Solana holders data:', { totalHolders, top10Percentage: top10Percentage.toFixed(2), giniCoefficient: giniCoefficient.toFixed(3), concentrationRisk });
+
+    return {
+      totalHolders,
+      topHolders,
+      top10Percentage,
+      concentrationRisk,
+      giniCoefficient
+    };
+  } catch (err) {
+    console.log('[MCP-CHAT] Solana holders fetch error:', err);
+    return null;
+  }
+}
+
+// Fetch token holders - routes to Helius for Solana, Moralis for EVM
 async function fetchHolders(address: string, chain: string): Promise<{
   totalHolders: number;
   topHolders: Array<{ address: string; percentage: number; balance: number }>;
@@ -403,6 +518,14 @@ async function fetchHolders(address: string, chain: string): Promise<{
   concentrationRisk: string;
   giniCoefficient: number;
 } | null> {
+  // Route Solana tokens to Helius
+  const solanaChains = ['solana', 'sol', 'spl'];
+  if (solanaChains.includes(chain.toLowerCase())) {
+    console.log('[MCP-CHAT] Routing to Helius for Solana holders');
+    return fetchSolanaHolders(address);
+  }
+
+  // EVM chains use Moralis
   try {
     const MORALIS_API_KEY = Deno.env.get('MORALIS_API_KEY');
     if (!MORALIS_API_KEY) {
@@ -426,6 +549,7 @@ async function fetchHolders(address: string, chain: string): Promise<{
     };
 
     const moralisChain = chainMap[chain.toLowerCase()] || '0x1';
+    console.log(`[MCP-CHAT] Fetching EVM holders for ${address} on chain: ${moralisChain}`);
     
     // Fetch token owners
     const ownersUrl = `https://deep-index.moralis.io/api/v2.2/erc20/${address}/owners?chain=${moralisChain}&limit=50&order=DESC`;
