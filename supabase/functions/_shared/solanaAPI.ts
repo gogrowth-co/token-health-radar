@@ -1,12 +1,124 @@
 /**
  * Solana-native API integrations for SPL token scanning
- * Uses Solana RPC, GeckoTerminal, and CoinGecko for data fetching
+ * Uses Helius RPC (with public fallback), GeckoTerminal, and CoinGecko for data fetching
  */
 
-const SOLANA_RPC_URL = 'https://api.mainnet-beta.solana.com';
+const PUBLIC_SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
 
 /**
- * Fetch SPL token mint info from Solana RPC
+ * Get the best available Solana RPC URL
+ * Prefers Helius if API key is configured, falls back to public RPC
+ */
+function getSolanaRpcUrl(): string {
+  const heliusApiKey = Deno.env.get('HELIUS_API_KEY');
+  if (heliusApiKey) {
+    console.log('[SOLANA-RPC] Using Helius RPC');
+    return `https://mainnet.helius-rpc.com/?api-key=${heliusApiKey}`;
+  }
+  console.log('[SOLANA-RPC] Using public RPC (Helius API key not configured)');
+  return PUBLIC_SOLANA_RPC;
+}
+
+/**
+ * Fetch enhanced token data from Helius DAS API (getAsset)
+ * Returns mint/freeze authority, supply, decimals, price, and metadata in one call
+ */
+export async function fetchHeliusAsset(mintAddress: string): Promise<{
+  decimals: number | null;
+  supply: string | null;
+  mintAuthority: string | null;
+  freezeAuthority: string | null;
+  isInitialized: boolean;
+  price: number | null;
+  name: string | null;
+  symbol: string | null;
+  image: string | null;
+} | null> {
+  const heliusApiKey = Deno.env.get('HELIUS_API_KEY');
+  if (!heliusApiKey) {
+    console.log('[HELIUS-DAS] API key not configured, skipping DAS API');
+    return null;
+  }
+
+  try {
+    console.log(`[HELIUS-DAS] Fetching asset data for: ${mintAddress}`);
+    
+    const url = `https://mainnet.helius-rpc.com/?api-key=${heliusApiKey}`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'helius-das',
+        method: 'getAsset',
+        params: {
+          id: mintAddress,
+          displayOptions: {
+            showFungible: true
+          }
+        }
+      })
+    });
+
+    if (!response.ok) {
+      console.warn(`[HELIUS-DAS] HTTP error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    
+    if (data.error) {
+      console.warn(`[HELIUS-DAS] RPC error:`, data.error);
+      return null;
+    }
+
+    const result = data.result;
+    if (!result) {
+      console.warn(`[HELIUS-DAS] No result for mint: ${mintAddress}`);
+      return null;
+    }
+
+    // Extract token info from DAS response
+    const tokenInfo = result.token_info || {};
+    const content = result.content || {};
+    const metadata = content.metadata || {};
+
+    // Get authorities from token_info or ownership
+    const authorities = result.authorities || [];
+    const mintAuthority = authorities.find((a: any) => a.scopes?.includes('mint'))?.address || null;
+    const freezeAuthority = authorities.find((a: any) => a.scopes?.includes('freeze'))?.address || null;
+
+    const assetData = {
+      decimals: tokenInfo.decimals ?? null,
+      supply: tokenInfo.supply?.toString() ?? null,
+      mintAuthority,
+      freezeAuthority,
+      isInitialized: true,
+      price: tokenInfo.price_info?.price_per_token ?? null,
+      name: metadata.name || content.json_uri?.name || null,
+      symbol: metadata.symbol || tokenInfo.symbol || null,
+      image: content.links?.image || content.files?.[0]?.uri || null
+    };
+
+    console.log(`[HELIUS-DAS] Asset data retrieved:`, {
+      name: assetData.name,
+      symbol: assetData.symbol,
+      decimals: assetData.decimals,
+      price: assetData.price,
+      mintAuthority: assetData.mintAuthority ? 'Active' : 'Renounced',
+      freezeAuthority: assetData.freezeAuthority ? 'Active' : 'Disabled'
+    });
+
+    return assetData;
+  } catch (error) {
+    console.error(`[HELIUS-DAS] Error fetching asset:`, error);
+    return null;
+  }
+}
+
+/**
+ * Fetch SPL token mint info from Solana RPC (Helius or public fallback)
  * Returns mint authority, freeze authority, supply, and decimals
  */
 export async function fetchSPLMintInfo(mintAddress: string): Promise<{
@@ -19,7 +131,9 @@ export async function fetchSPLMintInfo(mintAddress: string): Promise<{
   try {
     console.log(`[SOLANA-RPC] Fetching mint info for: ${mintAddress}`);
     
-    const response = await fetch(SOLANA_RPC_URL, {
+    const rpcUrl = getSolanaRpcUrl();
+    
+    const response = await fetch(rpcUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
