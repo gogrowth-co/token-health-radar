@@ -15,6 +15,9 @@ import CategoryTags from "./blocks/CategoryTags";
 import HoldersTable from "./blocks/HoldersTable";
 import { ChangeCard } from "./blocks/ChangeCard";
 import { TokenomicsCard } from "./blocks/TokenomicsCard";
+import { CommunityCard } from "./blocks/CommunityCard";
+import { SecurityCard } from "./blocks/SecurityCard";
+import { DevelopmentCard } from "./blocks/DevelopmentCard";
 
 interface CopilotPanelProps {
   token: {
@@ -26,7 +29,7 @@ interface CopilotPanelProps {
   standalone?: boolean;
 }
 
-type IntentType = 'price' | 'chart' | 'pools' | 'metadata' | 'summary' | 'holders' | 'tokenomics' | 'unknown';
+type IntentType = 'price' | 'chart' | 'pools' | 'metadata' | 'summary' | 'holders' | 'tokenomics' | 'community' | 'security' | 'development' | 'unknown';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -75,6 +78,39 @@ interface ChatMessage {
       tvl: number | null;
       circulatingRatio: number | null;
       maxSupply: number | null;
+    };
+    community?: {
+      twitterFollowers: number | null;
+      twitterVerified?: boolean;
+      twitterGrowth7d?: number | null;
+      discordMembers: number | null;
+      telegramMembers: number | null;
+      score?: number;
+    };
+    security?: {
+      ownershipRenounced: boolean | null;
+      canMint: boolean | null;
+      honeypotDetected: boolean | null;
+      freezeAuthority: boolean | null;
+      isProxy: boolean | null;
+      contractVerified: boolean | null;
+      isLiquidityLocked: boolean | null;
+      liquidityLockInfo?: string | null;
+      score?: number;
+      webacySeverity?: string | null;
+    };
+    development?: {
+      repoName: string | null;
+      repoUrl?: string | null;
+      commits30d: number | null;
+      contributors: number | null;
+      stars: number | null;
+      forks: number | null;
+      openIssues?: number | null;
+      lastCommitDate: string | null;
+      language?: string | null;
+      isArchived?: boolean;
+      score?: number;
     };
   };
   available?: string[];
@@ -282,6 +318,24 @@ export default function CopilotPanel({ token, standalone = false }: CopilotPanel
             {message.data.tokenomics && 
               (message.intent === 'tokenomics' || message.intent === 'summary') && (
               <TokenomicsCard tokenomics={message.data.tokenomics} />
+            )}
+
+            {/* Community: show for community and summary intents */}
+            {message.data.community && 
+              (message.intent === 'community' || message.intent === 'summary') && (
+              <CommunityCard community={message.data.community} />
+            )}
+
+            {/* Security: show for security and summary intents */}
+            {message.data.security && 
+              (message.intent === 'security' || message.intent === 'summary') && (
+              <SecurityCard security={message.data.security} />
+            )}
+
+            {/* Development: show for development and summary intents */}
+            {message.data.development && 
+              (message.intent === 'development' || message.intent === 'summary') && (
+              <DevelopmentCard development={message.data.development} />
             )}
           </div>
         )}

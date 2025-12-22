@@ -17,6 +17,42 @@ interface ChatRequest {
   mode: 'auto_insights' | 'chat';
 }
 
+interface CommunityData {
+  twitterFollowers: number | null;
+  twitterVerified?: boolean;
+  twitterGrowth7d?: number | null;
+  discordMembers: number | null;
+  telegramMembers: number | null;
+  score?: number;
+}
+
+interface SecurityData {
+  ownershipRenounced: boolean | null;
+  canMint: boolean | null;
+  honeypotDetected: boolean | null;
+  freezeAuthority: boolean | null;
+  isProxy: boolean | null;
+  contractVerified: boolean | null;
+  isLiquidityLocked: boolean | null;
+  liquidityLockInfo?: string | null;
+  score?: number;
+  webacySeverity?: string | null;
+}
+
+interface DevelopmentData {
+  repoName: string | null;
+  repoUrl?: string | null;
+  commits30d: number | null;
+  contributors: number | null;
+  stars: number | null;
+  forks: number | null;
+  openIssues?: number | null;
+  lastCommitDate: string | null;
+  language?: string | null;
+  isArchived?: boolean;
+  score?: number;
+}
+
 interface ChatResponse {
   text: string;
   data: {
@@ -39,15 +75,18 @@ interface ChatResponse {
       giniCoefficient?: number;
     };
     tokenomics?: TokenomicsData;
+    community?: CommunityData;
+    security?: SecurityData;
+    development?: DevelopmentData;
   };
   available: string[];
   limited: boolean;
   errors: string[];
-  intent?: string; // Add intent type to response
+  intent?: string;
 }
 
 interface ParsedIntent {
-  type: 'price' | 'chart' | 'pools' | 'metadata' | 'summary' | 'holders' | 'tokenomics' | 'unknown';
+  type: 'price' | 'chart' | 'pools' | 'metadata' | 'summary' | 'holders' | 'tokenomics' | 'community' | 'security' | 'development' | 'unknown';
   window?: string;
   needsExplanation?: boolean;
 }
@@ -62,7 +101,7 @@ interface TokenomicsData {
   maxSupply: number | null;
 }
 
-// Lovable AI-powered intent parsing
+// Lovable AI-powered intent parsing with new intent types
 async function parseIntentWithAI(
   message: string, 
   conversationHistory: ChatMessage[],
@@ -76,7 +115,6 @@ async function parseIntentWithAI(
   }
 
   try {
-    // Build conversation context (last 3 messages)
     const recentHistory = conversationHistory.slice(-3).map(m => ({
       role: m.role,
       content: m.content
@@ -93,7 +131,10 @@ Intent types:
 - metadata: Token categories/sector (e.g., "what type?", "category", "sector")
 - summary: General overview (e.g., "tell me about", "what is", "overview", "explain", "info")
 - holders: Token holder distribution (e.g., "holders", "who owns", "whale", "distribution", "top wallets", "concentration")
-- tokenomics: Supply metrics, valuation, FDV, TVL (e.g., "tokenomics", "supply", "circulating", "market cap", "fdv", "tvl", "total supply", "max supply", "allocation")
+- tokenomics: Supply metrics, valuation, FDV, TVL (e.g., "tokenomics", "supply", "circulating", "market cap", "fdv", "tvl")
+- community: Social metrics, followers, engagement (e.g., "community", "social", "twitter", "discord", "telegram", "followers", "engagement")
+- security: Contract safety, risks, audits (e.g., "security", "safe", "scam", "honeypot", "audit", "rug", "risky", "trust")
+- development: Code activity, team activity (e.g., "development", "github", "commits", "team", "devs", "active", "code")
 - unknown: Cannot determine intent
 
 Timeframes (for chart intent):
@@ -128,7 +169,7 @@ Consider conversation context for follow-ups like "and the 30 day?" or "what abo
               properties: {
                 intent_type: { 
                   type: 'string', 
-                  enum: ['price', 'chart', 'pools', 'metadata', 'summary', 'holders', 'tokenomics', 'unknown'],
+                  enum: ['price', 'chart', 'pools', 'metadata', 'summary', 'holders', 'tokenomics', 'community', 'security', 'development', 'unknown'],
                   description: 'The type of information the user wants'
                 },
                 timeframe: {
@@ -176,11 +217,32 @@ Consider conversation context for follow-ups like "and the 30 day?" or "what abo
   }
 }
 
-// Fallback keyword-based intent parser
+// Fallback keyword-based intent parser with new intent types
 function parseIntentFallback(message: string): ParsedIntent {
   const lower = message.toLowerCase();
   
-  // Check for summary/general questions first
+  // Check for community intent
+  if (lower.includes('community') || lower.includes('social') || lower.includes('twitter') || 
+      lower.includes('discord') || lower.includes('telegram') || lower.includes('follower') ||
+      lower.includes('engagement')) {
+    return { type: 'community' };
+  }
+  
+  // Check for security intent
+  if (lower.includes('security') || lower.includes('safe') || lower.includes('scam') || 
+      lower.includes('honeypot') || lower.includes('audit') || lower.includes('rug') ||
+      lower.includes('risky') || lower.includes('trust')) {
+    return { type: 'security' };
+  }
+  
+  // Check for development intent
+  if (lower.includes('development') || lower.includes('github') || lower.includes('commit') || 
+      lower.includes('team') || lower.includes('devs') || lower.includes('code') ||
+      lower.includes('repo')) {
+    return { type: 'development' };
+  }
+  
+  // Check for summary/general questions
   if (lower.includes('tell me about') || lower.includes('what is') || lower.includes('overview') || 
       lower.includes('explain') || lower.includes('info') || lower.includes('about this')) {
     return { type: 'summary', window: '7' };
@@ -209,7 +271,6 @@ function parseIntentFallback(message: string): ParsedIntent {
     return { type: 'holders' };
   }
   
-  // Check for tokenomics intent - must be before pools since "liquidity" could be confused
   if (lower.includes('tokenomics') || lower.includes('supply') || lower.includes('circulating') ||
       lower.includes('total supply') || lower.includes('max supply') || lower.includes('fdv') ||
       lower.includes('fully diluted') || lower.includes('tvl') || lower.includes('allocation') ||
@@ -230,7 +291,6 @@ function parseIntentFallback(message: string): ParsedIntent {
     return { type: 'metadata' };
   }
   
-  // Default to summary for generic questions
   return { type: 'summary', window: '7' };
 }
 
@@ -256,7 +316,7 @@ Respond naturally and conversationally. Be concise but informative.
 Include relevant data points from the provided data.
 Use $ for prices and % for percentages.
 Don't be overly formal - be friendly and direct.
-Always mention the source (CoinGecko or GeckoTerminal) at the end.
+Always mention the data source at the end (CoinGecko, GeckoTerminal, GoPlus, GitHub, or social APIs).
 Keep responses under 100 words unless specifically asked for details.`;
 
     const userPrompt = `User asked: "${userMessage}"
@@ -335,7 +395,6 @@ async function fetchOHLC(coingeckoId: string, days: string): Promise<Array<{ t: 
     const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) return null;
     
-    // Return closing prices as sparkline
     return data.map(([t, , , , c]: [number, number, number, number, number]) => ({
       t: Math.floor(t / 1000),
       v: c
@@ -355,7 +414,6 @@ async function fetchPools(address: string, chain: string): Promise<Array<{
   ageDays: number;
 }> | null> {
   try {
-    // Map chain to GeckoTerminal network ID
     const networkMap: Record<string, string> = {
       'eth': 'eth',
       '0x1': 'eth',
@@ -369,7 +427,6 @@ async function fetchPools(address: string, chain: string): Promise<Array<{
       '0x2105': 'base',
       'optimism': 'optimism',
       '0xa': 'optimism',
-      // Solana support
       'solana': 'solana',
       'sol': 'solana',
       'spl': 'solana'
@@ -471,6 +528,353 @@ async function fetchTokenomics(coingeckoId: string): Promise<TokenomicsData | nu
   }
 }
 
+// Fetch community data from CoinGecko and cache
+async function fetchCommunityData(coingeckoId: string, tokenAddress: string, chainId: string): Promise<CommunityData | null> {
+  try {
+    console.log(`[MCP-CHAT] Fetching community data for: ${coingeckoId}`);
+    
+    // First check Supabase cache
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (supabaseUrl && supabaseKey) {
+      const cacheRes = await fetch(
+        `${supabaseUrl}/rest/v1/token_community_cache?token_address=eq.${tokenAddress}&chain_id=eq.${chainId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey
+          }
+        }
+      );
+      
+      if (cacheRes.ok) {
+        const cacheData = await cacheRes.json();
+        if (cacheData && cacheData[0]) {
+          const cached = cacheData[0];
+          const cacheAge = Date.now() - new Date(cached.updated_at).getTime();
+          // Use cache if less than 24 hours old
+          if (cacheAge < 24 * 60 * 60 * 1000) {
+            console.log('[MCP-CHAT] Using cached community data');
+            return {
+              twitterFollowers: cached.twitter_followers,
+              twitterVerified: cached.twitter_verified,
+              twitterGrowth7d: cached.twitter_growth_7d,
+              discordMembers: cached.discord_members,
+              telegramMembers: cached.telegram_members,
+              score: cached.score
+            };
+          }
+        }
+      }
+    }
+    
+    // Fetch from CoinGecko
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coingeckoId}?localization=false&tickers=false&market_data=false&developer_data=false`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    
+    if (!res.ok) {
+      console.log(`[MCP-CHAT] CoinGecko community fetch failed: ${res.status}`);
+      return null;
+    }
+    
+    const data = await res.json();
+    const communityData = data.community_data || {};
+    
+    const community: CommunityData = {
+      twitterFollowers: communityData.twitter_followers || null,
+      discordMembers: null,
+      telegramMembers: communityData.telegram_channel_user_count || null,
+      score: undefined
+    };
+    
+    // Calculate a simple community score
+    let score = 0;
+    let factors = 0;
+    
+    if (community.twitterFollowers) {
+      if (community.twitterFollowers >= 100000) score += 30;
+      else if (community.twitterFollowers >= 10000) score += 20;
+      else if (community.twitterFollowers >= 1000) score += 10;
+      factors++;
+    }
+    
+    if (community.telegramMembers) {
+      if (community.telegramMembers >= 50000) score += 30;
+      else if (community.telegramMembers >= 10000) score += 20;
+      else if (community.telegramMembers >= 1000) score += 10;
+      factors++;
+    }
+    
+    if (factors > 0) {
+      community.score = Math.min(100, Math.round((score / factors) * (100 / 30)));
+    }
+    
+    console.log('[MCP-CHAT] Community data:', { 
+      twitter: community.twitterFollowers, 
+      telegram: community.telegramMembers,
+      score: community.score
+    });
+    
+    return community;
+  } catch (err) {
+    console.log('[MCP-CHAT] Community fetch failed:', err);
+    return null;
+  }
+}
+
+// Fetch security data from GoPlus or cache
+async function fetchSecurityData(tokenAddress: string, chainId: string): Promise<SecurityData | null> {
+  try {
+    console.log(`[MCP-CHAT] Fetching security data for: ${tokenAddress} on chain ${chainId}`);
+    
+    // First check Supabase cache
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (supabaseUrl && supabaseKey) {
+      const cacheRes = await fetch(
+        `${supabaseUrl}/rest/v1/token_security_cache?token_address=eq.${tokenAddress}&chain_id=eq.${chainId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey
+          }
+        }
+      );
+      
+      if (cacheRes.ok) {
+        const cacheData = await cacheRes.json();
+        if (cacheData && cacheData[0]) {
+          const cached = cacheData[0];
+          const cacheAge = Date.now() - new Date(cached.updated_at).getTime();
+          // Use cache if less than 24 hours old
+          if (cacheAge < 24 * 60 * 60 * 1000) {
+            console.log('[MCP-CHAT] Using cached security data');
+            return {
+              ownershipRenounced: cached.ownership_renounced,
+              canMint: cached.can_mint,
+              honeypotDetected: cached.honeypot_detected,
+              freezeAuthority: cached.freeze_authority,
+              isProxy: cached.is_proxy,
+              contractVerified: cached.contract_verified,
+              isLiquidityLocked: cached.is_liquidity_locked,
+              liquidityLockInfo: cached.liquidity_lock_info,
+              score: cached.score,
+              webacySeverity: cached.webacy_severity
+            };
+          }
+        }
+      }
+    }
+    
+    // Map chain to GoPlus chain ID
+    const goplusChainMap: Record<string, string> = {
+      'eth': '1',
+      '0x1': '1',
+      'bsc': '56',
+      '0x38': '56',
+      'polygon': '137',
+      '0x89': '137',
+      'arbitrum': '42161',
+      '0xa4b1': '42161',
+      'base': '8453',
+      '0x2105': '8453',
+      'solana': 'solana',
+      'sol': 'solana'
+    };
+    
+    const goplusChain = goplusChainMap[chainId.toLowerCase()] || '1';
+    
+    // Fetch from GoPlus
+    const goplusUrl = goplusChain === 'solana'
+      ? `https://api.gopluslabs.io/api/v1/solana/token_security?contract_addresses=${tokenAddress}`
+      : `https://api.gopluslabs.io/api/v1/token_security/${goplusChain}?contract_addresses=${tokenAddress}`;
+    
+    const res = await fetch(goplusUrl, { signal: AbortSignal.timeout(8000) });
+    
+    if (!res.ok) {
+      console.log(`[MCP-CHAT] GoPlus security fetch failed: ${res.status}`);
+      return null;
+    }
+    
+    const data = await res.json();
+    const tokenData = data.result?.[tokenAddress.toLowerCase()] || data.result?.[tokenAddress];
+    
+    if (!tokenData) {
+      console.log('[MCP-CHAT] No security data from GoPlus');
+      return null;
+    }
+    
+    const security: SecurityData = {
+      ownershipRenounced: tokenData.owner_change_balance === '0' || tokenData.can_take_back_ownership === '0',
+      canMint: tokenData.is_mintable === '1',
+      honeypotDetected: tokenData.is_honeypot === '1',
+      freezeAuthority: tokenData.transfer_pausable === '1' || tokenData.can_freeze === '1',
+      isProxy: tokenData.is_proxy === '1',
+      contractVerified: tokenData.is_open_source === '1',
+      isLiquidityLocked: null,
+      liquidityLockInfo: null,
+      score: undefined
+    };
+    
+    // Check LP holders for lock info
+    if (tokenData.lp_holders && Array.isArray(tokenData.lp_holders)) {
+      const lockedLp = tokenData.lp_holders.find((lp: any) => lp.is_locked === 1);
+      if (lockedLp) {
+        security.isLiquidityLocked = true;
+        security.liquidityLockInfo = `${(parseFloat(lockedLp.percent) * 100).toFixed(1)}% locked`;
+      }
+    }
+    
+    // Calculate security score
+    let score = 50; // Base score
+    if (security.ownershipRenounced === true) score += 15;
+    if (security.canMint === false) score += 10;
+    if (security.honeypotDetected === false) score += 15;
+    if (security.freezeAuthority === false) score += 5;
+    if (security.contractVerified === true) score += 5;
+    if (security.isLiquidityLocked === true) score += 10;
+    if (security.honeypotDetected === true) score -= 50;
+    
+    security.score = Math.max(0, Math.min(100, score));
+    
+    console.log('[MCP-CHAT] Security data:', { 
+      ownershipRenounced: security.ownershipRenounced,
+      honeypot: security.honeypotDetected,
+      score: security.score
+    });
+    
+    return security;
+  } catch (err) {
+    console.log('[MCP-CHAT] Security fetch failed:', err);
+    return null;
+  }
+}
+
+// Fetch development data from GitHub or cache
+async function fetchDevelopmentData(coingeckoId: string, tokenAddress: string, chainId: string): Promise<DevelopmentData | null> {
+  try {
+    console.log(`[MCP-CHAT] Fetching development data for: ${coingeckoId}`);
+    
+    // First check Supabase cache
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (supabaseUrl && supabaseKey) {
+      const cacheRes = await fetch(
+        `${supabaseUrl}/rest/v1/token_development_cache?token_address=eq.${tokenAddress}&chain_id=eq.${chainId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey
+          }
+        }
+      );
+      
+      if (cacheRes.ok) {
+        const cacheData = await cacheRes.json();
+        if (cacheData && cacheData[0]) {
+          const cached = cacheData[0];
+          const cacheAge = Date.now() - new Date(cached.updated_at).getTime();
+          // Use cache if less than 24 hours old
+          if (cacheAge < 24 * 60 * 60 * 1000) {
+            console.log('[MCP-CHAT] Using cached development data');
+            return {
+              repoName: cached.github_repo,
+              repoUrl: cached.github_repo ? `https://github.com/${cached.github_repo}` : null,
+              commits30d: cached.commits_30d,
+              contributors: cached.contributors_count,
+              stars: cached.stars,
+              forks: cached.forks,
+              openIssues: cached.open_issues,
+              lastCommitDate: cached.last_commit,
+              language: cached.language,
+              isArchived: cached.is_archived,
+              score: cached.score
+            };
+          }
+        }
+      }
+    }
+    
+    // Fetch from CoinGecko (includes developer data)
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coingeckoId}?localization=false&tickers=false&market_data=false&community_data=false`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    
+    if (!res.ok) {
+      console.log(`[MCP-CHAT] CoinGecko developer fetch failed: ${res.status}`);
+      return null;
+    }
+    
+    const data = await res.json();
+    const devData = data.developer_data || {};
+    const repoUrl = data.links?.repos_url?.github?.[0] || null;
+    
+    // Extract repo name from URL
+    let repoName = null;
+    if (repoUrl) {
+      const match = repoUrl.match(/github\.com\/([^\/]+\/[^\/]+)/);
+      repoName = match ? match[1] : null;
+    }
+    
+    const development: DevelopmentData = {
+      repoName,
+      repoUrl,
+      commits30d: devData.commit_count_4_weeks || null,
+      contributors: devData.pull_request_contributors || null,
+      stars: devData.stars || null,
+      forks: devData.forks || null,
+      openIssues: devData.total_issues || null,
+      lastCommitDate: null, // Not available from CoinGecko
+      language: null,
+      isArchived: false,
+      score: undefined
+    };
+    
+    // Calculate development score
+    let score = 0;
+    if (development.commits30d) {
+      if (development.commits30d >= 50) score += 40;
+      else if (development.commits30d >= 20) score += 30;
+      else if (development.commits30d >= 5) score += 20;
+      else if (development.commits30d >= 1) score += 10;
+    }
+    
+    if (development.contributors) {
+      if (development.contributors >= 20) score += 20;
+      else if (development.contributors >= 10) score += 15;
+      else if (development.contributors >= 5) score += 10;
+      else score += 5;
+    }
+    
+    if (development.stars) {
+      if (development.stars >= 1000) score += 20;
+      else if (development.stars >= 100) score += 15;
+      else if (development.stars >= 10) score += 10;
+    }
+    
+    if (repoName) score += 20; // Has a repo
+    
+    development.score = Math.min(100, score);
+    
+    console.log('[MCP-CHAT] Development data:', { 
+      repo: development.repoName,
+      commits: development.commits30d,
+      score: development.score
+    });
+    
+    return development;
+  } catch (err) {
+    console.log('[MCP-CHAT] Development fetch failed:', err);
+    return null;
+  }
+}
+
 // Fetch Solana token holders from Helius DAS API
 async function fetchSolanaHolders(mintAddress: string): Promise<{
   totalHolders: number;
@@ -490,7 +894,6 @@ async function fetchSolanaHolders(mintAddress: string): Promise<{
     
     const url = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
     
-    // Use getTokenAccounts to get holders
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -528,7 +931,6 @@ async function fetchSolanaHolders(mintAddress: string): Promise<{
       return null;
     }
 
-    // Calculate total supply from all accounts
     let totalSupply = 0;
     const holders: Array<{ owner: string; amount: number }> = [];
     
@@ -540,25 +942,20 @@ async function fetchSolanaHolders(mintAddress: string): Promise<{
       }
     }
 
-    // Sort by amount descending
     holders.sort((a, b) => b.amount - a.amount);
 
-    // Map top holders with percentages
     const topHolders = holders.slice(0, 10).map(h => ({
       address: h.owner,
       percentage: totalSupply > 0 ? (h.amount / totalSupply) * 100 : 0,
       balance: h.amount
     }));
 
-    // Calculate stats
     const totalHolders = tokenAccounts.length;
     const top10Percentage = topHolders.reduce((sum, h) => sum + h.percentage, 0);
     
-    // Calculate Gini coefficient
     const balances = holders.map(h => h.amount).filter(b => b > 0);
     const giniCoefficient = calculateGiniCoefficient(balances);
 
-    // Determine concentration risk
     let concentrationRisk = 'Low';
     if (top10Percentage > 80 || giniCoefficient > 0.9) {
       concentrationRisk = 'High';
@@ -589,14 +986,12 @@ async function fetchHolders(address: string, chain: string): Promise<{
   concentrationRisk: string;
   giniCoefficient: number;
 } | null> {
-  // Route Solana tokens to Helius
   const solanaChains = ['solana', 'sol', 'spl'];
   if (solanaChains.includes(chain.toLowerCase())) {
     console.log('[MCP-CHAT] Routing to Helius for Solana holders');
     return fetchSolanaHolders(address);
   }
 
-  // EVM chains use Moralis
   try {
     const MORALIS_API_KEY = Deno.env.get('MORALIS_API_KEY');
     if (!MORALIS_API_KEY) {
@@ -604,7 +999,6 @@ async function fetchHolders(address: string, chain: string): Promise<{
       return null;
     }
 
-    // Map chain to Moralis chain format
     const chainMap: Record<string, string> = {
       'eth': '0x1',
       'ethereum': '0x1',
@@ -622,7 +1016,6 @@ async function fetchHolders(address: string, chain: string): Promise<{
     const moralisChain = chainMap[chain.toLowerCase()] || '0x1';
     console.log(`[MCP-CHAT] Fetching EVM holders for ${address} on chain: ${moralisChain}`);
     
-    // Fetch token owners
     const ownersUrl = `https://deep-index.moralis.io/api/v2.2/erc20/${address}/owners?chain=${moralisChain}&limit=50&order=DESC`;
     
     const ownersRes = await fetch(ownersUrl, {
@@ -642,18 +1035,15 @@ async function fetchHolders(address: string, chain: string): Promise<{
       return null;
     }
 
-    // Calculate percentages and stats
     const holders = ownersData.result;
     const totalHolders = ownersData.page_size || holders.length;
     
-    // Get total supply for percentage calculation
     let totalSupply = 0;
     holders.forEach((h: any) => {
       const balance = parseFloat(h.balance_formatted || h.balance || '0');
       totalSupply += balance;
     });
 
-    // Map top holders with percentages
     const topHolders = holders.slice(0, 10).map((h: any) => {
       const balance = parseFloat(h.balance_formatted || h.balance || '0');
       const percentage = totalSupply > 0 ? (balance / totalSupply) * 100 : 0;
@@ -664,14 +1054,11 @@ async function fetchHolders(address: string, chain: string): Promise<{
       };
     });
 
-    // Calculate top 10 percentage
     const top10Percentage = topHolders.reduce((sum: number, h: any) => sum + h.percentage, 0);
 
-    // Calculate Gini coefficient
     const balances = holders.map((h: any) => parseFloat(h.balance_formatted || h.balance || '0')).filter((b: number) => b > 0);
     const giniCoefficient = calculateGiniCoefficient(balances);
 
-    // Determine concentration risk
     let concentrationRisk = 'Low';
     if (top10Percentage > 80 || giniCoefficient > 0.9) {
       concentrationRisk = 'High';
@@ -726,7 +1113,7 @@ function formatPct(pct: number): string {
   return `${sign}${pct.toFixed(2)}%`;
 }
 
-// Resolve CoinGecko ID by searching their API (fallback when coingeckoId is missing or invalid)
+// Resolve CoinGecko ID by searching their API
 async function resolveCoingeckoId(symbol: string, name: string): Promise<string | null> {
   try {
     console.log(`[MCP-CHAT] Resolving CoinGecko ID for: ${symbol} (${name})`);
@@ -741,7 +1128,6 @@ async function resolveCoingeckoId(symbol: string, name: string): Promise<string 
     }
     const data = await res.json();
     if (data.coins && data.coins.length > 0) {
-      // Find best match by symbol (case insensitive)
       const exactMatch = data.coins.find((c: any) => 
         c.symbol.toLowerCase() === symbol.toLowerCase()
       );
@@ -788,7 +1174,6 @@ Deno.serve(async (req) => {
     let coingeckoId = token.coingeckoId;
     if (!coingeckoId || coingeckoId.includes('-0x') || coingeckoId.startsWith('eth-') || coingeckoId.startsWith('0x')) {
       console.log('[MCP-CHAT] Invalid coingeckoId, attempting resolution...');
-      // Extract symbol from the provided data or try to resolve
       const symbol = token.address ? token.address.split('-').pop()?.slice(0, 5) : '';
       coingeckoId = await resolveCoingeckoId(symbol || 'unknown', '');
       if (!coingeckoId) {
@@ -821,7 +1206,6 @@ Deno.serve(async (req) => {
     const intent = await parseIntentWithAI(lastMessage, messages, tokenSymbol);
     console.log('[MCP-CHAT] Parsed intent:', intent);
     
-    // Set intent on response so frontend knows what was asked
     response.intent = intent.type;
 
     // Handle auto_insights mode
@@ -850,7 +1234,6 @@ Deno.serve(async (req) => {
         response.available.push('categories');
       }
 
-      // Try to generate a natural response
       const naturalResponse = await generateNaturalResponse(intent, response.data, tokenSymbol, lastMessage);
       response.text = naturalResponse || (price 
         ? `${tokenSymbol} is trading at ${formatNumber(price.usd)} (${formatPct(price.change24hPct)} 24h). Source: CoinGecko.`
@@ -864,14 +1247,120 @@ Deno.serve(async (req) => {
     // Handle chat mode
     else {
       switch (intent.type) {
+        case 'community': {
+          const [price, community] = await Promise.all([
+            fetchPrice(coingeckoId),
+            fetchCommunityData(coingeckoId, token.address, token.chain)
+          ]);
+
+          if (price) {
+            response.data.price = price;
+            response.available.push('price');
+          }
+
+          if (community) {
+            response.data.community = community;
+            response.available.push('community');
+
+            const naturalResponse = await generateNaturalResponse(intent, response.data, tokenSymbol, lastMessage);
+            if (naturalResponse) {
+              response.text = naturalResponse;
+            } else {
+              const parts: string[] = [];
+              if (community.twitterFollowers) parts.push(`Twitter: ${(community.twitterFollowers / 1000).toFixed(1)}K followers`);
+              if (community.telegramMembers) parts.push(`Telegram: ${(community.telegramMembers / 1000).toFixed(1)}K members`);
+              if (community.discordMembers) parts.push(`Discord: ${(community.discordMembers / 1000).toFixed(1)}K members`);
+              response.text = parts.length > 0 
+                ? `${tokenSymbol} community: ${parts.join(', ')}. Source: CoinGecko.`
+                : `No community data available for ${tokenSymbol}.`;
+            }
+          } else {
+            response.text = `Unable to fetch community data for ${tokenSymbol}. Try again soon.`;
+            response.limited = true;
+          }
+          break;
+        }
+
+        case 'security': {
+          const [price, security] = await Promise.all([
+            fetchPrice(coingeckoId),
+            fetchSecurityData(token.address, token.chain)
+          ]);
+
+          if (price) {
+            response.data.price = price;
+            response.available.push('price');
+          }
+
+          if (security) {
+            response.data.security = security;
+            response.available.push('security');
+
+            const naturalResponse = await generateNaturalResponse(intent, response.data, tokenSymbol, lastMessage);
+            if (naturalResponse) {
+              response.text = naturalResponse;
+            } else {
+              const flags: string[] = [];
+              if (security.honeypotDetected === true) flags.push('⚠️ Honeypot detected');
+              if (security.ownershipRenounced === true) flags.push('✅ Ownership renounced');
+              if (security.canMint === true) flags.push('⚠️ Can mint tokens');
+              if (security.isLiquidityLocked === true) flags.push('✅ Liquidity locked');
+              response.text = flags.length > 0 
+                ? `${tokenSymbol} security: ${flags.join(', ')}. Score: ${security.score || 'N/A'}/100. Source: GoPlus.`
+                : `Security data available for ${tokenSymbol}. Score: ${security.score || 'N/A'}/100. Source: GoPlus.`;
+            }
+          } else {
+            response.text = `Unable to fetch security data for ${tokenSymbol}. The token may not be indexed yet.`;
+            response.limited = true;
+          }
+          break;
+        }
+
+        case 'development': {
+          const [price, development] = await Promise.all([
+            fetchPrice(coingeckoId),
+            fetchDevelopmentData(coingeckoId, token.address, token.chain)
+          ]);
+
+          if (price) {
+            response.data.price = price;
+            response.available.push('price');
+          }
+
+          if (development) {
+            response.data.development = development;
+            response.available.push('development');
+
+            const naturalResponse = await generateNaturalResponse(intent, response.data, tokenSymbol, lastMessage);
+            if (naturalResponse) {
+              response.text = naturalResponse;
+            } else {
+              const parts: string[] = [];
+              if (development.commits30d !== null) parts.push(`${development.commits30d} commits in 30 days`);
+              if (development.contributors !== null) parts.push(`${development.contributors} contributors`);
+              if (development.stars !== null) parts.push(`${development.stars} stars`);
+              response.text = parts.length > 0 
+                ? `${tokenSymbol} development: ${parts.join(', ')}. Score: ${development.score || 'N/A'}/100. Source: CoinGecko/GitHub.`
+                : `Development data available for ${tokenSymbol}. Source: CoinGecko.`;
+            }
+          } else {
+            response.text = `Unable to fetch development data for ${tokenSymbol}. No GitHub repository may be linked.`;
+            response.limited = true;
+          }
+          break;
+        }
+
         case 'summary': {
-          // Fetch all data for a comprehensive summary
-          const [price, ohlc, pools, categories, tokenomics] = await Promise.all([
+          // Fetch all data for a comprehensive summary including new data types
+          const [price, ohlc, pools, categories, tokenomics, community, security, development] = await Promise.all([
             fetchPrice(coingeckoId),
             fetchOHLC(coingeckoId, intent.window || '7'),
             fetchPools(token.address, token.chain),
             fetchMetadata(coingeckoId),
-            fetchTokenomics(coingeckoId)
+            fetchTokenomics(coingeckoId),
+            fetchCommunityData(coingeckoId, token.address, token.chain),
+            fetchSecurityData(token.address, token.chain),
+            fetchDevelopmentData(coingeckoId, token.address, token.chain)
           ]);
 
           if (price) {
@@ -905,13 +1394,23 @@ Deno.serve(async (req) => {
             response.data.tokenomics = tokenomics;
             response.available.push('tokenomics');
           }
+          if (community) {
+            response.data.community = community;
+            response.available.push('community');
+          }
+          if (security) {
+            response.data.security = security;
+            response.available.push('security');
+          }
+          if (development) {
+            response.data.development = development;
+            response.available.push('development');
+          }
 
-          // Generate natural summary using AI
           const naturalResponse = await generateNaturalResponse(intent, response.data, tokenSymbol, lastMessage);
           if (naturalResponse) {
             response.text = naturalResponse;
           } else {
-            // Fallback summary
             const parts: string[] = [];
             if (price) {
               parts.push(`${tokenSymbol} is currently at ${formatNumber(price.usd)} (${formatPct(price.change24hPct)} 24h)`);
@@ -958,7 +1457,6 @@ Deno.serve(async (req) => {
             };
             response.available.push('change');
 
-            // Try natural response
             const naturalResponse = await generateNaturalResponse(intent, response.data, tokenSymbol, lastMessage);
             response.text = naturalResponse || `${days}-day change: ${formatPct(pctChange)} (${formatNumber(firstPrice)} → ${formatNumber(lastPrice)}). Source: CoinGecko.`;
           } else {
@@ -984,7 +1482,6 @@ Deno.serve(async (req) => {
             response.data.topPools = pools;
             response.available.push('topPools');
 
-            // Try natural response
             const naturalResponse = await generateNaturalResponse(intent, response.data, tokenSymbol, lastMessage);
             if (naturalResponse) {
               response.text = naturalResponse;
@@ -1036,7 +1533,6 @@ Deno.serve(async (req) => {
             response.data.holders = holders;
             response.available.push('holders');
 
-            // Try natural response
             const naturalResponse = await generateNaturalResponse(intent, response.data, tokenSymbol, lastMessage);
             if (naturalResponse) {
               response.text = naturalResponse;
@@ -1065,7 +1561,6 @@ Deno.serve(async (req) => {
             response.data.tokenomics = tokenomics;
             response.available.push('tokenomics');
 
-            // Try natural response
             const naturalResponse = await generateNaturalResponse(intent, response.data, tokenSymbol, lastMessage);
             if (naturalResponse) {
               response.text = naturalResponse;
@@ -1112,10 +1607,10 @@ Deno.serve(async (req) => {
 
     // Fallback message if nothing was fetched
     if (response.available.length === 0 && !response.text) {
-      response.text = `I can help you with ${tokenSymbol}'s price, trends (7d, 30d, 90d), liquidity pools, or give you a summary. What would you like to know?`;
+      response.text = `I can help you with ${tokenSymbol}'s price, trends (7d, 30d, 90d), liquidity pools, community, security, development, or give you a summary. What would you like to know?`;
     }
 
-    console.log('[MCP-CHAT] Response:', { available: response.available, errors: response.errors });
+    console.log('[MCP-CHAT] Response:', { available: response.available, errors: response.errors, intent: response.intent });
 
     return new Response(
       JSON.stringify(response),
