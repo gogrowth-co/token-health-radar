@@ -38,6 +38,7 @@ interface ChatResponse {
       concentrationRisk: string;
       giniCoefficient?: number;
     };
+    tokenomics?: TokenomicsData;
   };
   available: string[];
   limited: boolean;
@@ -46,9 +47,19 @@ interface ChatResponse {
 }
 
 interface ParsedIntent {
-  type: 'price' | 'chart' | 'pools' | 'metadata' | 'summary' | 'holders' | 'unknown';
+  type: 'price' | 'chart' | 'pools' | 'metadata' | 'summary' | 'holders' | 'tokenomics' | 'unknown';
   window?: string;
   needsExplanation?: boolean;
+}
+
+interface TokenomicsData {
+  totalSupply: number | null;
+  circulatingSupply: number | null;
+  marketCap: number | null;
+  fdv: number | null;
+  tvl: number | null;
+  circulatingRatio: number | null;
+  maxSupply: number | null;
 }
 
 // Lovable AI-powered intent parsing
@@ -82,6 +93,7 @@ Intent types:
 - metadata: Token categories/sector (e.g., "what type?", "category", "sector")
 - summary: General overview (e.g., "tell me about", "what is", "overview", "explain", "info")
 - holders: Token holder distribution (e.g., "holders", "who owns", "whale", "distribution", "top wallets", "concentration")
+- tokenomics: Supply metrics, valuation, FDV, TVL (e.g., "tokenomics", "supply", "circulating", "market cap", "fdv", "tvl", "total supply", "max supply", "allocation")
 - unknown: Cannot determine intent
 
 Timeframes (for chart intent):
@@ -116,7 +128,7 @@ Consider conversation context for follow-ups like "and the 30 day?" or "what abo
               properties: {
                 intent_type: { 
                   type: 'string', 
-                  enum: ['price', 'chart', 'pools', 'metadata', 'summary', 'holders', 'unknown'],
+                  enum: ['price', 'chart', 'pools', 'metadata', 'summary', 'holders', 'tokenomics', 'unknown'],
                   description: 'The type of information the user wants'
                 },
                 timeframe: {
@@ -196,6 +208,15 @@ function parseIntentFallback(message: string): ParsedIntent {
       lower.includes('distribution') || lower.includes('top wallet') || lower.includes('concentration')) {
     return { type: 'holders' };
   }
+  
+  // Check for tokenomics intent - must be before pools since "liquidity" could be confused
+  if (lower.includes('tokenomics') || lower.includes('supply') || lower.includes('circulating') ||
+      lower.includes('total supply') || lower.includes('max supply') || lower.includes('fdv') ||
+      lower.includes('fully diluted') || lower.includes('tvl') || lower.includes('allocation') ||
+      lower.includes('vesting') || lower.includes('emission')) {
+    return { type: 'tokenomics' };
+  }
+  
   if (lower.includes('pool') || lower.includes('liquidity') || lower.includes('dex') || lower.includes('trade')) {
     return { type: 'pools' };
   }
@@ -397,6 +418,55 @@ async function fetchMetadata(coingeckoId: string): Promise<string[] | null> {
     return null;
   } catch (err) {
     console.log('[MCP-CHAT] Metadata fetch failed:', err);
+    return null;
+  }
+}
+
+// Fetch tokenomics data from CoinGecko
+async function fetchTokenomics(coingeckoId: string): Promise<TokenomicsData | null> {
+  try {
+    console.log(`[MCP-CHAT] Fetching tokenomics for: ${coingeckoId}`);
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coingeckoId}?localization=false&tickers=false&community_data=false&developer_data=false`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) {
+      console.log(`[MCP-CHAT] Tokenomics fetch failed: ${res.status}`);
+      return null;
+    }
+    const data = await res.json();
+    
+    const marketData = data.market_data;
+    if (!marketData) {
+      console.log('[MCP-CHAT] No market_data in CoinGecko response');
+      return null;
+    }
+    
+    const totalSupply = marketData.total_supply || null;
+    const circulatingSupply = marketData.circulating_supply || null;
+    const maxSupply = marketData.max_supply || null;
+    
+    const tokenomics: TokenomicsData = {
+      totalSupply,
+      circulatingSupply,
+      marketCap: marketData.market_cap?.usd || null,
+      fdv: marketData.fully_diluted_valuation?.usd || null,
+      tvl: marketData.total_value_locked?.usd || null,
+      maxSupply,
+      circulatingRatio: (totalSupply && circulatingSupply) 
+        ? circulatingSupply / totalSupply 
+        : null
+    };
+    
+    console.log('[MCP-CHAT] Tokenomics data:', { 
+      marketCap: tokenomics.marketCap, 
+      fdv: tokenomics.fdv, 
+      circulatingRatio: tokenomics.circulatingRatio?.toFixed(2) 
+    });
+    
+    return tokenomics;
+  } catch (err) {
+    console.log('[MCP-CHAT] Tokenomics fetch failed:', err);
     return null;
   }
 }
@@ -796,11 +866,12 @@ Deno.serve(async (req) => {
       switch (intent.type) {
         case 'summary': {
           // Fetch all data for a comprehensive summary
-          const [price, ohlc, pools, categories] = await Promise.all([
+          const [price, ohlc, pools, categories, tokenomics] = await Promise.all([
             fetchPrice(coingeckoId),
             fetchOHLC(coingeckoId, intent.window || '7'),
             fetchPools(token.address, token.chain),
-            fetchMetadata(coingeckoId)
+            fetchMetadata(coingeckoId),
+            fetchTokenomics(coingeckoId)
           ]);
 
           if (price) {
@@ -829,6 +900,10 @@ Deno.serve(async (req) => {
           if (categories && categories.length > 0) {
             response.data.categories = categories;
             response.available.push('categories');
+          }
+          if (tokenomics) {
+            response.data.tokenomics = tokenomics;
+            response.available.push('tokenomics');
           }
 
           // Generate natural summary using AI
@@ -970,6 +1045,42 @@ Deno.serve(async (req) => {
             }
           } else {
             response.text = `Unable to fetch holder data for ${tokenSymbol}. The Moralis API may be unavailable or the token may not be indexed.`;
+            response.limited = true;
+          }
+          break;
+        }
+
+        case 'tokenomics': {
+          const [price, tokenomics] = await Promise.all([
+            fetchPrice(coingeckoId),
+            fetchTokenomics(coingeckoId)
+          ]);
+
+          if (price) {
+            response.data.price = price;
+            response.available.push('price');
+          }
+
+          if (tokenomics) {
+            response.data.tokenomics = tokenomics;
+            response.available.push('tokenomics');
+
+            // Try natural response
+            const naturalResponse = await generateNaturalResponse(intent, response.data, tokenSymbol, lastMessage);
+            if (naturalResponse) {
+              response.text = naturalResponse;
+            } else {
+              const parts: string[] = [];
+              if (tokenomics.marketCap) parts.push(`Market Cap: ${formatNumber(tokenomics.marketCap)}`);
+              if (tokenomics.fdv) parts.push(`FDV: ${formatNumber(tokenomics.fdv)}`);
+              if (tokenomics.circulatingRatio) parts.push(`Circulating: ${(tokenomics.circulatingRatio * 100).toFixed(1)}% of total supply`);
+              if (tokenomics.tvl) parts.push(`TVL: ${formatNumber(tokenomics.tvl)}`);
+              response.text = parts.length > 0 
+                ? `${tokenSymbol} Tokenomics: ${parts.join('. ')}. Source: CoinGecko.`
+                : `Tokenomics data available for ${tokenSymbol}. Source: CoinGecko.`;
+            }
+          } else {
+            response.text = `Unable to fetch tokenomics data for ${tokenSymbol}. Try again soon.`;
             response.limited = true;
           }
           break;
