@@ -14,6 +14,7 @@ import PoolsTable from "./blocks/PoolsTable";
 import CategoryTags from "./blocks/CategoryTags";
 import HoldersTable from "./blocks/HoldersTable";
 import { ChangeCard } from "./blocks/ChangeCard";
+import { TokenomicsCard } from "./blocks/TokenomicsCard";
 
 interface CopilotPanelProps {
   token: {
@@ -25,7 +26,7 @@ interface CopilotPanelProps {
   standalone?: boolean;
 }
 
-type IntentType = 'price' | 'chart' | 'pools' | 'metadata' | 'summary' | 'holders' | 'unknown';
+type IntentType = 'price' | 'chart' | 'pools' | 'metadata' | 'summary' | 'holders' | 'tokenomics' | 'unknown';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -65,6 +66,15 @@ interface ChatMessage {
       top10Percentage: number;
       concentrationRisk: string;
       giniCoefficient?: number;
+    };
+    tokenomics?: {
+      totalSupply: number | null;
+      circulatingSupply: number | null;
+      marketCap: number | null;
+      fdv: number | null;
+      tvl: number | null;
+      circulatingRatio: number | null;
+      maxSupply: number | null;
     };
   };
   available?: string[];
@@ -266,6 +276,12 @@ export default function CopilotPanel({ token, standalone = false }: CopilotPanel
             {message.data.holders && 
               (message.intent === 'holders' || message.intent === 'summary') && (
               <HoldersTable holders={message.data.holders} />
+            )}
+
+            {/* Tokenomics: show for tokenomics and summary intents */}
+            {message.data.tokenomics && 
+              (message.intent === 'tokenomics' || message.intent === 'summary') && (
+              <TokenomicsCard tokenomics={message.data.tokenomics} />
             )}
           </div>
         )}
