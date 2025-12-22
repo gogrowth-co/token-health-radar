@@ -42,6 +42,7 @@ interface ChatResponse {
   available: string[];
   limited: boolean;
   errors: string[];
+  intent?: string; // Add intent type to response
 }
 
 interface ParsedIntent {
@@ -740,7 +741,8 @@ Deno.serve(async (req) => {
       data: {},
       available: [],
       limited: false,
-      errors: []
+      errors: [],
+      intent: undefined
     };
 
     // Get the last user message and parse intent using AI
@@ -748,6 +750,9 @@ Deno.serve(async (req) => {
     const tokenSymbol = token.symbol || coingeckoId.toUpperCase();
     const intent = await parseIntentWithAI(lastMessage, messages, tokenSymbol);
     console.log('[MCP-CHAT] Parsed intent:', intent);
+    
+    // Set intent on response so frontend knows what was asked
+    response.intent = intent.type;
 
     // Handle auto_insights mode
     if (mode === 'auto_insights') {
