@@ -294,6 +294,7 @@ Deno.serve(async (req) => {
 
     // Extract social links for Phase 2
     const socialLinks = extractSocialLinks(metadata)
+    const coingeckoId = metadata?.coingecko_id || metadata?.id || null
     
     // ========== PHASE 2: Social & GitHub API Calls (parallel) ==========
     console.log(`[${requestId}] Phase 2: Social & GitHub API calls...`)
@@ -301,7 +302,7 @@ Deno.serve(async (req) => {
     const twitterHandle = extractTwitterHandle(socialLinks.twitter || '')
     
     const [twitterFollowers, telegramData, discordMembers, githubData] = await Promise.all([
-      twitterHandle ? fetchTwitterFollowers(twitterHandle) : Promise.resolve(null),
+      twitterHandle ? fetchTwitterFollowers(twitterHandle, coingeckoId) : Promise.resolve(null),
       socialLinks.telegram ? fetchTelegramMembers(socialLinks.telegram) : Promise.resolve({ members: null }),
       socialLinks.discord ? fetchDiscordMemberCount(socialLinks.discord) : Promise.resolve(null),
       socialLinks.github ? fetchGitHubRepoData(socialLinks.github) : Promise.resolve(null)
@@ -566,8 +567,9 @@ async function scanSolanaToken(
     })
     
     // Fetch social metrics, Discord, and GitHub data in parallel
+    const coingeckoId = marketData?.coingecko_id || marketData?.id || null
     const [twitterFollowers, telegramData, discordMembers, githubData] = await Promise.all([
-      twitterHandle ? fetchTwitterFollowers(twitterHandle) : Promise.resolve(null),
+      twitterHandle ? fetchTwitterFollowers(twitterHandle, coingeckoId) : Promise.resolve(null),
       marketData?.telegram_url ? fetchTelegramMembers(marketData.telegram_url) : Promise.resolve({ members: null }),
       marketData?.discord_url ? fetchDiscordMemberCount(marketData.discord_url) : Promise.resolve(null),
       marketData?.github_url ? fetchGitHubRepoData(marketData.github_url) : Promise.resolve(null)
