@@ -528,7 +528,197 @@ async function fetchTokenomics(coingeckoId: string): Promise<TokenomicsData | nu
   }
 }
 
-// Fetch community data from CoinGecko and cache
+// ========== Integrated Social APIs for Community Data ==========
+
+// Fetch Twitter followers from Apify or CoinGecko fallback
+async function fetchTwitterFollowers(twitterHandle: string, coingeckoId?: string): Promise<number | null> {
+  if (!twitterHandle) {
+    console.log('[TWITTER] No Twitter handle provided');
+    return null;
+  }
+
+  const apiKey = Deno.env.get('APIFY_API_KEY');
+  
+  // If no Apify key, go straight to CoinGecko fallback
+  if (!apiKey) {
+    console.log('[TWITTER] APIFY_API_KEY not configured, using CoinGecko fallback');
+    return await fetchTwitterFromCoinGecko(coingeckoId);
+  }
+
+  try {
+    console.log(`[TWITTER] Fetching followers for: @${twitterHandle}`);
+    
+    const apiUrl = `https://api.apify.com/v2/acts/practicaltools~cheap-simple-twitter-api/run-sync-get-dataset-items?token=${apiKey}`;
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        endpoint: 'user/info',
+        parameters: { userName: twitterHandle }
+      }),
+      signal: AbortSignal.timeout(15000)
+    });
+
+    if (!response.ok) {
+      console.log(`[TWITTER] Apify failed: ${response.status}, using CoinGecko fallback`);
+      return await fetchTwitterFromCoinGecko(coingeckoId);
+    }
+
+    const responseText = await response.text();
+    if (!responseText || responseText.trim() === '') {
+      console.log('[TWITTER] Empty Apify response, using CoinGecko fallback');
+      return await fetchTwitterFromCoinGecko(coingeckoId);
+    }
+
+    const data = JSON.parse(responseText);
+    const followerCount = Array.isArray(data) ? data[0]?.followers || null : null;
+    
+    if (followerCount && followerCount > 0) {
+      console.log(`[TWITTER] Successfully got ${followerCount} followers for @${twitterHandle}`);
+      return followerCount;
+    }
+    
+    console.log('[TWITTER] No Apify data, using CoinGecko fallback');
+    return await fetchTwitterFromCoinGecko(coingeckoId);
+  } catch (err) {
+    console.log('[TWITTER] Error:', err);
+    return await fetchTwitterFromCoinGecko(coingeckoId);
+  }
+}
+
+// CoinGecko fallback for Twitter followers
+async function fetchTwitterFromCoinGecko(coingeckoId?: string): Promise<number | null> {
+  if (!coingeckoId) return null;
+  
+  try {
+    console.log(`[TWITTER-CG] Fetching from CoinGecko for: ${coingeckoId}`);
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coingeckoId}?localization=false&tickers=false&market_data=false&community_data=true&developer_data=false`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    
+    if (!res.ok) return null;
+    const data = await res.json();
+    const followers = data.community_data?.twitter_followers;
+    
+    if (followers && followers > 0) {
+      console.log(`[TWITTER-CG] Got ${followers} followers from CoinGecko`);
+      return followers;
+    }
+    return null;
+  } catch (err) {
+    console.log('[TWITTER-CG] Error:', err);
+    return null;
+  }
+}
+
+// Fetch Discord member count from Discord API
+async function fetchDiscordMembers(discordUrl: string | null): Promise<number | null> {
+  if (!discordUrl) {
+    console.log('[DISCORD] No Discord URL provided');
+    return null;
+  }
+
+  try {
+    console.log(`[DISCORD] Extracting invite code from: ${discordUrl}`);
+    
+    // Extract invite code from Discord URLs
+    const inviteCodeMatch = discordUrl.match(/(?:discord\.gg|discord\.com\/invite)\/([a-zA-Z0-9]+)/);
+    if (!inviteCodeMatch) {
+      console.log(`[DISCORD] Invalid Discord URL format: ${discordUrl}`);
+      return null;
+    }
+    
+    const inviteCode = inviteCodeMatch[1];
+    console.log(`[DISCORD] Fetching members for invite: ${inviteCode}`);
+    
+    const response = await fetch(
+      `https://discord.com/api/v9/invites/${inviteCode}?with_counts=true`,
+      { 
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(5000)
+      }
+    );
+
+    if (!response.ok) {
+      console.log(`[DISCORD] API error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const memberCount = data?.approximate_member_count || null;
+    
+    if (memberCount) {
+      console.log(`[DISCORD] Got ${memberCount} members for ${data?.guild?.name || 'server'}`);
+    }
+    
+    return memberCount;
+  } catch (err) {
+    console.log('[DISCORD] Error:', err);
+    return null;
+  }
+}
+
+// Fetch Telegram members from Apify web scraper
+async function fetchTelegramMembers(telegramUrl: string | null): Promise<number | null> {
+  if (!telegramUrl) {
+    console.log('[TELEGRAM] No Telegram URL provided');
+    return null;
+  }
+
+  const apiKey = Deno.env.get('APIFY_API_KEY');
+  if (!apiKey) {
+    console.log('[TELEGRAM] APIFY_API_KEY not configured');
+    return null;
+  }
+
+  try {
+    console.log(`[TELEGRAM] Fetching members for: ${telegramUrl}`);
+    
+    const response = await fetch(
+      `https://api.apify.com/v2/acts/apify~web-scraper/run-sync-get-dataset-items?token=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          startUrls: [{ url: telegramUrl }],
+          pageFunction: "async function pageFunction(context) {\n  const title = document.querySelector('.tgme_page_title span')?.innerText.trim();\n  const stats = document.querySelector('.tgme_page_extra')?.innerText.trim();\n  return { title, stats };\n}"
+        }),
+        signal: AbortSignal.timeout(30000)
+      }
+    );
+
+    if (!response.ok) {
+      console.log(`[TELEGRAM] Apify error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const result = Array.isArray(data) ? data[0] : null;
+    
+    if (!result?.stats) {
+      console.log('[TELEGRAM] No stats in response');
+      return null;
+    }
+
+    // Parse member count from stats like "35 546 members, 1 138 online"
+    const memberMatch = result.stats.match(/([\d\s]+) members/);
+    if (memberMatch) {
+      const memberCount = parseInt(memberMatch[1].replace(/\s/g, ''), 10);
+      console.log(`[TELEGRAM] Got ${memberCount} members`);
+      return memberCount;
+    }
+    
+    return null;
+  } catch (err) {
+    console.log('[TELEGRAM] Error:', err);
+    return null;
+  }
+}
+
+// Fetch community data using all available APIs
 async function fetchCommunityData(coingeckoId: string, tokenAddress: string, chainId: string): Promise<CommunityData | null> {
   try {
     console.log(`[MCP-CHAT] Fetching community data for: ${coingeckoId}`);
@@ -569,28 +759,53 @@ async function fetchCommunityData(coingeckoId: string, tokenAddress: string, cha
       }
     }
     
-    // Fetch from CoinGecko
+    // Fetch social links from CoinGecko first
+    console.log('[MCP-CHAT] Fetching social links from CoinGecko...');
     const res = await fetch(
       `https://api.coingecko.com/api/v3/coins/${coingeckoId}?localization=false&tickers=false&market_data=false&developer_data=false`,
       { signal: AbortSignal.timeout(5000) }
     );
     
     if (!res.ok) {
-      console.log(`[MCP-CHAT] CoinGecko community fetch failed: ${res.status}`);
+      console.log(`[MCP-CHAT] CoinGecko fetch failed: ${res.status}`);
       return null;
     }
     
     const data = await res.json();
+    const links = data.links || {};
     const communityData = data.community_data || {};
     
+    // Extract social links
+    const twitterHandle = links.twitter_screen_name || null;
+    const telegramUrl = links.telegram_channel_identifier 
+      ? `https://t.me/${links.telegram_channel_identifier}` 
+      : null;
+    const discordUrl = links.chat_url?.find((url: string) => url.includes('discord')) || null;
+    
+    console.log('[MCP-CHAT] Social links found:', { 
+      twitter: twitterHandle, 
+      telegram: links.telegram_channel_identifier, 
+      discord: discordUrl ? 'yes' : 'no' 
+    });
+    
+    // Fetch all social metrics in parallel
+    const [twitterFollowers, discordMembers, telegramMembers] = await Promise.all([
+      fetchTwitterFollowers(twitterHandle, coingeckoId),
+      fetchDiscordMembers(discordUrl),
+      fetchTelegramMembers(telegramUrl)
+    ]);
+    
+    // Use CoinGecko data as fallback for Telegram
+    const finalTelegramMembers = telegramMembers || communityData.telegram_channel_user_count || null;
+    
     const community: CommunityData = {
-      twitterFollowers: communityData.twitter_followers || null,
-      discordMembers: null,
-      telegramMembers: communityData.telegram_channel_user_count || null,
+      twitterFollowers,
+      discordMembers,
+      telegramMembers: finalTelegramMembers,
       score: undefined
     };
     
-    // Calculate a simple community score
+    // Calculate community score
     let score = 0;
     let factors = 0;
     
@@ -598,6 +813,13 @@ async function fetchCommunityData(coingeckoId: string, tokenAddress: string, cha
       if (community.twitterFollowers >= 100000) score += 30;
       else if (community.twitterFollowers >= 10000) score += 20;
       else if (community.twitterFollowers >= 1000) score += 10;
+      factors++;
+    }
+    
+    if (community.discordMembers) {
+      if (community.discordMembers >= 50000) score += 30;
+      else if (community.discordMembers >= 10000) score += 20;
+      else if (community.discordMembers >= 1000) score += 10;
       factors++;
     }
     
@@ -614,6 +836,7 @@ async function fetchCommunityData(coingeckoId: string, tokenAddress: string, cha
     
     console.log('[MCP-CHAT] Community data:', { 
       twitter: community.twitterFollowers, 
+      discord: community.discordMembers,
       telegram: community.telegramMembers,
       score: community.score
     });
