@@ -25,6 +25,8 @@ interface CopilotPanelProps {
   standalone?: boolean;
 }
 
+type IntentType = 'price' | 'chart' | 'pools' | 'metadata' | 'summary' | 'holders' | 'unknown';
+
 interface ChatMessage {
   role: 'user' | 'assistant';
   text: string;
@@ -68,6 +70,7 @@ interface ChatMessage {
   available?: string[];
   limited?: boolean;
   errors?: string[];
+  intent?: IntentType;
   timestamp: Date;
 }
 
@@ -158,6 +161,7 @@ export default function CopilotPanel({ token, standalone = false }: CopilotPanel
         available: data.available,
         limited: data.limited,
         errors: data.errors,
+        intent: data.intent,
         timestamp: new Date()
       };
 
@@ -205,7 +209,7 @@ export default function CopilotPanel({ token, standalone = false }: CopilotPanel
           <p className="text-sm whitespace-pre-wrap">{message.text}</p>
         </div>
 
-        {/* Render data blocks for assistant messages */}
+        {/* Render data blocks for assistant messages based on intent */}
         {message.role === 'assistant' && message.data && (
           <div className="space-y-3 max-w-full">
             {message.limited && (
@@ -217,15 +221,23 @@ export default function CopilotPanel({ token, standalone = false }: CopilotPanel
               </Alert>
             )}
 
-            {message.data.change && (
+            {/* Change card: show for chart and summary intents */}
+            {message.data.change && 
+              (message.intent === 'chart' || message.intent === 'summary') && (
               <ChangeCard change={message.data.change} />
             )}
 
-            {message.data.price && (
+            {/* Price metrics: show for price, chart, pools, holders, and summary intents */}
+            {message.data.price && 
+              (message.intent === 'price' || message.intent === 'chart' || 
+               message.intent === 'pools' || message.intent === 'holders' || 
+               message.intent === 'summary') && (
               <MetricCards price={message.data.price} />
             )}
 
-            {message.data.sparkline && (
+            {/* Sparkline: show for chart and summary intents */}
+            {message.data.sparkline && 
+              (message.intent === 'chart' || message.intent === 'summary') && (
               <PriceSparkline 
                 ohlc={message.data.sparkline.map(point => ({
                   t: point.t,
@@ -238,15 +250,21 @@ export default function CopilotPanel({ token, standalone = false }: CopilotPanel
               />
             )}
 
-            {message.data.topPools && message.data.topPools.length > 0 && (
+            {/* Pools table: show ONLY for pools and summary intents */}
+            {message.data.topPools && message.data.topPools.length > 0 && 
+              (message.intent === 'pools' || message.intent === 'summary') && (
               <PoolsTable pools={message.data.topPools} />
             )}
 
-            {message.data.categories && message.data.categories.length > 0 && (
+            {/* Categories: show for metadata and summary intents */}
+            {message.data.categories && message.data.categories.length > 0 && 
+              (message.intent === 'metadata' || message.intent === 'summary') && (
               <CategoryTags categories={message.data.categories} />
             )}
 
-            {message.data.holders && (
+            {/* Holders: show for holders and summary intents */}
+            {message.data.holders && 
+              (message.intent === 'holders' || message.intent === 'summary') && (
               <HoldersTable holders={message.data.holders} />
             )}
           </div>
