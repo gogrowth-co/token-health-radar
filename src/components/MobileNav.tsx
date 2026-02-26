@@ -44,6 +44,13 @@ export default function MobileNav() {
                 Home
               </Link>
               <Link 
+                to="/ai-agents" 
+                className="text-base font-medium py-3 px-3 rounded hover:bg-accent min-h-[44px] flex items-center"
+                onClick={closeNav}
+              >
+                AI Agents
+              </Link>
+              <Link 
                 to="/token" 
                 className="text-base font-medium py-3 px-3 rounded hover:bg-accent min-h-[44px] flex items-center"
                 onClick={closeNav}

@@ -29,6 +29,9 @@ export default function Navbar() {
             <Link to="/copilot" className="text-sm font-medium transition-colors hover:text-primary">
               Copilot
             </Link>
+            <Link to="/ai-agents" className="text-sm font-medium transition-colors hover:text-primary">
+              AI Agents
+            </Link>
             <Link to="/token" className="text-sm font-medium transition-colors hover:text-primary">
               Token Reports
             </Link>
