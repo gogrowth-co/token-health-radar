@@ -4,7 +4,7 @@ import { fetchMoralisPriceData, fetchMoralisTokenStats, fetchMoralisTokenPairs, 
 import { fetchGitHubRepoData } from '../_shared/githubAPI.ts'
 import { fetchTwitterFollowers, fetchTelegramMembers } from '../_shared/apifyAPI.ts'
 import { fetchDiscordMemberCount } from '../_shared/discordAPI.ts'
-import { calculateSecurityScore, calculateLiquidityScore, calculateTokenomicsScore, calculateDevelopmentScore } from '../_shared/scoringUtils.ts'
+import { calculateSecurityScore, calculateLiquidityScore, calculateTokenomicsScore, calculateDevelopmentScore, calculateCommunityScore } from '../_shared/scoringUtils.ts'
 import { isSolanaChain } from '../_shared/chainConfig.ts'
 import { 
   fetchSPLMintInfo, 
@@ -192,39 +192,6 @@ function extractTwitterHandle(twitterUrl: string): string | null {
   if (!twitterUrl) return null
   const match = twitterUrl.match(/(?:twitter\.com|x\.com)\/([a-zA-Z0-9_]+)/)
   return match ? match[1] : null
-}
-
-// Calculate community score
-function calculateCommunityScore(data: { twitterFollowers: number; discordMembers: number; telegramMembers: number }): number {
-  let score = 20 // Base score
-  
-  // Twitter scoring (max 35 points)
-  const twitter = data.twitterFollowers || 0
-  if (twitter > 100000) score += 35
-  else if (twitter > 50000) score += 30
-  else if (twitter > 10000) score += 25
-  else if (twitter > 5000) score += 20
-  else if (twitter > 1000) score += 15
-  else if (twitter > 100) score += 10
-  else if (twitter > 0) score += 5
-  
-  // Discord scoring (max 25 points)
-  const discord = data.discordMembers || 0
-  if (discord > 50000) score += 25
-  else if (discord > 10000) score += 20
-  else if (discord > 5000) score += 15
-  else if (discord > 1000) score += 10
-  else if (discord > 0) score += 5
-  
-  // Telegram scoring (max 20 points)
-  const telegram = data.telegramMembers || 0
-  if (telegram > 50000) score += 20
-  else if (telegram > 10000) score += 15
-  else if (telegram > 5000) score += 10
-  else if (telegram > 1000) score += 5
-  else if (telegram > 0) score += 2
-  
-  return Math.min(100, score)
 }
 
 Deno.serve(async (req) => {
