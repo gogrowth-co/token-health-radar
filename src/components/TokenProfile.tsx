@@ -83,6 +83,7 @@ interface TokenProfileProps {
   description?: string;
   network?: string;
   chainId?: string;
+  agentToken?: { category: string; agent_framework: string; coingecko_id: string } | null;
 }
 
 export default function TokenProfile({
@@ -100,6 +101,7 @@ export default function TokenProfile({
   description,
   network = "ETH",
   chainId = "0x1",
+  agentToken = null,
 }: TokenProfileProps) {
   const isMobile = useIsMobile();
   
@@ -176,6 +178,32 @@ export default function TokenProfile({
                   ${symbol.toUpperCase()}
                 </span>
               </div>
+              
+              {/* AI Agent Badge */}
+              {agentToken && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                    agentToken.category === 'ai-agent' ? 'bg-purple-500/20 text-purple-400' :
+                    agentToken.category === 'ai-infrastructure' ? 'bg-blue-500/20 text-blue-400' :
+                    agentToken.category === 'ai-framework' ? 'bg-green-500/20 text-green-400' :
+                    agentToken.category === 'ai-launchpad' ? 'bg-amber-500/20 text-amber-400' :
+                    'bg-gray-500/20 text-gray-400'
+                  }`}>
+                    🤖 {agentToken.category === 'ai-agent' ? 'AI Agent' :
+                         agentToken.category === 'ai-infrastructure' ? 'AI Infrastructure' :
+                         agentToken.category === 'ai-framework' ? 'AI Framework' :
+                         agentToken.category === 'ai-launchpad' ? 'AI Launchpad' : 'AI'}
+                  </span>
+                  {agentToken.agent_framework && agentToken.agent_framework !== 'unknown' && (
+                    <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 text-gray-400 font-medium">
+                      {agentToken.agent_framework.charAt(0).toUpperCase() + agentToken.agent_framework.slice(1)} Framework
+                    </span>
+                  )}
+                  <a href="/ai-agents" className="text-xs text-blue-400 hover:text-blue-300 transition-colors ml-1">
+                    View all AI Agents →
+                  </a>
+                </div>
+              )}
               
               {/* Address and Network */}
               <div className="flex items-center gap-2 mb-2">
@@ -357,6 +385,32 @@ export default function TokenProfile({
                 ${symbol.toUpperCase()}
               </span>
             </div>
+            
+            {/* AI Agent Badge */}
+            {agentToken && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                  agentToken.category === 'ai-agent' ? 'bg-purple-500/20 text-purple-400' :
+                  agentToken.category === 'ai-infrastructure' ? 'bg-blue-500/20 text-blue-400' :
+                  agentToken.category === 'ai-framework' ? 'bg-green-500/20 text-green-400' :
+                  agentToken.category === 'ai-launchpad' ? 'bg-amber-500/20 text-amber-400' :
+                  'bg-gray-500/20 text-gray-400'
+                }`}>
+                  🤖 {agentToken.category === 'ai-agent' ? 'AI Agent' :
+                       agentToken.category === 'ai-infrastructure' ? 'AI Infrastructure' :
+                       agentToken.category === 'ai-framework' ? 'AI Framework' :
+                       agentToken.category === 'ai-launchpad' ? 'AI Launchpad' : 'AI'}
+                </span>
+                {agentToken.agent_framework && agentToken.agent_framework !== 'unknown' && (
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 text-gray-400 font-medium">
+                    {agentToken.agent_framework.charAt(0).toUpperCase() + agentToken.agent_framework.slice(1)} Framework
+                  </span>
+                )}
+                <a href="/ai-agents" className="text-xs text-blue-400 hover:text-blue-300 transition-colors ml-1">
+                  View all AI Agents →
+                </a>
+              </div>
+            )}
             {/* Description */}
             {clampedDesc && (
               <p

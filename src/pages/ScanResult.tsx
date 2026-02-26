@@ -191,7 +191,8 @@ export default function ScanResult() {
             { name: 'liquidity', query: supabase.from('token_liquidity_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
             { name: 'development', query: supabase.from('token_development_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
             { name: 'community', query: supabase.from('token_community_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
-            { name: 'descOverride', query: supabase.from('token_description_overrides').select('description').eq('token_address', tokenAddress).maybeSingle() }
+            { name: 'descOverride', query: supabase.from('token_description_overrides').select('description').eq('token_address', tokenAddress).maybeSingle() },
+            { name: 'agentToken', query: supabase.from('agent_tokens').select('category, agent_framework, coingecko_id').eq('token_address', tokenAddress).maybeSingle() }
           ];
 
           const cacheResults = await Promise.allSettled(cacheQueries.map(q => q.query));
@@ -213,7 +214,7 @@ export default function ScanResult() {
                 cacheData[cacheName] = { score: 0, token_address: tokenAddress, chain_id: chainId };
               } else {
                 cacheData[cacheName] = data || { score: 0, token_address: tokenAddress, chain_id: chainId };
-                if (data && data.score && data.score > 0) {
+                if (data && 'score' in data && (data as any).score > 0) {
                   hasValidScores = true;
                 }
               }
@@ -248,6 +249,7 @@ export default function ScanResult() {
             development: cacheData.development,
             community: cacheData.community,
             descriptionOverride: cacheData.descOverride?.description || null,
+            agentToken: cacheData.agentToken || null,
           };
 
           setScanData(freshScanData);
@@ -510,6 +512,7 @@ export default function ScanResult() {
             description={displayDescription}
             network={networkName}
             chainId={chainId}
+            agentToken={scanData?.agentToken}
           />
 
           {/* Update Frequency Note */}
