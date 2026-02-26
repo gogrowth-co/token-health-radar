@@ -256,6 +256,27 @@ export type Database = {
         }
         Relationships: []
       }
+      token_description_overrides: {
+        Row: {
+          created_at: string
+          description: string
+          token_address: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          token_address: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          token_address?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       token_development_cache: {
         Row: {
           chain_id: string
