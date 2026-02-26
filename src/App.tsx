@@ -28,6 +28,7 @@ import TokenDirectory from "./pages/TokenDirectory";
 import Copilot from "./pages/Copilot";
 import NotFound from "./pages/NotFound";
 import AdminUsers from "./pages/AdminUsers";
+import AIAgents from "./pages/AIAgents";
 import AdminRoute from "./components/admin/AdminRoute";
 import { useEffect } from "react";
 
@@ -110,6 +111,7 @@ const App = () => {
                     <Route path="/token-sniffer-vs-tokenhealthscan" element={<TokenSnifferComparison />} />
                     <Route path="/solana-launchpads" element={<SolanaLaunchpads />} />
                     <Route path="/ethereum-launchpads" element={<EthereumLaunchpads />} />
+                    <Route path="/ai-agents" element={<AIAgents />} />
                     <Route path="/token" element={<TokenDirectory />} />
                     <Route path="/token/:symbol" element={<TokenReport />} />
                     <Route path="/admin/users" element={
