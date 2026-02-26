@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_tokens: {
+        Row: {
+          agent_framework: string | null
+          category: string | null
+          chain_id: string | null
+          coingecko_id: string
+          created_at: string
+          current_price_usd: number | null
+          description: string | null
+          display_order: number | null
+          image_url: string | null
+          is_featured: boolean | null
+          last_scanned_at: string | null
+          last_synced_at: string | null
+          market_cap_rank: number | null
+          market_cap_usd: number | null
+          name: string
+          price_change_24h_pct: number | null
+          symbol: string
+          token_address: string | null
+          updated_at: string
+          volume_24h_usd: number | null
+        }
+        Insert: {
+          agent_framework?: string | null
+          category?: string | null
+          chain_id?: string | null
+          coingecko_id: string
+          created_at?: string
+          current_price_usd?: number | null
+          description?: string | null
+          display_order?: number | null
+          image_url?: string | null
+          is_featured?: boolean | null
+          last_scanned_at?: string | null
+          last_synced_at?: string | null
+          market_cap_rank?: number | null
+          market_cap_usd?: number | null
+          name: string
+          price_change_24h_pct?: number | null
+          symbol: string
+          token_address?: string | null
+          updated_at?: string
+          volume_24h_usd?: number | null
+        }
+        Update: {
+          agent_framework?: string | null
+          category?: string | null
+          chain_id?: string | null
+          coingecko_id?: string
+          created_at?: string
+          current_price_usd?: number | null
+          description?: string | null
+          display_order?: number | null
+          image_url?: string | null
+          is_featured?: boolean | null
+          last_scanned_at?: string | null
+          last_synced_at?: string | null
+          market_cap_rank?: number | null
+          market_cap_usd?: number | null
+          name?: string
+          price_change_24h_pct?: number | null
+          symbol?: string
+          token_address?: string | null
+          updated_at?: string
+          volume_24h_usd?: number | null
+        }
+        Relationships: []
+      }
       anonymous_scan_attempts: {
         Row: {
           attempted_at: string
