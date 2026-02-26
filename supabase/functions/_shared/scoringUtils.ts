@@ -367,9 +367,41 @@ export function calculateDevelopmentScore(githubData: any): number {
   if (githubData.is_fork && !commits30d) score -= 10; // Fork without recent commits might not be original development
   
   const finalScore = Math.max(0, Math.min(100, score));
-  
+
   console.log(`[GITHUB] Development score calculated: ${finalScore}`);
   console.log(`[GITHUB] - Base: 20, Commits: ${commits30d}, Contributors: ${contributors}, Issues: ${openIssues}/${closedIssues}, Stars: ${stars}, Forks: ${forks}`);
-  
+
   return finalScore;
+}
+
+export function calculateCommunityScore(data: { twitterFollowers: number; discordMembers: number; telegramMembers: number }): number {
+  let score = 20; // Base score
+
+  // Twitter scoring (max 35 points)
+  const twitter = data.twitterFollowers || 0;
+  if (twitter > 100000) score += 35;
+  else if (twitter > 50000) score += 30;
+  else if (twitter > 10000) score += 25;
+  else if (twitter > 5000) score += 20;
+  else if (twitter > 1000) score += 15;
+  else if (twitter > 100) score += 10;
+  else if (twitter > 0) score += 5;
+
+  // Discord scoring (max 25 points)
+  const discord = data.discordMembers || 0;
+  if (discord > 50000) score += 25;
+  else if (discord > 10000) score += 20;
+  else if (discord > 5000) score += 15;
+  else if (discord > 1000) score += 10;
+  else if (discord > 0) score += 5;
+
+  // Telegram scoring (max 20 points)
+  const telegram = data.telegramMembers || 0;
+  if (telegram > 50000) score += 20;
+  else if (telegram > 10000) score += 15;
+  else if (telegram > 5000) score += 10;
+  else if (telegram > 1000) score += 5;
+  else if (telegram > 0) score += 2;
+
+  return Math.min(100, score);
 }
