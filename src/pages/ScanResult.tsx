@@ -190,7 +190,8 @@ export default function ScanResult() {
             { name: 'tokenomics', query: supabase.from('token_tokenomics_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
             { name: 'liquidity', query: supabase.from('token_liquidity_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
             { name: 'development', query: supabase.from('token_development_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
-            { name: 'community', query: supabase.from('token_community_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() }
+            { name: 'community', query: supabase.from('token_community_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
+            { name: 'descOverride', query: supabase.from('token_description_overrides').select('description').eq('token_address', tokenAddress).maybeSingle() }
           ];
 
           const cacheResults = await Promise.allSettled(cacheQueries.map(q => q.query));
@@ -246,6 +247,7 @@ export default function ScanResult() {
             liquidity: cacheData.liquidity,
             development: cacheData.development,
             community: cacheData.community,
+            descriptionOverride: cacheData.descOverride?.description || null,
           };
 
           setScanData(freshScanData);
@@ -362,11 +364,6 @@ export default function ScanResult() {
   // Use database description, but ensure it's formal/informative (client-side guard)
   const properDescription = (tokenInfo?.description || "").toString();
 
-  // Special override for PENDLE token
-  const pendleDescription = "Pendle is a cross-chain compatible ERC20 token designed to offer fixed yields and control over yield exposure. It allows users to lock their PENDLE tokens for a stake in the protocol, providing opportunities for high returns or fixed yields.";
-  const isPendleToken = properSymbol?.toUpperCase() === 'PENDLE' || properName?.toLowerCase().includes('pendle');
-  const finalDescription = isPendleToken ? pendleDescription : properDescription;
-
   // Heuristic: detect marketing/tagline style or generic descriptions
   const isTaglineStyle = (text: string): boolean => {
     if (!text) return true;
@@ -413,74 +410,35 @@ export default function ScanResult() {
   const chainConfig = getChainConfigByMoralisId(chainId);
   const chainName = chainConfig?.name || "Ethereum";
 
-  // Curated, purpose-first overrides for known tokens
-  const curatedDescriptionOverride = (() => {
-    const map: Record<string, string> = {
-      // Top DeFi protocols
-      "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9": "Aave is a decentralized lending protocol where users can lend and borrow cryptocurrencies. AAVE token holders can stake their tokens for protocol security and governance.",
-      "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984": "Uniswap is a decentralized exchange protocol that uses automated market makers (AMMs) instead of traditional order books. UNI is its governance token.",
-      "0x6b175474e89094c44da98b954eedeac495271d0f": "Dai is a decentralized stablecoin pegged to the US dollar, maintained by the MakerDAO protocol through collateralized debt positions.",
-      "0x514910771af9ca656af840dff83e8264ecf986ca": "Chainlink provides decentralized oracle networks that connect smart contracts to real-world data, enabling secure and reliable off-chain data access.",
-      "0x0d8775f648430679a709e98d2b0cb6250d2887ef": "Basic Attention Token powers the Brave browser ecosystem, rewarding users for viewing privacy-respecting ads and enabling content creator monetization.",
-
-      // Stablecoins
-      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "USD Coin (USDC) is a fully-backed stablecoin pegged 1:1 to the US dollar, issued by Circle and regulated under US money transmission laws.",
-      "0xdac17f958d2ee523a2206206994597c13d831ec7": "Tether (USDT) is the largest stablecoin by market cap, pegged to the US dollar and widely used for trading and cross-border transactions.",
-
-      // Layer 2 & Infrastructure
-      "0x4200000000000000000000000000000000000006": "Wrapped Ether (WETH) on Base is an ERC-20 compatible version of ETH, enabling it to be used in DeFi protocols and smart contracts.",
-      "0x912ce59144191c1204e64559fe8253a0e49e6548": "Arbitrum (ARB) is the governance token for Arbitrum One, a leading Ethereum Layer 2 scaling solution using optimistic rollups.",
-      "0x0b2c639c533813f4aa9d7837caf62653d097ff85": "USD Coin on Optimism - bridged version of USDC on the Optimism Layer 2 network for faster and cheaper transactions.",
-
-      // ZK & Privacy
-      "0x6bef15d938d4e72056ac92ea4bdd0d76b1c4ad29": "Succinct (PROVE) is an ERC‑20 on Ethereum powering SP1's decentralized prover network for fast zero-knowledge proofs.",
-
-      // Yield & Derivatives
-      "0x808507121b80c02388fad14726482e061b8da827": "Pendle enables users to tokenize and trade future yield, separating ownership of the principal and yield components of yield-bearing tokens.",
-      "0x9d65ff81a3c488d585bbfb0bfe3c7707c7917f54": "SSV Network provides distributed validator technology for Ethereum staking, enabling resilient and secure validator operations.",
-
-      // Meme tokens (brief but accurate)
-      "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce": "Shiba Inu (SHIB) is an Ethereum-based meme token with a large community and expanding DeFi ecosystem including ShibaSwap DEX."
-    };
-    return map[tokenAddress.toLowerCase()] || "";
-  })();
-
   const displayDescription = (() => {
-    const truncate = (s: string, max = 180) => (s.length <= max ? s : s.slice(0, max - 1).trimEnd() + '…');
-
-    // If we have a curated override, use it
-    if (curatedDescriptionOverride) {
-      const finalText = truncate(curatedDescriptionOverride, 180);
-      console.log('ScanResult: Using curated description:', finalText);
+    const truncate = (s: string, max = 180) => (s.length <= max ? s : s.slice(0, max - 1).trimEnd() + '\u2026');
+    // If we have a database override, use it
+    const descOverride = scanData?.descriptionOverride || "";
+    if (descOverride) {
+      const finalText = truncate(descOverride, 180);
+      console.log('ScanResult: Using DB description override:', finalText);
       return finalText;
     }
-
-    // If we have a database description that's meaningful, use it
-    if (finalDescription && finalDescription.length > 50 && !isTaglineStyle(finalDescription)) {
-      const finalText = truncate(finalDescription, 180);
-      console.log('ScanResult: Using database description:', finalText);
+    // If we have an API description that's meaningful, use it
+    if (properDescription && properDescription.length > 50 && !isTaglineStyle(properDescription)) {
+      const finalText = truncate(properDescription, 180);
+      console.log('ScanResult: Using API description:', finalText);
       return finalText;
     }
-
     // Fallback to generated description
-
     const sec: any = scanData.security || {};
-
     const bits: string[] = [];
     if (sec.contract_verified === true) bits.push('Verified contract');
     if (sec.honeypot_detected === false) bits.push('No honeypot');
     if (sec.freeze_authority === false) bits.push('No freeze');
     if (sec.ownership_renounced === true) bits.push('Renounced');
-
     const mc = parseFloat(properMarketCap.replace(/[^0-9.]/g, "")) || 0;
     const market: string[] = [];
     if (properPrice && properPrice > 0) market.push(formatCompactUSD(properPrice));
     if (mc > 0) market.push(`MC ${formatCompactUSD(mc)}`);
-
-    const details = [bits.join(' · '), market.join(' · ')].filter(Boolean).join(' | ');
+    const details = [bits.join(' \u00b7 '), market.join(' \u00b7 ')].filter(Boolean).join(' | ');
     const base = `${properName} (${properSymbol}) on ${chainName}`;
     const composed = details ? `${base}: ${details}` : base;
-
     const finalText = truncate(composed, 180);
     console.log('ScanResult: Using generated description:', finalText);
     return finalText;
@@ -489,8 +447,6 @@ export default function ScanResult() {
   const networkName = chainConfig?.name === "Base" ? "BASE" : (chainConfig?.name === "Arbitrum" ? "ARB" : "ETH");
   // Use the calculated overall score from the scan data
   const overallScore = scanData.overall_score || 0;
-
-  console.log("ScanResult: Using description from database:", properDescription.substring(0, 50) + '...');
 
   console.log("ScanResult: Displaying scores:", {
     overall: overallScore,
