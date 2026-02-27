@@ -152,33 +152,18 @@ export default function AIAgents() {
   async function handleSyncPrices() {
     setSyncing(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      if (!token) {
-        toast({ title: "Auth error", description: "You must be logged in.", variant: "destructive" });
-        return;
-      }
-
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const res = await fetch(`${supabaseUrl}/functions/v1/sync-agent-tokens`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({}),
+      const { data, error } = await supabase.functions.invoke('sync-agent-tokens', {
+        method: 'POST',
       });
 
-      const body = await res.json();
-
-      if (!res.ok) {
-        toast({ title: "Sync failed", description: body.error || body.message || `HTTP ${res.status}`, variant: "destructive" });
+      if (error) {
+        toast({ title: "Sync failed", description: error.message || "Unknown error", variant: "destructive" });
         return;
       }
 
       toast({
         title: "Sync complete",
-        description: `${body.synced} tokens synced, ${body.new_tokens} new. ${body.errors?.length || 0} errors.`,
+        description: `${data.synced} tokens synced, ${data.new_tokens} new. ${data.errors?.length || 0} errors.`,
       });
 
       setRefreshKey((k) => k + 1);
