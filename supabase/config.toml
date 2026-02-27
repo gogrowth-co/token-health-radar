@@ -87,6 +87,3 @@ verify_jwt = true
 
 [functions.weekly-token-refresh]
 verify_jwt = false
-
-[functions.sync-agent-tokens]
-verify_jwt = false
