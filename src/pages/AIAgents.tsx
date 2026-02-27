@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "@/components/ui/helmet";
 import Navbar from "@/components/Navbar";
@@ -9,6 +9,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrencyValue } from "@/utils/tokenFormatters";
 import { cn } from "@/lib/utils";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, RefreshCw } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type AgentToken = Tables<"agent_tokens">;
@@ -53,11 +56,15 @@ function relativeTime(dateStr: string): string {
 
 export default function AIAgents() {
   const navigate = useNavigate();
+  const { isAdmin } = useUserRole();
+  const { toast } = useToast();
   const [agents, setAgents] = useState<AgentToken[]>([]);
   const [scores, setScores] = useState<Record<string, ScoreEntry>>({});
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState<"mcap" | "score">("mcap");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     async function load() {
@@ -110,7 +117,7 @@ export default function AIAgents() {
       setLoading(false);
     }
     load();
-  }, []);
+  }, [refreshKey]);
 
   const filtered = useMemo(() => {
     let list = agents;
@@ -141,6 +148,46 @@ export default function AIAgents() {
   const scannedCount = agents.filter(
     (a) => a.token_address && scores[a.token_address]
   ).length;
+
+  async function handleSyncPrices() {
+    setSyncing(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) {
+        toast({ title: "Auth error", description: "You must be logged in.", variant: "destructive" });
+        return;
+      }
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const res = await fetch(`${supabaseUrl}/functions/v1/sync-agent-tokens`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),
+      });
+
+      const body = await res.json();
+
+      if (!res.ok) {
+        toast({ title: "Sync failed", description: body.error || body.message || `HTTP ${res.status}`, variant: "destructive" });
+        return;
+      }
+
+      toast({
+        title: "Sync complete",
+        description: `${body.synced} tokens synced, ${body.new_tokens} new. ${body.errors?.length || 0} errors.`,
+      });
+
+      setRefreshKey((k) => k + 1);
+    } catch (err: any) {
+      toast({ title: "Sync error", description: err.message, variant: "destructive" });
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   function handleRowClick(agent: AgentToken) {
     if (!agent.token_address || !agent.chain_id) return;
@@ -178,6 +225,22 @@ export default function AIAgents() {
             </p>
           )}
         </section>
+
+        {/* Admin: Sync Prices */}
+        {isAdmin && (
+          <div className="flex justify-end mb-4">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={syncing}
+              onClick={handleSyncPrices}
+              className="gap-2"
+            >
+              {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              {syncing ? "Syncing…" : "Sync Prices"}
+            </Button>
+          </div>
+        )}
 
         {/* Filters + Sort */}
         <div className="flex flex-wrap items-center gap-2 mb-6">
