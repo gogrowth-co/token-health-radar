@@ -106,14 +106,18 @@ export const getSolanaAddress = (platforms: Record<string, string> | undefined):
 };
 
 /**
- * Normalize token address to lowercase for consistent database storage
- * CRITICAL: Always use this before ANY database operation to ensure case-insensitive matching
+ * Normalize a token address for database operations
+ * - EVM addresses: lowercase for case-insensitive matching
+ * - Solana addresses: preserve original case (Base58 is case-sensitive)
  * @param address - Token address to normalize
- * @returns Lowercase address or empty string
+ * @returns Normalized address or empty string
  */
 export const normalizeAddress = (address: string | undefined | null): string => {
   if (!address || typeof address !== 'string') return "";
-  return address.toLowerCase().trim();
+  const trimmed = address.trim();
+  // Solana addresses are Base58-encoded and case-sensitive — do NOT lowercase
+  if (isSolanaAddress(trimmed)) return trimmed;
+  return trimmed.toLowerCase();
 };
 
 /**
