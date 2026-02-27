@@ -26,7 +26,7 @@ serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // SECURITY: Validate internal API secret or service role key
+  // SECURITY: Validate authentication
   console.log('[SYNC-AGENT-TOKENS] Validating authentication...');
 
   const authHeader = req.headers.get('Authorization');
@@ -38,7 +38,7 @@ serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         error: 'Unauthorized - Authentication required',
-        message: 'This endpoint requires authentication. Please include a valid authorization token or internal API secret.',
+        message: 'This endpoint requires authentication.',
       }),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -48,12 +48,52 @@ serve(async (req: Request) => {
   const isValidServiceRole = token === serviceRoleKey;
   const isValidInternal = internalSecret && token === internalSecret;
 
-  if (!isValidServiceRole && !isValidInternal) {
-    console.error('[SYNC-AGENT-TOKENS] Invalid authentication token');
+  let authenticated = isValidServiceRole || isValidInternal;
+
+  // If not service role or internal secret, check if it's an authenticated admin user
+  if (!authenticated) {
+    try {
+      const supabaseAuth = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_ANON_KEY')!,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+
+      const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getUser(token);
+      if (claimsError || !claimsData?.user) {
+        console.error('[SYNC-AGENT-TOKENS] User auth failed:', claimsError?.message);
+      } else {
+        const userId = claimsData.user.id;
+        // Check admin role using the service-role client (created below)
+        const adminClient = createClient(
+          Deno.env.get('SUPABASE_URL')!,
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+        );
+        const { data: roleData, error: roleError } = await adminClient.rpc('has_role', {
+          _user_id: userId,
+          _role: 'admin',
+        });
+
+        if (roleError) {
+          console.error('[SYNC-AGENT-TOKENS] Role check error:', roleError.message);
+        } else if (roleData === true) {
+          authenticated = true;
+          console.log(`[SYNC-AGENT-TOKENS] Admin user authenticated: ${userId}`);
+        } else {
+          console.log(`[SYNC-AGENT-TOKENS] User ${userId} is not admin`);
+        }
+      }
+    } catch (err: any) {
+      console.error('[SYNC-AGENT-TOKENS] Auth check error:', err.message);
+    }
+  }
+
+  if (!authenticated) {
+    console.error('[SYNC-AGENT-TOKENS] Authentication failed');
     return new Response(
       JSON.stringify({
-        error: 'Unauthorized - Invalid token',
-        message: 'Your authentication token is invalid.',
+        error: 'Unauthorized - Invalid token or insufficient permissions',
+        message: 'Admin access required.',
       }),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
