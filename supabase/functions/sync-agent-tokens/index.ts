@@ -119,8 +119,8 @@ serve(async (req: Request) => {
     // Fetch AI agent tokens from CoinGecko
     console.log('[SYNC-AGENT-TOKENS] Fetching AI agent tokens from CoinGecko...');
     const cgResponse = await fetch(
-      'https://pro-api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=ai-agents&order=market_cap_desc&per_page=50&page=1',
-      { headers: { 'x-cg-pro-api-key': coingeckoApiKey } }
+      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=ai-agents&order=market_cap_desc&per_page=50&page=1',
+      { headers: { 'x-cg-demo-api-key': coingeckoApiKey } }
     );
 
     if (!cgResponse.ok) {
@@ -176,8 +176,8 @@ serve(async (req: Request) => {
 
           try {
             const coinResponse = await fetch(
-              `https://pro-api.coingecko.com/api/v3/coins/${item.id}`,
-              { headers: { 'x-cg-pro-api-key': coingeckoApiKey } }
+              `https://api.coingecko.com/api/v3/coins/${item.id}`,
+              { headers: { 'x-cg-demo-api-key': coingeckoApiKey } }
             );
 
             if (coinResponse.ok) {
