@@ -93,3 +93,6 @@ verify_jwt = false
 
 [functions.debug-auth-check]
 verify_jwt = false
+
+[functions.batch-scan-agents]
+verify_jwt = false
