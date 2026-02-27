@@ -176,7 +176,29 @@ export default function AIAgents() {
 
   function handleRowClick(agent: AgentToken) {
     if (!agent.token_address || !agent.chain_id) return;
-    navigate(`/scan-result?address=${agent.token_address}&chain=${agent.chain_id}`);
+    
+    // Save token info to localStorage for the scan flow
+    const tokenInfo = {
+      address: agent.token_address,
+      id: agent.coingecko_id,
+      name: agent.name,
+      symbol: agent.symbol,
+      logo: agent.image_url || '',
+      price_usd: agent.current_price_usd || 0,
+      price_change_24h: agent.price_change_24h_pct || 0,
+      market_cap_usd: agent.market_cap_usd || 0,
+      chain: agent.chain_id === 'solana' ? 'solana' : undefined,
+    };
+    localStorage.setItem("selectedToken", JSON.stringify(tokenInfo));
+
+    // Route through scan-loading so the scan actually runs
+    const params = new URLSearchParams({
+      address: agent.token_address,
+      chain: agent.chain_id,
+      id: agent.coingecko_id,
+      force_refresh: 'true',
+    });
+    navigate(`/scan-loading?${params.toString()}`);
   }
 
   function scoreColor(s: number) {
