@@ -90,3 +90,6 @@ verify_jwt = false
 
 [functions.sync-agent-tokens]
 verify_jwt = false
+
+[functions.debug-auth-check]
+verify_jwt = false
