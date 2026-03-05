@@ -39,19 +39,19 @@ const handler: Handler = async (event: HandlerEvent) => {
       }
     });
 
-    // Navigate and wait for the SPA to render
+    // Navigate and wait for the SPA to render (keep under Netlify's 10s default timeout)
     await page.goto(targetUrl, {
       waitUntil: "networkidle0",
-      timeout: 25000,
+      timeout: 12000,
     });
 
-    // Also wait for a custom readiness flag if the app sets one
+    // Brief wait for a custom readiness flag if the app sets one
     try {
       await page.waitForFunction("window.__PRERENDER_READY === true", {
-        timeout: 5000,
+        timeout: 2000,
       });
     } catch {
-      // If flag isn't set within 5s, proceed with whatever we have
+      // If flag isn't set within 2s, proceed with whatever we have
       console.log("[PRERENDER] __PRERENDER_READY not detected, using networkidle result");
     }
 
@@ -80,14 +80,35 @@ const handler: Handler = async (event: HandlerEvent) => {
   } catch (err: any) {
     console.error(`[PRERENDER] Error rendering ${targetUrl}:`, err.message);
 
+    // Fallback: serve basic HTML shell with meta tags so bots still get something useful
+    const fallbackHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Token Health Scan — Crypto Risk Analysis</title>
+  <meta name="description" content="Scan any crypto token for security risks, liquidity analysis, tokenomics, community health, and development activity.">
+  <meta property="og:title" content="Token Health Scan">
+  <meta property="og:description" content="Scan any crypto token for security risks, liquidity analysis, tokenomics, community health, and development activity.">
+  <meta property="og:image" content="https://tokenhealthscan.com/lovable-uploads/tokenhealthscan-og.png">
+  <meta property="og:url" content="https://tokenhealthscan.com${path}">
+  <meta name="prerender-status" content="fallback">
+  <link rel="canonical" href="https://tokenhealthscan.com${path}">
+</head>
+<body>
+  <h1>Token Health Scan</h1>
+  <p>Comprehensive crypto token risk analysis across security, liquidity, tokenomics, community, and development.</p>
+</body>
+</html>`;
+
     return {
-      statusCode: 500,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        error: "Prerender failed",
-        message: err.message,
-        path,
-      }),
+      statusCode: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=300",
+        "X-Prerender": "fallback",
+      },
+      body: fallbackHtml,
     };
   } finally {
     if (browser) {
