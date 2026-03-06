@@ -2,26 +2,22 @@
 /sitemap.xml /sitemap.xml 200
 /robots.txt /robots.txt 200
 
-# Prerender for bots and AI crawlers - use separate UA rules for reliable matching
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*bot*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*Bot*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*crawler*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*spider*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*ChatGPT-User*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*GPTBot*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*OAI-SearchBot*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*ClaudeBot*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*Claude-SearchBot*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*PerplexityBot*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*Perplexity-User*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*anthropic-ai*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*facebook*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*twitter*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*linkedin*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*whatsapp*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*telegram*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*slack*
-/* /.netlify/functions/prerender?path=:splat 200 User-Agent:*discord*
+# Prerender for AI crawlers - route to Netlify Function
+/* /.netlify/functions/prerender 200 User-Agent:*ChatGPT-User*
+/* /.netlify/functions/prerender 200 User-Agent:*GPTBot*
+/* /.netlify/functions/prerender 200 User-Agent:*OAI-SearchBot*
+/* /.netlify/functions/prerender 200 User-Agent:*ClaudeBot*
+/* /.netlify/functions/prerender 200 User-Agent:*Claude-SearchBot*
+/* /.netlify/functions/prerender 200 User-Agent:*PerplexityBot*
+/* /.netlify/functions/prerender 200 User-Agent:*Perplexity-User*
+/* /.netlify/functions/prerender 200 User-Agent:*anthropic-ai*
+/* /.netlify/functions/prerender 200 User-Agent:*facebookexternalhit*
+/* /.netlify/functions/prerender 200 User-Agent:*Twitterbot*
+/* /.netlify/functions/prerender 200 User-Agent:*linkedinbot*
+/* /.netlify/functions/prerender 200 User-Agent:*WhatsApp*
+/* /.netlify/functions/prerender 200 User-Agent:*TelegramBot*
+/* /.netlify/functions/prerender 200 User-Agent:*Slackbot*
+/* /.netlify/functions/prerender 200 User-Agent:*Discordbot*
 
 # SPA fallback for regular users
 /* /index.html 200
