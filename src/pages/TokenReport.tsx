@@ -105,6 +105,13 @@ export default function TokenReport() {
   const { symbol } = useParams<{ symbol: string }>();
   const { data, isLoading, error, refetch, isError } = useTokenReport(symbol);
 
+  // Signal to Netlify Prerender Extension that the page is ready
+  useEffect(() => {
+    if (!isLoading) {
+      (window as any).prerenderReady = true;
+    }
+  }, [isLoading]);
+
   // Real-time updates - subscribe to report changes
   useEffect(() => {
     if (!symbol) return;
