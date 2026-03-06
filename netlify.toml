@@ -2,12 +2,6 @@
   publish = "dist"
   command = "npm run build"
 
-# Edge function intercepts bot/crawler requests and returns server-rendered HTML.
-# Regular user requests pass through unchanged to the SPA.
-[[edge_functions]]
-  function = "prerender"
-  path = "/*"
-
 [[redirects]]
   from = "/sitemap.xml"
   to = "/sitemap.xml"
@@ -16,4 +10,9 @@
 [[redirects]]
   from = "/robots.txt"
   to = "/robots.txt"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
   status = 200
