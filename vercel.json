@@ -36,60 +36,11 @@
       }
     },
     {
-      "src": "/token-scan-guide",
-      "dest": "/api/prerender",
-      "headers": {
-        "Content-Type": "text/html"
-      },
-      "continue": true,
-      "check": true
-    },
-    {
-      "src": "/token-sniffer-comparison",
-      "dest": "/api/prerender",
-      "headers": {
-        "Content-Type": "text/html"
-      },
-      "continue": true,
-      "check": true
-    },
-    {
-      "src": "/solana-launchpads",
-      "dest": "/api/prerender",
-      "headers": {
-        "Content-Type": "text/html"
-      },
-      "continue": true,
-      "check": true
-    },
-    {
-      "src": "/ethereum-launchpads",
-      "dest": "/api/prerender",
-      "headers": {
-        "Content-Type": "text/html"
-      },
-      "continue": true,
-      "check": true
-    },
-    {
-      "src": "/token/(.*)",
-      "dest": "/api/prerender?token=$1",
-      "headers": {
-        "Content-Type": "text/html",
-        "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
-      },
-      "continue": true,
-      "check": true
-    },
-    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
   ],
   "functions": {
-    "api/prerender.js": {
-      "runtime": "nodejs18.x"
-    },
     "api/sitemap.ts": {
       "runtime": "nodejs18.x"
     }
