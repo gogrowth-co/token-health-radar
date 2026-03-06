@@ -2,22 +2,8 @@
 /sitemap.xml /sitemap.xml 200
 /robots.txt /robots.txt 200
 
-# Prerender for AI crawlers - route to Netlify Function
-/* /.netlify/functions/prerender 200 User-Agent:*ChatGPT-User*
-/* /.netlify/functions/prerender 200 User-Agent:*GPTBot*
-/* /.netlify/functions/prerender 200 User-Agent:*OAI-SearchBot*
-/* /.netlify/functions/prerender 200 User-Agent:*ClaudeBot*
-/* /.netlify/functions/prerender 200 User-Agent:*Claude-SearchBot*
-/* /.netlify/functions/prerender 200 User-Agent:*PerplexityBot*
-/* /.netlify/functions/prerender 200 User-Agent:*Perplexity-User*
-/* /.netlify/functions/prerender 200 User-Agent:*anthropic-ai*
-/* /.netlify/functions/prerender 200 User-Agent:*facebookexternalhit*
-/* /.netlify/functions/prerender 200 User-Agent:*Twitterbot*
-/* /.netlify/functions/prerender 200 User-Agent:*linkedinbot*
-/* /.netlify/functions/prerender 200 User-Agent:*WhatsApp*
-/* /.netlify/functions/prerender 200 User-Agent:*TelegramBot*
-/* /.netlify/functions/prerender 200 User-Agent:*Slackbot*
-/* /.netlify/functions/prerender 200 User-Agent:*Discordbot*
+# Prerender for bots and AI crawlers - Netlify Prerender Extension
+/*    /.netlify/functions/prerender?path=:splat  200  User-Agent:*bot* User-Agent:*Bot* User-Agent:*chatgpt* User-Agent:*gpt* User-Agent:*claude* User-Agent:*anthropic* User-Agent:*perplexity* User-Agent:*cohere* User-Agent:*facebook* User-Agent:*twitter* User-Agent:*linkedin* User-Agent:*whatsapp* User-Agent:*telegram* User-Agent:*slack* User-Agent:*discord*
 
 # SPA fallback for regular users
 /* /index.html 200
