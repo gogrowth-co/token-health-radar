@@ -2,27 +2,34 @@
 
 ## Problem
 
-The "Sync Prices" button fails with a `404` because `import.meta.env.VITE_SUPABASE_URL` resolves to `undefined` in the preview environment. The resulting request goes to `undefined/functions/v1/sync-agent-tokens`.
+The mangabeira project works because its `_redirects` has a bot-routing rule that proxies bot traffic to `/.netlify/functions/prerender` — a function provided by the **Netlify Prerender Extension** (not custom code). Your project is missing this rule entirely.
 
-## Root Cause
+The mangabeira `_redirects` (line 27):
+```
+/*    /.netlify/functions/prerender?path=:splat  200  User-Agent:*bot* User-Agent:*facebook* User-Agent:*twitter* User-Agent:*linkedin* User-Agent:*whatsapp* User-Agent:*telegram* User-Agent:*slack* User-Agent:*discord*
+```
 
-The `.env` file has `VITE_SUPABASE_URL` defined, but the Lovable preview environment auto-populates only `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` from the connected Supabase project. The variable may not be available at runtime due to environment handling differences.
+Your current `_redirects` has no such rule — bot traffic goes straight to `index.html` (the empty SPA shell).
 
 ## Solution
 
-Replace the manual `fetch()` call with `supabase.functions.invoke('sync-agent-tokens')` from the already-configured Supabase client. This client already knows the correct project URL and will attach the user's auth token automatically.
+Add the bot-routing redirect rule to `public/_redirects`, matching the mangabeira pattern. No custom prerender function is needed — the Netlify Prerender Extension provides `/.netlify/functions/prerender` automatically.
 
-### Changes (single file: `src/pages/AIAgents.tsx`)
+### Changes (single file: `public/_redirects`)
 
-1. Remove the manual `fetch` + session token logic in `handleSyncPrices`
-2. Replace with:
-   ```ts
-   const { data, error } = await supabase.functions.invoke('sync-agent-tokens', {
-     method: 'POST',
-   });
-   ```
-3. Handle `error` for the error toast, and `data` for the success toast (synced count, new tokens)
-4. Remove the `supabase.auth.getSession()` call since the client handles auth headers automatically
+Replace contents with:
 
-This approach is simpler, more reliable, and follows the project's documented pattern for calling edge functions.
+```
+# Static files served directly
+/sitemap.xml /sitemap.xml 200
+/robots.txt /robots.txt 200
+
+# Prerender for bots and AI crawlers - routed to Netlify Prerender Extension
+/*    /.netlify/functions/prerender?path=:splat  200  User-Agent:*bot* User-Agent:*chatgpt* User-Agent:*gpt* User-Agent:*claude* User-Agent:*anthropic* User-Agent:*perplexity* User-Agent:*cohere* User-Agent:*facebook* User-Agent:*twitter* User-Agent:*linkedin* User-Agent:*whatsapp* User-Agent:*telegram* User-Agent:*slack* User-Agent:*discord*
+
+# SPA fallback for regular users
+/* /index.html 200
+```
+
+This adds AI crawler User-Agents (`chatgpt`, `gpt`, `claude`, `anthropic`, `perplexity`, `cohere`) beyond what mangabeira uses, while keeping the same routing mechanism. No other files are touched.
 
