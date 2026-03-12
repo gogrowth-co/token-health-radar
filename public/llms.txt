@@ -1,0 +1,48 @@
+# Token Health Scan — LLM Accessibility Guide
+
+> Token Health Scan (tokenhealthscan.com) is a crypto token risk analysis platform.
+> It evaluates any token's security, liquidity, tokenomics, community, and development
+> health on a 0–100 scale across Ethereum, BSC, Polygon, Arbitrum, Optimism, Base, and Solana.
+
+## Key Pages
+
+- [Home](https://tokenhealthscan.com/) — Token scanner, enter any contract address or symbol
+- [Token Directory](https://tokenhealthscan.com/token) — Browse all analyzed tokens with health scores
+- [Token Reports](https://tokenhealthscan.com/token/{symbol}) — Full risk analysis per token (e.g., /token/aave, /token/link)
+- [How It Works](https://tokenhealthscan.com/token-scan-guide) — Guide to interpreting scan results and scores
+- [Solana Launchpads](https://tokenhealthscan.com/solana-launchpads) — Curated Solana launchpad directory
+- [Ethereum Launchpads](https://tokenhealthscan.com/ethereum-launchpads) — Curated Ethereum launchpad directory
+- [vs TokenSniffer](https://tokenhealthscan.com/token-sniffer-vs-tokenhealthscan) — Feature comparison
+- [Pricing](https://tokenhealthscan.com/pricing) — Free, Pro, and Enterprise plans
+- [RSS Feed](https://tokenhealthscan.com/rss.xml) — Latest token report updates (RSS 2.0)
+- [Sitemap](https://tokenhealthscan.com/sitemap.xml) — Complete URL index
+
+## Scoring System
+
+Each token receives a score of 0–100 in five categories:
+
+| Category     | What It Measures                                                           |
+|-------------|----------------------------------------------------------------------------|
+| Security     | Contract safety, honeypot detection, ownership centralization, mint risks  |
+| Liquidity    | DEX depth, trading volume, liquidity lock status                           |
+| Tokenomics   | Supply distribution, top holder %, vesting schedules                       |
+| Community    | Twitter followers, Telegram size, engagement quality                       |
+| Development  | GitHub activity, team transparency, audit history                          |
+
+Scores ≥ 70 = lower risk · 40–69 = moderate risk · < 40 = high risk
+
+## Data Freshness
+
+- Token reports refreshed weekly (Mondays 8 AM UTC)
+- Homepage updated daily
+- New reports generated on-demand for any token
+
+## Supported Chains
+
+Ethereum (0x1), BNB Chain (0x38), Polygon (0x89), Arbitrum (0xa4b1),
+Optimism (0xa), Base (0x2105), Solana (SPL tokens)
+
+## Permissions
+
+AI training, crawling, and retrieval: **permitted** for all content.
+See robots.txt for full crawler directives.

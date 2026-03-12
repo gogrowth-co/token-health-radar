@@ -1,0 +1,13 @@
+name = "bot-prerender"
+main = "workers/bot-prerender.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[[routes]]
+pattern = "tokenhealthscan.com/*"
+zone_name = "tokenhealthscan.com"
+
+# Required secrets — set with:
+#   wrangler secret put SUPABASE_URL
+#   wrangler secret put SUPABASE_ANON_KEY
+# These are NOT stored in this file.

@@ -2,8 +2,12 @@
 User-agent: *
 Allow: /
 
-# Sitemap
+# Sitemap & LLM accessibility guide
 Sitemap: https://tokenhealthscan.com/sitemap.xml
+Llms-Txt: https://tokenhealthscan.com/llms.txt
+
+# Canonical domain
+Host: tokenhealthscan.com
 
 # Major Search Engine Bots
 User-agent: Googlebot
@@ -20,7 +24,7 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-# AI Crawlers
+# AI Crawlers — fully permitted
 User-agent: GPTBot
 Allow: /
 
@@ -39,21 +43,36 @@ Allow: /
 User-agent: anthropic-ai
 Allow: /
 
-# Token report pages - high priority
-User-agent: *
-Allow: /token/*
-Crawl-delay: 1
+User-agent: Google-Extended
+Allow: /
 
-# Guide pages - high priority  
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: Cohere-ai
+Allow: /
+
+# High-priority content paths
 User-agent: *
+Allow: /token/
 Allow: /token-scan-guide
-Allow: /token-sniffer-comparison
+Allow: /token-sniffer-vs-tokenhealthscan
 Allow: /solana-launchpads
 Allow: /ethereum-launchpads
+Allow: /pricing
+Allow: /llms.txt
+Allow: /rss.xml
 Crawl-delay: 1
 
+# Block private/functional paths from indexing
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /auth
+Disallow: /scan-loading
+Disallow: /confirm
+Disallow: /api/
+
 # File access controls
-User-agent: *
 Disallow: /lovable-uploads/
 Allow: /lovable-uploads/*.png
 Allow: /lovable-uploads/*.jpg

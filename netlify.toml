@@ -2,6 +2,15 @@
   publish = "dist"
   command = "npm run build"
 
+# ─── Edge Functions ────────────────────────────────────────────────────────
+# Backup bot-prerender layer for when Cloudflare proxy is disabled.
+# When Cloudflare orange cloud is ON, the Cloudflare Worker (workers/bot-prerender.js)
+# handles bot routing instead — it runs before Cloudflare's cache.
+[[edge_functions]]
+  path = "/*"
+  function = "bot-prerender"
+
+# ─── Static File Serving ───────────────────────────────────────────────────
 [[redirects]]
   from = "/sitemap.xml"
   to = "/sitemap.xml"
@@ -11,3 +20,37 @@
   from = "/robots.txt"
   to = "/robots.txt"
   status = 200
+
+[[redirects]]
+  from = "/llms.txt"
+  to = "/llms.txt"
+  status = 200
+
+# ─── Canonical Domain ─────────────────────────────────────────────────────
+# Redirect .netlify.app subdomain to custom domain to prevent:
+# - Duplicate content penalties
+# - Google cloaking flags from serving SPA shell on .netlify.app
+[[redirects]]
+  from = "https://token-health-radar.netlify.app/*"
+  to = "https://tokenhealthscan.com/:splat"
+  status = 301
+  force = true
+
+# ─── Security Headers ─────────────────────────────────────────────────────
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    X-Frame-Options = "DENY"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

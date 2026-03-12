@@ -33,12 +33,17 @@ serve(async (req) => {
     const currentDate = new Date().toISOString().split('T')[0];
     
     const staticPages = [
-      { url: '', lastmod: '2025-06-20', changefreq: 'daily', priority: '1.0' },
+      { url: '', lastmod: currentDate, changefreq: 'daily', priority: '1.0' },
+      { url: '/token', lastmod: currentDate, changefreq: 'daily', priority: '0.9' },
       { url: '/token-scan-guide', lastmod: '2025-06-20', changefreq: 'weekly', priority: '0.8' },
       { url: '/token-sniffer-vs-tokenhealthscan', lastmod: '2025-06-23', changefreq: 'weekly', priority: '0.8' },
       { url: '/solana-launchpads', lastmod: '2025-06-25', changefreq: 'weekly', priority: '0.8' },
       { url: '/ethereum-launchpads', lastmod: '2025-01-15', changefreq: 'weekly', priority: '0.8' },
-      { url: '/token', lastmod: currentDate, changefreq: 'daily', priority: '0.9' },
+      { url: '/pricing', lastmod: '2025-06-20', changefreq: 'monthly', priority: '0.7' },
+      { url: '/ai-agents', lastmod: '2025-06-20', changefreq: 'monthly', priority: '0.6' },
+      { url: '/copilot', lastmod: '2025-06-20', changefreq: 'monthly', priority: '0.6' },
+      { url: '/privacy', lastmod: '2025-06-20', changefreq: 'yearly', priority: '0.3' },
+      { url: '/terms', lastmod: '2025-06-20', changefreq: 'yearly', priority: '0.3' },
     ];
 
     const tokenPages = tokenReports?.map(report => ({
