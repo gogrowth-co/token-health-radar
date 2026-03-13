@@ -6,9 +6,9 @@
 # Bot prerender: intercepts bot/crawler requests and returns full HTML from Supabase.
 # Cloudflare proxy is OFF (grey cloud), so edge function runs on every request.
 # Requires env vars in Netlify dashboard: SUPABASE_URL, SUPABASE_ANON_KEY
-[[edge_functions]]
-  path = "/*"
-  function = "bot-prerender"
+# [[edge_functions]]
+#   path = "/*"
+#   function = "bot-prerender"
 
 # ─── Static File Serving ───────────────────────────────────────────────────
 [[redirects]]
