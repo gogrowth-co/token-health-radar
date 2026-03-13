@@ -3,9 +3,9 @@
   command = "npm run build"
 
 # ─── Edge Functions ────────────────────────────────────────────────────────
-# Backup bot-prerender layer for when Cloudflare proxy is disabled.
-# When Cloudflare orange cloud is ON, the Cloudflare Worker (workers/bot-prerender.js)
-# handles bot routing instead — it runs before Cloudflare's cache.
+# Bot prerender: intercepts bot/crawler requests and returns full HTML from Supabase.
+# Cloudflare proxy is OFF (grey cloud), so edge function runs on every request.
+# Requires env vars in Netlify dashboard: SUPABASE_URL, SUPABASE_ANON_KEY
 [[edge_functions]]
   path = "/*"
   function = "bot-prerender"
