@@ -97,6 +97,13 @@ export interface CommunityData {
   team_visibility: string | null;
   active_channels: string[] | null;
   score: number | null;
+  // LunarCrush fields
+  galaxy_score: number | null;
+  alt_rank: number | null;
+  sentiment: number | null;
+  interactions_24h: number | null;
+  posts_active: number | null;
+  contributors_active: number | null;
 }
 
 export interface DevelopmentData {
