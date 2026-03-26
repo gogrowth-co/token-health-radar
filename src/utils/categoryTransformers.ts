@@ -781,42 +781,28 @@ export const transformLiquidityData = (data: LiquidityData | null): CategoryFeat
 export const transformCommunityData = (data: CommunityData | null): CategoryFeature[] => {
   if (!data) {
     return [
-      { icon: Star, title: "Galaxy Score", description: "LunarCrush Galaxy Score — overall social health metric combining multiple signals", badgeLabel: "Unknown", badgeVariant: "gray" },
       { icon: Heart, title: "Sentiment", description: "Community sentiment across social platforms — higher is more positive", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Users, title: "Active Creators", description: "Number of unique contributors posting about this token", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Activity, title: "Daily Engagements", description: "Total social interactions in the last 24 hours", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Award, title: "AltRank", description: "LunarCrush AltRank — lower is better, measures social activity relative to market cap", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: TrendingUp, title: "Social Dominance", description: "Share of total crypto social conversation", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Activity, title: "Trend", description: "Social momentum direction — is buzz growing or fading?", badgeLabel: "Unknown", badgeVariant: "gray" },
       { icon: Hash, title: "Discord Members", description: "Active Discord community size", badgeLabel: "Unknown", badgeVariant: "gray" },
       { icon: MessageCircle, title: "Telegram Members", description: "Telegram group participation", badgeLabel: "Unknown", badgeVariant: "gray" }
     ];
   }
 
-  const galaxyScore = safeNumberAccess(data, 'galaxy_score');
   const sentiment = safeNumberAccess(data, 'sentiment');
-  const contributorsActive = safeNumberAccess(data, 'contributors_active');
-  const interactions24h = safeNumberAccess(data, 'interactions_24h');
-  const altRank = safeNumberAccess(data, 'alt_rank');
+  const socialDominance = safeNumberAccess(data, 'social_dominance');
+  const trend = safeAccess(data, 'trend', null) as string | null;
   const discordMembers = safeNumberAccess(data, 'discord_members');
   const telegramMembers = safeNumberAccess(data, 'telegram_members');
 
+  // Paywalled metrics (show as available but locked)
+  const galaxyScore = safeNumberAccess(data, 'galaxy_score');
+  const altRank = safeNumberAccess(data, 'alt_rank');
+  const interactions24h = safeNumberAccess(data, 'interactions_24h');
+
   const metrics: CategoryFeature[] = [];
 
-  // 1. Galaxy Score
-  let gsVariant: CategoryFeature["badgeVariant"] = "gray";
-  if (galaxyScore >= 70) gsVariant = "green";
-  else if (galaxyScore >= 50) gsVariant = "blue";
-  else if (galaxyScore >= 30) gsVariant = "yellow";
-  else if (galaxyScore > 0) gsVariant = "orange";
-
-  metrics.push({
-    icon: Star,
-    title: "Galaxy Score",
-    description: "LunarCrush Galaxy Score — overall social health metric combining multiple signals",
-    badgeLabel: galaxyScore > 0 ? `${galaxyScore}` : "—",
-    badgeVariant: gsVariant
-  });
-
-  // 2. Sentiment
+  // 1. Sentiment (primary metric)
   let sentVariant: CategoryFeature["badgeVariant"] = "gray";
   if (sentiment >= 75) sentVariant = "green";
   else if (sentiment >= 60) sentVariant = "blue";
@@ -831,45 +817,37 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
     badgeVariant: sentVariant
   });
 
-  // 3. Active Creators
-  let creatorsVariant: CategoryFeature["badgeVariant"] = "gray";
-  if (contributorsActive >= 1000) creatorsVariant = "green";
-  else if (contributorsActive >= 200) creatorsVariant = "blue";
-  else if (contributorsActive >= 50) creatorsVariant = "yellow";
-  else if (contributorsActive > 0) creatorsVariant = "orange";
+  // 2. Social Dominance
+  let domVariant: CategoryFeature["badgeVariant"] = "gray";
+  if (socialDominance >= 2) domVariant = "green";
+  else if (socialDominance >= 0.5) domVariant = "blue";
+  else if (socialDominance >= 0.1) domVariant = "yellow";
+  else if (socialDominance > 0) domVariant = "orange";
 
   metrics.push({
-    icon: Users,
-    title: "Active Creators",
-    description: "Number of unique contributors posting about this token",
-    badgeLabel: contributorsActive > 0 ? formatNumber(contributorsActive) : "—",
-    badgeVariant: creatorsVariant
+    icon: TrendingUp,
+    title: "Social Dominance",
+    description: "Share of total crypto social conversation — higher means more market mindshare",
+    badgeLabel: socialDominance > 0 ? `${socialDominance.toFixed(3)}%` : "—",
+    badgeVariant: domVariant
   });
 
-  // 4. Daily Engagements
+  // 3. Trend
+  let trendVariant: CategoryFeature["badgeVariant"] = "gray";
+  let trendLabel = "—";
+  if (trend === 'up') { trendVariant = "green"; trendLabel = "↑ Rising"; }
+  else if (trend === 'flat') { trendVariant = "blue"; trendLabel = "→ Stable"; }
+  else if (trend === 'down') { trendVariant = "red"; trendLabel = "↓ Falling"; }
+
   metrics.push({
     icon: Activity,
-    title: "Daily Engagements",
-    description: "Total social interactions in the last 24 hours",
-    badgeLabel: interactions24h > 0 ? formatNumber(interactions24h) : "—",
-    badgeVariant: interactions24h > 0 ? "blue" : "gray"
+    title: "Trend",
+    description: "Social momentum direction — is buzz growing or fading?",
+    badgeLabel: trendLabel,
+    badgeVariant: trendVariant
   });
 
-  // 5. AltRank (lower is better)
-  let altVariant: CategoryFeature["badgeVariant"] = "gray";
-  if (altRank > 0 && altRank <= 100) altVariant = "green";
-  else if (altRank > 0 && altRank <= 500) altVariant = "blue";
-  else if (altRank > 0) altVariant = "yellow";
-
-  metrics.push({
-    icon: Award,
-    title: "AltRank",
-    description: "LunarCrush AltRank — lower is better, measures social activity relative to market cap",
-    badgeLabel: altRank > 0 ? `#${altRank}` : "—",
-    badgeVariant: altVariant
-  });
-
-  // 6. Discord Members
+  // 4. Discord Members
   let discordVariant: CategoryFeature["badgeVariant"] = "gray";
   if (discordMembers > 50000) discordVariant = "green";
   else if (discordMembers > 5000) discordVariant = "blue";
@@ -884,7 +862,7 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
     badgeVariant: discordVariant
   });
 
-  // 7. Telegram Members
+  // 5. Telegram Members
   let telegramVariant: CategoryFeature["badgeVariant"] = "gray";
   if (telegramMembers > 50000) telegramVariant = "green";
   else if (telegramMembers > 5000) telegramVariant = "blue";
@@ -899,11 +877,42 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
     badgeVariant: telegramVariant
   });
 
-  // 8. Data Source footnote
+  // 6. Paywalled metrics shown as locked (only if they have data from a previous paid scan)
+  if (galaxyScore > 0) {
+    metrics.push({
+      icon: Star,
+      title: "Galaxy Score",
+      description: "LunarCrush Galaxy Score — overall social health metric",
+      badgeLabel: `${galaxyScore}`,
+      badgeVariant: galaxyScore >= 70 ? "green" : galaxyScore >= 50 ? "blue" : "yellow"
+    });
+  }
+
+  if (altRank > 0) {
+    metrics.push({
+      icon: Award,
+      title: "AltRank",
+      description: "LunarCrush AltRank — lower is better",
+      badgeLabel: `#${altRank}`,
+      badgeVariant: altRank <= 100 ? "green" : altRank <= 500 ? "blue" : "yellow"
+    });
+  }
+
+  if (interactions24h > 0) {
+    metrics.push({
+      icon: Users,
+      title: "Daily Engagements",
+      description: "Total social interactions in the last 24 hours",
+      badgeLabel: formatNumber(interactions24h),
+      badgeVariant: "blue"
+    });
+  }
+
+  // Data Source footnote
   metrics.push({
     icon: Info,
     title: "Data Source",
-    description: "Social data via LunarCrush · Updated every 6h",
+    description: "Powered by LunarCrush · Social Sentiment Data",
     badgeLabel: "LunarCrush",
     badgeVariant: "blue"
   });

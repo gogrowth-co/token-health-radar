@@ -1,26 +1,21 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Star, Heart, Activity, Award, Hash, MessageCircle } from "lucide-react";
+import { Users, Heart, Activity, TrendingUp, Hash, MessageCircle, Lock } from "lucide-react";
 
 interface CommunityData {
-  galaxyScore?: number | null;
   sentiment?: number | null;
-  contributorsActive?: number | null;
-  interactions24h?: number | null;
-  altRank?: number | null;
+  socialDominance?: number | null;
+  social_dominance?: number | null;
+  trend?: string | null;
   discordMembers?: number | null;
-  telegramMembers?: number | null;
-  // Legacy fields for backward compat
-  twitterFollowers?: number | null;
-  twitterVerified?: boolean;
-  twitterGrowth7d?: number | null;
   discord_members?: number | null;
+  telegramMembers?: number | null;
   telegram_members?: number | null;
+  // Legacy / paywalled fields
+  galaxyScore?: number | null;
   galaxy_score?: number | null;
+  altRank?: number | null;
   alt_rank?: number | null;
-  contributors_active?: number | null;
-  interactions_24h?: number | null;
-  posts_active?: number | null;
   score?: number;
 }
 
@@ -36,14 +31,12 @@ function formatNumber(num: number | null | undefined): string {
 }
 
 export function CommunityCard({ community }: CommunityCardProps) {
-  // Normalize fields: support both camelCase and snake_case
-  const gs = community.galaxyScore ?? community.galaxy_score ?? null;
   const sent = community.sentiment ?? null;
-  const creators = community.contributorsActive ?? community.contributors_active ?? null;
-  const interactions = community.interactions24h ?? community.interactions_24h ?? null;
-  const alt = community.altRank ?? community.alt_rank ?? null;
+  const dom = community.socialDominance ?? community.social_dominance ?? null;
+  const trend = community.trend ?? null;
   const discord = community.discordMembers ?? community.discord_members ?? null;
   const telegram = community.telegramMembers ?? community.telegram_members ?? null;
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -53,7 +46,7 @@ export function CommunityCard({ community }: CommunityCardProps) {
               <Users className="h-4 w-4 text-primary" />
               Community
             </CardTitle>
-            <CardDescription className="text-xs">Social Metrics via LunarCrush</CardDescription>
+            <CardDescription className="text-xs">Social Sentiment Data</CardDescription>
           </div>
           {community.score !== undefined && (
             <Badge variant={community.score >= 70 ? "default" : community.score >= 40 ? "secondary" : "destructive"}>
@@ -64,17 +57,6 @@ export function CommunityCard({ community }: CommunityCardProps) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-          {/* Galaxy Score */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-muted-foreground text-xs">
-              <Star className="h-3 w-3" />
-              Galaxy Score
-            </div>
-            <div className="font-semibold">
-              {gs != null ? gs : '—'}
-            </div>
-          </div>
-
           {/* Sentiment */}
           <div className="space-y-1">
             <div className="flex items-center gap-1 text-muted-foreground text-xs">
@@ -86,36 +68,25 @@ export function CommunityCard({ community }: CommunityCardProps) {
             </div>
           </div>
 
-          {/* Active Creators */}
+          {/* Social Dominance */}
           <div className="space-y-1">
             <div className="flex items-center gap-1 text-muted-foreground text-xs">
-              <Users className="h-3 w-3" />
-              Active Creators
+              <TrendingUp className="h-3 w-3" />
+              Social Dominance
             </div>
             <div className="font-semibold">
-              {formatNumber(creators)}
+              {dom != null ? `${dom.toFixed(3)}%` : '—'}
             </div>
           </div>
 
-          {/* Daily Engagements */}
+          {/* Trend */}
           <div className="space-y-1">
             <div className="flex items-center gap-1 text-muted-foreground text-xs">
               <Activity className="h-3 w-3" />
-              Engagements (24h)
+              Trend
             </div>
             <div className="font-semibold">
-              {formatNumber(interactions)}
-            </div>
-          </div>
-
-          {/* AltRank */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-muted-foreground text-xs">
-              <Award className="h-3 w-3" />
-              AltRank
-            </div>
-            <div className="font-semibold">
-              {alt != null ? `#${alt}` : '—'}
+              {trend === 'up' ? '↑ Rising' : trend === 'down' ? '↓ Falling' : trend === 'flat' ? '→ Stable' : '—'}
             </div>
           </div>
 
@@ -145,7 +116,7 @@ export function CommunityCard({ community }: CommunityCardProps) {
         {/* Data source */}
         <div className="flex gap-2 mt-4 pt-3 border-t">
           <Badge variant="outline" className="text-xs">
-            LunarCrush · Updated every 6h
+            Powered by LunarCrush · Updated every 6h
           </Badge>
         </div>
       </CardContent>
