@@ -383,6 +383,17 @@ export function calculateCommunityScore(data: {
   discordMembers: number;
   telegramMembers: number;
 }): number {
+  // Check if we have ANY data at all
+  const hasLunarCrush = data.galaxyScore !== null || data.sentiment !== null || 
+                        data.contributorsActive !== null || data.postsActive !== null || 
+                        data.altRank !== null;
+  const hasSocial = (data.discordMembers || 0) > 0 || (data.telegramMembers || 0) > 0;
+  
+  if (!hasLunarCrush && !hasSocial) {
+    console.log('[COMMUNITY-SCORE] No community data available — returning conservative fallback of 25');
+    return 25;
+  }
+
   let score = 0;
 
   // Galaxy Score (max 25 points)
