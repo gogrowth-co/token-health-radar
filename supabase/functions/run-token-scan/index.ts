@@ -308,11 +308,9 @@ Deno.serve(async (req) => {
     
     // Community Score
     const communityScore = calculateCommunityScore({
-      galaxyScore: lunarCrushData?.galaxy_score ?? null,
       sentiment: lunarCrushData?.sentiment ?? null,
-      contributorsActive: lunarCrushData?.contributors_active ?? null,
-      postsActive: lunarCrushData?.posts_active ?? null,
-      altRank: lunarCrushData?.alt_rank ?? null,
+      socialDominance: lunarCrushData?.social_dominance ?? null,
+      trend: lunarCrushData?.trend ?? null,
       discordMembers: discordMembers || 0,
       telegramMembers: telegramData?.members || 0
     })
