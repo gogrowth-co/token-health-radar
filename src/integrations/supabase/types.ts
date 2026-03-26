@@ -228,9 +228,11 @@ export type Database = {
           posts_active: number | null
           score: number | null
           sentiment: number | null
+          social_dominance: number | null
           team_visibility: string | null
           telegram_members: number | null
           token_address: string
+          trend: string | null
           twitter_followers: number | null
           twitter_growth_7d: number | null
           twitter_verified: boolean | null
@@ -248,9 +250,11 @@ export type Database = {
           posts_active?: number | null
           score?: number | null
           sentiment?: number | null
+          social_dominance?: number | null
           team_visibility?: string | null
           telegram_members?: number | null
           token_address: string
+          trend?: string | null
           twitter_followers?: number | null
           twitter_growth_7d?: number | null
           twitter_verified?: boolean | null
@@ -268,9 +272,11 @@ export type Database = {
           posts_active?: number | null
           score?: number | null
           sentiment?: number | null
+          social_dominance?: number | null
           team_visibility?: string | null
           telegram_members?: number | null
           token_address?: string
+          trend?: string | null
           twitter_followers?: number | null
           twitter_growth_7d?: number | null
           twitter_verified?: boolean | null

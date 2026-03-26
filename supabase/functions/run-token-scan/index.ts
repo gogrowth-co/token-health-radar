@@ -308,11 +308,9 @@ Deno.serve(async (req) => {
     
     // Community Score
     const communityScore = calculateCommunityScore({
-      galaxyScore: lunarCrushData?.galaxy_score ?? null,
       sentiment: lunarCrushData?.sentiment ?? null,
-      contributorsActive: lunarCrushData?.contributors_active ?? null,
-      postsActive: lunarCrushData?.posts_active ?? null,
-      altRank: lunarCrushData?.alt_rank ?? null,
+      socialDominance: lunarCrushData?.social_dominance ?? null,
+      trend: lunarCrushData?.trend ?? null,
       discordMembers: discordMembers || 0,
       telegramMembers: telegramData?.members || 0
     })
@@ -410,6 +408,8 @@ Deno.serve(async (req) => {
         interactions_24h: lunarCrushData?.interactions_24h ?? null,
         posts_active: lunarCrushData?.posts_active ?? null,
         contributors_active: lunarCrushData?.contributors_active ?? null,
+        social_dominance: lunarCrushData?.social_dominance ?? null,
+        trend: lunarCrushData?.trend ?? null,
         lunarcrush_fetched_at: lunarCrushData ? new Date().toISOString() : null,
         active_channels: [
           lunarCrushData ? 'lunarcrush' : null,
@@ -564,11 +564,9 @@ async function scanSolanaToken(
     
     // Calculate REAL community score based on fetched data
     const communityScore = calculateCommunityScore({
-      galaxyScore: lunarCrushData?.galaxy_score ?? null,
       sentiment: lunarCrushData?.sentiment ?? null,
-      contributorsActive: lunarCrushData?.contributors_active ?? null,
-      postsActive: lunarCrushData?.posts_active ?? null,
-      altRank: lunarCrushData?.alt_rank ?? null,
+      socialDominance: lunarCrushData?.social_dominance ?? null,
+      trend: lunarCrushData?.trend ?? null,
       discordMembers: discordMembers || 0,
       telegramMembers: telegramData?.members || 0
     })
@@ -657,6 +655,8 @@ async function scanSolanaToken(
         interactions_24h: lunarCrushData?.interactions_24h ?? null,
         posts_active: lunarCrushData?.posts_active ?? null,
         contributors_active: lunarCrushData?.contributors_active ?? null,
+        social_dominance: lunarCrushData?.social_dominance ?? null,
+        trend: lunarCrushData?.trend ?? null,
         lunarcrush_fetched_at: lunarCrushData ? new Date().toISOString() : null,
         active_channels: [
           lunarCrushData ? 'lunarcrush' : null,
