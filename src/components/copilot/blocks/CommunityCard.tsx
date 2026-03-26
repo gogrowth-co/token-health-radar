@@ -82,7 +82,7 @@ export function CommunityCard({ community }: CommunityCardProps) {
               Sentiment
             </div>
             <div className="font-semibold">
-              {community.sentiment != null ? `${community.sentiment.toFixed(1)}%` : '—'}
+              {sent != null ? `${sent.toFixed(1)}%` : '—'}
             </div>
           </div>
 
