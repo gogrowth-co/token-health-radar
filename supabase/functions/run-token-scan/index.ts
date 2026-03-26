@@ -271,7 +271,7 @@ Deno.serve(async (req) => {
     const symbol = metadata?.symbol || priceData?.symbol || 'UNKNOWN'
     
     const [lunarCrushData, telegramData, discordMembers, githubData] = await Promise.all([
-      fetchLunarCrushWithCache(symbol, token_address, chainId, supabase),
+      fetchLunarCrushWithCache(symbol, token_address, chainId, supabase, !!force_refresh),
       socialLinks.telegram ? fetchTelegramMembers(socialLinks.telegram) : Promise.resolve({ members: null }),
       socialLinks.discord ? fetchDiscordMemberCount(socialLinks.discord) : Promise.resolve(null),
       socialLinks.github ? fetchGitHubRepoData(socialLinks.github) : Promise.resolve(null)
@@ -547,7 +547,7 @@ async function scanSolanaToken(
     // Fetch social metrics, Discord, and GitHub data in parallel
     const symbol = marketData?.symbol || 'SPL'
     const [lunarCrushData, telegramData, discordMembers, githubData] = await Promise.all([
-      fetchLunarCrushWithCache(symbol, normalizedMint, 'solana', supabase),
+      fetchLunarCrushWithCache(symbol, normalizedMint, 'solana', supabase, false),
       marketData?.telegram_url ? fetchTelegramMembers(marketData.telegram_url) : Promise.resolve({ members: null }),
       marketData?.discord_url ? fetchDiscordMemberCount(marketData.discord_url) : Promise.resolve(null),
       marketData?.github_url ? fetchGitHubRepoData(marketData.github_url) : Promise.resolve(null)
