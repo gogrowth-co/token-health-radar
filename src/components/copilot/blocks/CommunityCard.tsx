@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Heart, Activity, TrendingUp, Hash, MessageCircle, Lock } from "lucide-react";
+import { Users, Heart, Activity, TrendingUp, Hash, MessageCircle, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CommunityData {
   sentiment?: number | null;
@@ -56,69 +57,82 @@ export function CommunityCard({ community }: CommunityCardProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-          {/* Sentiment */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-muted-foreground text-xs">
-              <Heart className="h-3 w-3" />
-              Sentiment
+        <TooltipProvider>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+            {/* Sentiment */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                <Heart className="h-3 w-3" />
+                Sentiment
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3 w-3 ml-auto cursor-help text-muted-foreground/60" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top"><p className="text-xs">Powered by LunarCrush®</p></TooltipContent>
+                </Tooltip>
+              </div>
+              <div className="font-semibold">
+                {sent != null ? `${sent.toFixed(1)}%` : '—'}
+              </div>
             </div>
-            <div className="font-semibold">
-              {sent != null ? `${sent.toFixed(1)}%` : '—'}
+
+            {/* Social Dominance */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                <TrendingUp className="h-3 w-3" />
+                Social Dominance
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3 w-3 ml-auto cursor-help text-muted-foreground/60" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top"><p className="text-xs">Powered by LunarCrush®</p></TooltipContent>
+                </Tooltip>
+              </div>
+              <div className="font-semibold">
+                {dom != null ? `${dom.toFixed(3)}%` : '—'}
+              </div>
+            </div>
+
+            {/* Trend */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                <Activity className="h-3 w-3" />
+                Trend
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3 w-3 ml-auto cursor-help text-muted-foreground/60" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top"><p className="text-xs">Powered by LunarCrush®</p></TooltipContent>
+                </Tooltip>
+              </div>
+              <div className="font-semibold">
+                {trend === 'up' ? '↑ Rising' : trend === 'down' ? '↓ Falling' : trend === 'flat' ? '→ Stable' : '—'}
+              </div>
+            </div>
+
+            {/* Discord */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                <Hash className="h-3 w-3" />
+                Discord
+              </div>
+              <div className="font-semibold">
+                {formatNumber(discord)}
+              </div>
+            </div>
+
+            {/* Telegram */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                <MessageCircle className="h-3 w-3" />
+                Telegram
+              </div>
+              <div className="font-semibold">
+                {formatNumber(telegram)}
+              </div>
             </div>
           </div>
-
-          {/* Social Dominance */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-muted-foreground text-xs">
-              <TrendingUp className="h-3 w-3" />
-              Social Dominance
-            </div>
-            <div className="font-semibold">
-              {dom != null ? `${dom.toFixed(3)}%` : '—'}
-            </div>
-          </div>
-
-          {/* Trend */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-muted-foreground text-xs">
-              <Activity className="h-3 w-3" />
-              Trend
-            </div>
-            <div className="font-semibold">
-              {trend === 'up' ? '↑ Rising' : trend === 'down' ? '↓ Falling' : trend === 'flat' ? '→ Stable' : '—'}
-            </div>
-          </div>
-
-          {/* Discord */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-muted-foreground text-xs">
-              <Hash className="h-3 w-3" />
-              Discord
-            </div>
-            <div className="font-semibold">
-              {formatNumber(discord)}
-            </div>
-          </div>
-
-          {/* Telegram */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-muted-foreground text-xs">
-              <MessageCircle className="h-3 w-3" />
-              Telegram
-            </div>
-            <div className="font-semibold">
-              {formatNumber(telegram)}
-            </div>
-          </div>
-        </div>
-
-        {/* Data source */}
-        <div className="flex gap-2 mt-4 pt-3 border-t">
-          <Badge variant="outline" className="text-xs">
-            Powered by LunarCrush · Updated every 6h
-          </Badge>
-        </div>
+        </TooltipProvider>
       </CardContent>
     </Card>
   );
