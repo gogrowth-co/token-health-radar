@@ -115,20 +115,31 @@ export async function fetchLunarCrush(tokenSymbol: string): Promise<LunarCrushDa
     const socialDomMatch = markdown.match(/### Social Dominance:\s*([\d.,]+%|\[[-]+\])/);
     const socialDominance = parseVal(socialDomMatch);
 
-    // Trend: look for "Trend: up" or "trending up/down" patterns
+    // Trend: infer from multiple signals in the markdown
     let trend: string | null = null;
+    
+    // 1. Explicit "Trend:" header
     const trendMatch = markdown.match(/(?:###\s*)?Trend[:\s]+(\w+)/i);
     if (trendMatch) {
       const t = trendMatch[1].toLowerCase();
-      if (t === 'up' || t === 'bullish' || t === 'rising') trend = 'up';
-      else if (t === 'down' || t === 'bearish' || t === 'falling') trend = 'down';
-      else if (t === 'flat' || t === 'neutral' || t === 'stable') trend = 'flat';
+      if (['up', 'bullish', 'rising'].includes(t)) trend = 'up';
+      else if (['down', 'bearish', 'falling'].includes(t)) trend = 'down';
+      else if (['flat', 'neutral', 'stable'].includes(t)) trend = 'flat';
     }
-    // Fallback: infer from sentiment themes or summary text
+    
+    // 2. Sentiment delta: "sentiment is up X%" or "sentiment is down X%"
+    if (!trend) {
+      const sentDelta = markdown.match(/sentiment\s+is\s+(up|down)\s+[\d.]+%/i);
+      if (sentDelta) {
+        trend = sentDelta[1].toLowerCase() === 'up' ? 'up' : 'down';
+      }
+    }
+    
+    // 3. Broader keyword inference
     if (!trend) {
       const lower = markdown.toLowerCase();
-      if (lower.includes('trending up') || lower.includes('trend is up') || lower.includes('bullish trend')) trend = 'up';
-      else if (lower.includes('trending down') || lower.includes('trend is down') || lower.includes('bearish trend')) trend = 'down';
+      if (lower.includes('trending up') || lower.includes('bullish trend') || lower.includes('positive social sentiment')) trend = 'up';
+      else if (lower.includes('trending down') || lower.includes('bearish trend') || lower.includes('negative social sentiment')) trend = 'down';
     }
 
     console.log(`[LUNARCRUSH] Parsed: sentiment=${sentiment}, altRank=${altRank}, galaxyScore=${galaxyScore}, interactions=${interactions24h}, posts=${postsActive}, contributors=${contributorsActive}, socialDominance=${socialDominance}, trend=${trend}`);
