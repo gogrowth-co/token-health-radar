@@ -176,7 +176,8 @@ export async function fetchLunarCrushWithCache(
   tokenSymbol: string,
   tokenAddress: string,
   chainId: string,
-  supabase: any
+  supabase: any,
+  forceRefresh: boolean = false
 ): Promise<LunarCrushData | null> {
   try {
     const { data: cached } = await supabase
