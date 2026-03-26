@@ -655,6 +655,8 @@ async function scanSolanaToken(
         interactions_24h: lunarCrushData?.interactions_24h ?? null,
         posts_active: lunarCrushData?.posts_active ?? null,
         contributors_active: lunarCrushData?.contributors_active ?? null,
+        social_dominance: lunarCrushData?.social_dominance ?? null,
+        trend: lunarCrushData?.trend ?? null,
         lunarcrush_fetched_at: lunarCrushData ? new Date().toISOString() : null,
         active_channels: [
           lunarCrushData ? 'lunarcrush' : null,
