@@ -104,7 +104,7 @@ export function CommunityCard({ community }: CommunityCardProps) {
               Engagements (24h)
             </div>
             <div className="font-semibold">
-              {formatNumber(community.interactions24h)}
+              {formatNumber(interactions)}
             </div>
           </div>
 
