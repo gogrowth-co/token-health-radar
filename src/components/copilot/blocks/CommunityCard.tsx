@@ -115,7 +115,7 @@ export function CommunityCard({ community }: CommunityCardProps) {
               AltRank
             </div>
             <div className="font-semibold">
-              {community.altRank != null ? `#${community.altRank}` : '—'}
+              {alt != null ? `#${alt}` : '—'}
             </div>
           </div>
 
