@@ -271,7 +271,7 @@ Deno.serve(async (req) => {
     const symbol = metadata?.symbol || priceData?.symbol || 'UNKNOWN'
     
     const [lunarCrushData, telegramData, discordMembers, githubData] = await Promise.all([
-      fetchLunarCrushWithCache(symbol, token_address, chainId, supabase),
+      fetchLunarCrushWithCache(symbol, token_address, chainId, supabase, !!force_refresh),
       socialLinks.telegram ? fetchTelegramMembers(socialLinks.telegram) : Promise.resolve({ members: null }),
       socialLinks.discord ? fetchDiscordMemberCount(socialLinks.discord) : Promise.resolve(null),
       socialLinks.github ? fetchGitHubRepoData(socialLinks.github) : Promise.resolve(null)
