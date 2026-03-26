@@ -3,13 +3,24 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Star, Heart, Activity, Award, Hash, MessageCircle } from "lucide-react";
 
 interface CommunityData {
-  galaxyScore: number | null;
-  sentiment: number | null;
-  contributorsActive: number | null;
-  interactions24h: number | null;
-  altRank: number | null;
-  discordMembers: number | null;
-  telegramMembers: number | null;
+  galaxyScore?: number | null;
+  sentiment?: number | null;
+  contributorsActive?: number | null;
+  interactions24h?: number | null;
+  altRank?: number | null;
+  discordMembers?: number | null;
+  telegramMembers?: number | null;
+  // Legacy fields for backward compat
+  twitterFollowers?: number | null;
+  twitterVerified?: boolean;
+  twitterGrowth7d?: number | null;
+  discord_members?: number | null;
+  telegram_members?: number | null;
+  galaxy_score?: number | null;
+  alt_rank?: number | null;
+  contributors_active?: number | null;
+  interactions_24h?: number | null;
+  posts_active?: number | null;
   score?: number;
 }
 
