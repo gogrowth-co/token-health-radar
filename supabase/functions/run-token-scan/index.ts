@@ -547,7 +547,7 @@ async function scanSolanaToken(
     // Fetch social metrics, Discord, and GitHub data in parallel
     const symbol = marketData?.symbol || 'SPL'
     const [lunarCrushData, telegramData, discordMembers, githubData] = await Promise.all([
-      fetchLunarCrushWithCache(symbol, normalizedMint, 'solana', supabase),
+      fetchLunarCrushWithCache(symbol, normalizedMint, 'solana', supabase, false),
       marketData?.telegram_url ? fetchTelegramMembers(marketData.telegram_url) : Promise.resolve({ members: null }),
       marketData?.discord_url ? fetchDiscordMemberCount(marketData.discord_url) : Promise.resolve(null),
       marketData?.github_url ? fetchGitHubRepoData(marketData.github_url) : Promise.resolve(null)
