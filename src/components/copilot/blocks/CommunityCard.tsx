@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Heart, Activity, TrendingUp, Hash, MessageCircle, Lock } from "lucide-react";
+import { Users, Heart, Activity, TrendingUp, Hash, MessageCircle, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CommunityData {
   sentiment?: number | null;
