@@ -812,7 +812,7 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
   metrics.push({
     icon: Heart,
     title: "Sentiment",
-    description: "Community sentiment across social platforms — higher is more positive",
+    description: "Community sentiment across social platforms — higher is more positive · Powered by LunarCrush®",
     badgeLabel: sentiment > 0 ? `${sentiment.toFixed(1)}%` : "—",
     badgeVariant: sentVariant
   });
