@@ -712,7 +712,7 @@ async function scanSolanaToken(
       },
       social_data: {
         twitter_handle: twitterHandle,
-        twitter_followers: twitterFollowers,
+        lunarcrush: lunarCrushData,
         telegram_members: telegramData?.members || null,
         discord_members: discordMembers || null,
         github_repo: githubData ? `${githubData.owner}/${githubData.repo}` : null
