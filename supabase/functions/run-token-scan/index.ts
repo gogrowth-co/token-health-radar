@@ -268,15 +268,16 @@ Deno.serve(async (req) => {
     console.log(`[${requestId}] Phase 2: Social & GitHub API calls...`)
     
     const twitterHandle = extractTwitterHandle(socialLinks.twitter || '')
+    const symbol = metadata?.symbol || priceData?.symbol || 'UNKNOWN'
     
-    const [twitterFollowers, telegramData, discordMembers, githubData] = await Promise.all([
-      twitterHandle ? fetchTwitterFollowers(twitterHandle, coingeckoId) : Promise.resolve(null),
+    const [lunarCrushData, telegramData, discordMembers, githubData] = await Promise.all([
+      fetchLunarCrushWithCache(symbol, token_address, chainId, supabase),
       socialLinks.telegram ? fetchTelegramMembers(socialLinks.telegram) : Promise.resolve({ members: null }),
       socialLinks.discord ? fetchDiscordMemberCount(socialLinks.discord) : Promise.resolve(null),
       socialLinks.github ? fetchGitHubRepoData(socialLinks.github) : Promise.resolve(null)
     ])
     
-    console.log(`[${requestId}] Phase 2 results: twitter=${twitterFollowers || 0}, telegram=${telegramData?.members || 0}, discord=${discordMembers || 0}, github=${!!githubData}`)
+    console.log(`[${requestId}] Phase 2 results: lunarcrush=${!!lunarCrushData}, telegram=${telegramData?.members || 0}, discord=${discordMembers || 0}, github=${!!githubData}`)
 
     // ========== PHASE 3: Calculate Scores ==========
     console.log(`[${requestId}] Phase 3: Calculating scores...`)
@@ -306,12 +307,15 @@ Deno.serve(async (req) => {
     console.log(`[${requestId}] Tokenomics score: ${tokenomicsScore}`)
     
     // Community Score
-    const communityData = {
-      twitterFollowers: twitterFollowers || 0,
+    const communityScore = calculateCommunityScore({
+      galaxyScore: lunarCrushData?.galaxy_score ?? null,
+      sentiment: lunarCrushData?.sentiment ?? null,
+      contributorsActive: lunarCrushData?.contributors_active ?? null,
+      postsActive: lunarCrushData?.posts_active ?? null,
+      altRank: lunarCrushData?.alt_rank ?? null,
       discordMembers: discordMembers || 0,
       telegramMembers: telegramData?.members || 0
-    }
-    const communityScore = calculateCommunityScore(communityData)
+    })
     console.log(`[${requestId}] Community score: ${communityScore}`)
     
     // Development Score
