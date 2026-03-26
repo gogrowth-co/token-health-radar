@@ -71,7 +71,7 @@ export function CommunityCard({ community }: CommunityCardProps) {
               Galaxy Score
             </div>
             <div className="font-semibold">
-              {community.galaxyScore != null ? community.galaxyScore : '—'}
+              {gs != null ? gs : '—'}
             </div>
           </div>
 
