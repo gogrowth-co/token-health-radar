@@ -842,7 +842,7 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
   metrics.push({
     icon: Activity,
     title: "Trend",
-    description: "Social momentum direction — is buzz growing or fading?",
+    description: "Social momentum direction — is buzz growing or fading? · Powered by LunarCrush®",
     badgeLabel: trendLabel,
     badgeVariant: trendVariant
   });
