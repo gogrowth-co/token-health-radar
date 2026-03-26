@@ -187,7 +187,7 @@ export async function fetchLunarCrushWithCache(
       .eq('chain_id', chainId)
       .single();
 
-    if (cached?.lunarcrush_fetched_at) {
+    if (cached?.lunarcrush_fetched_at && !forceRefresh) {
       const fetchedAt = new Date(cached.lunarcrush_fetched_at);
       const ageHours = (Date.now() - fetchedAt.getTime()) / (1000 * 60 * 60);
       
