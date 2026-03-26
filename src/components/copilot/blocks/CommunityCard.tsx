@@ -36,6 +36,14 @@ function formatNumber(num: number | null | undefined): string {
 }
 
 export function CommunityCard({ community }: CommunityCardProps) {
+  // Normalize fields: support both camelCase and snake_case
+  const gs = community.galaxyScore ?? community.galaxy_score ?? null;
+  const sent = community.sentiment ?? null;
+  const creators = community.contributorsActive ?? community.contributors_active ?? null;
+  const interactions = community.interactions24h ?? community.interactions_24h ?? null;
+  const alt = community.altRank ?? community.alt_rank ?? null;
+  const discord = community.discordMembers ?? community.discord_members ?? null;
+  const telegram = community.telegramMembers ?? community.telegram_members ?? null;
   return (
     <Card>
       <CardHeader className="pb-3">
