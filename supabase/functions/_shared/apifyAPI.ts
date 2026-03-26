@@ -177,7 +177,61 @@ export async function fetchTwitterFollowers(twitterHandle: string, coingeckoId?:
   }
 }
 
-// Telegram member count fetching using Web Scraper
+// Direct HTML fetch fallback for Telegram member count
+async function fetchTelegramDirect(telegramUrl: string): Promise<{ members: number | null, name?: string }> {
+  try {
+    console.log(`[TELEGRAM-DIRECT] Fetching HTML from: ${telegramUrl}`);
+    const res = await fetch(telegramUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; bot)' }
+    });
+    if (!res.ok) {
+      console.error(`[TELEGRAM-DIRECT] HTTP error: ${res.status}`);
+      return { members: null };
+    }
+    const html = await res.text();
+    
+    // Parse member count from HTML meta or page content
+    // Pattern: <div class="tgme_page_extra">35 546 members, 1 138 online</div>
+    const extraMatch = html.match(/tgme_page_extra[^>]*>([^<]+)</);
+    if (extraMatch) {
+      const statsText = extraMatch[1];
+      const memberMatch = statsText.match(/([\d\s]+)\s*members/i);
+      if (memberMatch) {
+        const count = parseInt(memberMatch[1].replace(/\s/g, ''), 10);
+        console.log(`[TELEGRAM-DIRECT] Extracted member count: ${count}`);
+        
+        const titleMatch = html.match(/tgme_page_title[^>]*><span[^>]*>([^<]+)/);
+        return { members: count, name: titleMatch?.[1]?.trim() || '' };
+      }
+      // Also check for "subscribers" (channels use this)
+      const subMatch = statsText.match(/([\d\s]+)\s*subscribers/i);
+      if (subMatch) {
+        const count = parseInt(subMatch[1].replace(/\s/g, ''), 10);
+        console.log(`[TELEGRAM-DIRECT] Extracted subscriber count: ${count}`);
+        return { members: count };
+      }
+    }
+    
+    // Fallback: check og:description meta tag which often has member counts
+    const ogMatch = html.match(/og:description[^>]*content="([^"]+)"/);
+    if (ogMatch) {
+      const memberMatch = ogMatch[1].match(/([\d\s]+)\s*(?:members|subscribers)/i);
+      if (memberMatch) {
+        const count = parseInt(memberMatch[1].replace(/\s/g, ''), 10);
+        console.log(`[TELEGRAM-DIRECT] Extracted from og:description: ${count}`);
+        return { members: count };
+      }
+    }
+    
+    console.log(`[TELEGRAM-DIRECT] Could not find member count in HTML`);
+    return { members: null };
+  } catch (error) {
+    console.error(`[TELEGRAM-DIRECT] Error:`, error);
+    return { members: null };
+  }
+}
+
+// Telegram member count fetching — Apify first, then direct HTML fallback
 export async function fetchTelegramMembers(telegramUrl: string): Promise<{ members: number | null, name?: string, description?: string }> {
   if (!telegramUrl) {
     console.log('[TELEGRAM] No Telegram URL provided');
@@ -185,9 +239,12 @@ export async function fetchTelegramMembers(telegramUrl: string): Promise<{ membe
   }
 
   const apiKey = Deno.env.get('APIFY_API_KEY');
+  
+  // If no Apify key, go straight to direct fetch
   if (!apiKey) {
-    console.error('[TELEGRAM] APIFY_API_KEY not configured');
-    return { members: null };
+    console.log('[TELEGRAM] No APIFY_API_KEY, using direct HTML fallback');
+    const result = await fetchTelegramDirect(telegramUrl);
+    return { members: result.members, name: result.name };
   }
 
   try {
@@ -200,66 +257,58 @@ export async function fetchTelegramMembers(telegramUrl: string): Promise<{ membe
       pageFunction: "async function pageFunction(context) {\n  const title = document.querySelector('.tgme_page_title span')?.innerText.trim();\n  const stats = document.querySelector('.tgme_page_extra')?.innerText.trim();\n  const description = document.querySelector('.tgme_page_description')?.innerText.trim();\n  return { title, stats, description };\n}"
     };
     
-    console.log(`[TELEGRAM] Request body:`, JSON.stringify(requestBody, null, 2));
-    
     const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
-      console.error(`[TELEGRAM] HTTP error: ${response.status}`);
-      return { members: null };
+      console.error(`[TELEGRAM] Apify HTTP error: ${response.status}, falling back to direct fetch`);
+      const result = await fetchTelegramDirect(telegramUrl);
+      return { members: result.members, name: result.name };
     }
 
     const responseText = await response.text();
-    console.log(`[TELEGRAM] Raw response text:`, responseText);
     
     if (!responseText || responseText.trim() === '') {
-      console.error(`[TELEGRAM] Empty response body from Apify API`);
-      return { members: null };
+      console.error(`[TELEGRAM] Empty Apify response, falling back to direct fetch`);
+      const result = await fetchTelegramDirect(telegramUrl);
+      return { members: result.members, name: result.name };
     }
 
     let data;
     try {
       data = JSON.parse(responseText);
-      console.log(`[TELEGRAM] Parsed response:`, JSON.stringify(data, null, 2));
     } catch (parseError) {
-      console.error(`[TELEGRAM] Failed to parse JSON response:`, parseError);
-      return { members: null };
+      console.error(`[TELEGRAM] Failed to parse Apify response, falling back to direct fetch`);
+      const result = await fetchTelegramDirect(telegramUrl);
+      return { members: result.members, name: result.name };
     }
 
-    // Extract data from first result
     const result = Array.isArray(data) ? data[0] : null;
     if (!result || !result.stats) {
-      console.log(`[TELEGRAM] No member data found in response`);
-      return { members: null };
+      console.log(`[TELEGRAM] No Apify data, falling back to direct fetch`);
+      const directResult = await fetchTelegramDirect(telegramUrl);
+      return { members: directResult.members, name: directResult.name };
     }
 
-    // Parse member count from stats like "35 546 members, 1 138 online"
     const statsText = result.stats;
     const memberMatch = statsText.match(/([\d\s]+) members/);
     
     if (memberMatch) {
-      // Remove spaces and parse number
       const memberCount = parseInt(memberMatch[1].replace(/\s/g, ''), 10);
-      console.log(`[TELEGRAM] Successfully extracted member count: ${memberCount}`);
-      
-      return {
-        members: memberCount,
-        name: result.title || '',
-        description: result.description || ''
-      };
-    } else {
-      console.log(`[TELEGRAM] Could not parse member count from stats: ${statsText}`);
-      return { members: null };
+      console.log(`[TELEGRAM] Extracted member count: ${memberCount}`);
+      return { members: memberCount, name: result.title || '', description: result.description || '' };
     }
+    
+    console.log(`[TELEGRAM] Could not parse Apify stats, falling back to direct fetch`);
+    const directResult = await fetchTelegramDirect(telegramUrl);
+    return { members: directResult.members, name: directResult.name };
 
   } catch (error) {
-    console.error(`[TELEGRAM] Error fetching member count:`, error);
-    return { members: null };
+    console.error(`[TELEGRAM] Apify error, falling back to direct fetch:`, error);
+    const result = await fetchTelegramDirect(telegramUrl);
+    return { members: result.members, name: result.name };
   }
 }
