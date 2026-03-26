@@ -17,6 +17,11 @@ import {
   GitFork,
   AlertOctagon,
   FileCode,
+  Heart,
+  Award,
+  Info,
+  Hash,
+  MessageCircle,
   LucideIcon
 } from "lucide-react";
 
@@ -97,6 +102,13 @@ export interface CommunityData {
   team_visibility: string | null;
   active_channels: string[] | null;
   score: number | null;
+  // LunarCrush fields
+  galaxy_score: number | null;
+  alt_rank: number | null;
+  sentiment: number | null;
+  interactions_24h: number | null;
+  posts_active: number | null;
+  contributors_active: number | null;
 }
 
 export interface DevelopmentData {
@@ -767,148 +779,131 @@ export const transformLiquidityData = (data: LiquidityData | null): CategoryFeat
 export const transformCommunityData = (data: CommunityData | null): CategoryFeature[] => {
   if (!data) {
     return [
-      { icon: Users, title: "Twitter Followers", description: "Social media following size - larger audiences indicate community interest and project awareness", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Shield, title: "Twitter Verified", description: "Official account verification status - verified accounts reduce impersonation risk and add legitimacy", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: TrendingUp, title: "Twitter Growth (7d)", description: "Recent follower growth rate - positive growth shows increasing community interest and project momentum", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Users, title: "Discord Members", description: "Active Discord community size - engaged communities provide support, feedback, and long-term project sustainability", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Users, title: "Telegram Members", description: "Telegram group participation - large groups indicate widespread community engagement and information sharing", badgeLabel: "Unknown", badgeVariant: "gray" },
-      { icon: Activity, title: "Team Visibility", description: "Team transparency and accessibility - visible teams build trust, accountability, and reduce anonymity risks", badgeLabel: "Unknown", badgeVariant: "gray" }
+      { icon: Star, title: "Galaxy Score", description: "LunarCrush Galaxy Score — overall social health metric combining multiple signals", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Heart, title: "Sentiment", description: "Community sentiment across social platforms — higher is more positive", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Users, title: "Active Creators", description: "Number of unique contributors posting about this token", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Activity, title: "Daily Engagements", description: "Total social interactions in the last 24 hours", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Award, title: "AltRank", description: "LunarCrush AltRank — lower is better, measures social activity relative to market cap", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: Hash, title: "Discord Members", description: "Active Discord community size", badgeLabel: "Unknown", badgeVariant: "gray" },
+      { icon: MessageCircle, title: "Telegram Members", description: "Telegram group participation", badgeLabel: "Unknown", badgeVariant: "gray" }
     ];
   }
 
-  const twitterFollowers = safeNumberAccess(data, 'twitter_followers');
-  const twitterVerified = safeBooleanAccess(data, 'twitter_verified');
-  const twitterGrowth = safeNumberAccess(data, 'twitter_growth_7d');
+  const galaxyScore = safeNumberAccess(data, 'galaxy_score');
+  const sentiment = safeNumberAccess(data, 'sentiment');
+  const contributorsActive = safeNumberAccess(data, 'contributors_active');
+  const interactions24h = safeNumberAccess(data, 'interactions_24h');
+  const altRank = safeNumberAccess(data, 'alt_rank');
   const discordMembers = safeNumberAccess(data, 'discord_members');
   const telegramMembers = safeNumberAccess(data, 'telegram_members');
-  const teamVisibility = safeAccess(data, 'team_visibility', 'Unknown');
 
-  // Build comprehensive community metrics
   const metrics: CategoryFeature[] = [];
 
-  // 1. Twitter Followers - Social media reach
-  let followersVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
+  // 1. Galaxy Score
+  let gsVariant: CategoryFeature["badgeVariant"] = "gray";
+  if (galaxyScore >= 70) gsVariant = "green";
+  else if (galaxyScore >= 50) gsVariant = "blue";
+  else if (galaxyScore >= 30) gsVariant = "yellow";
+  else if (galaxyScore > 0) gsVariant = "orange";
 
-  if (twitterFollowers === 0) {
-    followersVariant = "gray";
-  } else if (twitterFollowers < 1000) {
-    followersVariant = "orange";
-  } else if (twitterFollowers < 10000) {
-    followersVariant = "yellow";
-  } else if (twitterFollowers < 100000) {
-    followersVariant = "blue";
-  } else {
-    followersVariant = "green";
-  }
+  metrics.push({
+    icon: Star,
+    title: "Galaxy Score",
+    description: "LunarCrush Galaxy Score — overall social health metric combining multiple signals",
+    badgeLabel: galaxyScore > 0 ? `${galaxyScore}` : "—",
+    badgeVariant: gsVariant
+  });
+
+  // 2. Sentiment
+  let sentVariant: CategoryFeature["badgeVariant"] = "gray";
+  if (sentiment >= 75) sentVariant = "green";
+  else if (sentiment >= 60) sentVariant = "blue";
+  else if (sentiment >= 45) sentVariant = "yellow";
+  else if (sentiment > 0) sentVariant = "orange";
+
+  metrics.push({
+    icon: Heart,
+    title: "Sentiment",
+    description: "Community sentiment across social platforms — higher is more positive",
+    badgeLabel: sentiment > 0 ? `${sentiment.toFixed(1)}%` : "—",
+    badgeVariant: sentVariant
+  });
+
+  // 3. Active Creators
+  let creatorsVariant: CategoryFeature["badgeVariant"] = "gray";
+  if (contributorsActive >= 1000) creatorsVariant = "green";
+  else if (contributorsActive >= 200) creatorsVariant = "blue";
+  else if (contributorsActive >= 50) creatorsVariant = "yellow";
+  else if (contributorsActive > 0) creatorsVariant = "orange";
 
   metrics.push({
     icon: Users,
-    title: "Twitter Followers",
-    description: "Social media following size - larger audiences indicate community interest and project awareness",
-    badgeLabel: twitterFollowers > 0 ? formatNumber(twitterFollowers) : "No Followers",
-    badgeVariant: followersVariant
+    title: "Active Creators",
+    description: "Number of unique contributors posting about this token",
+    badgeLabel: contributorsActive > 0 ? formatNumber(contributorsActive) : "—",
+    badgeVariant: creatorsVariant
   });
 
-  // 2. Twitter Verified - Account authenticity
+  // 4. Daily Engagements
   metrics.push({
-    icon: Shield,
-    title: "Twitter Verified",
-    description: "Official account verification status - verified accounts reduce impersonation risk and add legitimacy",
-    badgeLabel: getSecurityBadgeLabel(twitterVerified),
-    badgeVariant: getSecurityBadgeVariant(twitterVerified, true)
+    icon: Activity,
+    title: "Daily Engagements",
+    description: "Total social interactions in the last 24 hours",
+    badgeLabel: interactions24h > 0 ? formatNumber(interactions24h) : "—",
+    badgeVariant: interactions24h > 0 ? "blue" : "gray"
   });
 
-  // 3. Twitter Growth (7d) - Community momentum
-  let growthVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
-
-  if (twitterGrowth === 0) {
-    growthVariant = "gray";
-  } else if (twitterGrowth < 0) {
-    growthVariant = "red";
-  } else if (twitterGrowth < 1) {
-    growthVariant = "yellow";
-  } else if (twitterGrowth < 5) {
-    growthVariant = "blue";
-  } else {
-    growthVariant = "green";
-  }
+  // 5. AltRank (lower is better)
+  let altVariant: CategoryFeature["badgeVariant"] = "gray";
+  if (altRank > 0 && altRank <= 100) altVariant = "green";
+  else if (altRank > 0 && altRank <= 500) altVariant = "blue";
+  else if (altRank > 0) altVariant = "yellow";
 
   metrics.push({
-    icon: TrendingUp,
-    title: "Twitter Growth (7d)",
-    description: "Recent follower growth rate - positive growth shows increasing community interest and project momentum",
-    badgeLabel: twitterGrowth !== 0 ? `${twitterGrowth}%` : "0%",
-    badgeVariant: growthVariant
+    icon: Award,
+    title: "AltRank",
+    description: "LunarCrush AltRank — lower is better, measures social activity relative to market cap",
+    badgeLabel: altRank > 0 ? `#${altRank}` : "—",
+    badgeVariant: altVariant
   });
 
-  // 4. Discord Members - Community engagement
-  let discordVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
-
-  if (discordMembers === 0) {
-    discordVariant = "gray";
-  } else if (discordMembers < 500) {
-    discordVariant = "orange";
-  } else if (discordMembers < 5000) {
-    discordVariant = "yellow";
-  } else if (discordMembers < 50000) {
-    discordVariant = "blue";
-  } else {
-    discordVariant = "green";
-  }
+  // 6. Discord Members
+  let discordVariant: CategoryFeature["badgeVariant"] = "gray";
+  if (discordMembers > 50000) discordVariant = "green";
+  else if (discordMembers > 5000) discordVariant = "blue";
+  else if (discordMembers > 500) discordVariant = "yellow";
+  else if (discordMembers > 0) discordVariant = "orange";
 
   metrics.push({
-    icon: Users,
+    icon: Hash,
     title: "Discord Members",
-    description: "Active Discord community size - engaged communities provide support, feedback, and long-term project sustainability",
+    description: "Active Discord community size — engaged communities provide support and long-term sustainability",
     badgeLabel: discordMembers > 0 ? formatNumber(discordMembers) : "No Discord",
     badgeVariant: discordVariant
   });
 
-  // 5. Telegram Members - Group participation
-  let telegramVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
-
-  if (telegramMembers === 0) {
-    telegramVariant = "gray";
-  } else if (telegramMembers < 500) {
-    telegramVariant = "orange";
-  } else if (telegramMembers < 5000) {
-    telegramVariant = "yellow";
-  } else if (telegramMembers < 50000) {
-    telegramVariant = "blue";
-  } else {
-    telegramVariant = "green";
-  }
+  // 7. Telegram Members
+  let telegramVariant: CategoryFeature["badgeVariant"] = "gray";
+  if (telegramMembers > 50000) telegramVariant = "green";
+  else if (telegramMembers > 5000) telegramVariant = "blue";
+  else if (telegramMembers > 500) telegramVariant = "yellow";
+  else if (telegramMembers > 0) telegramVariant = "orange";
 
   metrics.push({
-    icon: Users,
+    icon: MessageCircle,
     title: "Telegram Members",
-    description: "Telegram group participation - large groups indicate widespread community engagement and information sharing",
+    description: "Telegram group participation — large groups indicate widespread community engagement",
     badgeLabel: telegramMembers > 0 ? formatNumber(telegramMembers) : "No Telegram",
     badgeVariant: telegramVariant
   });
 
-  // 6. Team Visibility - Transparency and trust
-  let visibilityVariant: "gray" | "blue" | "green" | "red" | "orange" | "yellow" = "gray";
-  const normalizedVisibility = teamVisibility.toLowerCase();
-
-  if (normalizedVisibility === "unknown" || !teamVisibility) {
-    visibilityVariant = "gray";
-  } else if (normalizedVisibility === "high") {
-    visibilityVariant = "green";
-  } else if (normalizedVisibility === "medium") {
-    visibilityVariant = "blue";
-  } else if (normalizedVisibility === "low") {
-    visibilityVariant = "red";
-  } else {
-    visibilityVariant = "gray";
-  }
-
+  // 8. Data Source footnote
   metrics.push({
-    icon: Activity,
-    title: "Team Visibility",
-    description: "Team transparency and accessibility - visible teams build trust, accountability, and reduce anonymity risks",
-    badgeLabel: teamVisibility.charAt(0).toUpperCase() + teamVisibility.slice(1),
-    badgeVariant: visibilityVariant
+    icon: Info,
+    title: "Data Source",
+    description: "Social data via LunarCrush · Updated every 6h",
+    badgeLabel: "LunarCrush",
+    badgeVariant: "blue"
   });
 
   return metrics;

@@ -374,34 +374,66 @@ export function calculateDevelopmentScore(githubData: any): number {
   return finalScore;
 }
 
-export function calculateCommunityScore(data: { twitterFollowers: number; discordMembers: number; telegramMembers: number }): number {
-  let score = 20; // Base score
+export function calculateCommunityScore(data: {
+  galaxyScore: number | null;
+  sentiment: number | null;
+  contributorsActive: number | null;
+  postsActive: number | null;
+  altRank: number | null;
+  discordMembers: number;
+  telegramMembers: number;
+}): number {
+  let score = 0;
 
-  // Twitter scoring (max 35 points)
-  const twitter = data.twitterFollowers || 0;
-  if (twitter > 100000) score += 35;
-  else if (twitter > 50000) score += 30;
-  else if (twitter > 10000) score += 25;
-  else if (twitter > 5000) score += 20;
-  else if (twitter > 1000) score += 15;
-  else if (twitter > 100) score += 10;
-  else if (twitter > 0) score += 5;
+  // Galaxy Score (max 25 points)
+  const gs = data.galaxyScore ?? 0;
+  if (gs >= 70) score += 25;
+  else if (gs >= 50) score += 18;
+  else if (gs >= 30) score += 10;
+  else if (gs > 0) score += 5;
 
-  // Discord scoring (max 25 points)
+  // Sentiment (max 25 points)
+  const sent = data.sentiment ?? 0;
+  if (sent >= 75) score += 25;
+  else if (sent >= 60) score += 18;
+  else if (sent >= 45) score += 10;
+  else if (sent > 0) score += 5;
+
+  // Contributors Active (max 15 points)
+  const contrib = data.contributorsActive ?? 0;
+  if (contrib >= 1000) score += 15;
+  else if (contrib >= 200) score += 10;
+  else if (contrib >= 50) score += 5;
+  else if (contrib > 0) score += 2;
+
+  // Posts Active (max 10 points)
+  const posts = data.postsActive ?? 0;
+  if (posts >= 500) score += 10;
+  else if (posts >= 100) score += 7;
+  else if (posts >= 20) score += 4;
+  else if (posts > 0) score += 2;
+
+  // AltRank (max 10 points — lower is better)
+  const alt = data.altRank ?? 99999;
+  if (alt <= 100) score += 10;
+  else if (alt <= 500) score += 7;
+  else if (alt <= 1000) score += 4;
+
+  // Discord (max 10 points)
   const discord = data.discordMembers || 0;
-  if (discord > 50000) score += 25;
-  else if (discord > 10000) score += 20;
-  else if (discord > 5000) score += 15;
-  else if (discord > 1000) score += 10;
-  else if (discord > 0) score += 5;
+  if (discord > 50000) score += 10;
+  else if (discord > 10000) score += 8;
+  else if (discord > 5000) score += 6;
+  else if (discord > 1000) score += 4;
+  else if (discord > 0) score += 2;
 
-  // Telegram scoring (max 20 points)
+  // Telegram (max 5 points)
   const telegram = data.telegramMembers || 0;
-  if (telegram > 50000) score += 20;
-  else if (telegram > 10000) score += 15;
-  else if (telegram > 5000) score += 10;
-  else if (telegram > 1000) score += 5;
-  else if (telegram > 0) score += 2;
+  if (telegram > 50000) score += 5;
+  else if (telegram > 10000) score += 4;
+  else if (telegram > 5000) score += 3;
+  else if (telegram > 1000) score += 2;
+  else if (telegram > 0) score += 1;
 
   return Math.min(100, score);
 }

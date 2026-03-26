@@ -2,7 +2,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { fetchMoralisPriceData, fetchMoralisTokenStats, fetchMoralisTokenPairs, fetchMoralisTokenOwners, fetchMoralisMetadata } from '../_shared/moralisAPI.ts'
 import { fetchGitHubRepoData } from '../_shared/githubAPI.ts'
-import { fetchTwitterFollowers, fetchTelegramMembers } from '../_shared/apifyAPI.ts'
+import { fetchTelegramMembers } from '../_shared/apifyAPI.ts'
+import { fetchLunarCrushWithCache } from '../_shared/lunarcrushAPI.ts'
 import { fetchDiscordMemberCount } from '../_shared/discordAPI.ts'
 import { calculateSecurityScore, calculateLiquidityScore, calculateTokenomicsScore, calculateDevelopmentScore, calculateCommunityScore } from '../_shared/scoringUtils.ts'
 import { isSolanaChain } from '../_shared/chainConfig.ts'
@@ -267,15 +268,16 @@ Deno.serve(async (req) => {
     console.log(`[${requestId}] Phase 2: Social & GitHub API calls...`)
     
     const twitterHandle = extractTwitterHandle(socialLinks.twitter || '')
+    const symbol = metadata?.symbol || priceData?.symbol || 'UNKNOWN'
     
-    const [twitterFollowers, telegramData, discordMembers, githubData] = await Promise.all([
-      twitterHandle ? fetchTwitterFollowers(twitterHandle, coingeckoId) : Promise.resolve(null),
+    const [lunarCrushData, telegramData, discordMembers, githubData] = await Promise.all([
+      fetchLunarCrushWithCache(symbol, token_address, chainId, supabase),
       socialLinks.telegram ? fetchTelegramMembers(socialLinks.telegram) : Promise.resolve({ members: null }),
       socialLinks.discord ? fetchDiscordMemberCount(socialLinks.discord) : Promise.resolve(null),
       socialLinks.github ? fetchGitHubRepoData(socialLinks.github) : Promise.resolve(null)
     ])
     
-    console.log(`[${requestId}] Phase 2 results: twitter=${twitterFollowers || 0}, telegram=${telegramData?.members || 0}, discord=${discordMembers || 0}, github=${!!githubData}`)
+    console.log(`[${requestId}] Phase 2 results: lunarcrush=${!!lunarCrushData}, telegram=${telegramData?.members || 0}, discord=${discordMembers || 0}, github=${!!githubData}`)
 
     // ========== PHASE 3: Calculate Scores ==========
     console.log(`[${requestId}] Phase 3: Calculating scores...`)
@@ -305,12 +307,15 @@ Deno.serve(async (req) => {
     console.log(`[${requestId}] Tokenomics score: ${tokenomicsScore}`)
     
     // Community Score
-    const communityData = {
-      twitterFollowers: twitterFollowers || 0,
+    const communityScore = calculateCommunityScore({
+      galaxyScore: lunarCrushData?.galaxy_score ?? null,
+      sentiment: lunarCrushData?.sentiment ?? null,
+      contributorsActive: lunarCrushData?.contributors_active ?? null,
+      postsActive: lunarCrushData?.posts_active ?? null,
+      altRank: lunarCrushData?.alt_rank ?? null,
       discordMembers: discordMembers || 0,
       telegramMembers: telegramData?.members || 0
-    }
-    const communityScore = calculateCommunityScore(communityData)
+    })
     console.log(`[${requestId}] Community score: ${communityScore}`)
     
     // Development Score
@@ -326,7 +331,6 @@ Deno.serve(async (req) => {
     console.log(`[${requestId}] Phase 4: Saving to database...`)
     
     const name = metadata?.name || priceData?.name || `Token ${token_address.slice(0, 8)}`
-    const symbol = metadata?.symbol || priceData?.symbol || 'UNKNOWN'
     const description = metadata?.description || `${name} (${symbol}) on ${chain.name}`
 
     await Promise.all([
@@ -395,13 +399,20 @@ Deno.serve(async (req) => {
       supabase.from('token_community_cache').upsert({
         token_address,
         chain_id: chainId,
-        twitter_followers: twitterFollowers || 0,
+        twitter_followers: 0,
         discord_members: discordMembers || 0,
         telegram_members: telegramData?.members || 0,
         twitter_verified: null,
         twitter_growth_7d: null,
+        galaxy_score: lunarCrushData?.galaxy_score ?? null,
+        alt_rank: lunarCrushData?.alt_rank ?? null,
+        sentiment: lunarCrushData?.sentiment ?? null,
+        interactions_24h: lunarCrushData?.interactions_24h ?? null,
+        posts_active: lunarCrushData?.posts_active ?? null,
+        contributors_active: lunarCrushData?.contributors_active ?? null,
+        lunarcrush_fetched_at: lunarCrushData ? new Date().toISOString() : null,
         active_channels: [
-          twitterHandle ? 'twitter' : null,
+          lunarCrushData ? 'lunarcrush' : null,
           telegramData?.members ? 'telegram' : null,
           discordMembers ? 'discord' : null
         ].filter(Boolean),
@@ -534,15 +545,15 @@ async function scanSolanaToken(
     })
     
     // Fetch social metrics, Discord, and GitHub data in parallel
-    const coingeckoId = marketData?.coingecko_id || marketData?.id || null
-    const [twitterFollowers, telegramData, discordMembers, githubData] = await Promise.all([
-      twitterHandle ? fetchTwitterFollowers(twitterHandle, coingeckoId) : Promise.resolve(null),
+    const symbol = marketData?.symbol || 'SPL'
+    const [lunarCrushData, telegramData, discordMembers, githubData] = await Promise.all([
+      fetchLunarCrushWithCache(symbol, normalizedMint, 'solana', supabase),
       marketData?.telegram_url ? fetchTelegramMembers(marketData.telegram_url) : Promise.resolve({ members: null }),
       marketData?.discord_url ? fetchDiscordMemberCount(marketData.discord_url) : Promise.resolve(null),
       marketData?.github_url ? fetchGitHubRepoData(marketData.github_url) : Promise.resolve(null)
     ])
     
-    console.log(`[${requestId}] Phase 2 results: twitter=${twitterFollowers || 0} followers, telegram=${telegramData?.members || 0} members, discord=${discordMembers || 0} members, github=${githubData ? `${githubData.repo} (${githubData.stars} stars)` : 'none'}`)
+    console.log(`[${requestId}] Phase 2 results: lunarcrush=${!!lunarCrushData}, telegram=${telegramData?.members || 0} members, discord=${discordMembers || 0} members, github=${githubData ? `${githubData.repo} (${githubData.stars} stars)` : 'none'}`)
 
     // Phase 3: Calculate scores
     console.log(`[${requestId}] Phase 3: Calculating scores...`)
@@ -552,12 +563,15 @@ async function scanSolanaToken(
     const liquidityScore = calculateSolanaLiquidityScore(liquidityData)
     
     // Calculate REAL community score based on fetched data
-    const communityData = {
-      twitterFollowers: twitterFollowers || 0,
+    const communityScore = calculateCommunityScore({
+      galaxyScore: lunarCrushData?.galaxy_score ?? null,
+      sentiment: lunarCrushData?.sentiment ?? null,
+      contributorsActive: lunarCrushData?.contributors_active ?? null,
+      postsActive: lunarCrushData?.posts_active ?? null,
+      altRank: lunarCrushData?.alt_rank ?? null,
       discordMembers: discordMembers || 0,
       telegramMembers: telegramData?.members || 0
-    }
-    const communityScore = calculateCommunityScore(communityData)
+    })
     
     // Calculate REAL development score based on GitHub data
     const developmentScore = calculateDevelopmentScore(githubData)
@@ -570,7 +584,6 @@ async function scanSolanaToken(
 
     // Phase 4: Prepare data for database
     const name = marketData?.name || `SPL Token ${normalizedMint.slice(0, 8)}`
-    const symbol = marketData?.symbol || 'SPL'
     const description = marketData?.description || `${name} is an SPL token on Solana.`
 
     // Phase 5: Save to database with chain='solana'
@@ -631,15 +644,22 @@ async function scanSolanaToken(
         score: liquidityScore
       }, { onConflict: 'token_address,chain_id' }),
 
-      // Community cache with REAL data including Discord
+      // Community cache with LunarCrush data
       supabase.from('token_community_cache').upsert({
         token_address: normalizedMint,
         chain_id: 'solana',
-        twitter_followers: twitterFollowers || 0,
+        twitter_followers: 0,
         telegram_members: telegramData?.members || 0,
         discord_members: discordMembers || 0,
+        galaxy_score: lunarCrushData?.galaxy_score ?? null,
+        alt_rank: lunarCrushData?.alt_rank ?? null,
+        sentiment: lunarCrushData?.sentiment ?? null,
+        interactions_24h: lunarCrushData?.interactions_24h ?? null,
+        posts_active: lunarCrushData?.posts_active ?? null,
+        contributors_active: lunarCrushData?.contributors_active ?? null,
+        lunarcrush_fetched_at: lunarCrushData ? new Date().toISOString() : null,
         active_channels: [
-          twitterHandle ? 'twitter' : null,
+          lunarCrushData ? 'lunarcrush' : null,
           telegramData?.members ? 'telegram' : null,
           discordMembers ? 'discord' : null
         ].filter(Boolean),
@@ -692,7 +712,7 @@ async function scanSolanaToken(
       },
       social_data: {
         twitter_handle: twitterHandle,
-        twitter_followers: twitterFollowers,
+        lunarcrush: lunarCrushData,
         telegram_members: telegramData?.members || null,
         discord_members: discordMembers || null,
         github_repo: githubData ? `${githubData.owner}/${githubData.repo}` : null
