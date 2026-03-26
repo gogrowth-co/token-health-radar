@@ -109,6 +109,8 @@ export interface CommunityData {
   interactions_24h: number | null;
   posts_active: number | null;
   contributors_active: number | null;
+  social_dominance: number | null;
+  trend: string | null;
 }
 
 export interface DevelopmentData {
