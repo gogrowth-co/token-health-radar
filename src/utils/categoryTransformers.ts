@@ -908,14 +908,6 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
     });
   }
 
-  // Data Source footnote
-  metrics.push({
-    icon: Info,
-    title: "Data Source",
-    description: "Powered by LunarCrush · Social Sentiment Data",
-    badgeLabel: "LunarCrush",
-    badgeVariant: "blue"
-  });
 
   return metrics;
 };
