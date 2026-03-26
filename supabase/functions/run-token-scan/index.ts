@@ -331,7 +331,6 @@ Deno.serve(async (req) => {
     console.log(`[${requestId}] Phase 4: Saving to database...`)
     
     const name = metadata?.name || priceData?.name || `Token ${token_address.slice(0, 8)}`
-    const symbol = metadata?.symbol || priceData?.symbol || 'UNKNOWN'
     const description = metadata?.description || `${name} (${symbol}) on ${chain.name}`
 
     await Promise.all([
