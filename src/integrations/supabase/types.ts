@@ -218,9 +218,16 @@ export type Database = {
       token_community_cache: {
         Row: {
           active_channels: string[] | null
+          alt_rank: number | null
           chain_id: string
+          contributors_active: number | null
           discord_members: number | null
+          galaxy_score: number | null
+          interactions_24h: number | null
+          lunarcrush_fetched_at: string | null
+          posts_active: number | null
           score: number | null
+          sentiment: number | null
           team_visibility: string | null
           telegram_members: number | null
           token_address: string
@@ -231,9 +238,16 @@ export type Database = {
         }
         Insert: {
           active_channels?: string[] | null
+          alt_rank?: number | null
           chain_id?: string
+          contributors_active?: number | null
           discord_members?: number | null
+          galaxy_score?: number | null
+          interactions_24h?: number | null
+          lunarcrush_fetched_at?: string | null
+          posts_active?: number | null
           score?: number | null
+          sentiment?: number | null
           team_visibility?: string | null
           telegram_members?: number | null
           token_address: string
@@ -244,9 +258,16 @@ export type Database = {
         }
         Update: {
           active_channels?: string[] | null
+          alt_rank?: number | null
           chain_id?: string
+          contributors_active?: number | null
           discord_members?: number | null
+          galaxy_score?: number | null
+          interactions_24h?: number | null
+          lunarcrush_fetched_at?: string | null
+          posts_active?: number | null
           score?: number | null
+          sentiment?: number | null
           team_visibility?: string | null
           telegram_members?: number | null
           token_address?: string
