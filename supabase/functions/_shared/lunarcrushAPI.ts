@@ -8,25 +8,13 @@ export interface LunarCrushData {
   interactions_24h: number | null;
   posts_active: number | null;
   contributors_active: number | null;
-}
-
-/**
- * Parse a numeric value from markdown text, handling redacted values like [---]
- */
-function parseMetricValue(text: string, pattern: RegExp): number | null {
-  const match = text.match(pattern);
-  if (!match) return null;
-  const val = match[1].replace(/,/g, '').replace(/\$/g, '').replace(/%/g, '');
-  // Check if value is redacted (contains only dashes/brackets)
-  if (/^\[[-]+\]$/.test(match[1].trim()) || /^[-]+$/.test(val.trim())) return null;
-  const num = parseFloat(val);
-  return isNaN(num) ? null : num;
+  social_dominance: number | null;
+  trend: string | null;
 }
 
 /**
  * Fetch social metrics from the free lunarcrush.ai/topic endpoint.
- * This returns markdown which we parse for key metrics.
- * No paid subscription required.
+ * Returns markdown which we parse for key metrics.
  */
 export async function fetchLunarCrush(tokenSymbol: string): Promise<LunarCrushData | null> {
   if (!tokenSymbol || tokenSymbol === 'UNKNOWN' || tokenSymbol === 'SPL') {
@@ -62,14 +50,24 @@ export async function fetchLunarCrush(tokenSymbol: string): Promise<LunarCrushDa
       return null;
     }
 
-    // Parse Sentiment: "### Sentiment: 87%"
-    const sentiment = parseMetricValue(markdown, /### Sentiment:\s*([\d.]+)%/);
+    // Helper to parse a value, returning null for redacted [---] patterns
+    const parseVal = (match: RegExpMatchArray | null): number | null => {
+      if (!match) return null;
+      const raw = match[1].trim();
+      if (/^\[[-]+\]$/.test(raw)) return null;
+      const cleaned = raw.replace(/,/g, '').replace(/%/g, '');
+      const num = parseFloat(cleaned);
+      return isNaN(num) ? null : num;
+    };
 
-    // Parse AltRank: "AltRank #511"
+    // Sentiment: "### Sentiment: 87%"
+    const sentiment = parseVal(markdown.match(/### Sentiment:\s*([\d.,]+%|\[[-]+\])/));
+
+    // AltRank: "AltRank #511"
     const altRankMatch = markdown.match(/AltRank\s*#(\d+)/);
     const altRank = altRankMatch ? parseInt(altRankMatch[1], 10) : null;
 
-    // Parse Galaxy Score: "### Galaxy Score: [-----]" or "### Galaxy Score: 65"
+    // Galaxy Score: "### Galaxy Score: 65" or "### Galaxy Score: [-----]"
     const galaxyScoreMatch = markdown.match(/### Galaxy Score:\s*(.+)/);
     let galaxyScore: number | null = null;
     if (galaxyScoreMatch) {
@@ -80,7 +78,7 @@ export async function fetchLunarCrush(tokenSymbol: string): Promise<LunarCrushDa
       }
     }
 
-    // Parse Engagements (interactions): "### Engagements: [------] (24h)" or "### Engagements: 123,456 (24h)"
+    // Engagements: "### Engagements: 123,456 (24h)"
     const engagementsMatch = markdown.match(/### Engagements:\s*(.+?)\s*\(24h\)/);
     let interactions24h: number | null = null;
     if (engagementsMatch) {
@@ -91,7 +89,7 @@ export async function fetchLunarCrush(tokenSymbol: string): Promise<LunarCrushDa
       }
     }
 
-    // Parse Mentions as posts: "### Mentions: [---] (24h)" or "### Mentions: 456 (24h)"
+    // Mentions: "### Mentions: 456 (24h)"
     const mentionsMatch = markdown.match(/### Mentions:\s*(.+?)\s*\(24h\)/);
     let postsActive: number | null = null;
     if (mentionsMatch) {
@@ -102,7 +100,7 @@ export async function fetchLunarCrush(tokenSymbol: string): Promise<LunarCrushDa
       }
     }
 
-    // Parse Creators as contributors: "### Creators: [---] (24h)" or "### Creators: 234 (24h)"
+    // Creators: "### Creators: 234 (24h)"
     const creatorsMatch = markdown.match(/### Creators:\s*(.+?)\s*\(24h\)/);
     let contributorsActive: number | null = null;
     if (creatorsMatch) {
@@ -113,11 +111,32 @@ export async function fetchLunarCrush(tokenSymbol: string): Promise<LunarCrushDa
       }
     }
 
-    console.log(`[LUNARCRUSH] Parsed: sentiment=${sentiment}, altRank=${altRank}, galaxyScore=${galaxyScore}, interactions=${interactions24h}, posts=${postsActive}, contributors=${contributorsActive}`);
+    // Social Dominance: "### Social Dominance: 0.534%"
+    const socialDomMatch = markdown.match(/### Social Dominance:\s*([\d.,]+%|\[[-]+\])/);
+    const socialDominance = parseVal(socialDomMatch);
+
+    // Trend: look for "Trend: up" or "trending up/down" patterns
+    let trend: string | null = null;
+    const trendMatch = markdown.match(/(?:###\s*)?Trend[:\s]+(\w+)/i);
+    if (trendMatch) {
+      const t = trendMatch[1].toLowerCase();
+      if (t === 'up' || t === 'bullish' || t === 'rising') trend = 'up';
+      else if (t === 'down' || t === 'bearish' || t === 'falling') trend = 'down';
+      else if (t === 'flat' || t === 'neutral' || t === 'stable') trend = 'flat';
+    }
+    // Fallback: infer from sentiment themes or summary text
+    if (!trend) {
+      const lower = markdown.toLowerCase();
+      if (lower.includes('trending up') || lower.includes('trend is up') || lower.includes('bullish trend')) trend = 'up';
+      else if (lower.includes('trending down') || lower.includes('trend is down') || lower.includes('bearish trend')) trend = 'down';
+    }
+
+    console.log(`[LUNARCRUSH] Parsed: sentiment=${sentiment}, altRank=${altRank}, galaxyScore=${galaxyScore}, interactions=${interactions24h}, posts=${postsActive}, contributors=${contributorsActive}, socialDominance=${socialDominance}, trend=${trend}`);
 
     // If we got nothing at all, return null
     if (sentiment === null && altRank === null && galaxyScore === null && 
-        interactions24h === null && postsActive === null && contributorsActive === null) {
+        interactions24h === null && postsActive === null && contributorsActive === null &&
+        socialDominance === null) {
       console.log(`[LUNARCRUSH] No parseable data for ${symbolLower}`);
       return null;
     }
@@ -128,7 +147,9 @@ export async function fetchLunarCrush(tokenSymbol: string): Promise<LunarCrushDa
       sentiment,
       interactions_24h: interactions24h,
       posts_active: postsActive,
-      contributors_active: contributorsActive
+      contributors_active: contributorsActive,
+      social_dominance: socialDominance,
+      trend
     };
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
@@ -149,7 +170,7 @@ export async function fetchLunarCrushWithCache(
   try {
     const { data: cached } = await supabase
       .from('token_community_cache')
-      .select('galaxy_score, alt_rank, sentiment, interactions_24h, posts_active, contributors_active, lunarcrush_fetched_at')
+      .select('galaxy_score, alt_rank, sentiment, interactions_24h, posts_active, contributors_active, social_dominance, trend, lunarcrush_fetched_at')
       .eq('token_address', tokenAddress)
       .eq('chain_id', chainId)
       .single();
@@ -166,7 +187,9 @@ export async function fetchLunarCrushWithCache(
           sentiment: cached.sentiment,
           interactions_24h: cached.interactions_24h,
           posts_active: cached.posts_active,
-          contributors_active: cached.contributors_active
+          contributors_active: cached.contributors_active,
+          social_dominance: cached.social_dominance,
+          trend: cached.trend
         };
       }
     }

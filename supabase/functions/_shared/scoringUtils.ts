@@ -375,20 +375,15 @@ export function calculateDevelopmentScore(githubData: any): number {
 }
 
 export function calculateCommunityScore(data: {
-  galaxyScore: number | null;
   sentiment: number | null;
-  contributorsActive: number | null;
-  postsActive: number | null;
-  altRank: number | null;
+  socialDominance: number | null;
+  trend: string | null;
   discordMembers: number;
   telegramMembers: number;
 }): number {
-  // Check if we have ANY data at all
-  const hasLunarCrush = data.galaxyScore !== null || data.sentiment !== null || 
-                        data.contributorsActive !== null || data.postsActive !== null || 
-                        data.altRank !== null;
+  const hasLunarCrush = data.sentiment !== null || data.socialDominance !== null || data.trend !== null;
   const hasSocial = (data.discordMembers || 0) > 0 || (data.telegramMembers || 0) > 0;
-  
+
   if (!hasLunarCrush && !hasSocial) {
     console.log('[COMMUNITY-SCORE] No community data available — returning conservative fallback of 25');
     return 25;
@@ -396,49 +391,42 @@ export function calculateCommunityScore(data: {
 
   let score = 0;
 
-  // Sentiment (max 30 points) — primary metric from free topic endpoint
+  // Sentiment (max 35 points) — primary free metric
   const sent = data.sentiment ?? 0;
-  if (sent >= 75) score += 30;
+  if (sent >= 75) score += 35;
   else if (sent >= 60) score += 22;
-  else if (sent >= 45) score += 14;
-  else if (sent > 0) score += 7;
+  else if (sent >= 45) score += 12;
+  else if (sent > 0) score += 5;
 
-  // Contributors Active (max 25 points)
-  const contrib = data.contributorsActive ?? 0;
-  if (contrib >= 1000) score += 25;
-  else if (contrib >= 200) score += 18;
-  else if (contrib >= 50) score += 10;
-  else if (contrib > 0) score += 4;
+  // Social Dominance (max 25 points)
+  const dom = data.socialDominance ?? 0;
+  if (dom >= 2) score += 25;
+  else if (dom >= 0.5) score += 15;
+  else if (dom >= 0.1) score += 8;
+  else if (dom > 0) score += 3;
 
-  // Posts Active (max 15 points)
-  const posts = data.postsActive ?? 0;
-  if (posts >= 500) score += 15;
-  else if (posts >= 100) score += 10;
-  else if (posts >= 20) score += 6;
-  else if (posts > 0) score += 3;
+  // Trend (max 10 points)
+  if (data.trend === 'up') score += 10;
+  else if (data.trend === 'flat') score += 5;
+  // 'down' or null = 0
 
-  // Galaxy Score (max 10 points) — only if available (paid tier)
-  const gs = data.galaxyScore ?? 0;
-  if (gs >= 70) score += 10;
-  else if (gs >= 50) score += 7;
-  else if (gs >= 30) score += 4;
-  else if (gs > 0) score += 2;
-
-  // Discord (max 12 points)
+  // Discord (max 18 points)
   const discord = data.discordMembers || 0;
-  if (discord > 50000) score += 12;
-  else if (discord > 10000) score += 9;
-  else if (discord > 5000) score += 7;
-  else if (discord > 1000) score += 4;
-  else if (discord > 0) score += 2;
+  if (discord > 50000) score += 18;
+  else if (discord > 10000) score += 14;
+  else if (discord > 5000) score += 10;
+  else if (discord > 1000) score += 6;
+  else if (discord > 0) score += 3;
 
-  // Telegram (max 8 points)
+  // Telegram (max 12 points)
   const telegram = data.telegramMembers || 0;
-  if (telegram > 50000) score += 8;
-  else if (telegram > 10000) score += 6;
-  else if (telegram > 5000) score += 4;
-  else if (telegram > 1000) score += 3;
-  else if (telegram > 0) score += 1;
+  if (telegram > 50000) score += 12;
+  else if (telegram > 10000) score += 9;
+  else if (telegram > 5000) score += 6;
+  else if (telegram > 1000) score += 4;
+  else if (telegram > 0) score += 2;
 
-  return Math.min(100, score);
+  const final = Math.min(100, score);
+  console.log(`[COMMUNITY-SCORE] sentiment=${sent} (${data.sentiment}), dominance=${dom}, trend=${data.trend}, discord=${discord}, telegram=${telegram} => ${final}`);
+  return final;
 }
