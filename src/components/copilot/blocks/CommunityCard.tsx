@@ -93,7 +93,7 @@ export function CommunityCard({ community }: CommunityCardProps) {
               Active Creators
             </div>
             <div className="font-semibold">
-              {formatNumber(community.contributorsActive)}
+              {formatNumber(creators)}
             </div>
           </div>
 
