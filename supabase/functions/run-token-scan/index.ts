@@ -584,7 +584,6 @@ async function scanSolanaToken(
 
     // Phase 4: Prepare data for database
     const name = marketData?.name || `SPL Token ${normalizedMint.slice(0, 8)}`
-    const symbol = marketData?.symbol || 'SPL'
     const description = marketData?.description || `${name} is an SPL token on Solana.`
 
     // Phase 5: Save to database with chain='solana'
