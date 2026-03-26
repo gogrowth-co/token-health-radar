@@ -1,69 +1,81 @@
 
 
-## LunarCrush Integration for Community Pillar
+## Rework Community Pillar for Free-Tier Reality
 
-### Critical Correction to the Proposed Plan
+### Problem
+The current implementation tries to parse `galaxy_score`, `alt_rank`, `interactions_24h`, `contributors_active`, and `posts_active` from LunarCrush — but all of these are redacted (`[---]`) on the free tier. Only **sentiment**, **social_dominance**, and **trend** are reliably available for free.
 
-The user's plan assumes all fields (`galaxy_score`, `alt_rank`, `sentiment`, `interactions_24h`, `posts_active`, `contributors_active`, `social_dominance`) come from a single endpoint (`/api4/public/topic/:topic/v1`). **This is wrong based on the actual API docs.**
+### Strategy
+Rebuild the scoring and UI around the three metrics that actually work, plus Discord and Telegram. Mark paywalled metrics honestly in the UI.
 
-The real API structure:
-- **Coins endpoint** (`/api4/public/coins/:symbol/v1`): Returns `galaxy_score`, `alt_rank`, but NOT sentiment/interactions/contributors/posts/social_dominance
-- **Topic endpoint** (`/api4/public/topic/:topic/v1`): Returns `interactions_24h`, `num_contributors`, `num_posts`, `types_sentiment` (per-platform object, not single number), but NOT galaxy_score/alt_rank/social_dominance
-- **Coins List v2** (`/api4/public/coins/list/v2`): Returns ALL fields but for the entire coin list (expensive, 6000+ coins)
+### Changes
 
-**Solution**: Call both Coins and Topic endpoints in parallel, merge results. Compute a weighted average sentiment from `types_sentiment`. Drop `social_dominance` from DB columns (not reliably available per-coin without the full list call).
+#### 1. `supabase/functions/_shared/lunarcrushAPI.ts` — Update parser and interface
 
-### Files & Changes
+- Add `social_dominance` and `trend` to the `LunarCrushData` interface
+- Parse `social_dominance` from markdown: `### Social Dominance: 0.534%`
+- Parse `trend` from the markdown summary text (look for trend indicator keywords or section)
+- Keep existing parsers for galaxy_score, alt_rank, interactions, contributors, posts — they'll return `null` on free tier (already handled by redaction check)
+- Update `fetchLunarCrushWithCache` to include `social_dominance` and `trend` in cache read/write
 
-#### 1. SQL Migration
-Add 7 columns to `token_community_cache` (drop `social_dominance` from user's plan since it requires the expensive list endpoint):
-- `galaxy_score numeric`
-- `alt_rank integer`
-- `sentiment numeric`
-- `interactions_24h bigint`
-- `posts_active integer`
-- `contributors_active integer`
-- `lunarcrush_fetched_at timestamptz`
+#### 2. DB migration — Add columns to `token_community_cache`
 
-#### 2. New file: `supabase/functions/_shared/lunarcrushAPI.ts`
-- `fetchLunarCrush(symbol: string)` — calls BOTH:
-  - `GET /api4/public/coins/{SYMBOL}/v1` (galaxy_score, alt_rank)
-  - `GET /api4/public/topic/{symbol_lowercase}/v1` (interactions_24h, num_contributors, num_posts, types_sentiment)
-  - Merges results, computes single sentiment as weighted average from `types_sentiment`
-- `fetchLunarCrushWithCache(symbol, tokenAddress, chainId, supabase)` — checks `lunarcrush_fetched_at < 6h`, returns cached or calls `fetchLunarCrush`
-- Auth: `Authorization: Bearer {LUNARCRUSH_API_KEY}` header
-- On any error: log and return null (never throw)
+```sql
+ALTER TABLE token_community_cache
+  ADD COLUMN IF NOT EXISTS social_dominance numeric,
+  ADD COLUMN IF NOT EXISTS trend text;
+```
 
-#### 3. Edit: `supabase/functions/_shared/scoringUtils.ts`
-Replace `calculateCommunityScore` with new signature matching user's plan (galaxyScore, sentiment, contributorsActive, postsActive, altRank, discordMembers, telegramMembers). Score 0-100 with no free base points. Weights as specified.
+#### 3. `supabase/functions/_shared/scoringUtils.ts` — Rewrite `calculateCommunityScore`
 
-#### 4. Edit: `supabase/functions/run-token-scan/index.ts`
-**EVM path** (line 271): Replace `fetchTwitterFollowers` with `fetchLunarCrushWithCache`. Derive `symbol` before Phase 2. Update Phase 3 community score call. Update Phase 4 community cache upsert with LunarCrush fields.
+New 0–100 scale using only confirmed free metrics:
 
-**Solana path** (line 538): Same changes. Replace Twitter fetch, update scoring, update upsert.
+| Metric | Max | Logic |
+|---|---|---|
+| Sentiment | 35 | ≥75% → 35, ≥60% → 22, ≥45% → 12, >0 → 5 |
+| Social Dominance | 25 | ≥2% → 25, ≥0.5% → 15, ≥0.1% → 8, >0 → 3 |
+| Trend | 10 | "up" → 10, "flat" → 5, "down" → 0 |
+| Discord Members | 18 | >50K → 18, >10K → 14, >5K → 10, >1K → 6, >0 → 3 |
+| Telegram Members | 12 | >50K → 12, >10K → 9, >5K → 6, >1K → 4, >0 → 2 |
 
-Remove `fetchTwitterFollowers` import (keep `fetchTelegramMembers`).
+Remove `galaxyScore`, `contributorsActive`, `postsActive`, `altRank` from input interface. Add `socialDominance` and `trend`. Keep fallback of 25 when no data.
 
-#### 5. Edit: `src/utils/categoryTransformers.ts`
-- Add 7 new fields to `CommunityData` interface (keep legacy twitter fields for type compat)
-- Replace `transformCommunityData` cards: Galaxy Score, Sentiment, Active Creators, Daily Engagements, AltRank, Discord Members, Telegram Members, Data Source footnote
+#### 4. `supabase/functions/run-token-scan/index.ts` — Update both EVM and Solana paths
 
-#### 6. Edit: `src/components/copilot/blocks/CommunityCard.tsx`
-Replace Twitter-centric display with Galaxy Score + Sentiment as primary, Active Creators + Engagements as secondary. Keep Discord + Telegram.
+- Pass `socialDominance` and `trend` to `calculateCommunityScore`
+- Remove `galaxyScore`, `contributorsActive`, `postsActive`, `altRank` from score call
+- Add `social_dominance` and `trend` to community cache upsert
 
-#### 7. `src/integrations/supabase/types.ts`
-Will auto-update after migration. Add 7 new columns to `token_community_cache` types.
+#### 5. `src/utils/categoryTransformers.ts` — Rework `CommunityData` and `transformCommunityData`
 
-### Pre-requisite
-User must add `LUNARCRUSH_API_KEY` to Supabase Edge Function secrets before deployment.
+- Add `social_dominance` and `trend` to `CommunityData` interface
+- Replace the 7-card layout with 5 cards:
+  1. **Sentiment** — percentage with color badge (primary metric)
+  2. **Social Dominance** — percentage of total crypto social conversation
+  3. **Trend** — up/flat/down with arrow indicator
+  4. **Discord Members** — count
+  5. **Telegram Members** — count
+- Add a "Pro" locked indicator row for Galaxy Score, AltRank, Engagements (showing they exist but require upgrade)
+- Data source footnote: "Powered by LunarCrush · Social Sentiment Data"
+
+#### 6. `src/components/copilot/blocks/CommunityCard.tsx` — Match new fields
+
+- Primary display: Sentiment + Social Dominance
+- Secondary: Trend indicator, Discord, Telegram
+- Gray-out Galaxy Score / AltRank with lock icon and "Pro" label
+- Normalize both camelCase and snake_case as before
+
+#### 7. `src/integrations/supabase/types.ts` — Auto-updates after migration
 
 ### Not Touched
-- `apifyAPI.ts` (Telegram still uses it)
-- `discordAPI.ts`, `moralisAPI.ts`, `goplusAPI.ts`
-- All Security/Liquidity/Tokenomics/Development scoring and UI
+- Discord API, Telegram/Apify scraping, Security/Liquidity/Tokenomics/Development
 - Auth, Stripe, RLS policies
-- `ScanResult.tsx` (already does `SELECT *` from cache)
 
-### Existing Build Errors
-The build errors shown are pre-existing TypeScript issues in `goplusAPI.ts`, `moralisAPI.ts`, `secureHandler.ts`, `validation.ts`, `webacyAPI.ts`, `airtable-sync`, `check-scan-access`, `coingecko-mcp` — all unrelated to this change. They will be left as-is per scope.
+### Technical Details
+
+- The markdown parser already handles `[---]` redaction — galaxy_score etc. will naturally return `null`
+- `social_dominance` regex: `/### Social Dominance:\s*([\d.]+)%/`
+- `trend` regex: look for trend section or infer from summary keywords; fallback to `null`
+- Cache TTL stays at 6 hours
+- Scoring fallback of 25 when no LunarCrush + no Discord/Telegram data
 
