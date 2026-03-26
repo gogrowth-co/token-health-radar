@@ -264,8 +264,45 @@ Deno.serve(async (req) => {
     const socialLinks = extractSocialLinks(metadata)
     const coingeckoId = metadata?.coingecko_id || metadata?.id || null
     
+    // ========== PHASE 1.5: CoinGecko fallback for missing social links ==========
+    if (coingeckoId && (!socialLinks.discord || !socialLinks.telegram)) {
+      try {
+        console.log(`[${requestId}] Fetching CoinGecko community links for ${coingeckoId}...`)
+        const COINGECKO_API_KEY = Deno.env.get('COINGECKO_API_KEY')
+        const cgHeaders: Record<string, string> = { 'Accept': 'application/json' }
+        if (COINGECKO_API_KEY) {
+          cgHeaders['x-cg-pro-api-key'] = COINGECKO_API_KEY
+        }
+        const baseUrl = COINGECKO_API_KEY ? 'https://pro-api.coingecko.com' : 'https://api.coingecko.com'
+        const cgRes = await fetch(`${baseUrl}/api/v3/coins/${coingeckoId}?localization=false&tickers=false&market_data=false&community_data=true&developer_data=false`, { headers: cgHeaders })
+        if (cgRes.ok) {
+          const cgData = await cgRes.json()
+          const cgLinks = cgData.links || {}
+          
+          if (!socialLinks.telegram && cgLinks.telegram_channel_identifier) {
+            socialLinks.telegram = `https://t.me/${cgLinks.telegram_channel_identifier}`
+            console.log(`[${requestId}] CoinGecko fallback: telegram=${socialLinks.telegram}`)
+          }
+          if (!socialLinks.discord && cgLinks.chat_url && Array.isArray(cgLinks.chat_url)) {
+            const discordLink = cgLinks.chat_url.find((url: string) => url.includes('discord'))
+            if (discordLink) {
+              socialLinks.discord = discordLink
+              console.log(`[${requestId}] CoinGecko fallback: discord=${socialLinks.discord}`)
+            }
+          }
+          if (!socialLinks.github && cgLinks.repos_url?.github?.length > 0) {
+            socialLinks.github = cgLinks.repos_url.github[0]
+            console.log(`[${requestId}] CoinGecko fallback: github=${socialLinks.github}`)
+          }
+        }
+      } catch (cgError) {
+        console.error(`[${requestId}] CoinGecko fallback error:`, cgError)
+      }
+    }
+    
     // ========== PHASE 2: Social & GitHub API Calls (parallel) ==========
     console.log(`[${requestId}] Phase 2: Social & GitHub API calls...`)
+    console.log(`[${requestId}] Social links for Phase 2:`, socialLinks)
     
     const twitterHandle = extractTwitterHandle(socialLinks.twitter || '')
     const symbol = metadata?.symbol || priceData?.symbol || 'UNKNOWN'
