@@ -827,7 +827,7 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
   metrics.push({
     icon: TrendingUp,
     title: "Social Dominance",
-    description: "Share of total crypto social conversation — higher means more market mindshare",
+    description: "Share of total crypto social conversation — higher means more market mindshare · Powered by LunarCrush®",
     badgeLabel: socialDominance > 0 ? `${socialDominance.toFixed(3)}%` : "—",
     badgeVariant: domVariant
   });
