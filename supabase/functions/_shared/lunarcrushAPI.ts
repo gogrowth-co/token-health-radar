@@ -1,5 +1,5 @@
 // LunarCrush API v4 integration for social metrics
-// Calls both Coins and Topic endpoints in parallel, merges results
+// Uses only the FREE /public/topic/:topic/v1 endpoint
 
 export interface LunarCrushData {
   galaxy_score: number | null;
@@ -11,11 +11,12 @@ export interface LunarCrushData {
 }
 
 /**
- * Fetch social metrics from LunarCrush API v4.
- * Calls two endpoints in parallel:
- *  - /api4/public/coins/{SYMBOL}/v1 → galaxy_score, alt_rank
+ * Fetch social metrics from LunarCrush API v4 FREE tier.
+ * Uses only the public topic endpoint (no paid subscription required):
  *  - /api4/public/topic/{symbol}/v1 → interactions, contributors, posts, sentiment
- * On any error: logs and returns null (never throws).
+ * 
+ * galaxy_score and alt_rank are NOT available on free endpoints,
+ * so they will always be null. Scoring handles this gracefully.
  */
 export async function fetchLunarCrush(tokenSymbol: string): Promise<LunarCrushData | null> {
   const apiKey = Deno.env.get('LUNARCRUSH_API_KEY')
@@ -30,89 +31,64 @@ export async function fetchLunarCrush(tokenSymbol: string): Promise<LunarCrushDa
   }
 
   const headers = { 'Authorization': `Bearer ${apiKey}` }
-  const symbolUpper = tokenSymbol.toUpperCase()
   const symbolLower = tokenSymbol.toLowerCase()
 
-  console.log(`[LUNARCRUSH] Fetching data for symbol: ${symbolUpper}`)
+  console.log(`[LUNARCRUSH] Fetching topic data for: ${symbolLower} (free tier)`)
 
   try {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 10000)
 
-    const [coinsRes, topicRes] = await Promise.allSettled([
-      fetch(`https://lunarcrush.com/api4/public/coins/${symbolUpper}/v1`, {
-        headers,
-        signal: controller.signal
-      }),
-      fetch(`https://lunarcrush.com/api4/public/topic/${symbolLower}/v1`, {
-        headers,
-        signal: controller.signal
-      })
-    ])
+    const topicRes = await fetch(
+      `https://lunarcrush.com/api4/public/topic/${symbolLower}/v1`,
+      { headers, signal: controller.signal }
+    )
 
     clearTimeout(timeout)
 
-    let galaxyScore: number | null = null
-    let altRank: number | null = null
+    if (!topicRes.ok) {
+      console.log(`[LUNARCRUSH] Topic endpoint failed: ${topicRes.status}`)
+      return null
+    }
+
     let interactions24h: number | null = null
     let postsActive: number | null = null
     let contributorsActive: number | null = null
     let sentiment: number | null = null
 
-    // Parse Coins endpoint (galaxy_score, alt_rank)
-    if (coinsRes.status === 'fulfilled' && coinsRes.value.ok) {
-      try {
-        const coinsData = await coinsRes.value.json()
-        const data = coinsData?.data || coinsData
-        galaxyScore = data?.galaxy_score ?? null
-        altRank = data?.alt_rank ?? null
-        console.log(`[LUNARCRUSH] Coins endpoint: galaxy_score=${galaxyScore}, alt_rank=${altRank}`)
-      } catch (e) {
-        console.log(`[LUNARCRUSH] Failed to parse coins response: ${e}`)
-      }
-    } else {
-      const status = coinsRes.status === 'fulfilled' ? coinsRes.value.status : 'rejected'
-      console.log(`[LUNARCRUSH] Coins endpoint failed: ${status}`)
-    }
+    try {
+      const topicData = await topicRes.json()
+      const data = topicData?.data || topicData
+      interactions24h = data?.interactions_24h ?? data?.interactions ?? null
+      contributorsActive = data?.num_contributors ?? data?.contributors_active ?? null
+      postsActive = data?.num_posts ?? data?.posts_active ?? null
 
-    // Parse Topic endpoint (interactions, contributors, posts, sentiment)
-    if (topicRes.status === 'fulfilled' && topicRes.value.ok) {
-      try {
-        const topicData = await topicRes.value.json()
-        const data = topicData?.data || topicData
-        interactions24h = data?.interactions_24h ?? data?.interactions ?? null
-        contributorsActive = data?.num_contributors ?? data?.contributors_active ?? null
-        postsActive = data?.num_posts ?? data?.posts_active ?? null
-
-        // Compute weighted average sentiment from types_sentiment
-        if (data?.types_sentiment && typeof data.types_sentiment === 'object') {
-          const entries = Object.values(data.types_sentiment) as number[]
-          if (entries.length > 0) {
-            const avg = entries.reduce((sum: number, v: number) => sum + (v || 0), 0) / entries.length
-            sentiment = Math.round(avg * 100) / 100
-          }
-        } else if (data?.sentiment != null) {
-          sentiment = data.sentiment
+      // Compute weighted average sentiment from types_sentiment
+      if (data?.types_sentiment && typeof data.types_sentiment === 'object') {
+        const entries = Object.values(data.types_sentiment) as number[]
+        if (entries.length > 0) {
+          const avg = entries.reduce((sum: number, v: number) => sum + (v || 0), 0) / entries.length
+          sentiment = Math.round(avg * 100) / 100
         }
-
-        console.log(`[LUNARCRUSH] Topic endpoint: interactions=${interactions24h}, contributors=${contributorsActive}, posts=${postsActive}, sentiment=${sentiment}`)
-      } catch (e) {
-        console.log(`[LUNARCRUSH] Failed to parse topic response: ${e}`)
+      } else if (data?.sentiment != null) {
+        sentiment = data.sentiment
       }
-    } else {
-      const status = topicRes.status === 'fulfilled' ? topicRes.value.status : 'rejected'
-      console.log(`[LUNARCRUSH] Topic endpoint failed: ${status}`)
+
+      console.log(`[LUNARCRUSH] Topic data: interactions=${interactions24h}, contributors=${contributorsActive}, posts=${postsActive}, sentiment=${sentiment}`)
+    } catch (e) {
+      console.log(`[LUNARCRUSH] Failed to parse topic response: ${e}`)
+      return null
     }
 
-    // If we got nothing from either endpoint, return null
-    if (galaxyScore === null && altRank === null && interactions24h === null && sentiment === null) {
-      console.log(`[LUNARCRUSH] No data from either endpoint for ${symbolUpper}`)
+    // If we got nothing useful, return null
+    if (interactions24h === null && sentiment === null && contributorsActive === null && postsActive === null) {
+      console.log(`[LUNARCRUSH] No data from topic endpoint for ${symbolLower}`)
       return null
     }
 
     return {
-      galaxy_score: galaxyScore,
-      alt_rank: altRank,
+      galaxy_score: null,  // Not available on free tier
+      alt_rank: null,      // Not available on free tier
       sentiment,
       interactions_24h: interactions24h,
       posts_active: postsActive,
