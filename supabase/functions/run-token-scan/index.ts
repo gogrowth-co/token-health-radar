@@ -545,15 +545,15 @@ async function scanSolanaToken(
     })
     
     // Fetch social metrics, Discord, and GitHub data in parallel
-    const coingeckoId = marketData?.coingecko_id || marketData?.id || null
-    const [twitterFollowers, telegramData, discordMembers, githubData] = await Promise.all([
-      twitterHandle ? fetchTwitterFollowers(twitterHandle, coingeckoId) : Promise.resolve(null),
+    const symbol = marketData?.symbol || 'SPL'
+    const [lunarCrushData, telegramData, discordMembers, githubData] = await Promise.all([
+      fetchLunarCrushWithCache(symbol, normalizedMint, 'solana', supabase),
       marketData?.telegram_url ? fetchTelegramMembers(marketData.telegram_url) : Promise.resolve({ members: null }),
       marketData?.discord_url ? fetchDiscordMemberCount(marketData.discord_url) : Promise.resolve(null),
       marketData?.github_url ? fetchGitHubRepoData(marketData.github_url) : Promise.resolve(null)
     ])
     
-    console.log(`[${requestId}] Phase 2 results: twitter=${twitterFollowers || 0} followers, telegram=${telegramData?.members || 0} members, discord=${discordMembers || 0} members, github=${githubData ? `${githubData.repo} (${githubData.stars} stars)` : 'none'}`)
+    console.log(`[${requestId}] Phase 2 results: lunarcrush=${!!lunarCrushData}, telegram=${telegramData?.members || 0} members, discord=${discordMembers || 0} members, github=${githubData ? `${githubData.repo} (${githubData.stars} stars)` : 'none'}`)
 
     // Phase 3: Calculate scores
     console.log(`[${requestId}] Phase 3: Calculating scores...`)
@@ -563,12 +563,15 @@ async function scanSolanaToken(
     const liquidityScore = calculateSolanaLiquidityScore(liquidityData)
     
     // Calculate REAL community score based on fetched data
-    const communityData = {
-      twitterFollowers: twitterFollowers || 0,
+    const communityScore = calculateCommunityScore({
+      galaxyScore: lunarCrushData?.galaxy_score ?? null,
+      sentiment: lunarCrushData?.sentiment ?? null,
+      contributorsActive: lunarCrushData?.contributors_active ?? null,
+      postsActive: lunarCrushData?.posts_active ?? null,
+      altRank: lunarCrushData?.alt_rank ?? null,
       discordMembers: discordMembers || 0,
       telegramMembers: telegramData?.members || 0
-    }
-    const communityScore = calculateCommunityScore(communityData)
+    })
     
     // Calculate REAL development score based on GitHub data
     const developmentScore = calculateDevelopmentScore(githubData)
