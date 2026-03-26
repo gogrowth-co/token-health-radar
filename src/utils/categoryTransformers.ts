@@ -812,7 +812,7 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
   metrics.push({
     icon: Heart,
     title: "Sentiment",
-    description: "Community sentiment across social platforms — higher is more positive",
+    description: "Community sentiment across social platforms — higher is more positive · Powered by LunarCrush®",
     badgeLabel: sentiment > 0 ? `${sentiment.toFixed(1)}%` : "—",
     badgeVariant: sentVariant
   });
@@ -827,7 +827,7 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
   metrics.push({
     icon: TrendingUp,
     title: "Social Dominance",
-    description: "Share of total crypto social conversation — higher means more market mindshare",
+    description: "Share of total crypto social conversation — higher means more market mindshare · Powered by LunarCrush®",
     badgeLabel: socialDominance > 0 ? `${socialDominance.toFixed(3)}%` : "—",
     badgeVariant: domVariant
   });
@@ -842,7 +842,7 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
   metrics.push({
     icon: Activity,
     title: "Trend",
-    description: "Social momentum direction — is buzz growing or fading?",
+    description: "Social momentum direction — is buzz growing or fading? · Powered by LunarCrush®",
     badgeLabel: trendLabel,
     badgeVariant: trendVariant
   });
@@ -908,14 +908,6 @@ export const transformCommunityData = (data: CommunityData | null): CategoryFeat
     });
   }
 
-  // Data Source footnote
-  metrics.push({
-    icon: Info,
-    title: "Data Source",
-    description: "Powered by LunarCrush · Social Sentiment Data",
-    badgeLabel: "LunarCrush",
-    badgeVariant: "blue"
-  });
 
   return metrics;
 };
