@@ -137,7 +137,7 @@ export function CommunityCard({ community }: CommunityCardProps) {
               Telegram
             </div>
             <div className="font-semibold">
-              {formatNumber(community.telegramMembers)}
+              {formatNumber(telegram)}
             </div>
           </div>
         </div>
