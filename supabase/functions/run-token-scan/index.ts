@@ -644,15 +644,22 @@ async function scanSolanaToken(
         score: liquidityScore
       }, { onConflict: 'token_address,chain_id' }),
 
-      // Community cache with REAL data including Discord
+      // Community cache with LunarCrush data
       supabase.from('token_community_cache').upsert({
         token_address: normalizedMint,
         chain_id: 'solana',
-        twitter_followers: twitterFollowers || 0,
+        twitter_followers: 0,
         telegram_members: telegramData?.members || 0,
         discord_members: discordMembers || 0,
+        galaxy_score: lunarCrushData?.galaxy_score ?? null,
+        alt_rank: lunarCrushData?.alt_rank ?? null,
+        sentiment: lunarCrushData?.sentiment ?? null,
+        interactions_24h: lunarCrushData?.interactions_24h ?? null,
+        posts_active: lunarCrushData?.posts_active ?? null,
+        contributors_active: lunarCrushData?.contributors_active ?? null,
+        lunarcrush_fetched_at: lunarCrushData ? new Date().toISOString() : null,
         active_channels: [
-          twitterHandle ? 'twitter' : null,
+          lunarCrushData ? 'lunarcrush' : null,
           telegramData?.members ? 'telegram' : null,
           discordMembers ? 'discord' : null
         ].filter(Boolean),
