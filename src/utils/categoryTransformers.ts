@@ -17,6 +17,11 @@ import {
   GitFork,
   AlertOctagon,
   FileCode,
+  Heart,
+  Award,
+  Info,
+  Hash,
+  MessageCircle,
   LucideIcon
 } from "lucide-react";
 
