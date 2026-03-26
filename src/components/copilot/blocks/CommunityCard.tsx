@@ -126,7 +126,7 @@ export function CommunityCard({ community }: CommunityCardProps) {
               Discord
             </div>
             <div className="font-semibold">
-              {formatNumber(community.discordMembers)}
+              {formatNumber(discord)}
             </div>
           </div>
 
