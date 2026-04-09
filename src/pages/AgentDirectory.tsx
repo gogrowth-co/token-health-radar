@@ -15,35 +15,48 @@ interface AgentEntry {
   agentId: string;
   chain: string;
   name: string;
-  description?: string;
-  serviceTypes?: string[];
+  scannedAt: string;
 }
 
 export default function AgentDirectory() {
   const [params, setParams] = useSearchParams();
   const chain = params.get("chain") || "base";
   const page = parseInt(params.get("page") || "1");
+  const pageSize = 20;
 
   const [agents, setAgents] = useState<AgentEntry[]>([]);
   const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        const { data } = await supabase.functions.invoke("fetch-agent-directory", {
-          method: "POST",
-          body: {},
-        });
+        // Query agent_scans for distinct agents on this chain
+        const { data } = await supabase
+          .from("agent_scans")
+          .select("agent_id, agent_name, chain, created_at")
+          .eq("chain", chain)
+          .order("created_at", { ascending: false })
+          .limit(500);
 
-        // The edge function is GET-based, but invoke sends POST. 
-        // Handle both response shapes.
-        if (data?.agents) {
-          setAgents(data.agents);
-          setTotal(data.total || data.agents.length);
-          setTotalPages(data.totalPages || 1);
+        if (data) {
+          // Deduplicate by agent_id, keep most recent scan
+          const seen = new Map<string, AgentEntry>();
+          for (const row of data) {
+            const key = row.agent_id;
+            if (!seen.has(key)) {
+              seen.set(key, {
+                agentId: row.agent_id,
+                chain: row.chain,
+                name: row.agent_name || `Agent #${row.agent_id}`,
+                scannedAt: row.created_at,
+              });
+            }
+          }
+          const all = Array.from(seen.values());
+          setTotal(all.length);
+          setAgents(all.slice((page - 1) * pageSize, page * pageSize));
         }
       } catch (err) {
         console.error("Directory fetch error:", err);
@@ -52,6 +65,8 @@ export default function AgentDirectory() {
     }
     load();
   }, [chain, page]);
+
+  const totalPages = Math.ceil(total / pageSize);
 
   function setChain(newChain: string) {
     setParams({ chain: newChain, page: "1" });
@@ -77,7 +92,7 @@ export default function AgentDirectory() {
       <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-8 space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">AI Agent Directory</h1>
-          <p className="text-muted-foreground text-sm">Browse ERC-8004 registered agents and scan for trust scores</p>
+          <p className="text-muted-foreground text-sm">Previously scanned ERC-8004 agents — the directory grows as more agents are scanned</p>
         </div>
 
         {/* Filters */}
@@ -107,15 +122,10 @@ export default function AgentDirectory() {
           </div>
         ) : agents.length === 0 ? (
           <div className="text-center py-16 space-y-3">
-            <p className="text-muted-foreground">No agents found for this chain.</p>
-            <a
-              href="https://8004scan.io/agents"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-primary hover:underline"
-            >
-              Browse on 8004scan.io →
-            </a>
+            <p className="text-muted-foreground">No agents have been scanned on this chain yet.</p>
+            <p className="text-sm text-muted-foreground">
+              Be the first — enter an agent ID above to scan it.
+            </p>
           </div>
         ) : (
           <>
@@ -129,7 +139,7 @@ export default function AgentDirectory() {
                   <Card className="border-border bg-card hover:bg-accent/40 transition-colors cursor-pointer">
                     <CardContent className="py-4 flex items-center gap-4">
                       <span className="text-xs text-muted-foreground font-mono w-6 text-right">
-                        {(page - 1) * 20 + i + 1}
+                        {(page - 1) * pageSize + i + 1}
                       </span>
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
                         {agent.name?.charAt(0) || "#"}
@@ -162,7 +172,7 @@ export default function AgentDirectory() {
                   Previous
                 </Button>
                 <span className="text-sm text-muted-foreground flex items-center px-3">
-                  Page {page} of {totalPages}
+                  {`Page ${page} of ${totalPages}`}
                 </span>
                 <Button
                   variant="outline"
