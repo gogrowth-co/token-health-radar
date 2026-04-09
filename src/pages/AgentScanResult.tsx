@@ -99,7 +99,7 @@ export default function AgentScanResult() {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       <Helmet>
-        <title>{scanData.agent.name} Trust Score — {result.overallScore}/100 | Token Health Scan</title>
+        <title>{`${scanData.agent.name} Trust Score — ${result.overallScore}/100 | Token Health Scan`}</title>
         <meta name="description" content={`${scanData.agent.name} scored ${result.overallScore}/100 on the Agent Trust Score. ${result.label}. Scanned across Identity, Financial, Operational, Reputation, and Compliance dimensions.`} />
         <meta name="robots" content="noindex" />
       </Helmet>
