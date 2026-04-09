@@ -1,3 +1,4 @@
+import AgentCrossSell from "@/components/agent-scan/AgentCrossSell";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "@/components/ui/helmet";
