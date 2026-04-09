@@ -65,6 +65,9 @@ serve(async (req) => {
       if (res.ok) {
         const html = await res.text();
 
+        console.log(`[scan-agent] HTML preview: ${html.substring(0, 500)}`);
+        console.log(`[scan-agent] Title match: ${html.match(/<title>([^|<]+)\|/i)}`);
+
         // Parse agent data from HTML
         // Priority 1: <title> tag (works on SPA pre-rendered pages like "Clawdia | 8004scan")
         const titleMatch = html.match(/<title>([^|<]+)\|/i);
