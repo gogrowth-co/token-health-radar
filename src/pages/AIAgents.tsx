@@ -221,6 +221,8 @@ export default function AIAgents() {
       <Navbar />
 
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-10">
+        {/* Cross-sell banner */}
+        <AgentCrossSell variant="banner" />
         {/* Hero */}
         <section className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent mb-3">
