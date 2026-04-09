@@ -30,29 +30,50 @@ export default function AgentScanSearch() {
       setLoading(true);
       try {
         // Search previously scanned agents in agent_scans table
+        // Search by agent_name first
         const { data } = await supabase
           .from("agent_scans")
-          .select("agent_id, agent_name, chain, created_at")
+          .select("agent_id, agent_name, chain, created_at, raw_data")
           .eq("chain", chain)
           .ilike("agent_name", `%${query}%`)
           .order("created_at", { ascending: false })
           .limit(100);
 
-        if (data) {
-          // Deduplicate by chain-agent_id, keep most recent
-          const seen = new Map<string, AgentEntry>();
-          for (const row of data) {
-            const key = `${row.chain}-${row.agent_id}`;
-            if (!seen.has(key) && row.agent_name && !row.agent_name.startsWith("Agent #")) {
-              seen.set(key, {
-                agentId: row.agent_id,
-                chain: row.chain,
-                name: row.agent_name,
-              });
-            }
+        let rows = data || [];
+
+        // If no results by agent_name, try searching raw_data for the name
+        if (rows.length === 0) {
+          const { data: fallbackData } = await supabase
+            .from("agent_scans")
+            .select("agent_id, agent_name, chain, created_at, raw_data")
+            .eq("chain", chain)
+            .order("created_at", { ascending: false })
+            .limit(200);
+
+          if (fallbackData) {
+            rows = fallbackData.filter((row) => {
+              const rawName = (row.raw_data as any)?.agent?.name;
+              return rawName && rawName.toLowerCase().includes(query.toLowerCase());
+            });
           }
-          setResults(Array.from(seen.values()).slice(0, 20));
         }
+
+        // Deduplicate by chain-agent_id, keep most recent
+        const seen = new Map<string, AgentEntry>();
+        for (const row of rows) {
+          const key = `${row.chain}-${row.agent_id}`;
+          if (!seen.has(key)) {
+            const realName = row.agent_name?.startsWith("Agent #")
+              ? (row.raw_data as any)?.agent?.name || row.agent_name
+              : row.agent_name;
+            seen.set(key, {
+              agentId: row.agent_id,
+              chain: row.chain,
+              name: realName || `Agent #${row.agent_id}`,
+            });
+          }
+        }
+        setResults(Array.from(seen.values()).slice(0, 20));
       } catch (err) {
         console.error("Search error:", err);
       }
