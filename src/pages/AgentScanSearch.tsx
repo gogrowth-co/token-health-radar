@@ -17,6 +17,10 @@ interface AgentEntry {
   name: string;
 }
 
+interface LiveAgentSearchResponse {
+  agents?: AgentEntry[];
+}
+
 export default function AgentScanSearch() {
   const [params] = useSearchParams();
   const query = params.get("q") || "";
@@ -26,62 +30,82 @@ export default function AgentScanSearch() {
   const isNumericQuery = /^\d+$/.test(query.trim());
 
   useEffect(() => {
+    const trimmedQuery = query.trim();
+
     async function search() {
+      if (!trimmedQuery || isNumericQuery) {
+        setResults([]);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
+
       try {
-        // Search previously scanned agents in agent_scans table
-        // Search by agent_name first
-        const { data } = await supabase
-          .from("agent_scans")
-          .select("agent_id, agent_name, chain, created_at, raw_data")
-          .eq("chain", chain)
-          .ilike("agent_name", `%${query}%`)
-          .order("created_at", { ascending: false })
-          .limit(100);
-
-        let rows = data || [];
-
-        // If no results by agent_name, try searching raw_data for the name
-        if (rows.length === 0) {
-          const { data: fallbackData } = await supabase
+        const [liveSearchResult, cachedSearchResult] = await Promise.allSettled([
+          supabase.functions.invoke<LiveAgentSearchResponse>("fetch-agent-directory", {
+            body: { chain, q: trimmedQuery, page: 1 },
+          }),
+          supabase
             .from("agent_scans")
             .select("agent_id, agent_name, chain, created_at, raw_data")
             .eq("chain", chain)
             .order("created_at", { ascending: false })
-            .limit(200);
+            .limit(200),
+        ]);
 
-          if (fallbackData) {
-            rows = fallbackData.filter((row) => {
-              const rawName = (row.raw_data as any)?.agent?.name;
-              return rawName && rawName.toLowerCase().includes(query.toLowerCase());
-            });
-          }
-        }
-
-        // Deduplicate by chain-agent_id, keep most recent
         const seen = new Map<string, AgentEntry>();
-        for (const row of rows) {
-          const key = `${row.chain}-${row.agent_id}`;
-          if (!seen.has(key)) {
+
+        if (liveSearchResult.status === "fulfilled") {
+          if (liveSearchResult.value.error) {
+            console.error("Live agent search error:", liveSearchResult.value.error);
+          } else {
+            const liveAgents = Array.isArray(liveSearchResult.value.data?.agents)
+              ? liveSearchResult.value.data.agents
+              : [];
+
+            for (const agent of liveAgents) {
+              if (!agent.agentId || !agent.name) continue;
+
+              const key = `${agent.chain}-${agent.agentId}`;
+              if (!seen.has(key)) {
+                seen.set(key, agent);
+              }
+            }
+          }
+        } else {
+          console.error("Live agent search failed:", liveSearchResult.reason);
+        }
+
+        if (cachedSearchResult.status === "fulfilled" && cachedSearchResult.value.data) {
+          for (const row of cachedSearchResult.value.data) {
             const realName = row.agent_name?.startsWith("Agent #")
-              ? (row.raw_data as any)?.agent?.name || row.agent_name
+              ? ((row.raw_data as { agent?: { name?: string } } | null)?.agent?.name || row.agent_name)
               : row.agent_name;
-            seen.set(key, {
-              agentId: row.agent_id,
-              chain: row.chain,
-              name: realName || `Agent #${row.agent_id}`,
-            });
+
+            if (!realName?.toLowerCase().includes(trimmedQuery.toLowerCase())) continue;
+
+            const key = `${row.chain}-${row.agent_id}`;
+            if (!seen.has(key)) {
+              seen.set(key, {
+                agentId: row.agent_id,
+                chain: row.chain,
+                name: realName || `Agent #${row.agent_id}`,
+              });
+            }
           }
         }
+
         setResults(Array.from(seen.values()).slice(0, 20));
       } catch (err) {
         console.error("Search error:", err);
+        setResults([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
 
-    if (query && !isNumericQuery) search();
-    else setLoading(false);
+    search();
   }, [query, chain, isNumericQuery]);
 
   return (
@@ -102,7 +126,6 @@ export default function AgentScanSearch() {
           {`Results for "${query}" on ${chain}`}
         </h1>
 
-        {/* Direct ID scan CTA */}
         {isNumericQuery && (
           <Link to={`/agent-scan/${chain}/${query.trim()}`} className="block">
             <Card className="border-primary/50 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer">
@@ -137,7 +160,7 @@ export default function AgentScanSearch() {
           </div>
         ) : (
           <div className="space-y-2">
-            {results.map(agent => (
+            {results.map((agent) => (
               <Link
                 key={`${agent.chain}-${agent.agentId}`}
                 to={`/agent-scan/${agent.chain}/${agent.agentId}`}
