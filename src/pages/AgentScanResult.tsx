@@ -3,7 +3,6 @@ import { useEffect, useState, useRef } from "react";
 import { Helmet } from "@/components/ui/helmet";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import AgentTrustScoreRing from "@/components/agent-scan/AgentTrustScoreRing";
 import AgentDimensionGrid from "@/components/agent-scan/AgentDimensionGrid";
 import AgentIdentityCard from "@/components/agent-scan/AgentIdentityCard";
 import AgentActionPlan from "@/components/agent-scan/AgentActionPlan";
@@ -27,7 +26,6 @@ export default function AgentScanResult() {
 
     async function scan() {
       try {
-        // Step progress animation
         const stepInterval = setInterval(() => {
           setStep(prev => Math.min(prev + 1, 4));
         }, 1200);
@@ -45,7 +43,6 @@ export default function AgentScanResult() {
           return;
         }
 
-        // Data could be cached (full row) or fresh (raw_data wrapper)
         const rawData: AgentScanData = data?.raw_data?.agent
           ? data.raw_data
           : data?.raw_data;
@@ -107,17 +104,13 @@ export default function AgentScanResult() {
       <Navbar />
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 space-y-8">
-        {/* Identity + Score */}
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-start">
-          <AgentIdentityCard data={scanData} />
-          <div className="flex justify-center relative">
-            <AgentTrustScoreRing
-              score={result.overallScore}
-              color={result.color}
-              label={result.label}
-            />
-          </div>
-        </div>
+        {/* Hero: Identity + Score merged */}
+        <AgentIdentityCard
+          data={scanData}
+          score={result.overallScore}
+          color={result.color}
+          label={result.label}
+        />
 
         {/* Dimensions */}
         <section>

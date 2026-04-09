@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import type { DimensionScore } from "@/lib/agent-scoring";
@@ -9,13 +8,18 @@ interface AgentDimensionCardProps {
   dimension: DimensionScore;
 }
 
+function getScoreColor(pct: number): string {
+  if (pct >= 80) return "#10b981";
+  if (pct >= 40) return "#f59e0b";
+  return "#ef4444";
+}
+
 export default function AgentDimensionCard({ dimension }: AgentDimensionCardProps) {
   const pct = Math.round((dimension.score / dimension.maxScore) * 100);
-
-  const scoreColor = pct >= 80 ? "#10b981" : pct >= 60 ? "#14b8a6" : pct >= 40 ? "#f59e0b" : pct >= 20 ? "#f97316" : "#ef4444";
+  const scoreColor = getScoreColor(pct);
 
   return (
-    <Card className="border-border bg-card">
+    <Card className="border-border bg-card hover:shadow-md transition-shadow rounded-xl">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-semibold">{dimension.label}</CardTitle>
@@ -23,7 +27,16 @@ export default function AgentDimensionCard({ dimension }: AgentDimensionCardProp
             {dimension.score}
           </span>
         </div>
-        <Progress value={pct} className="h-1.5 mt-1" />
+        {/* Score bar with dynamic color */}
+        <div className="h-1.5 mt-2 w-full rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-700 ease-out"
+            style={{
+              width: `${pct}%`,
+              backgroundColor: scoreColor,
+            }}
+          />
+        </div>
       </CardHeader>
       <CardContent className="pt-0">
         <Accordion type="single" collapsible>
