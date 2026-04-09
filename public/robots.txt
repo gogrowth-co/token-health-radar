@@ -60,6 +60,8 @@ Allow: /token-sniffer-vs-tokenhealthscan
 Allow: /solana-launchpads
 Allow: /ethereum-launchpads
 Allow: /pricing
+Allow: /agent-scan/
+Allow: /agent-directory
 Allow: /llms.txt
 Allow: /rss.xml
 Crawl-delay: 1
