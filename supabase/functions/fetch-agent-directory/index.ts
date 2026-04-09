@@ -1,134 +1,166 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const PAGE_SIZE = 20;
+const SUPPORTED_CHAINS: Record<string, number> = {
+  base: 8453,
+  ethereum: 1,
+  polygon: 137,
+  arbitrum: 42161,
+};
+
+interface RequestParams {
+  chain: string;
+  page: number;
+  query: string;
+}
+
+interface AgentEntry {
+  agentId: string;
+  chain: string;
+  name: string;
+}
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+async function getRequestParams(req: Request): Promise<RequestParams> {
+  if (req.method === "POST") {
+    const body = await req.json().catch(() => ({}));
+    return normalizeParams(body);
+  }
+
+  const url = new URL(req.url);
+  return normalizeParams({
+    chain: url.searchParams.get("chain"),
+    page: url.searchParams.get("page"),
+    q: url.searchParams.get("q"),
+    query: url.searchParams.get("query"),
+  });
+}
+
+function normalizeParams(input: Record<string, unknown>): RequestParams {
+  const chain = typeof input.chain === "string" ? input.chain.toLowerCase() : "base";
+  const rawPage = Number(input.page);
+  const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+  const queryValue = typeof input.q === "string"
+    ? input.q
+    : typeof input.query === "string"
+      ? input.query
+      : "";
+
+  return {
+    chain,
+    page,
+    query: queryValue.trim(),
+  };
+}
+
+function isSupportedChain(chain: string) {
+  return Object.prototype.hasOwnProperty.call(SUPPORTED_CHAINS, chain);
+}
+
+function matchesRequestedChain(item: Record<string, unknown>, chain: string) {
+  const expectedChainId = SUPPORTED_CHAINS[chain];
+  const chainId = Number(item.chain_id);
+  const isTestnet = item.is_testnet === true;
+  return chainId === expectedChainId && !isTestnet;
+}
+
+function toAgentEntry(item: Record<string, unknown>, chain: string): AgentEntry | null {
+  const agentId = String(item.token_id ?? item.tokenId ?? "").trim();
+  const name = typeof item.name === "string" ? item.name.trim() : "";
+
+  if (!agentId || !name) {
+    return null;
+  }
+
+  return {
+    agentId,
+    chain,
+    name,
+  };
+}
+
+async function fetchAgents(chain: string, query: string) {
+  const params = new URLSearchParams({ chain });
+  const endpoint = query
+    ? `https://8004scan.io/api/v1/agents?${new URLSearchParams({ chain, search: query }).toString()}`
+    : `https://8004scan.io/api/v1/agents/latest?${params.toString()}`;
+
+  console.log(`[fetch-agent-directory] Fetching ${endpoint}`);
+
+  const response = await fetch(endpoint, {
+    headers: {
+      Accept: "application/json",
+      "User-Agent": "TokenHealthScan/1.0",
+    },
+    signal: AbortSignal.timeout(10000),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`8004scan API ${response.status}: ${errorText.slice(0, 200)}`);
+  }
+
+  const payload = await response.json();
+  const items = Array.isArray(payload?.items) ? payload.items : Array.isArray(payload) ? payload : [];
+
+  const deduped = new Map<string, AgentEntry>();
+
+  for (const item of items) {
+    if (!item || typeof item !== "object") continue;
+    if (!matchesRequestedChain(item as Record<string, unknown>, chain)) continue;
+
+    const agent = toAgentEntry(item as Record<string, unknown>, chain);
+    if (!agent) continue;
+
+    const key = `${agent.chain}-${agent.agentId}`;
+    if (!deduped.has(key)) {
+      deduped.set(key, agent);
+    }
+  }
+
+  return Array.from(deduped.values());
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders, status: 204 });
   }
 
+  if (!["GET", "POST"].includes(req.method)) {
+    return jsonResponse({ error: "Method not allowed" }, 405);
+  }
+
   try {
-    const url = new URL(req.url);
-    const chain = url.searchParams.get("chain") || "base";
-    const page = parseInt(url.searchParams.get("page") || "1");
-    const pageSize = 20;
+    const { chain, page, query } = await getRequestParams(req);
 
-    console.log(`[fetch-agent-directory] chain=${chain} page=${page}`);
-
-    // Check cache (24 hour TTL)
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { data: cached } = await supabase
-      .from("agent_directory_cache")
-      .select("*")
-      .eq("chain_filter", chain)
-      .gte("updated_at", twentyFourHoursAgo)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    let agents: any[] = [];
-
-    if (cached?.agents_data) {
-      console.log(`[fetch-agent-directory] Cache hit`);
-      agents = cached.agents_data as any[];
-    } else {
-      // Fetch from 8004scan.io
-      try {
-        const res = await fetch(`https://8004scan.io/agents?chain=${chain}`, {
-          headers: { "User-Agent": "TokenHealthScan/1.0" },
-          signal: AbortSignal.timeout(10000),
-        });
-
-        if (res.ok) {
-          const html = await res.text();
-
-          // Parse agent cards from HTML
-          // Look for patterns like agent links, IDs, names
-          const agentPattern = /\/agents\/([^/]+)\/(\d+)[^>]*>([^<]*)/gi;
-          let match;
-          const seen = new Set<string>();
-
-          while ((match = agentPattern.exec(html)) !== null) {
-            const [, agentChain, id, name] = match;
-            const key = `${agentChain}-${id}`;
-            if (!seen.has(key) && name.trim()) {
-              seen.add(key);
-              agents.push({
-                agentId: id,
-                chain: agentChain,
-                name: name.trim(),
-              });
-            }
-          }
-
-          // Fallback: try JSON in page
-          if (agents.length === 0) {
-            const jsonMatch = html.match(/agents['"]\s*:\s*(\[[\s\S]*?\])/);
-            if (jsonMatch) {
-              try {
-                const parsed = JSON.parse(jsonMatch[1]);
-                agents = parsed.map((a: any) => ({
-                  agentId: a.id || a.agentId,
-                  chain: a.chain || chain,
-                  name: a.name || `Agent #${a.id}`,
-                  description: a.description,
-                  serviceTypes: a.serviceTypes || a.service_types || [],
-                  owner: a.owner,
-                }));
-              } catch {}
-            }
-          }
-
-          // Cache results
-          if (agents.length > 0) {
-            await supabase.from("agent_directory_cache").upsert(
-              {
-                chain_filter: chain,
-                agents_data: agents,
-                updated_at: new Date().toISOString(),
-              },
-              { onConflict: "chain_filter" }
-            ).then(res => {
-              // If upsert fails (no unique constraint), just insert
-              if (res.error) {
-                return supabase.from("agent_directory_cache").insert({
-                  chain_filter: chain,
-                  agents_data: agents,
-                  updated_at: new Date().toISOString(),
-                });
-              }
-            });
-          }
-        }
-      } catch (err) {
-        console.error(`[fetch-agent-directory] Fetch error:`, err);
-      }
+    if (!isSupportedChain(chain)) {
+      return jsonResponse({ error: "Unsupported chain" }, 400);
     }
 
-    // Paginate
-    const total = agents.length;
-    const start = (page - 1) * pageSize;
-    const paged = agents.slice(start, start + pageSize);
+    if (query.length > 100) {
+      return jsonResponse({ error: "Search query is too long" }, 400);
+    }
 
-    return new Response(
-      JSON.stringify({
-        agents: paged,
-        total,
-        page,
-        pageSize,
-        totalPages: Math.ceil(total / pageSize),
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    const agents = await fetchAgents(chain, query);
+    const start = (page - 1) * PAGE_SIZE;
+    const pagedAgents = agents.slice(start, start + PAGE_SIZE);
+
+    return jsonResponse({
+      agents: pagedAgents,
+      total: agents.length,
+      page,
+      pageSize: PAGE_SIZE,
+      totalPages: Math.max(1, Math.ceil(agents.length / PAGE_SIZE)),
+    });
   } catch (error) {
-    console.error(`[fetch-agent-directory] Error:`, error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    console.error("[fetch-agent-directory] Error:", error);
+    return jsonResponse({ error: error instanceof Error ? error.message : "Unknown error" }, 500);
   }
 });

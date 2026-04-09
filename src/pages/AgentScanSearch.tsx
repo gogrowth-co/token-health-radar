@@ -130,9 +130,9 @@ export default function AgentScanSearch() {
           </div>
         ) : !isNumericQuery && results.length === 0 ? (
           <div className="text-center py-16 space-y-3">
-            <p className="text-muted-foreground">No previously scanned agents match "{query}"</p>
+            <p className="text-muted-foreground">No agents found matching "{query}"</p>
             <p className="text-sm text-muted-foreground">
-              Know the agent ID? Enter it directly to scan any agent.
+              Try another name, or enter the exact agent ID to scan any agent directly.
             </p>
           </div>
         ) : (
