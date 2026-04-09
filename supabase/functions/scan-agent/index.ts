@@ -66,11 +66,15 @@ serve(async (req) => {
         const html = await res.text();
 
         // Parse agent data from HTML
-        const nameMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i) ||
+        // Priority 1: <title> tag (works on SPA pre-rendered pages like "Clawdia | 8004scan")
+        const titleMatch = html.match(/<title>([^|<]+)\|/i);
+        const nameMatch = titleMatch ||
+          html.match(/<h1[^>]*>([^<]+)<\/h1>/i) ||
           html.match(/agent[_-]?name["']?\s*[:=]\s*["']([^"']+)/i);
         const ownerMatch = html.match(/owner["']?\s*[:=]\s*["'](0x[a-fA-F0-9]+)/i) ||
           html.match(/owner[^>]*>(0x[a-fA-F0-9]{6,})/i);
-        const descMatch = html.match(/description["']?\s*[:=]\s*["']([^"']{10,})/i) ||
+        const descMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)/i) ||
+          html.match(/description["']?\s*[:=]\s*["']([^"']{10,})/i) ||
           html.match(/<p[^>]*class="[^"]*description[^"]*"[^>]*>([^<]+)/i);
         const serviceMatch = html.match(/service[_-]?type[s]?["']?\s*[:=]\s*["']?(\[[^\]]+\]|[^"',\n]+)/i);
         const endpointMatches = html.match(/https?:\/\/[^\s"'<>]+\/api[^\s"'<>]*/gi) || [];

@@ -6,15 +6,15 @@ import Footer from "@/components/Footer";
 import AgentSearchInput from "@/components/agent-scan/AgentSearchInput";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { Search } from "lucide-react";
 
 interface AgentEntry {
   agentId: string;
   chain: string;
   name: string;
-  description?: string;
-  serviceTypes?: string[];
 }
 
 export default function AgentScanSearch() {
@@ -23,38 +23,35 @@ export default function AgentScanSearch() {
   const chain = params.get("chain") || "base";
   const [results, setResults] = useState<AgentEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const isNumericQuery = /^\d+$/.test(query.trim());
 
   useEffect(() => {
     async function search() {
       setLoading(true);
       try {
-        // Search agent_directory_cache
+        // Search previously scanned agents in agent_scans table
         const { data } = await supabase
-          .from("agent_directory_cache")
-          .select("agents_data")
-          .eq("chain_filter", chain)
-          .limit(1)
-          .single();
+          .from("agent_scans")
+          .select("agent_id, agent_name, chain, created_at")
+          .eq("chain", chain)
+          .ilike("agent_name", `%${query}%`)
+          .order("created_at", { ascending: false })
+          .limit(100);
 
-        if (data?.agents_data) {
-          const agents = (data.agents_data as unknown as AgentEntry[]).filter(a =>
-            a.name?.toLowerCase().includes(query.toLowerCase()) ||
-            a.agentId?.toString().includes(query)
-          );
-          setResults(agents.slice(0, 20));
-        } else {
-          // Try fetching from edge function
-          const { data: dirData } = await supabase.functions.invoke("fetch-agent-directory", {
-            method: "POST",
-            body: {},
-          });
-          if (dirData?.agents) {
-            const agents = dirData.agents.filter((a: AgentEntry) =>
-              a.name?.toLowerCase().includes(query.toLowerCase()) ||
-              a.agentId?.toString().includes(query)
-            );
-            setResults(agents.slice(0, 20));
+        if (data) {
+          // Deduplicate by chain-agent_id, keep most recent
+          const seen = new Map<string, AgentEntry>();
+          for (const row of data) {
+            const key = `${row.chain}-${row.agent_id}`;
+            if (!seen.has(key) && row.agent_name && !row.agent_name.startsWith("Agent #")) {
+              seen.set(key, {
+                agentId: row.agent_id,
+                chain: row.chain,
+                name: row.agent_name,
+              });
+            }
           }
+          setResults(Array.from(seen.values()).slice(0, 20));
         }
       } catch (err) {
         console.error("Search error:", err);
@@ -62,9 +59,9 @@ export default function AgentScanSearch() {
       setLoading(false);
     }
 
-    if (query) search();
+    if (query && !isNumericQuery) search();
     else setLoading(false);
-  }, [query, chain]);
+  }, [query, chain, isNumericQuery]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
@@ -81,8 +78,28 @@ export default function AgentScanSearch() {
         </div>
 
         <h1 className="text-xl font-bold">
-          Results for "{query}" on {chain}
+          {`Results for "${query}" on ${chain}`}
         </h1>
+
+        {/* Direct ID scan CTA */}
+        {isNumericQuery && (
+          <Link to={`/agent-scan/${chain}/${query.trim()}`} className="block">
+            <Card className="border-primary/50 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer">
+              <CardContent className="py-5 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Search className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm">Scan Agent #{query.trim()}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Run a trust score scan on agent ID {query.trim()} on {chain}
+                  </p>
+                </div>
+                <Button size="sm">Scan Now</Button>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
 
         {loading ? (
           <div className="space-y-3">
@@ -90,17 +107,12 @@ export default function AgentScanSearch() {
               <Skeleton key={i} className="h-16 w-full rounded-lg" />
             ))}
           </div>
-        ) : results.length === 0 ? (
+        ) : !isNumericQuery && results.length === 0 ? (
           <div className="text-center py-16 space-y-3">
-            <p className="text-muted-foreground">No agents found matching "{query}"</p>
-            <a
-              href={`https://8004scan.io/agents?chain=${chain}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-primary hover:underline"
-            >
-              Browse agents on 8004scan.io →
-            </a>
+            <p className="text-muted-foreground">No previously scanned agents match "{query}"</p>
+            <p className="text-sm text-muted-foreground">
+              Know the agent ID? Enter it directly to scan any agent.
+            </p>
           </div>
         ) : (
           <div className="space-y-2">

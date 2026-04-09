@@ -50,7 +50,7 @@ export default function AgentSearchInput({ large }: AgentSearchInputProps) {
         <Input
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Agent name or ID (e.g. 44218)"
+          placeholder="Enter agent ID or search by name"
           className={`pl-9 ${large ? "h-12 text-base" : "h-10"}`}
         />
       </div>
