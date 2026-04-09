@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_directory_cache: {
+        Row: {
+          agents_data: Json | null
+          chain_filter: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          agents_data?: Json | null
+          chain_filter?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          agents_data?: Json | null
+          chain_filter?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      agent_scans: {
+        Row: {
+          agent_id: string
+          agent_name: string | null
+          chain: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          raw_data: Json | null
+          scores: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          agent_id: string
+          agent_name?: string | null
+          chain: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          raw_data?: Json | null
+          scores?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          agent_id?: string
+          agent_name?: string | null
+          chain?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          raw_data?: Json | null
+          scores?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       agent_tokens: {
         Row: {
           agent_framework: string | null
@@ -142,6 +199,7 @@ export type Database = {
       }
       subscribers: {
         Row: {
+          agent_scans_used: number | null
           created_at: string | null
           id: string
           name: string | null
@@ -154,6 +212,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          agent_scans_used?: number | null
           created_at?: string | null
           id: string
           name?: string | null
@@ -166,6 +225,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          agent_scans_used?: number | null
           created_at?: string | null
           id?: string
           name?: string | null
