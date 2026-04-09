@@ -37,7 +37,7 @@ export default function AgentScanSearch() {
           .single();
 
         if (data?.agents_data) {
-          const agents = (data.agents_data as AgentEntry[]).filter(a =>
+          const agents = (data.agents_data as unknown as AgentEntry[]).filter(a =>
             a.name?.toLowerCase().includes(query.toLowerCase()) ||
             a.agentId?.toString().includes(query)
           );
