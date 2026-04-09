@@ -15,6 +15,7 @@ interface AgentEntry {
   agentId: string;
   chain: string;
   name: string;
+  imageUrl?: string;
 }
 
 interface LiveAgentSearchResponse {
