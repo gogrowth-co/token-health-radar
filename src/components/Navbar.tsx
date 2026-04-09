@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "./ThemeToggle";
-import { Search } from "lucide-react";
+import { Search, Shield } from "lucide-react";
 import { AuthButton } from "./auth/AuthButton";
 import MobileNav from "./MobileNav";
 
@@ -31,6 +31,9 @@ export default function Navbar() {
             </Link>
             <Link to="/ai-agents" className="text-sm font-medium transition-colors hover:text-primary">
               AI Agents
+            </Link>
+            <Link to="/agent-scan" className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1">
+              <Shield className="h-3.5 w-3.5" /> Agent Scan
             </Link>
             <Link to="/token" className="text-sm font-medium transition-colors hover:text-primary">
               Token Reports
