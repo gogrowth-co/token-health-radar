@@ -15,6 +15,7 @@ interface AgentEntry {
   agentId: string;
   chain: string;
   name: string;
+  imageUrl?: string;
 }
 
 interface LiveAgentSearchResponse {
@@ -168,7 +169,18 @@ export default function AgentScanSearch() {
               >
                 <Card className="border-border bg-card hover:bg-accent/40 transition-colors cursor-pointer">
                   <CardContent className="py-4 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                    {agent.imageUrl ? (
+                      <img
+                        src={agent.imageUrl}
+                        alt={agent.name}
+                        className="w-10 h-10 rounded-full object-cover bg-muted"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                          (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
+                        }}
+                      />
+                    ) : null}
+                    <div className={`w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary ${agent.imageUrl ? "hidden" : ""}`}>
                       {agent.name?.charAt(0) || "#"}
                     </div>
                     <div className="flex-1 min-w-0">

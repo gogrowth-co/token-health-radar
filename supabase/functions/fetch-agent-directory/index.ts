@@ -19,6 +19,7 @@ interface AgentEntry {
   agentId: string;
   chain: string;
   name: string;
+  imageUrl?: string;
 }
 
 function jsonResponse(body: unknown, status = 200) {
@@ -79,10 +80,13 @@ function toAgentEntry(item: Record<string, unknown>, chain: string): AgentEntry 
     return null;
   }
 
+  const imageUrl = typeof item.image_url === "string" ? item.image_url : undefined;
+
   return {
     agentId,
     chain,
     name,
+    imageUrl,
   };
 }
 
