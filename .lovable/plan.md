@@ -1,81 +1,100 @@
 
 
-## Rework Community Pillar for Free-Tier Reality
+## Agent Trust Score — Full Implementation Plan
 
-### Problem
-The current implementation tries to parse `galaxy_score`, `alt_rank`, `interactions_24h`, `contributors_active`, and `posts_active` from LunarCrush — but all of these are redacted (`[---]`) on the free tier. Only **sentiment**, **social_dominance**, and **trend** are reliably available for free.
+### Overview
+Add an "Agent Trust Score" product vertical that scans ERC-8004 AI agents and produces a 5-dimension trust score. Distinct from `/ai-agents` (which tracks agent tokens). Agent scans have their own independent quota: 3 free lifetime, 10/month for Pro — completely separate from token scan limits.
 
-### Strategy
-Rebuild the scoring and UI around the three metrics that actually work, plus Discord and Telegram. Mark paywalled metrics honestly in the UI.
+### Phase 1 — Foundation
 
-### Changes
+**1. Database migration**
+- `agent_scans` table: id, chain, agent_id, agent_name, raw_data (JSONB), scores (JSONB), user_id, ip_address, created_at. Index on (chain, agent_id, created_at DESC). RLS: public read/insert.
+- `agent_directory_cache` table: id, agents_data (JSONB), chain_filter, updated_at. RLS: public read.
+- Add `agent_scans_used` (integer, default 0) to `subscribers` table — independent counter from `scans_used`.
 
-#### 1. `supabase/functions/_shared/lunarcrushAPI.ts` — Update parser and interface
+**2. Scoring engine** — `src/lib/agent-scoring.ts`
+- Pure function, no side effects. 5 dimensions x 100 points each (Identity Verification, Financial Transparency, Operational Reliability, Reputation, Compliance), averaged to 0-100 overall.
+- 5 trust levels: Highly Trusted (80+, green), Moderately Trusted (60-79, teal), Use Caution (40-59, amber), Low Trust (20-39, orange), Unverified (0-19, red).
+- Exports types: `AgentScanData`, `AgentTrustResult`, `DimensionScore`, `CheckResult`.
 
-- Add `social_dominance` and `trend` to the `LunarCrushData` interface
-- Parse `social_dominance` from markdown: `### Social Dominance: 0.534%`
-- Parse `trend` from the markdown summary text (look for trend indicator keywords or section)
-- Keep existing parsers for galaxy_score, alt_rank, interactions, contributors, posts — they'll return `null` on free tier (already handled by redaction check)
-- Update `fetchLunarCrushWithCache` to include `social_dominance` and `trend` in cache read/write
+**3. Edge Function: `scan-agent`**
+- `createSecureHandler` pattern, no auth required.
+- Input: `POST { chain, agentId }`.
+- Fetches 8004scan.io agent page via `fetch()` + regex/string parsing (no Firecrawl). Searches toku.agency API (graceful failure). HEAD pings to service endpoints (5s timeout).
+- Rate limit: `CommonRateLimits.publicTokenScan` (3/hour).
 
-#### 2. DB migration — Add columns to `token_community_cache`
+**4. Edge Function: `fetch-agent-directory`**
+- Fetches/caches agent list from 8004scan.io. 24hr TTL in `agent_directory_cache`. Paginated (20/page). No auth required.
 
-```sql
-ALTER TABLE token_community_cache
-  ADD COLUMN IF NOT EXISTS social_dominance numeric,
-  ADD COLUMN IF NOT EXISTS trend text;
-```
+**5. Scan access: `check-scan-access` update**
+- Return `agentScansUsed` and `agentScanLimit` alongside existing token scan fields.
+- Free: 3 agent scans lifetime. Pro: 10/month. Admin: unlimited. Completely independent of `scans_used` / `pro_scan_limit`.
+- New field in response: `canAgentScan: boolean`.
 
-#### 3. `supabase/functions/_shared/scoringUtils.ts` — Rewrite `calculateCommunityScore`
+### Phase 2 — UI Components
 
-New 0–100 scale using only confirmed free metrics:
+**6. New components in `src/components/agent-scan/`**
+- `AgentTrustScoreRing.tsx` — Large SVG ring with 5-level colors (new component, does NOT modify `OverallHealthScore`).
+- `AgentDimensionCard.tsx` — Per-dimension card with mini-ring, expandable check list.
+- `AgentDimensionGrid.tsx` — Grid of 5 dimension cards.
+- `AgentIdentityCard.tsx` — Name, chain badge, owner address, service type badges, external links.
+- `AgentActionPlan.tsx` — Ordered list of failed/partial checks with recommendations.
+- `AgentSearchInput.tsx` — Text input + chain selector dropdown.
+- `AgentCrossSell.tsx` — Cross-sell banner linking to token scans.
+- `AgentScanLoading.tsx` — Sequential loading states.
+- `AgentDirectoryTable.tsx` — Table/card list for directory page.
 
-| Metric | Max | Logic |
+### Phase 3 — Pages & Routes
+
+**7. Pages**
+- `AgentScan.tsx` (`/agent-scan`) — Landing with hero, search input + chain selector, how-it-works, 5 dimension preview cards.
+- `AgentScanResult.tsx` (`/agent-scan/:chain/:agentId`) — Checks cache (6hr TTL), calls edge function on miss, runs scoring engine, renders full result. Checks `agent_scans_used` before invoking; shows `UpgradeModal` if exceeded.
+- `AgentScanSearch.tsx` (`/agent-scan/search`) — Searches `agent_directory_cache`, shows matching agents.
+- `AgentDirectory.tsx` (`/agent-directory`) — Full directory with filters, pagination, trust score column.
+
+**8. Route registration** in `App.tsx` — 4 new lazy routes.
+
+### Phase 4 — Navigation & Cross-Sell
+
+**9. Nav updates**
+- `Navbar.tsx`: Add "Agent Scan" (Shield icon) after "AI Agents", before "Token Reports".
+- `MobileNav.tsx`: Add "Agent Scan" after "AI Agents".
+
+**10. Cross-sell**
+- `AIAgents.tsx`: Dismissible banner → "Scan the agent behind the token".
+- `HeroSection.tsx`: Tab toggle "Scan Token" / "Scan Agent" above search.
+
+### Phase 5 — SEO
+
+**11. Helmet + schema markup** on all new pages. Sitemap and robots.txt updates.
+
+### Quota System Detail
+
+| | Token Scans | Agent Scans |
 |---|---|---|
-| Sentiment | 35 | ≥75% → 35, ≥60% → 22, ≥45% → 12, >0 → 5 |
-| Social Dominance | 25 | ≥2% → 25, ≥0.5% → 15, ≥0.1% → 8, >0 → 3 |
-| Trend | 10 | "up" → 10, "flat" → 5, "down" → 0 |
-| Discord Members | 18 | >50K → 18, >10K → 14, >5K → 10, >1K → 6, >0 → 3 |
-| Telegram Members | 12 | >50K → 12, >10K → 9, >5K → 6, >1K → 4, >0 → 2 |
+| Free | 3 lifetime (`scans_used`) | 3 lifetime (`agent_scans_used`) |
+| Pro | 10/mo (`pro_scan_limit`) | 10/mo (new `agent_scan_limit` or hardcoded) |
+| Admin | Unlimited | Unlimited |
+| DB Column | `subscribers.scans_used` | `subscribers.agent_scans_used` (new) |
+| Edge Function | `check-scan-access` returns `scansUsed` | Same function returns `agentScansUsed` |
 
-Remove `galaxyScore`, `contributorsActive`, `postsActive`, `altRank` from input interface. Add `socialDominance` and `trend`. Keep fallback of 25 when no data.
+The two quotas are completely independent. Using a token scan does not decrement agent scans and vice versa.
 
-#### 4. `supabase/functions/run-token-scan/index.ts` — Update both EVM and Solana paths
+### Files Summary
 
-- Pass `socialDominance` and `trend` to `calculateCommunityScore`
-- Remove `galaxyScore`, `contributorsActive`, `postsActive`, `altRank` from score call
-- Add `social_dominance` and `trend` to community cache upsert
+**New (17)**: Migration SQL, `agent-scoring.ts`, 2 edge functions, 9 components in `agent-scan/`, 4 pages.
 
-#### 5. `src/utils/categoryTransformers.ts` — Rework `CommunityData` and `transformCommunityData`
+**Modified (8)**: `App.tsx` (routes), `Navbar.tsx`, `MobileNav.tsx`, `AIAgents.tsx` (banner), `HeroSection.tsx` (tab toggle), `check-scan-access/index.ts` (agent quota), `sitemap.xml`, `robots.txt`.
 
-- Add `social_dominance` and `trend` to `CommunityData` interface
-- Replace the 7-card layout with 5 cards:
-  1. **Sentiment** — percentage with color badge (primary metric)
-  2. **Social Dominance** — percentage of total crypto social conversation
-  3. **Trend** — up/flat/down with arrow indicator
-  4. **Discord Members** — count
-  5. **Telegram Members** — count
-- Add a "Pro" locked indicator row for Galaxy Score, AltRank, Engagements (showing they exist but require upgrade)
-- Data source footnote: "Powered by LunarCrush · Social Sentiment Data"
-
-#### 6. `src/components/copilot/blocks/CommunityCard.tsx` — Match new fields
-
-- Primary display: Sentiment + Social Dominance
-- Secondary: Trend indicator, Discord, Telegram
-- Gray-out Galaxy Score / AltRank with lock icon and "Pro" label
-- Normalize both camelCase and snake_case as before
-
-#### 7. `src/integrations/supabase/types.ts` — Auto-updates after migration
-
-### Not Touched
-- Discord API, Telegram/Apify scraping, Security/Liquidity/Tokenomics/Development
-- Auth, Stripe, RLS policies
-
-### Technical Details
-
-- The markdown parser already handles `[---]` redaction — galaxy_score etc. will naturally return `null`
-- `social_dominance` regex: `/### Social Dominance:\s*([\d.]+)%/`
-- `trend` regex: look for trend section or infer from summary keywords; fallback to `null`
-- Cache TTL stays at 6 hours
-- Scoring fallback of 25 when no LunarCrush + no Discord/Telegram data
+### Execution Order
+1. Scoring engine (pure logic, no deps)
+2. DB migration (tables + `agent_scans_used` column)
+3. `scan-agent` edge function
+4. `fetch-agent-directory` edge function
+5. Update `check-scan-access` for agent quota
+6. Nav updates + route registration
+7. UI components
+8. Landing page → Search page → Results page → Directory page
+9. Cross-sell integration
+10. SEO markup
 
