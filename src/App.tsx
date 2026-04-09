@@ -29,6 +29,10 @@ import Copilot from "./pages/Copilot";
 import NotFound from "./pages/NotFound";
 import AdminUsers from "./pages/AdminUsers";
 import AIAgents from "./pages/AIAgents";
+import AgentScan from "./pages/AgentScan";
+import AgentScanResult from "./pages/AgentScanResult";
+import AgentScanSearch from "./pages/AgentScanSearch";
+import AgentDirectory from "./pages/AgentDirectory";
 import AdminRoute from "./components/admin/AdminRoute";
 import { useEffect } from "react";
 
@@ -112,6 +116,10 @@ const App = () => {
                     <Route path="/solana-launchpads" element={<SolanaLaunchpads />} />
                     <Route path="/ethereum-launchpads" element={<EthereumLaunchpads />} />
                     <Route path="/ai-agents" element={<AIAgents />} />
+                    <Route path="/agent-scan" element={<AgentScan />} />
+                    <Route path="/agent-scan/search" element={<AgentScanSearch />} />
+                    <Route path="/agent-scan/:chain/:agentId" element={<AgentScanResult />} />
+                    <Route path="/agent-directory" element={<AgentDirectory />} />
                     <Route path="/token" element={<TokenDirectory />} />
                     <Route path="/token/:symbol" element={<TokenReport />} />
                     <Route path="/admin/users" element={

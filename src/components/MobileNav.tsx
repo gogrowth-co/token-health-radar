@@ -51,6 +51,13 @@ export default function MobileNav() {
                 AI Agents
               </Link>
               <Link 
+                to="/agent-scan" 
+                className="text-base font-medium py-3 px-3 rounded hover:bg-accent min-h-[44px] flex items-center"
+                onClick={closeNav}
+              >
+                Agent Scan
+              </Link>
+              <Link 
                 to="/token" 
                 className="text-base font-medium py-3 px-3 rounded hover:bg-accent min-h-[44px] flex items-center"
                 onClick={closeNav}

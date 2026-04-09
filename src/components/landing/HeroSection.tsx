@@ -1,6 +1,8 @@
 
 import { memo } from "react";
 import TokenSearchInput from "@/components/TokenSearchInput";
+import AgentSearchInput from "@/components/agent-scan/AgentSearchInput";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const HeroSection = memo(() => {
   return (
@@ -12,7 +14,7 @@ const HeroSection = memo(() => {
         <div className="flex justify-center mb-6">
           <div className="inline-flex items-center rounded-full text-sm font-medium overflow-hidden">
             <span className="px-3 py-2 bg-blue-600 text-white">🔥 New</span>
-            <span className="px-4 py-2 bg-blue-900 text-white">TokenHealthScan now supports Multi-chain scans!</span>
+            <span className="px-4 py-2 bg-blue-900 text-white">AI Agent Trust Score — scan any ERC-8004 agent!</span>
           </div>
         </div>
         <div className="space-y-3 md:space-y-4 max-w-4xl mx-auto">
@@ -25,10 +27,24 @@ const HeroSection = memo(() => {
         </div>
         
         <div className="max-w-lg mx-auto px-2 sm:px-4">
-          <TokenSearchInput large={true} placeholder="Enter token name or address" />
-          <p className="text-xs sm:text-sm text-muted-foreground mt-2">
-            Free to use. No wallet required.
-          </p>
+          <Tabs defaultValue="token" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="token">Scan Token</TabsTrigger>
+              <TabsTrigger value="agent">Scan Agent</TabsTrigger>
+            </TabsList>
+            <TabsContent value="token">
+              <TokenSearchInput large={true} placeholder="Enter token name or address" />
+              <p className="text-xs sm:text-sm text-muted-foreground mt-2">
+                Free to use. No wallet required.
+              </p>
+            </TabsContent>
+            <TabsContent value="agent">
+              <AgentSearchInput large />
+              <p className="text-xs sm:text-sm text-muted-foreground mt-2">
+                Scan any ERC-8004 AI agent. 3 free scans included.
+              </p>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </section>
