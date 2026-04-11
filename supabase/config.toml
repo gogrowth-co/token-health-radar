@@ -96,3 +96,6 @@ verify_jwt = false
 
 [functions.batch-scan-agents]
 verify_jwt = false
+
+[functions.token-health-mcp]
+verify_jwt = false
