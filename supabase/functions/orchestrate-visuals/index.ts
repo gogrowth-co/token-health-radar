@@ -2,6 +2,7 @@
 // Coordinates visual asset generation with freshness checks & locking
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireJwt } from "../_shared/authGuard.ts";
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -37,6 +38,10 @@ const FRESHNESS = {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  // SECURITY: require authenticated user
+  const auth = await requireJwt(req, corsHeaders);
+  if (auth.blocked) return auth.blocked;
 
   const errors: Array<{ step: string; error: string }> = [];
   const assets: Record<string, string> = {};

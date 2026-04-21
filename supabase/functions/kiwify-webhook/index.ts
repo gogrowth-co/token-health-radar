@@ -41,10 +41,50 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Parse webhook payload
-    const payload: KiwifyWebhookPayload = await req.json()
-    
-    console.log('Kiwify webhook received:', JSON.stringify(payload, null, 2))
+    // SECURITY: validate Kiwify webhook signature before doing anything
+    // Kiwify signs requests with HMAC-SHA1 and sends the hex digest in the
+    // `signature` query string param using the account-token as the key.
+    // https://docs.kiwify.com.br/developers/webhooks
+    const url = new URL(req.url)
+    const providedSig = url.searchParams.get('signature') || req.headers.get('x-kiwify-signature') || ''
+    const kiwifySecret = Deno.env.get('KIWIFY_WEBHOOK_SECRET')
+
+    const rawBody = await req.text()
+
+    if (!kiwifySecret) {
+      console.error('Kiwify webhook: KIWIFY_WEBHOOK_SECRET not configured')
+      return new Response(JSON.stringify({ error: 'Webhook secret not configured' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    if (!providedSig) {
+      console.warn('Kiwify webhook: missing signature')
+      return new Response(JSON.stringify({ error: 'Missing signature' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Compute HMAC-SHA1(rawBody, secret) and compare hex
+    const enc = new TextEncoder()
+    const key = await crypto.subtle.importKey(
+      'raw', enc.encode(kiwifySecret), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
+    )
+    const sigBuf = await crypto.subtle.sign('HMAC', key, enc.encode(rawBody))
+    const expectedSig = Array.from(new Uint8Array(sigBuf))
+      .map(b => b.toString(16).padStart(2, '0')).join('')
+
+    if (expectedSig.toLowerCase() !== providedSig.toLowerCase()) {
+      console.warn('Kiwify webhook: signature mismatch')
+      return new Response(JSON.stringify({ error: 'Invalid signature' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Parse webhook payload (from already-read raw body)
+    const payload: KiwifyWebhookPayload = JSON.parse(rawBody)
+
+    console.log('Kiwify webhook received & verified:', JSON.stringify(payload, null, 2))
 
     // Validate event type
     if (payload.event_type !== 'checkout.approved') {

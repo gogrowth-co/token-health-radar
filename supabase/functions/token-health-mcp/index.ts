@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.7";
+import { checkRateLimit, createRateLimitError } from "../_shared/rateLimit.ts";
+import { getClientIp } from "../_shared/authGuard.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -178,6 +180,16 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: CORS_HEADERS });
   }
+
+  // SECURITY: per-IP rate limit (this endpoint is intentionally public for MCP)
+  const ip = getClientIp(req);
+  const rl = await checkRateLimit({
+    maxRequests: 60,
+    windowSeconds: 3600,
+    identifier: ip,
+    namespace: "token-health-mcp",
+  });
+  if (!rl.allowed) return createRateLimitError(rl, CORS_HEADERS);
 
   let body: any;
   try {

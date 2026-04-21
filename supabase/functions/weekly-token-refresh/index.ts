@@ -1,8 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.7';
+import { requireCronSecret } from '../_shared/authGuard.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 };
 
 interface RefreshSummary {
@@ -22,6 +23,10 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // SECURITY: require x-cron-secret header
+  const blocked = requireCronSecret(req, corsHeaders);
+  if (blocked) return blocked;
 
   const startTime = new Date();
   console.log(`[WEEKLY-REFRESH] Starting weekly token refresh at ${startTime.toISOString()}`);

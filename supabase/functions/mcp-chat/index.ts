@@ -1,4 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { checkRateLimit, createRateLimitError } from '../_shared/rateLimit.ts';
+import { getClientIp } from '../_shared/authGuard.ts';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -1369,6 +1371,16 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
+
+  // SECURITY: per-IP rate limit (calls Lovable AI = $$$)
+  const ip = getClientIp(req);
+  const rl = await checkRateLimit({
+    maxRequests: 30,
+    windowSeconds: 3600,
+    identifier: ip,
+    namespace: 'mcp-chat',
+  });
+  if (!rl.allowed) return createRateLimitError(rl, corsHeaders);
 
   try {
     const { messages, token, mode }: ChatRequest = await req.json();

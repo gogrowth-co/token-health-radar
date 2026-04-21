@@ -7,7 +7,7 @@ import { fetchLunarCrushWithCache } from '../_shared/lunarcrushAPI.ts'
 import { fetchDiscordMemberCount } from '../_shared/discordAPI.ts'
 import { calculateSecurityScore, calculateLiquidityScore, calculateTokenomicsScore, calculateDevelopmentScore, calculateCommunityScore } from '../_shared/scoringUtils.ts'
 import { isSolanaChain } from '../_shared/chainConfig.ts'
-import { 
+import {
   fetchSPLMintInfo, 
   fetchSolanaLiquidity, 
   fetchSolanaMarketData,
@@ -15,10 +15,12 @@ import {
   calculateSolanaTokenomicsScore,
   calculateSolanaLiquidityScore
 } from '../_shared/solanaAPI.ts'
+import { requireAuthOrInternal, getClientIp } from '../_shared/authGuard.ts'
+import { checkRateLimit, createRateLimitError } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-internal-secret',
 }
 
 const supabase = createClient(
@@ -210,6 +212,20 @@ Deno.serve(async (req) => {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   }
+
+  // SECURITY: require either a valid Supabase JWT or x-internal-secret header.
+  const auth = await requireAuthOrInternal(req, corsHeaders)
+  if (auth.blocked) return auth.blocked
+
+  // Per-IP rate limit (defense in depth, even for authenticated users)
+  const ip = getClientIp(req)
+  const rl = await checkRateLimit({
+    maxRequests: auth.via === 'internal' ? 1000 : 30,
+    windowSeconds: 3600,
+    identifier: auth.userId || ip,
+    namespace: 'run-token-scan',
+  })
+  if (!rl.allowed) return createRateLimitError(rl, corsHeaders)
 
   try {
     const bodyText = await req.text()

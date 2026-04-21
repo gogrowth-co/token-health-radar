@@ -99,3 +99,6 @@ verify_jwt = false
 
 [functions.token-health-mcp]
 verify_jwt = false
+
+[functions.kiwify-webhook]
+verify_jwt = false
