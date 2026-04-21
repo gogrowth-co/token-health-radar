@@ -3,6 +3,7 @@
 // No external API calls. Always returns 200 with { ok, urls? | error }.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireJwt } from "../_shared/authGuard.ts";
 // Canvas import temporarily disabled until library is fixed
 
 const corsHeaders: Record<string, string> = {
@@ -32,6 +33,10 @@ type Payload = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // SECURITY: require authenticated user
+  const auth = await requireJwt(req, corsHeaders);
+  if (auth.blocked) return auth.blocked;
 
   try {
     if (req.method !== "POST") return json({ ok: false, error: "invalid_method" });
