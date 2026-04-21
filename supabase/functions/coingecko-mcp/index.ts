@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.7';
+import { checkRateLimit, createRateLimitError } from '../_shared/rateLimit.ts';
+import { getClientIp } from '../_shared/authGuard.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,6 +12,16 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // SECURITY: per-IP rate limit (public MCP endpoint)
+  const ip = getClientIp(req);
+  const rl = await checkRateLimit({
+    maxRequests: 60,
+    windowSeconds: 3600,
+    identifier: ip,
+    namespace: 'coingecko-mcp',
+  });
+  if (!rl.allowed) return createRateLimitError(rl, corsHeaders);
 
   try {
     const startTime = Date.now();
