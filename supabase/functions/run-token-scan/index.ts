@@ -213,6 +213,20 @@ Deno.serve(async (req) => {
     })
   }
 
+  // SECURITY: require either a valid Supabase JWT or x-internal-secret header.
+  const auth = await requireAuthOrInternal(req, corsHeaders)
+  if (auth.blocked) return auth.blocked
+
+  // Per-IP rate limit (defense in depth, even for authenticated users)
+  const ip = getClientIp(req)
+  const rl = await checkRateLimit({
+    maxRequests: auth.via === 'internal' ? 1000 : 30,
+    windowSeconds: 3600,
+    identifier: auth.userId || ip,
+    namespace: 'run-token-scan',
+  })
+  if (!rl.allowed) return createRateLimitError(rl, corsHeaders)
+
   try {
     const bodyText = await req.text()
     if (!bodyText.trim()) {
