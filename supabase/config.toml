@@ -99,3 +99,27 @@ verify_jwt = false
 
 [functions.token-health-mcp]
 verify_jwt = false
+
+[functions.weekly-token-refresh]
+verify_jwt = false
+
+[functions.kiwify-webhook]
+verify_jwt = false
+
+[functions.mcp-chat]
+verify_jwt = false
+
+[functions.compose-hero]
+verify_jwt = false
+
+[functions.orchestrate-visuals]
+verify_jwt = false
+
+[functions.ai-hero-background]
+verify_jwt = false
+
+[functions.render-chart]
+verify_jwt = false
+
+[functions.render-score-snapshot]
+verify_jwt = false
