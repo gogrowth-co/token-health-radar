@@ -102,3 +102,12 @@ verify_jwt = false
 
 [functions.kiwify-webhook]
 verify_jwt = false
+
+[functions.seo-snapshot]
+verify_jwt = false
+
+[functions.regenerate-seo-snapshot]
+verify_jwt = false
+
+[functions.regenerate-static-snapshots]
+verify_jwt = false

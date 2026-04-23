@@ -250,6 +250,16 @@ serve(async (req) => {
 
     console.log(`[scan-agent] Scan complete for ${agentData.name}`);
 
+    // Fire-and-forget: regenerate the SEO snapshot for this agent
+    fetch(`${supabaseUrl}/functions/v1/regenerate-seo-snapshot`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${supabaseServiceKey}`,
+      },
+      body: JSON.stringify({ kind: "agent", chain, agentId }),
+    }).catch((e) => console.warn(`[scan-agent] snapshot regen failed:`, e?.message));
+
     return new Response(JSON.stringify({ raw_data: result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
