@@ -24,6 +24,8 @@
 
 const SITE_URL = "https://tokenhealthscan.com";
 const DEFAULT_LOVABLE_ORIGIN = "https://token-health-radar.lovable.app";
+const SUPABASE_PROJECT = "qaqebpcqespvzbfwawlp";
+const CMS_STORAGE_BUCKET = "blog-images";
 
 const BOT_UA_PATTERN = new RegExp(
   [
@@ -61,14 +63,23 @@ const STATIC_ROUTES = new Set([
   "/token-scan-guide", "/token-sniffer-comparison", "/token-sniffer-vs-tokenhealthscan",
   "/solana-launchpads", "/ethereum-launchpads",
   "/ai-agents", "/agent-directory", "/agent-scan",
-  "/copilot", "/privacy", "/terms", "/ltd",
+  "/copilot", "/publications", "/privacy", "/terms", "/ltd",
 ]);
 
 // Dynamic route patterns
 const DYNAMIC_PATTERNS = [
   /^\/token\/[^/]+$/,                  // /token/:symbol
   /^\/agent-scan\/[^/]+\/[^/]+$/,      // /agent-scan/:chain/:agentId
+  /^\/publications\/[^/]+$/,           // /publications/:slug
 ];
+
+const CMS_STORAGE_PROXY_PATHS = {
+  "/rss.xml": "rss.xml",
+  "/rss/en.xml": "rss/en.xml",
+  "/rss-en.xml": "rss-en.xml",
+  "/llms.txt": "llms.txt",
+  "/llms-full.txt": "llms-full.txt",
+};
 
 function normalizePath(pathname) {
   let p = (pathname || "/").split("?")[0].split("#")[0];
@@ -138,6 +149,21 @@ async function proxySitemap(env) {
   });
 }
 
+async function proxyCmsStorage(path) {
+  const objectKey = CMS_STORAGE_PROXY_PATHS[path];
+  const url = `https://${SUPABASE_PROJECT}.supabase.co/storage/v1/object/public/${CMS_STORAGE_BUCKET}/${objectKey}`;
+  const upstream = await fetch(url, { cf: { cacheTtl: 600, cacheEverything: true } });
+  const contentType = objectKey.endsWith(".xml") ? "application/xml; charset=utf-8" : "text/plain; charset=utf-8";
+  return new Response(upstream.body, {
+    status: upstream.status,
+    headers: {
+      "Content-Type": contentType,
+      "Cache-Control": "public, max-age=600, s-maxage=3600",
+      "X-Served-By": "cf-worker-cms-static",
+    },
+  });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -153,6 +179,10 @@ export default {
     // Static helpers — always pass through to origin (Lovable serves /robots.txt etc)
     if (path === "/sitemap.xml") {
       try { return await proxySitemap(env); } catch (_) { /* fallthrough */ }
+    }
+
+    if (CMS_STORAGE_PROXY_PATHS[path]) {
+      try { return await proxyCmsStorage(path); } catch (_) { /* fallthrough */ }
     }
 
     // Only intercept GET HTML-ish requests
