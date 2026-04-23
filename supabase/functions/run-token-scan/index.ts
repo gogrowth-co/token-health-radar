@@ -505,6 +505,18 @@ Deno.serve(async (req) => {
     console.log(`[${requestId}] ========== SCAN COMPLETE in ${processingTime}ms ==========`)
     console.log(`[${requestId}] Scores: Security=${securityScore}, Liquidity=${liquidityScore}, Tokenomics=${tokenomicsScore}, Community=${communityScore}, Development=${developmentScore}, Overall=${overallScore}`)
 
+    // Fire-and-forget: regenerate the SEO snapshot for this token (bots love fresh HTML)
+    if (symbol) {
+      fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/regenerate-seo-snapshot`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        },
+        body: JSON.stringify({ kind: 'token', symbol }),
+      }).catch((e) => console.warn(`[${requestId}] snapshot regen failed:`, e?.message))
+    }
+
     return new Response(JSON.stringify({
       success: true,
       token_address,
@@ -748,6 +760,18 @@ async function scanSolanaToken(
 
     const processingTime = Date.now() - startTime
     console.log(`[${requestId}] ========== SOLANA SCAN COMPLETE in ${processingTime}ms ==========`)
+
+    // Fire-and-forget: regenerate the SEO snapshot for this token
+    if (symbol) {
+      fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/regenerate-seo-snapshot`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        },
+        body: JSON.stringify({ kind: 'token', symbol }),
+      }).catch((e) => console.warn(`[${requestId}] snapshot regen failed:`, e?.message))
+    }
 
     return new Response(JSON.stringify({
       success: true,
