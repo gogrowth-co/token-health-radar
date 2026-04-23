@@ -27,7 +27,12 @@ import TokenReport from "./pages/TokenReport";
 import TokenDirectory from "./pages/TokenDirectory";
 import Copilot from "./pages/Copilot";
 import NotFound from "./pages/NotFound";
+import Admin from "./pages/Admin";
+import AdminNew from "./pages/AdminNew";
+import AdminEdit from "./pages/AdminEdit";
 import AdminUsers from "./pages/AdminUsers";
+import Publications from "./pages/Publications";
+import DynamicPage from "./pages/DynamicPage";
 import AIAgents from "./pages/AIAgents";
 import AgentScan from "./pages/AgentScan";
 import AgentScanResult from "./pages/AgentScanResult";
@@ -122,6 +127,23 @@ const App = () => {
                     <Route path="/agent-directory" element={<AgentDirectory />} />
                     <Route path="/token" element={<TokenDirectory />} />
                     <Route path="/token/:symbol" element={<TokenReport />} />
+                    <Route path="/publications" element={<Publications />} />
+                    <Route path="/publications/:slug" element={<DynamicPage />} />
+                    <Route path="/admin" element={
+                      <AdminRoute>
+                        <Admin />
+                      </AdminRoute>
+                    } />
+                    <Route path="/admin/new" element={
+                      <AdminRoute>
+                        <AdminNew />
+                      </AdminRoute>
+                    } />
+                    <Route path="/admin/edit/:id" element={
+                      <AdminRoute>
+                        <AdminEdit />
+                      </AdminRoute>
+                    } />
                     <Route path="/admin/users" element={
                       <AdminRoute>
                         <AdminUsers />

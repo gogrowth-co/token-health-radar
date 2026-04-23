@@ -124,6 +124,50 @@ async function buildLiveAgentPage(chain: string, agentId: string): Promise<strin
   });
 }
 
+function esc(input: unknown): string {
+  return String(input ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function stripHtml(html: string | null): string {
+  return (html || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+async function buildLiveCmsPage(slug: string): Promise<string | null> {
+  const { data: translation } = await supabase
+    .from("page_translations")
+    .select("*, pages(*)")
+    .eq("language", "en")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (!translation?.pages || (translation.pages as any).status !== "published") return null;
+
+  const page: any = translation.pages;
+  const canonical = `https://tokenhealthscan.com/publications/${encodeURIComponent(translation.slug || page.slug)}`;
+  const title = translation.title || page.slug;
+  const description = translation.meta_description || stripHtml(translation.content).slice(0, 155) || "Token Health Scan publication.";
+  const image = page.featured_image || "https://tokenhealthscan.com/lovable-uploads/tokenhealthscan-og.png";
+  const articleLd = translation.schema || {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    image,
+    author: { "@type": "Organization", name: page.author_name || "Token Health Scan" },
+    publisher: { "@type": "Organization", name: "Token Health Scan" },
+    datePublished: page.created_at,
+    dateModified: page.updated_at,
+    mainEntityOfPage: canonical,
+  };
+
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>${esc(title)} | Token Health Scan</title><meta name="description" content="${esc(description)}"/><link rel="canonical" href="${esc(canonical)}"/><meta property="og:type" content="article"/><meta property="og:site_name" content="Token Health Scan"/><meta property="og:title" content="${esc(title)}"/><meta property="og:description" content="${esc(description)}"/><meta property="og:url" content="${esc(canonical)}"/><meta property="og:image" content="${esc(image)}"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="${esc(title)}"/><meta name="twitter:description" content="${esc(description)}"/><meta name="twitter:image" content="${esc(image)}"/><script type="application/ld+json">${JSON.stringify(articleLd).replaceAll("<", "\\u003c")}</script></head><body><main><h1>${esc(title)}</h1><p>${esc(description)}</p>${translation.content || ""}</main></body></html>`;
+}
+
 async function buildLive(path: string): Promise<string | null> {
   // Token: /token/:symbol
   const tokenMatch = path.match(/^\/token\/([^\/]+)$/);
@@ -132,6 +176,10 @@ async function buildLive(path: string): Promise<string | null> {
   // Agent scan: /agent-scan/:chain/:agentId
   const agentMatch = path.match(/^\/agent-scan\/([^\/]+)\/([^\/]+)$/);
   if (agentMatch) return buildLiveAgentPage(decodeURIComponent(agentMatch[1]), decodeURIComponent(agentMatch[2]));
+
+  // CMS publication: /publications/:slug
+  const cmsMatch = path.match(/^\/publications\/([^\/]+)$/);
+  if (cmsMatch) return buildLiveCmsPage(decodeURIComponent(cmsMatch[1]));
 
   // Static
   if (STATIC_ROUTES.includes(path as any)) return renderStaticPage(path);
