@@ -197,6 +197,110 @@ export type Database = {
         }
         Relationships: []
       }
+      page_translations: {
+        Row: {
+          content: string | null
+          created_at: string
+          featured_image_alt: string | null
+          id: string
+          language: string
+          meta_description: string | null
+          page_id: string
+          schema: Json | null
+          slug: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          featured_image_alt?: string | null
+          id?: string
+          language?: string
+          meta_description?: string | null
+          page_id: string
+          schema?: Json | null
+          slug?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          featured_image_alt?: string | null
+          id?: string
+          language?: string
+          meta_description?: string | null
+          page_id?: string
+          schema?: Json | null
+          slug?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_translations_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pages: {
+        Row: {
+          author_name: string | null
+          category: string | null
+          created_at: string
+          featured_image: string | null
+          id: string
+          is_featured: boolean
+          is_system_page: boolean
+          preserve_styles: boolean
+          read_time: string | null
+          reading_time: number | null
+          slug: string
+          status: string
+          tags: Json
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          author_name?: string | null
+          category?: string | null
+          created_at?: string
+          featured_image?: string | null
+          id?: string
+          is_featured?: boolean
+          is_system_page?: boolean
+          preserve_styles?: boolean
+          read_time?: string | null
+          reading_time?: number | null
+          slug: string
+          status?: string
+          tags?: Json
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          author_name?: string | null
+          category?: string | null
+          created_at?: string
+          featured_image?: string | null
+          id?: string
+          is_featured?: boolean
+          is_system_page?: boolean
+          preserve_styles?: boolean
+          read_time?: string | null
+          reading_time?: number | null
+          slug?: string
+          status?: string
+          tags?: Json
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           agent_scans_used: number | null
