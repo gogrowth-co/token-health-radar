@@ -111,3 +111,18 @@ verify_jwt = false
 
 [functions.regenerate-static-snapshots]
 verify_jwt = false
+
+[functions.mcp-content]
+verify_jwt = false
+
+[functions.generate-cms-rss]
+verify_jwt = false
+
+[functions.generate-cms-llms-txt]
+verify_jwt = false
+
+[functions.regenerate-cms-snapshot]
+verify_jwt = false
+
+[functions.submit-indexnow]
+verify_jwt = false
