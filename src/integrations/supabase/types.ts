@@ -1008,6 +1008,39 @@ export type Database = {
         }
         Relationships: []
       }
+      public_agent_scans: {
+        Row: {
+          agent_id: string | null
+          agent_name: string | null
+          chain: string | null
+          created_at: string | null
+          id: string | null
+          raw_data: Json | null
+          scores: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          agent_name?: string | null
+          chain?: string | null
+          created_at?: string | null
+          id?: string | null
+          raw_data?: Json | null
+          scores?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          agent_name?: string | null
+          chain?: string | null
+          created_at?: string | null
+          id?: string | null
+          raw_data?: Json | null
+          scores?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_admin_hubspot_data: {
