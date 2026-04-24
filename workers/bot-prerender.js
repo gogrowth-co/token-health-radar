@@ -164,6 +164,19 @@ async function proxyCmsStorage(path) {
   });
 }
 
+function createOriginRequest(request) {
+  const headers = new Headers(request.headers);
+  headers.set("X-Forwarded-Proto", "https");
+  headers.set("X-Forwarded-Ssl", "on");
+  headers.set("X-Url-Scheme", "https");
+  headers.set("X-Forwarded-Host", new URL(request.url).hostname);
+
+  return new Request(request, {
+    headers,
+    redirect: "manual",
+  });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -187,7 +200,7 @@ export default {
 
     // Only intercept GET HTML-ish requests
     if (request.method !== "GET" || !wantsHtml(request)) {
-      return fetch(request);
+      return fetch(createOriginRequest(request));
     }
 
     // Bots on a known route → snapshot
@@ -202,6 +215,6 @@ export default {
     }
 
     // Default: transparent passthrough to Lovable hosting
-    return fetch(request);
+    return fetch(createOriginRequest(request));
   },
 };
