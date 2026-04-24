@@ -164,6 +164,41 @@ async function proxyCmsStorage(path) {
   });
 }
 
+function createOriginRequest(request) {
+  const incomingUrl = new URL(request.url);
+  const originBase = new URL(DEFAULT_LOVABLE_ORIGIN);
+  const originUrl = new URL(`${incomingUrl.pathname}${incomingUrl.search}`, originBase);
+  const headers = new Headers(request.headers);
+  headers.set("Host", originBase.hostname);
+  headers.set("X-Forwarded-Host", incomingUrl.hostname);
+  headers.set("X-Forwarded-Proto", "https");
+  headers.set("X-Forwarded-Ssl", "on");
+  headers.set("X-Url-Scheme", "https");
+
+  return new Request(originUrl.toString(), {
+    method: request.method,
+    headers,
+    body: request.body,
+    redirect: "manual",
+  });
+}
+
+async function fetchLovableOrigin(request) {
+  const response = await fetch(createOriginRequest(request));
+  const location = response.headers.get("Location");
+  if (response.status >= 300 && response.status < 400 && location) {
+    const requestUrl = new URL(request.url);
+    const redirectUrl = new URL(location, requestUrl);
+    if (redirectUrl.hostname === requestUrl.hostname && redirectUrl.pathname === requestUrl.pathname) {
+      const headers = new Headers(response.headers);
+      headers.delete("Location");
+      headers.set("Cache-Control", "no-store");
+      return new Response(null, { status: 204, headers });
+    }
+  }
+  return response;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -187,7 +222,7 @@ export default {
 
     // Only intercept GET HTML-ish requests
     if (request.method !== "GET" || !wantsHtml(request)) {
-      return fetch(request);
+      return fetchLovableOrigin(request);
     }
 
     // Bots on a known route → snapshot
@@ -202,6 +237,6 @@ export default {
     }
 
     // Default: transparent passthrough to Lovable hosting
-    return fetch(request);
+    return fetchLovableOrigin(request);
   },
 };
