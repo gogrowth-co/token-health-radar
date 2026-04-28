@@ -87,8 +87,16 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    if (!AIRTABLE_ACCESS_TOKEN) {
+      console.error('[AIRTABLE-SYNC] AIRTABLE_ACCESS_TOKEN not configured');
+      return new Response(
+        JSON.stringify({ error: 'AIRTABLE_ACCESS_TOKEN not configured', success: false }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { operation, record }: SyncRequest = await req.json();
-    
+
     console.log(`Syncing ${operation} operation for token_reports record:`, record.id);
 
     // Prepare the record for Airtable

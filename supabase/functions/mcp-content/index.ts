@@ -27,8 +27,10 @@ async function uploadImage(args: any) { const db = supabase(); const bytes = Uin
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
   if (req.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: CORS_HEADERS });
-  const secret = Deno.env.get("MCP_CONTENT_SECRET") || ""; const provided = req.headers.get("X-MCP-Secret") || "";
-  if (!secret || !safeEqual(provided, secret)) return new Response(JSON.stringify({ jsonrpc: "2.0", error: { code: -32001, message: "Unauthorized" }, id: null }), { status: 401, headers: CORS_HEADERS });
+  const secret = Deno.env.get("MCP_CONTENT_SECRET");
+  if (!secret) { console.error("MCP_CONTENT_SECRET not configured"); return new Response(JSON.stringify({ jsonrpc: "2.0", error: { code: -32002, message: "Server misconfigured: MCP_CONTENT_SECRET missing" }, id: null }), { status: 503, headers: CORS_HEADERS }); }
+  const provided = req.headers.get("X-MCP-Secret") || "";
+  if (!safeEqual(provided, secret)) return new Response(JSON.stringify({ jsonrpc: "2.0", error: { code: -32001, message: "Unauthorized" }, id: null }), { status: 401, headers: CORS_HEADERS });
   const raw = await req.text(); if (raw.length > 1_000_000) return new Response(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "Request too large" }, id: null }), { status: 413, headers: CORS_HEADERS });
   let body: any; try { body = JSON.parse(raw); } catch { return new Response(JSON.stringify({ jsonrpc: "2.0", error: { code: -32700, message: "Parse error" }, id: null }), { status: 400, headers: CORS_HEADERS }); }
   const { method, params = {}, id } = body; const ok = (result: any) => new Response(JSON.stringify({ jsonrpc: "2.0", result, id }), { headers: CORS_HEADERS }); const err = (code: number, message: string) => new Response(JSON.stringify({ jsonrpc: "2.0", error: { code, message }, id }), { headers: CORS_HEADERS });

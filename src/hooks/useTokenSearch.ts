@@ -94,6 +94,9 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
+
     const searchTokens = async () => {
       if (!searchTerm || searchTerm.trim() === '') {
         setResults([]);
@@ -109,6 +112,7 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
 
         // Phase 1: Search tokens using Moralis API
         const moralisSearchResults = await callWithRetry(() => searchTokensByMoralis(searchTerm.trim(), 5));
+        if (signal.aborted) return;
 
         if (!moralisSearchResults || moralisSearchResults.length === 0) {
           console.log("[TOKEN-SEARCH] No tokens found");
@@ -261,10 +265,13 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
           })
         );
 
+        if (signal.aborted) return;
+
         console.log("[TOKEN-SEARCH] Final Moralis-based results:", enhancedResults);
         setResults(enhancedResults);
 
       } catch (err: any) {
+        if (signal.aborted) return;
         console.error("Token search failed:", err);
 
         // Provide more specific error messages
@@ -289,12 +296,16 @@ export default function useTokenSearch(searchTerm: string, isAuthenticated: bool
           searchTerm
         });
       } finally {
-        setIsLoading(false);
+        if (!signal.aborted) setIsLoading(false);
       }
     };
 
     // Execute search immediately without additional debouncing
     searchTokens();
+
+    return () => {
+      abortController.abort();
+    };
   }, [searchTerm]);
 
   return { results, isLoading, error };
