@@ -55,21 +55,6 @@ verify_jwt = false
 [functions.debug-api-health]
 verify_jwt = true
 
-[functions.render-chart]
-verify_jwt = false
-
-[functions.ai-hero-background]
-verify_jwt = false
-
-[functions.compose-hero]
-verify_jwt = false
-
-[functions.orchestrate-visuals]
-verify_jwt = false
-
-[functions.render-score-snapshot]
-verify_jwt = false
-
 [functions.coingecko-mcp]
 verify_jwt = false
 
