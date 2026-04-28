@@ -438,53 +438,9 @@ Make the content informative, balanced, and professional. Include specific data 
       console.error('❌ Unexpected error invoking generate-sitemap:', err);
     }
 
-    // Generate score snapshot image asynchronously (don't await to avoid blocking response)
-    const snapshotGeneration = (async () => {
-      try {
-        console.log('Generating score snapshot...');
-        
-        const { data: snapshotData, error: snapshotError } = await supabase.functions.invoke('render-score-snapshot', {
-          body: {
-            tokenName: token.name,
-            tokenSymbol: token.symbol,
-            tokenAddress,
-            chainId,
-            overallScore,
-            scores,
-            updatedAt: new Date().toISOString()
-          }
-        });
+    // Score snapshot generation removed — render-score-snapshot function deleted.
+    // Hero image generation below covers the OG image needs via generate-hero-image.
 
-        if (snapshotError || !snapshotData?.url) {
-          console.error('Failed to generate snapshot:', snapshotError);
-          return;
-        }
-
-        console.log('Snapshot generated:', snapshotData.url);
-        
-        // Update report content with snapshot URL
-        const updatedContent = {
-          ...enrichedContent,
-          metadata: {
-            ...enrichedContent.metadata,
-            snapshotUrl: snapshotData.url
-          }
-        };
-        
-        await supabase
-          .from('token_reports')
-          .update({ report_content: updatedContent })
-          .eq('id', reportData.id);
-          
-        console.log('Report updated with snapshot URL');
-        
-      } catch (error) {
-        console.error('Error in snapshot generation:', error);
-      }
-    })();
-
-    // Don't await the snapshot generation
-    snapshotGeneration.catch(err => console.error('Snapshot generation failed:', err));
 
     // Generate hero image synchronously to ensure it's available when report is accessed
     try {
