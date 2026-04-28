@@ -47,9 +47,18 @@ serve(async (req: Request) => {
     };
 
     console.log('Sending data to Make.com webhook...');
-    
+
+    const makeWebhookUrl = Deno.env.get('MAKE_WEBHOOK_URL');
+    if (!makeWebhookUrl) {
+      console.error('MAKE_WEBHOOK_URL secret not configured');
+      return new Response(
+        JSON.stringify({ success: false, error: 'MAKE_WEBHOOK_URL not configured' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 503 }
+      );
+    }
+
     // Send to Make.com webhook
-    const response = await fetch('https://hook.us2.make.com/6agypb495rymylvki6b0iw9iofu6pkds', {
+    const response = await fetch(makeWebhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

@@ -25,7 +25,16 @@ serve(async (req: Request) => {
 
   try {
     console.log('Make.com webhook triggered');
-    
+
+    const makeWebhookUrl = Deno.env.get('MAKE_WEBHOOK_URL');
+    if (!makeWebhookUrl) {
+      console.error('MAKE_WEBHOOK_URL secret not configured');
+      return new Response(
+        JSON.stringify({ success: false, error: 'MAKE_WEBHOOK_URL not configured' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 503 }
+      );
+    }
+
     // Check if this is a test request
     if (req.url.includes('test=true')) {
       console.log('Test mode - sending latest token report');
@@ -62,7 +71,7 @@ serve(async (req: Request) => {
       };
       
       // Send test data directly to Make.com
-      const response = await fetch('https://hook.us2.make.com/6agypb495rymylvki6b0iw9iofu6pkds', {
+      const response = await fetch(makeWebhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -93,9 +102,6 @@ serve(async (req: Request) => {
     
     const { record } = await req.json();
     console.log('Received record:', record);
-
-    // Make.com webhook URL
-    const makeWebhookUrl = 'https://hook.us2.make.com/6agypb495rymylvki6b0iw9iofu6pkds';
 
     // Send data to Make.com
     const response = await fetch(makeWebhookUrl, {
