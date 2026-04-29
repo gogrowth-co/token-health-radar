@@ -121,6 +121,7 @@ async function serveSnapshot(path, env) {
         }
       : {},
     cf: { cacheTtl: 300, cacheEverything: true },
+    signal: withTimeout(),
   });
   if (!upstream.ok) return null;
   const html = await upstream.text();
@@ -138,12 +139,17 @@ async function serveSnapshot(path, env) {
 
 async function proxySitemap(env) {
   const supabaseUrl = env.SUPABASE_URL;
+  if (!supabaseUrl) throw new Error("Missing SUPABASE_URL secret");
   const upstream = await fetch(`${supabaseUrl}/functions/v1/serve-sitemap`, {
     headers: env.SUPABASE_ANON_KEY
       ? { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${env.SUPABASE_ANON_KEY}` }
       : {},
     cf: { cacheTtl: 600, cacheEverything: true },
+    signal: withTimeout(),
   });
+  if (!upstream.ok) {
+    return new Response("upstream sitemap error", { status: 502, headers: { "X-Served-By": "cf-worker-sitemap" } });
+  }
   return new Response(await upstream.text(), {
     status: upstream.status,
     headers: {
@@ -154,10 +160,14 @@ async function proxySitemap(env) {
   });
 }
 
-async function proxyCmsStorage(path) {
+async function proxyCmsStorage(path, env) {
   const objectKey = CMS_STORAGE_PROXY_PATHS[path];
-  const url = `https://${SUPABASE_PROJECT}.supabase.co/storage/v1/object/public/${CMS_STORAGE_BUCKET}/${objectKey}`;
-  const upstream = await fetch(url, { cf: { cacheTtl: 600, cacheEverything: true } });
+  const projectRef = env.SUPABASE_PROJECT_REF || DEFAULT_SUPABASE_PROJECT;
+  const url = `https://${projectRef}.supabase.co/storage/v1/object/public/${CMS_STORAGE_BUCKET}/${objectKey}`;
+  const upstream = await fetch(url, { cf: { cacheTtl: 600, cacheEverything: true }, signal: withTimeout() });
+  if (!upstream.ok) {
+    return new Response("upstream cms error", { status: 502, headers: { "X-Served-By": "cf-worker-cms-static" } });
+  }
   const contentType = objectKey.endsWith(".xml") ? "application/xml; charset=utf-8" : "text/plain; charset=utf-8";
   return new Response(upstream.body, {
     status: upstream.status,
