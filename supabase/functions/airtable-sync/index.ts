@@ -1,8 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const AIRTABLE_ACCESS_TOKEN = Deno.env.get('AIRTABLE_ACCESS_TOKEN');
-const AIRTABLE_BASE_ID = 'app4JRfXh5wCJcqBj';
-const AIRTABLE_TABLE_ID = 'tblnIbszxeVftpsiU';
+const AIRTABLE_BASE_ID = Deno.env.get('AIRTABLE_BASE_ID') || 'app4JRfXh5wCJcqBj';
+const AIRTABLE_TABLE_ID = Deno.env.get('AIRTABLE_TABLE_ID') || 'tblnIbszxeVftpsiU';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
