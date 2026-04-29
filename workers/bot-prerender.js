@@ -24,8 +24,13 @@
 
 const SITE_URL = "https://tokenhealthscan.com";
 const DEFAULT_LOVABLE_ORIGIN = "https://token-health-radar.lovable.app";
-const SUPABASE_PROJECT = "qaqebpcqespvzbfwawlp";
+const DEFAULT_SUPABASE_PROJECT = "qaqebpcqespvzbfwawlp";
 const CMS_STORAGE_BUCKET = "blog-images";
+const UPSTREAM_TIMEOUT_MS = 5000;
+
+function withTimeout(ms = UPSTREAM_TIMEOUT_MS) {
+  return AbortSignal.timeout(ms);
+}
 
 const BOT_UA_PATTERN = new RegExp(
   [
