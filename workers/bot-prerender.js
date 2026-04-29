@@ -232,7 +232,7 @@ export default {
     }
 
     if (CMS_STORAGE_PROXY_PATHS[path]) {
-      try { return await proxyCmsStorage(path); } catch (_) { /* fallthrough */ }
+      try { return await proxyCmsStorage(path, env); } catch (_) { /* fallthrough */ }
     }
 
     // Only intercept GET HTML-ish requests
