@@ -123,8 +123,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Test Airtable API connection
     console.log('Testing Airtable API connection...');
+    const baseId = Deno.env.get('AIRTABLE_BASE_ID') || 'app4JRfXh5wCJcqBj';
+    const tableId = Deno.env.get('AIRTABLE_TABLE_ID') || 'tblnIbszxeVftpsiU';
     const testResponse = await fetch(
-      'https://api.airtable.com/v0/app4JRfXh5wCJcqBj/tblnIbszxeVftpsiU?maxRecords=1',
+      `https://api.airtable.com/v0/${baseId}/${tableId}?maxRecords=1`,
       {
         headers: {
           'Authorization': `Bearer ${airtableToken}`,
