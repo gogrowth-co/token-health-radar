@@ -26,7 +26,7 @@ interface ApiHealthResults {
     webacy: ApiTest;
     goplus: ApiTest;
     moralis: ApiTest;
-    gecko: ApiTest;
+    moralisPrice: ApiTest;
     github: ApiTest;
   };
   summary: {
