@@ -35,5 +35,6 @@ export {
   calculateDevelopmentScore
 };
 
-// Keep GeckoTerminalData name for compatibility but use Moralis Price API
-export const fetchGeckoTerminalData = fetchMoralisPriceData;
+// NOTE: A previous `fetchGeckoTerminalData` alias pointed at Moralis Price.
+// It was removed because it caused the API Health dashboard to mislabel
+// Moralis as GeckoTerminal. Use `fetchMoralisPriceData` directly instead.

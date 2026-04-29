@@ -1,9 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
-import { 
+import {
   fetchGoPlusSecurity,
   fetchWebacySecurity,
-  fetchGeckoTerminalData,
+  fetchMoralisPriceData,
   fetchMoralisMetadata,
   fetchGitHubRepoData
 } from '../_shared/apiClients.ts'
@@ -33,7 +33,7 @@ async function testApiHealth(testTokenAddress: string = '0x808507121b80c02388fad
       webacy: { status: 'pending', data: null, error: null, responseTime: 0 },
       goplus: { status: 'pending', data: null, error: null, responseTime: 0 },
       moralis: { status: 'pending', data: null, error: null, responseTime: 0 },
-      gecko: { status: 'pending', data: null, error: null, responseTime: 0 },
+      moralisPrice: { status: 'pending', data: null, error: null, responseTime: 0 },
       github: { status: 'pending', data: null, error: null, responseTime: 0 }
     }
   };
@@ -110,28 +110,28 @@ async function testApiHealth(testTokenAddress: string = '0x808507121b80c02388fad
     console.error(`[API-HEALTH] Moralis failed:`, error);
   }
 
-  // Test GeckoTerminal API
+  // Test Moralis Price API (previously mislabeled as GeckoTerminal)
   try {
-    console.log(`[API-HEALTH] Testing GeckoTerminal API...`);
+    console.log(`[API-HEALTH] Testing Moralis Price API...`);
     const startTime = Date.now();
-    const geckoData = await fetchGeckoTerminalData(testTokenAddress, testChainId);
+    const priceData = await fetchMoralisPriceData(testTokenAddress, testChainId);
     const responseTime = Date.now() - startTime;
-    
-    results.tests.gecko = {
-      status: geckoData ? 'success' : 'no_data',
-      data: geckoData,
+
+    results.tests.moralisPrice = {
+      status: priceData ? 'success' : 'no_data',
+      data: priceData,
       error: null,
       responseTime
     };
-    console.log(`[API-HEALTH] GeckoTerminal: ${results.tests.gecko.status} (${responseTime}ms)`);
+    console.log(`[API-HEALTH] Moralis Price: ${results.tests.moralisPrice.status} (${responseTime}ms)`);
   } catch (error) {
-    results.tests.gecko = {
+    results.tests.moralisPrice = {
       status: 'error',
       data: null,
       error: error.message,
       responseTime: 0
     };
-    console.error(`[API-HEALTH] GeckoTerminal failed:`, error);
+    console.error(`[API-HEALTH] Moralis Price failed:`, error);
   }
 
   // Test GitHub API (if we have a GitHub URL)
