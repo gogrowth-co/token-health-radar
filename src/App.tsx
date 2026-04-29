@@ -27,10 +27,6 @@ import TokenReport from "./pages/TokenReport";
 import TokenDirectory from "./pages/TokenDirectory";
 import Copilot from "./pages/Copilot";
 import NotFound from "./pages/NotFound";
-import Admin from "./pages/Admin";
-import AdminNew from "./pages/AdminNew";
-import AdminEdit from "./pages/AdminEdit";
-import AdminUsers from "./pages/AdminUsers";
 import Publications from "./pages/Publications";
 import DynamicPage from "./pages/DynamicPage";
 import AIAgents from "./pages/AIAgents";
@@ -39,7 +35,20 @@ import AgentScanResult from "./pages/AgentScanResult";
 import AgentScanSearch from "./pages/AgentScanSearch";
 import AgentDirectory from "./pages/AgentDirectory";
 import AdminRoute from "./components/admin/AdminRoute";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
+import { Loader2 } from "lucide-react";
+
+// Lazy-loaded admin/CMS pages (admin-only, rarely accessed by most users)
+const Admin = lazy(() => import("./pages/Admin"));
+const AdminNew = lazy(() => import("./pages/AdminNew"));
+const AdminEdit = lazy(() => import("./pages/AdminEdit"));
+const AdminUsers = lazy(() => import("./pages/AdminUsers"));
+
+const AdminFallback = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  </div>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -131,22 +140,22 @@ const App = () => {
                     <Route path="/publications/:slug" element={<DynamicPage />} />
                     <Route path="/admin" element={
                       <AdminRoute>
-                        <Admin />
+                        <Suspense fallback={<AdminFallback />}><Admin /></Suspense>
                       </AdminRoute>
                     } />
                     <Route path="/admin/new" element={
                       <AdminRoute>
-                        <AdminNew />
+                        <Suspense fallback={<AdminFallback />}><AdminNew /></Suspense>
                       </AdminRoute>
                     } />
                     <Route path="/admin/edit/:id" element={
                       <AdminRoute>
-                        <AdminEdit />
+                        <Suspense fallback={<AdminFallback />}><AdminEdit /></Suspense>
                       </AdminRoute>
                     } />
                     <Route path="/admin/users" element={
                       <AdminRoute>
-                        <AdminUsers />
+                        <Suspense fallback={<AdminFallback />}><AdminUsers /></Suspense>
                       </AdminRoute>
                     } />
                     <Route path="*" element={<NotFound />} />

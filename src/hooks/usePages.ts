@@ -60,7 +60,7 @@ async function triggerOutputs(slug?: string) {
     supabase.functions.invoke("generate-cms-rss"),
     supabase.functions.invoke("generate-cms-llms-txt"),
     supabase.functions.invoke("regenerate-cms-snapshot", { body: slug ? { slug } : { all: true } }),
-    slug ? supabase.functions.invoke("submit-indexnow", { body: { url: `https://tokenhealthscan.com/publications/${slug}` } }) : Promise.resolve(),
+    slug ? supabase.functions.invoke("submit-indexnow", { body: { url: `${typeof window !== "undefined" ? window.location.origin : "https://tokenhealthscan.com"}/publications/${slug}` } }) : Promise.resolve(),
   ]);
 }
 

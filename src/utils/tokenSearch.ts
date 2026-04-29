@@ -4,7 +4,54 @@ import { TokenResult } from "@/components/token/types";
 
 // Cache for token detail responses to reduce API calls - versioned
 export const CACHE_VERSION = "v5"; // Increment for Demo Plan authentication changes
-export const tokenDetailCache: Record<string, any> = {};
+
+// Bounded LRU cache with TTL for token detail responses
+const TOKEN_CACHE_MAX = 100;
+const TOKEN_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+interface CacheEntry {
+  value: any;
+  expiresAt: number;
+}
+
+const cacheMap = new Map<string, CacheEntry>();
+
+export const tokenDetailCache = new Proxy({} as Record<string, any>, {
+  get(_target, prop: string) {
+    const entry = cacheMap.get(prop);
+    if (!entry) return undefined;
+    if (Date.now() > entry.expiresAt) {
+      cacheMap.delete(prop);
+      return undefined;
+    }
+    // refresh recency (LRU)
+    cacheMap.delete(prop);
+    cacheMap.set(prop, entry);
+    return entry.value;
+  },
+  set(_target, prop: string, value: any) {
+    if (cacheMap.has(prop)) cacheMap.delete(prop);
+    cacheMap.set(prop, { value, expiresAt: Date.now() + TOKEN_CACHE_TTL_MS });
+    while (cacheMap.size > TOKEN_CACHE_MAX) {
+      const oldestKey = cacheMap.keys().next().value;
+      if (oldestKey === undefined) break;
+      cacheMap.delete(oldestKey);
+    }
+    return true;
+  },
+  has(_target, prop: string) {
+    const entry = cacheMap.get(prop);
+    if (!entry) return false;
+    if (Date.now() > entry.expiresAt) {
+      cacheMap.delete(prop);
+      return false;
+    }
+    return true;
+  },
+  deleteProperty(_target, prop: string) {
+    return cacheMap.delete(prop);
+  },
+});
 
 // Demo Plan rate limits: 30 calls/min (2 seconds between calls)
 let lastApiCallTime = 0;

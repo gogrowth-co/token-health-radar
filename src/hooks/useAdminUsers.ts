@@ -185,7 +185,16 @@ export function useAdminUsers() {
   };
 
   useEffect(() => {
-    fetchUsers();
+    let mounted = true;
+    (async () => {
+      await fetchUsers();
+      if (!mounted) {
+        // component unmounted before fetch completed; skip state updates downstream
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return {
