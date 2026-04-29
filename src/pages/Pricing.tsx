@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, AlertCircle } from "lucide-react";
+import { safeRedirect } from "@/lib/safeRedirect";
 
 export default function Pricing() {
   const [isLoading, setIsLoading] = useState(false);
@@ -74,9 +75,11 @@ export default function Pricing() {
       }
 
       console.log("Received checkout URL:", data.url);
-      
-      // Redirect to Stripe checkout
-      window.location.href = data.url;
+
+      // Redirect to Stripe checkout (validated against allowlist)
+      if (!safeRedirect(data.url)) {
+        throw new Error("Received an unexpected checkout URL");
+      }
     } catch (error) {
       console.error("Error creating checkout session:", error);
       setCheckoutError(error instanceof Error ? error.message : "Unknown error occurred");

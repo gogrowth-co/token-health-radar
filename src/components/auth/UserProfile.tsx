@@ -9,6 +9,7 @@ import { Loader2, Crown } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { useUserRole } from "@/hooks/useUserRole";
+import { safeRedirect } from "@/lib/safeRedirect";
 
 type SubscriberData = {
   plan: string;
@@ -80,7 +81,13 @@ export function UserProfile() {
       if (error) throw new Error(error.message);
       
       if (data?.url) {
-        window.location.href = data.url;
+        if (!safeRedirect(data.url)) {
+          toast({
+            title: "Error",
+            description: "Received an unexpected portal URL. Please contact support.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       console.error("Error creating customer portal session:", error);
