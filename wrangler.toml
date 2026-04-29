@@ -1,7 +1,6 @@
 name = "bot-prerender"
 main = "workers/bot-prerender.js"
 compatibility_date = "2024-09-23"
-compatibility_flags = ["nodejs_compat"]
 
 [[routes]]
 pattern = "tokenhealthscan.com/*"
