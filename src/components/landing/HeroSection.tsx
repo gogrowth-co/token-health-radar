@@ -14,15 +14,15 @@ const HeroSection = memo(() => {
         <div className="flex justify-center mb-6">
           <div className="inline-flex items-center rounded-full text-sm font-medium overflow-hidden">
             <span className="px-3 py-2 bg-blue-600 text-white">Built for protocol founders</span>
-            <span className="px-4 py-2 bg-blue-900 text-white">Live data · No SQL</span>
+            <span className="px-4 py-2 bg-blue-900 text-white">Live data · Instant verdict</span>
           </div>
         </div>
         <div className="space-y-3 md:space-y-4 max-w-4xl mx-auto">
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
-            Your token is struggling. Find out exactly why.
+            Know exactly where your token stands.
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Stop opening 5 tabs and getting no verdict. Token Health Scan returns a 0–100 score across all 5 dimensions — with a ranked list of what to fix — in 60 seconds.
+            Five dimensions. One score. A ranked fix list — in 60 seconds. Free, no login.
           </p>
         </div>
         
