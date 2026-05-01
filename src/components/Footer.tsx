@@ -35,8 +35,11 @@ export default function Footer() {
           </nav>
         </div>
         
-        {/* Disclaimer */}
+        {/* Tagline */}
         <div className="max-w-4xl text-center">
+          <p className="text-sm font-medium leading-relaxed mb-3">
+            Data from 7+ live APIs. No cached results. Built for protocol teams.
+          </p>
           <p className="text-xs text-muted-foreground leading-relaxed">
             Token Health Scan provides automated token assessments using public data from third-party sources. This information is for informational purposes only and does not constitute financial, legal, or investment advice. Cryptoassets carry significant risk, including loss of capital. Always do your own research.
           </p>

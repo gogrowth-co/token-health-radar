@@ -1,7 +1,7 @@
 
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
-import { Shield, Droplet, BarChart3, Globe, Code, ArrowRight } from "lucide-react";
+import { Shield, Droplet, BarChart3, Globe, Code, ListChecks, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const FeatureGridSection = memo(() => {
@@ -9,13 +9,13 @@ const FeatureGridSection = memo(() => {
     <section className="py-12 md:py-16">
       <div className="container px-4 md:px-6">
         <div className="text-center mb-8 md:mb-10">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tighter">Comprehensive Token Analysis</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tighter">Every Angle Covered</h2>
           <p className="text-base md:text-lg text-muted-foreground mt-2 max-w-2xl mx-auto leading-relaxed">
-            Get detailed insights across 5 critical categories
+            Most tools check one thing. Token Health Scan combines all five into one actionable number — and tells you what to do about it.
           </p>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-4">
           <div className="bg-card rounded-lg border p-4 text-center hover:shadow-md transition-shadow min-h-[120px] flex flex-col justify-center">
             <Shield className="h-8 w-8 mx-auto mb-2 text-primary" />
             <h3 className="font-medium">Security</h3>
@@ -40,10 +40,16 @@ const FeatureGridSection = memo(() => {
             <p className="text-sm text-muted-foreground mt-1">Social presence & growth</p>
           </div>
           
-          <div className="bg-card rounded-lg border p-4 text-center hover:shadow-md transition-shadow min-h-[120px] flex flex-col justify-center sm:col-span-2 lg:col-span-1">
+          <div className="bg-card rounded-lg border p-4 text-center hover:shadow-md transition-shadow min-h-[120px] flex flex-col justify-center">
             <Code className="h-8 w-8 mx-auto mb-2 text-primary" />
             <h3 className="font-medium">Development</h3>
             <p className="text-sm text-muted-foreground mt-1">Activity & contributor metrics</p>
+          </div>
+
+          <div className="bg-card rounded-lg border-2 border-primary p-4 text-center hover:shadow-md transition-shadow min-h-[120px] flex flex-col justify-center">
+            <ListChecks className="h-8 w-8 mx-auto mb-2 text-primary" />
+            <h3 className="font-medium">Remediation — Fix list</h3>
+            <p className="text-sm text-muted-foreground mt-1">Built for protocol teams. Every issue gets a specific action, ranked by severity. No other tool does this.</p>
           </div>
         </div>
         
