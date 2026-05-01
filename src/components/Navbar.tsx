@@ -49,6 +49,10 @@ export default function Navbar() {
         
         <div className="flex items-center gap-1 sm:gap-2">
           <ThemeToggle />
+          {/* Desktop scan CTA */}
+          <Button asChild size="sm" className="hidden md:inline-flex">
+            <Link to="/">Scan Your Token →</Link>
+          </Button>
           {/* Desktop auth button */}
           <div className="hidden md:block">
             <AuthButton />
