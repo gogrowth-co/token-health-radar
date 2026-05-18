@@ -72,7 +72,7 @@ export function usePublicPage(slug: string | undefined) {
         .from("pages")
         .select("*, page_translations(*)")
         .eq("status", "published")
-        .or(`slug.eq.${slug},page_translations.slug.eq.${slug}`)
+        .or(`slug.eq."${slug}",page_translations.slug.eq."${slug}"`)
         .eq("page_translations.language", "en")
         .limit(1)
         .maybeSingle();
