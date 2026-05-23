@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# ============================================================
+# token-health-radar — Web3 analytics tool
+# ============================================================
+
+language: "en-US"
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+
+  path_instructions:
+    - path: "**/*"
+      instructions: |
+        Web3 analytics tool. Check for:
+        - Hardcoded API keys (DeFiLlama, Dune, CoinGecko, etc.)
+        - Private key or wallet credentials
+        - SQL injection in any database queries
+        - Missing validation on blockchain addresses from user input
+        - Unhandled RPC provider failures
+        - Cached data served as live data without staleness check
+
+    - path: "**/.env*"
+      instructions: |
+        CRITICAL: .env files must never be committed.
+
+  tools:
+    semgrep:
+      enabled: true
+    gitleaks:
+      enabled: true
+    trufflehog:
+      enabled: true
+
+chat:
+  auto_reply: true
