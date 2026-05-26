@@ -316,6 +316,8 @@ type StaticKey =
   | "/token-directory"
   | "/token-scan-guide"
   | "/token-sniffer-comparison"
+  | "/token-sniffer-vs-tokenhealthscan"
+  | "/publications"
   | "/solana-launchpads"
   | "/ethereum-launchpads"
   | "/ai-agents"
