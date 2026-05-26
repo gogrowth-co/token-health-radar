@@ -45,9 +45,11 @@ export async function verifyJwt(req: Request): Promise<{ userId?: string; valid:
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } }
     );
-    const { data, error } = await supabase.auth.getClaims(token);
-    if (error || !data?.claims) return { valid: false };
-    return { userId: data.claims.sub as string, valid: true };
+    // Use getUser() — the correct Supabase JS v2 method for JWT validation.
+    // getClaims() does not exist in v2 and causes every auth check to fail.
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data?.user) return { valid: false };
+    return { userId: data.user.id, valid: true };
   } catch {
     return { valid: false };
   }
