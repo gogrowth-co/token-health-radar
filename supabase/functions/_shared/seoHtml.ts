@@ -316,6 +316,8 @@ type StaticKey =
   | "/token-directory"
   | "/token-scan-guide"
   | "/token-sniffer-comparison"
+  | "/token-sniffer-vs-tokenhealthscan"
+  | "/publications"
   | "/solana-launchpads"
   | "/ethereum-launchpads"
   | "/ai-agents"
@@ -506,6 +508,85 @@ const STATIC_DEFS: Record<StaticKey, { title: string; description: string; h1: s
     description: "Lifetime access to Token Health Scan Pro features.",
     h1: "Lifetime Deal",
     body: `<p>One-time payment for lifetime Pro access. Limited availability.</p>`,
+  },
+  "/token-sniffer-vs-tokenhealthscan": {
+    title: `Token Sniffer vs Token Health Scan — Honest Comparison`,
+    description: "Compare Token Sniffer and Token Health Scan: scoring depth, supported chains, AI analysis, security signals, and pricing. See which tool surfaces more risks.",
+    h1: "Token Sniffer vs Token Health Scan",
+    body: `
+      <p>Token Sniffer and Token Health Scan both help investors spot token risks — but they differ significantly in scope and depth.</p>
+      <h2>What Token Health Scan adds</h2>
+      <ul>
+        <li><strong>AI risk narrative</strong> — plain-English summary of every risk flag, not just raw data</li>
+        <li><strong>Solana support</strong> — full scoring on Solana tokens, not just EVM chains</li>
+        <li><strong>Development scoring</strong> — GitHub activity, contributors, and code health signals</li>
+        <li><strong>Community scoring</strong> — LunarCrush social sentiment, holder growth, social dominance</li>
+        <li><strong>Locked liquidity duration</strong> — not just whether liquidity is locked, but for how long</li>
+      </ul>
+      <h2>When to use Token Sniffer</h2>
+      <p>Token Sniffer is useful for a fast contract-level honeypot check on EVM tokens. It does not provide AI analysis, Solana support, or development/community signals.</p>
+      <h2>When to use Token Health Scan</h2>
+      <p>Use Token Health Scan when you need a full five-dimension audit — security, liquidity, tokenomics, community, and development — with an AI-generated risk narrative and support across seven chains.</p>
+      <p><a href="${SITE_URL}/token">Scan a token now →</a></p>`,
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline: "Token Sniffer vs Token Health Scan",
+        description: "Compare Token Sniffer and Token Health Scan across scoring depth, chains, AI analysis, and pricing.",
+        author: { "@type": "Organization", name: SITE_NAME },
+        publisher: { "@type": "Organization", name: SITE_NAME },
+        mainEntityOfPage: `${SITE_URL}/token-sniffer-vs-tokenhealthscan`,
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: [
+          {
+            "@type": "Question",
+            name: "Is Token Health Scan better than Token Sniffer?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Token Health Scan covers more dimensions: security, liquidity, tokenomics, community, and development — including Solana support and AI risk narrative. Token Sniffer focuses primarily on EVM contract-level honeypot detection.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Does Token Health Scan support Solana?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Yes. Token Health Scan supports Ethereum, BNB Chain, Polygon, Arbitrum, Base, Optimism, and Solana. Token Sniffer is EVM-only.",
+            },
+          },
+        ],
+      },
+    ],
+  },
+  "/publications": {
+    title: `Research & Publications | ${SITE_NAME}`,
+    description: "In-depth research on DeFi token risk, exploit patterns, on-chain health signals, and protocol audits. Written by the Token Health Scan team.",
+    h1: "Research & Publications",
+    body: `
+      <p>Original research and analysis from the Token Health Scan team — covering DeFi exploit patterns, on-chain risk signals, and protocol health deep dives.</p>
+      <h2>Featured topics</h2>
+      <ul>
+        <li>DeFi token collapse patterns and early warning signals</li>
+        <li>Smart contract audit limitations and what audits miss</li>
+        <li>On-chain signals that predicted major exploits</li>
+        <li>How Token Health Scan scores a protocol across five dimensions</li>
+        <li>Monthly DeFi exploit reports</li>
+      </ul>
+      <p><a href="${SITE_URL}/publications/defi-token-collapse-patterns">Read: 5 DeFi Token Collapse Patterns →</a></p>`,
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "Token Health Scan Research & Publications",
+        description: "In-depth DeFi risk research and protocol health analysis.",
+        url: `${SITE_URL}/publications`,
+        publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+      },
+    ],
   },
 };
 
