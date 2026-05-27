@@ -206,6 +206,25 @@ export default function Pricing() {
                 ) : "Upgrade & Save"}
                 onCtaClick={() => handleUpgrade(pricePlans.annual, "annual")}
               />
+              <PricingCard 
+                name="API"
+                price="99"
+                interval="per month"
+                badge="API ACCESS"
+                className="md:col-span-3 border-blue-500 shadow-lg shadow-blue-500/20"
+                features={[
+                  "1,000 token scans per month",
+                  "5-dimension JSON response per scan",
+                  "Composite 0-100 score in one API call",
+                  "Bulk scan: up to 50 tokens per request",
+                  "ERC-8004 AI agent trust score",
+                  "REST endpoint + API key auth",
+                  "Priority email support"
+                ]}
+                popular={true}
+                cta="Join Beta Waitlist"
+                onCtaClick={() => window.open("https://tally.so/r/wkEQ0y", "_blank")}
+              />
             </div>
           </div>
         </section>
