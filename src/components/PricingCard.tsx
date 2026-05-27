@@ -15,6 +15,8 @@ interface PricingCardProps {
   cta: React.ReactNode;
   popular?: boolean;
   onCtaClick?: () => void;
+  badge?: string;
+  className?: string;
 }
 
 export default function PricingCard({
@@ -26,13 +28,15 @@ export default function PricingCard({
   limitation,
   cta,
   popular = false,
-  onCtaClick
+  onCtaClick,
+  badge,
+  className
 }: PricingCardProps) {
   return (
-    <Card className={`relative flex flex-col ${popular ? 'border-primary shadow-lg shadow-primary/20' : ''}`}>
-      {popular && (
+    <Card className={`relative flex flex-col ${popular && !badge ? 'border-primary shadow-lg shadow-primary/20' : ''} ${className || ''}`}>
+      {(popular || badge) && (
         <div className="absolute -top-3 left-0 right-0 mx-auto w-fit">
-          <Badge variant="default" className="px-3 py-1">Most Popular</Badge>
+          <Badge variant={badge ? "blue" : "default"} className="px-3 py-1">{badge || "Most Popular"}</Badge>
         </div>
       )}
       
