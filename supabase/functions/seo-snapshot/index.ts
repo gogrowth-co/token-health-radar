@@ -79,23 +79,27 @@ async function buildLiveTokenPage(symbol: string): Promise<string | null> {
     .maybeSingle();
 
   const rc: any = report.report_content || {};
-  const scores = rc?.scores || {};
+  // Scores live under report_content.metadata (metadata.scores /
+  // metadata.overallScore) — the top-level rc.scores path was never
+  // populated and rendered every score as "—". Fixed 2026-08-05.
+  const meta: any = rc?.metadata || {};
+  const scores = rc?.scores || meta?.scores || {};
 
   const input: TokenSnapshotInput = {
     symbol,
-    name: report.token_name || cache?.name || symbol,
-    address: report.token_address,
-    chain: report.chain_id,
-    overall_score: rc?.overall_score ?? null,
+    name: report.token_name || cache?.name || meta?.tokenName || symbol,
+    address: report.token_address || meta?.tokenAddress || null,
+    chain: report.chain_id || meta?.chainId || null,
+    overall_score: rc?.overall_score ?? meta?.overallScore ?? null,
     security_score: scores?.security ?? null,
     liquidity_score: scores?.liquidity ?? null,
     tokenomics_score: scores?.tokenomics ?? null,
     community_score: scores?.community ?? null,
     development_score: scores?.development ?? null,
-    ai_analysis: rc?.ai_analysis || rc?.summary || null,
-    description: cache?.description || null,
-    price_usd: cache?.current_price_usd ?? null,
-    market_cap_usd: cache?.market_cap_usd ?? null,
+    ai_analysis: rc?.ai_analysis || rc?.summary || rc?.riskOverview || null,
+    description: cache?.description || rc?.whatIsToken || null,
+    price_usd: cache?.current_price_usd ?? meta?.currentPrice ?? null,
+    market_cap_usd: cache?.market_cap_usd ?? meta?.marketCap ?? null,
     hero_image_url: rc?.hero_image_url || null,
     updated_at: report.updated_at,
   };

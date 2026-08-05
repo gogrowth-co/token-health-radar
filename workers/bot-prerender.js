@@ -1,257 +1,203 @@
-/**
- * Cloudflare Worker — Bot Prerender + Edge Router
- *
- * Single edge entry point in front of Lovable hosting (tokenhealthscan.com).
- *
- *  • Bots/crawlers/unfurlers (Google, GPTBot, PerplexityBot, ClaudeBot,
- *    Gemini, OAI-SearchBot, social unfurlers, audit tools, ...) on a
- *    known route → fetch from the Supabase `seo-snapshot` edge function
- *    and serve that HTML on the first byte.
- *
- *  • Static helpers (/sitemap.xml, /robots.txt, /llms.txt, /rss.xml) →
- *    proxy to the appropriate origin (Supabase edge fn or Lovable static).
- *
- *  • *.lovable.app/* → 301 to https://tokenhealthscan.com/...
- *
- *  • Everything else → transparent passthrough to Lovable hosting (SPA).
- *
- * Deploy: wrangler deploy
- * Secrets:
- *   wrangler secret put SUPABASE_URL          (e.g. https://qaqebpcqespvzbfwawlp.supabase.co)
- *   wrangler secret put SUPABASE_ANON_KEY     (publishable / anon key)
- *   wrangler secret put LOVABLE_ORIGIN        (defaults to https://token-health-radar.lovable.app)
- */
+// tokenhealthscan-bot-prerender v2.0 — 2026-08-05
+// Changes vs v1 (deployed as tokenhealthscan-bot-prerender):
+// - Hard 404 propagation (mangabeira-snapshot-router v2.6 pattern):
+//   when a bot hits a known dynamic route pattern (/token/:sym,
+//   /publications/:slug, /agent-scan/:chain/:id) and seo-snapshot
+//   returns 404, serve a real 404 page instead of falling through
+//   to the SPA origin (which returns index.html at 200 = soft 404).
+// - Bots on fully unknown routes get X-Robots-Tag: noindex on the
+//   origin response so junk URLs can never be indexed.
+// - Static-file proxy + og-image fix behavior unchanged.
 
-const SITE_URL = "https://tokenhealthscan.com";
-const DEFAULT_LOVABLE_ORIGIN = "https://token-health-radar.lovable.app";
-const DEFAULT_SUPABASE_PROJECT = "qaqebpcqespvzbfwawlp";
-const CMS_STORAGE_BUCKET = "blog-images";
-const UPSTREAM_TIMEOUT_MS = 5000;
+const FIXED_OG_IMAGE = "https://tokenhealthscan.com/lovable-uploads/tokenhealthscan-og.png";
 
-function withTimeout(ms = UPSTREAM_TIMEOUT_MS) {
-  return AbortSignal.timeout(ms);
+async function fixOgImage(response) {
+  const ct = response.headers.get("content-type") || "";
+  if (!ct.includes("text/html")) return response;
+  const text = await response.text();
+  if (!text.includes("storage.googleapis.com/gpt-engineer-file-uploads")) return new Response(text, response);
+  const fixed = text.replace(/https:\/\/storage\.googleapis\.com\/gpt-engineer-file-uploads\/[^"]+/g, FIXED_OG_IMAGE);
+  return new Response(fixed, { status: response.status, headers: response.headers });
 }
 
-const BOT_UA_PATTERN = new RegExp(
-  [
-    // Search engines
-    "googlebot", "google-inspectiontool", "googleother",
-    "bingbot", "duckduckbot", "duckassistbot",
-    "yandexbot", "baiduspider", "sogou", "exabot", "ia_archiver", "applebot",
-    "applebot-extended", "msnbot", "teoma", "rogerbot", "seznambot", "slurp",
-    // AI / AEO crawlers
-    "gptbot", "chatgpt-user", "oai-searchbot",
-    "claudebot", "anthropic-ai", "claude-web",
-    "perplexitybot", "perplexity-user",
-    "google-extended", "googleother", "gemini",
-    "ccbot", "meta-externalagent", "meta-externalfetcher", "facebookbot",
-    "bytespider", "amazonbot", "cohere-ai", "cohere-bot",
-    "mistralai", "mistral", "xai", "grok", "diffbot",
-    "petalbot", "youbot", "you.com", "kagibot", "phindbot",
-    "omgili", "mojeekbot",
-    // Social unfurlers
-    "twitterbot", "facebookexternalhit", "linkedinbot", "slackbot",
-    "whatsapp", "telegrambot", "discordbot", "embedly", "redditbot",
-    "pinterestbot", "vkshare", "nuzzel", "bitlybot",
-    // SEO / audit tools
-    "semrushbot", "ahrefsbot", "ahrefssiteaudit", "mj12bot", "dotbot",
-    "screaming frog", "sitebulb", "lighthouse", "chrome-lighthouse",
-    "headlesschrome", "pagespeed", "gtmetrix", "pingdom",
-    "mozcrawler", "moz.com",
-  ].join("|"),
-  "i"
-);
+const SUPABASE_PROJECT = "qaqebpcqespvzbfwawlp";
+const SUPABASE_URL = `https://${SUPABASE_PROJECT}.supabase.co`;
+const SITEMAP_BUCKET = "sitemaps";
+const STATIC_FILE_BUCKET = "seo-snapshots";
 
-// Static allowlist
-const STATIC_ROUTES = new Set([
-  "/", "/pricing", "/token", "/token-directory",
-  "/token-scan-guide", "/token-sniffer-comparison", "/token-sniffer-vs-tokenhealthscan",
-  "/solana-launchpads", "/ethereum-launchpads",
-  "/ai-agents", "/agent-directory", "/agent-scan",
-  "/copilot", "/publications", "/privacy", "/terms", "/ltd",
-]);
-
-// Dynamic route patterns
-const DYNAMIC_PATTERNS = [
-  /^\/token\/[^/]+$/,                  // /token/:symbol
-  /^\/agent-scan\/[^/]+\/[^/]+$/,      // /agent-scan/:chain/:agentId
-  /^\/publications\/[^/]+$/,           // /publications/:slug
-];
-
-const CMS_STORAGE_PROXY_PATHS = {
-  "/rss.xml": "rss.xml",
-  "/rss/en.xml": "rss/en.xml",
-  "/rss-en.xml": "rss-en.xml",
-  "/llms.txt": "llms.txt",
-  "/llms-full.txt": "llms-full.txt",
+const STORAGE_PROXY_PATHS = {
+  "/sitemap.xml": {
+    url: `${SUPABASE_URL}/storage/v1/object/public/${SITEMAP_BUCKET}/sitemap.xml`,
+    contentType: "application/xml; charset=utf-8"
+  },
+  "/llms.txt": {
+    url: `${SUPABASE_URL}/storage/v1/object/public/${STATIC_FILE_BUCKET}/llms.txt`,
+    contentType: "text/plain; charset=utf-8"
+  },
+  "/rss.xml": {
+    url: `${SUPABASE_URL}/functions/v1/rss-feed`,
+    contentType: "application/rss+xml; charset=utf-8"
+  },
+  "/f8a3d2e1b4c7059e6a8f3b2d1e4c7059.txt": {
+    url: `${SUPABASE_URL}/storage/v1/object/public/${STATIC_FILE_BUCKET}/f8a3d2e1b4c7059e6a8f3b2d1e4c7059.txt`,
+    contentType: "text/plain; charset=utf-8"
+  }
 };
 
+const BOT_UA_REGEX = /bot|crawler|spider|crawling|googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|duckassistbot|slurp|yandexbot|baiduspider|applebot|applebot-extended|gptbot|chatgpt-user|oai-searchbot|claudebot|anthropic-ai|claude-web|perplexitybot|perplexity-user|google-extended|gemini|ccbot|meta-externalagent|meta-externalfetcher|facebookbot|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|discordbot|slackbot|redditbot|pinterestbot|bytespider|amazonbot|cohere-ai|mistralai|xai|grok|diffbot|petalbot|youbot|kagibot|lighthouse|chrome-lighthouse|screaming frog|ahrefsbot|semrushbot|mj12bot|dotbot|sitebulb|mozcrawler/i;
+
+const STATIC_ROUTES = new Set([
+  "/",
+  "/pricing",
+  "/token",
+  "/token-directory",
+  "/token-scan-guide",
+  "/token-sniffer-comparison",
+  "/token-sniffer-vs-tokenhealthscan",
+  "/solana-launchpads",
+  "/ethereum-launchpads",
+  "/ai-agents",
+  "/agent-directory",
+  "/agent-scan",
+  "/copilot",
+  "/publications",
+  "/privacy",
+  "/terms",
+  "/ltd"
+]);
+
+const DYNAMIC_ROUTES = [
+  /^\/token\/[^/]+$/,
+  /^\/agent-scan\/[^/]+\/[^/]+$/,
+  /^\/publications\/[^/]+$/
+];
+
 function normalizePath(pathname) {
-  let p = (pathname || "/").split("?")[0].split("#")[0];
-  p = p.replace(/\/{2,}/g, "/");
-  if (p.length > 1) p = p.replace(/\/+$/, "");
-  return p || "/";
+  let path = pathname || "/";
+  path = path.replace(/\/{2,}/g, "/");
+  if (path.length > 1) path = path.replace(/\/+$/, "");
+  return path || "/";
 }
 
-function isKnownRoute(path) {
-  if (STATIC_ROUTES.has(path)) return true;
-  return DYNAMIC_PATTERNS.some((re) => re.test(path));
+function isStaticRoute(pathname) {
+  return STATIC_ROUTES.has(pathname);
 }
 
-function isBot(req) {
-  const ua = req.headers.get("User-Agent") || "";
-  return BOT_UA_PATTERN.test(ua);
+function isDynamicRoute(pathname) {
+  return DYNAMIC_ROUTES.some((pattern) => pattern.test(pathname));
 }
 
-function wantsHtml(req) {
-  const accept = req.headers.get("Accept") || "";
-  // Bots often omit Accept; treat empty/string as html-acceptable.
+function isKnownRoute(pathname) {
+  return isStaticRoute(pathname) || isDynamicRoute(pathname);
+}
+
+function isBot(request) {
+  return BOT_UA_REGEX.test(request.headers.get("user-agent") || "");
+}
+
+function wantsHtml(request) {
+  const accept = request.headers.get("accept") || "";
   return !accept || accept.includes("text/html") || accept.includes("*/*");
 }
 
-async function serveSnapshot(path, env) {
-  const supabaseUrl = env.SUPABASE_URL;
-  if (!supabaseUrl) throw new Error("Missing SUPABASE_URL secret");
-  const url = `${supabaseUrl}/functions/v1/seo-snapshot?path=${encodeURIComponent(path)}`;
-  const upstream = await fetch(url, {
-    headers: env.SUPABASE_ANON_KEY
-      ? {
-          apikey: env.SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
-        }
-      : {},
-    cf: { cacheTtl: 300, cacheEverything: true },
-    signal: withTimeout(),
+function notFoundPage(pathname) {
+  const body = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>404 Not Found | Token Health Scan</title>
+<meta name="robots" content="noindex"/>
+</head><body style="font-family:system-ui;max-width:600px;margin:10vh auto;padding:24px;background:#0a0a0f;color:#e5e7eb">
+<h1>404 — Page not found</h1>
+<p>The page <code>${pathname.replace(/[<>&"']/g, "")}</code> does not exist.</p>
+<p><a href="https://tokenhealthscan.com/" style="color:#a78bfa">Token Health Scan home</a> · <a href="https://tokenhealthscan.com/token" style="color:#a78bfa">Token directory</a></p>
+</body></html>`;
+  return new Response(body, {
+    status: 404,
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "public, max-age=300",
+      "x-served-by": "cf-worker-404"
+    }
+  });
+}
+
+async function proxyStaticFile(pathname, request) {
+  const target = STORAGE_PROXY_PATHS[pathname];
+  if (!target) return null;
+  const upstream = await fetch(target.url, {
+    headers: {
+      "user-agent": request.headers.get("user-agent") || "tokenhealthscan-worker",
+      accept: target.contentType
+    },
+    cf: { cacheTtl: 300, cacheEverything: true }
   });
   if (!upstream.ok) return null;
-  const html = await upstream.text();
-  return new Response(html, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "public, max-age=300, s-maxage=86400, stale-while-revalidate=604800",
-      "X-Robots-Tag": "index, follow",
-      "X-Served-By": "cf-worker-snapshot",
-      "X-Snapshot-Source": upstream.headers.get("X-Snapshot-Source") || "unknown",
-    },
-  });
-}
-
-async function proxySitemap(env) {
-  const supabaseUrl = env.SUPABASE_URL;
-  if (!supabaseUrl) throw new Error("Missing SUPABASE_URL secret");
-  const upstream = await fetch(`${supabaseUrl}/functions/v1/serve-sitemap`, {
-    headers: env.SUPABASE_ANON_KEY
-      ? { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${env.SUPABASE_ANON_KEY}` }
-      : {},
-    cf: { cacheTtl: 600, cacheEverything: true },
-    signal: withTimeout(),
-  });
-  if (!upstream.ok) {
-    return new Response("upstream sitemap error", { status: 502, headers: { "X-Served-By": "cf-worker-sitemap" } });
-  }
-  return new Response(await upstream.text(), {
-    status: upstream.status,
-    headers: {
-      "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=600, s-maxage=3600",
-      "X-Served-By": "cf-worker-sitemap",
-    },
-  });
-}
-
-async function proxyCmsStorage(path, env) {
-  const objectKey = CMS_STORAGE_PROXY_PATHS[path];
-  const projectRef = env.SUPABASE_PROJECT_REF || DEFAULT_SUPABASE_PROJECT;
-  const url = `https://${projectRef}.supabase.co/storage/v1/object/public/${CMS_STORAGE_BUCKET}/${objectKey}`;
-  const upstream = await fetch(url, { cf: { cacheTtl: 600, cacheEverything: true }, signal: withTimeout() });
-  if (!upstream.ok) {
-    return new Response("upstream cms error", { status: 502, headers: { "X-Served-By": "cf-worker-cms-static" } });
-  }
-  const contentType = objectKey.endsWith(".xml") ? "application/xml; charset=utf-8" : "text/plain; charset=utf-8";
   return new Response(upstream.body, {
     status: upstream.status,
     headers: {
-      "Content-Type": contentType,
-      "Cache-Control": "public, max-age=600, s-maxage=3600",
-      "X-Served-By": "cf-worker-cms-static",
-    },
-  });
-}
-
-function createOriginRequest(request) {
-  const incomingUrl = new URL(request.url);
-  const originBase = new URL(DEFAULT_LOVABLE_ORIGIN);
-  const originUrl = new URL(`${incomingUrl.pathname}${incomingUrl.search}`, originBase);
-  const headers = new Headers(request.headers);
-  headers.set("Host", originBase.hostname);
-  headers.set("X-Forwarded-Host", incomingUrl.hostname);
-  headers.set("X-Forwarded-Proto", "https");
-  headers.set("X-Forwarded-Ssl", "on");
-  headers.set("X-Url-Scheme", "https");
-
-  return new Request(originUrl.toString(), {
-    method: request.method,
-    headers,
-    body: request.body,
-    redirect: "manual",
-  });
-}
-
-async function fetchLovableOrigin(request) {
-  const response = await fetch(createOriginRequest(request));
-  const location = response.headers.get("Location");
-  if (response.status >= 300 && response.status < 400 && location) {
-    const requestUrl = new URL(request.url);
-    const redirectUrl = new URL(location, requestUrl);
-    if (redirectUrl.hostname === requestUrl.hostname && redirectUrl.pathname === requestUrl.pathname) {
-      const headers = new Headers(response.headers);
-      headers.delete("Location");
-      headers.set("Cache-Control", "no-store");
-      return new Response(null, { status: 204, headers });
+      "content-type": target.contentType,
+      "cache-control": "public, max-age=300, s-maxage=600",
+      "x-served-by": pathname === "/sitemap.xml" ? "cf-worker-sitemap-storage" : "cf-worker-static-proxy"
     }
+  });
+}
+
+// Returns a Response (snapshot 200 or propagated 404) or null on upstream error.
+async function serveSnapshot(pathname) {
+  const snapshotUrl = `${SUPABASE_URL}/functions/v1/seo-snapshot?path=${encodeURIComponent(pathname)}`;
+  const upstream = await fetch(snapshotUrl, {
+    cf: { cacheTtl: 300, cacheEverything: true }
+  });
+  if (upstream.ok) {
+    return new Response(upstream.body, {
+      status: 200,
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=300, s-maxage=86400, stale-while-revalidate=604800",
+        "x-robots-tag": "index, follow",
+        "x-served-by": "cf-worker-snapshot",
+        "x-snapshot-source": upstream.headers.get("x-snapshot-source") || "unknown"
+      }
+    });
   }
-  return response;
+  // v2.0: propagate hard 404 for dynamic routes whose slug doesn't exist
+  // (seo-snapshot returns 404 only for unknown content; 5xx falls through).
+  if (upstream.status === 404 && isDynamicRoute(pathname)) {
+    return notFoundPage(pathname);
+  }
+  return null;
+}
+
+async function addNoindex(response) {
+  const r = new Response(response.body, response);
+  r.headers.set("x-robots-tag", "noindex");
+  return r;
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request) {
     const url = new URL(request.url);
+    const pathname = normalizePath(url.pathname);
 
-    // Canonical-host redirect: *.lovable.app → tokenhealthscan.com
-    if (url.hostname.endsWith(".lovable.app")) {
-      const target = `${SITE_URL}${url.pathname}${url.search}`;
-      return Response.redirect(target, 301);
+    if (STORAGE_PROXY_PATHS[pathname]) {
+      const fileResponse = await proxyStaticFile(pathname, request);
+      if (fileResponse) return fileResponse;
+      return fetch(request);
     }
 
-    const path = normalizePath(url.pathname);
+    const botHtml = request.method === "GET" && wantsHtml(request) && isBot(request);
 
-    // Static helpers — always pass through to origin (Lovable serves /robots.txt etc)
-    if (path === "/sitemap.xml") {
-      try { return await proxySitemap(env); } catch (_) { /* fallthrough */ }
+    if (botHtml && isKnownRoute(pathname)) {
+      const snapshot = await serveSnapshot(pathname);
+      if (snapshot) return snapshot;
     }
 
-    if (CMS_STORAGE_PROXY_PATHS[path]) {
-      try { return await proxyCmsStorage(path, env); } catch (_) { /* fallthrough */ }
+    const originResp = await fetch(request);
+
+    // v2.0: bots on unknown routes must never index the SPA shell.
+    if (botHtml && !isKnownRoute(pathname)) {
+      return addNoindex(await fixOgImage(originResp));
     }
 
-    // Only intercept GET HTML-ish requests
-    if (request.method !== "GET" || !wantsHtml(request)) {
-      return fetchLovableOrigin(request);
-    }
-
-    // Bots on a known route → snapshot
-    if (isBot(request) && isKnownRoute(path)) {
-      try {
-        const snap = await serveSnapshot(path, env);
-        if (snap) return snap;
-      } catch (e) {
-        console.error("Snapshot fetch failed:", e?.message);
-      }
-      // fall through to passthrough on snapshot failure
-    }
-
-    // Default: transparent passthrough to Lovable hosting
-    return fetchLovableOrigin(request);
-  },
+    return fixOgImage(originResp);
+  }
 };
