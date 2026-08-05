@@ -113,6 +113,11 @@ function scoreClass(s: unknown): string {
 }
 
 // ─── Token report page ────────────────────────────────────────────────────
+export interface TokenAnalysisSection {
+  summary?: string;
+  keyPoints?: string[];
+}
+
 export interface TokenSnapshotInput {
   symbol: string;
   name?: string | null;
@@ -130,6 +135,29 @@ export interface TokenSnapshotInput {
   market_cap_usd?: number | null;
   hero_image_url?: string | null;
   updated_at?: string | null;
+  // Full report prose (2026-08-05) — populated from report_content's
+  // per-dimension fields so bots/AEO crawlers get real content, not just
+  // the score grid + one AI-summary paragraph.
+  what_is?: string | null;
+  risk_overview?: string | null;
+  security_analysis?: TokenAnalysisSection | null;
+  liquidity_analysis?: TokenAnalysisSection | null;
+  tokenomics_analysis?: TokenAnalysisSection | null;
+  community_analysis?: TokenAnalysisSection | null;
+  development_analysis?: TokenAnalysisSection | null;
+  how_to_buy?: Array<{ step?: number; title?: string; description?: string }> | null;
+  faq?: Array<{ question?: string; q?: string; answer?: string; a?: string }> | null;
+}
+
+function sectionHtml(heading: string, section?: TokenAnalysisSection | null): string {
+  if (!section) return "";
+  const summary = section.summary ? `<p>${escHtml(section.summary)}</p>` : "";
+  const points =
+    Array.isArray(section.keyPoints) && section.keyPoints.length
+      ? `<ul>${section.keyPoints.map((p) => `<li>${escHtml(p)}</li>`).join("")}</ul>`
+      : "";
+  if (!summary && !points) return "";
+  return `<h2>${escHtml(heading)}</h2>${summary}${points}`;
 }
 
 export function renderTokenPage(t: TokenSnapshotInput): string {
@@ -217,8 +245,31 @@ export function renderTokenPage(t: TokenSnapshotInput): string {
       <div class="card"><div class="score ${scoreClass(dev)}">${dev}</div><div class="label">Development</div></div>
     </div>
 
-    ${t.ai_analysis ? `<h2>AI Risk Analysis</h2><p>${escHtml(t.ai_analysis).slice(0, 4000)}</p>` : ""}
-    ${t.description ? `<h2>About ${escHtml(name)}</h2><p>${escHtml(t.description).slice(0, 2000)}</p>` : ""}
+    ${t.what_is ? `<h2>What is ${escHtml(name)}?</h2><p>${escHtml(t.what_is)}</p>` : ""}
+    ${t.risk_overview ? `<h2>Risk overview</h2><p>${escHtml(t.risk_overview)}</p>` : ""}
+    ${!t.what_is && !t.risk_overview && t.ai_analysis ? `<h2>AI Risk Analysis</h2><p>${escHtml(t.ai_analysis).slice(0, 4000)}</p>` : ""}
+    ${!t.what_is && t.description ? `<h2>About ${escHtml(name)}</h2><p>${escHtml(t.description).slice(0, 2000)}</p>` : ""}
+    ${sectionHtml("Security analysis", t.security_analysis)}
+    ${sectionHtml("Liquidity analysis", t.liquidity_analysis)}
+    ${sectionHtml("Tokenomics analysis", t.tokenomics_analysis)}
+    ${sectionHtml("Community analysis", t.community_analysis)}
+    ${sectionHtml("Development analysis", t.development_analysis)}
+    ${
+      Array.isArray(t.how_to_buy) && t.how_to_buy.length
+        ? `<h2>How to buy ${escHtml(sym)}</h2><ol>${t.how_to_buy
+            .map((s) => `<li><strong>${escHtml(s.title || "")}</strong> ${escHtml(s.description || "")}</li>`)
+            .join("")}</ol>`
+        : ""
+    }
+    ${
+      Array.isArray(t.faq) && t.faq.length
+        ? `<h2>Frequently asked questions</h2>${t.faq
+            .filter((f) => (f.question || f.q) && (f.answer || f.a))
+            .slice(0, 6)
+            .map((f) => `<h3>${escHtml(f.question || f.q || "")}</h3><p>${escHtml(f.answer || f.a || "")}</p>`)
+            .join("")}`
+        : ""
+    }
 
     ${
       t.address
