@@ -452,6 +452,24 @@ const STATIC_DEFS: Record<StaticKey, { title: string; description: string; h1: s
     description: "Browse independent risk analyses of crypto tokens across Ethereum, Solana, Base, BSC and more.",
     h1: "Token Directory",
     body: `<p>Explore token health reports across every supported chain. Each report includes scores for security, liquidity, tokenomics, community and development.</p>`,
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: `Token Directory — ${SITE_NAME}`,
+        url: `${SITE_URL}/token`,
+        description: "Independent token health reports across security, liquidity, tokenomics, community and development.",
+        isPartOf: { "@type": "WebSite", name: SITE_NAME, url: SITE_URL },
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+          { "@type": "ListItem", position: 2, name: "Tokens", item: `${SITE_URL}/token` },
+        ],
+      },
+    ],
   },
   "/token-directory": {
     title: `Token Directory — ${SITE_NAME}`,
@@ -543,19 +561,60 @@ const STATIC_DEFS: Record<StaticKey, { title: string; description: string; h1: s
     title: `Token Copilot — Conversational Crypto Research | ${SITE_NAME}`,
     description: "Chat with a crypto research copilot powered by CoinGecko MCP and full Token Health Scan data.",
     h1: "Token Copilot",
-    body: `<p>Ask natural-language questions about any token. Get prices, holders, security flags, and risk insights without leaving chat.</p>`,
+    body: `<p>Ask natural-language questions about any token. Get prices, holders, security flags, and risk insights without leaving chat.</p>
+      <h2>What you can ask</h2>
+      <ul>
+        <li>Live token prices and market data for any listed token, via the CoinGecko MCP integration</li>
+        <li>Holder and supply information for tokens covered by Token Health Scan</li>
+        <li>Security flags surfaced by the Token Health Scan scoring pipeline</li>
+        <li>Risk insights across the five scoring dimensions: security, liquidity, tokenomics, community and development</li>
+      </ul>
+      <h2>How it works</h2>
+      <p>Token Copilot is a conversational research interface. It answers natural-language questions using CoinGecko market data and the full Token Health Scan dataset, the same 0–100 dimension scores served on every token report page.</p>
+      <h2>Supported chains</h2>
+      <p>Ethereum, BNB Chain, Polygon, Arbitrum, Base, Optimism, and Solana.</p>`,
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        name: "Token Copilot",
+        url: `${SITE_URL}/copilot`,
+        applicationCategory: "FinanceApplication",
+        operatingSystem: "Web",
+        description: "Conversational crypto research copilot powered by CoinGecko MCP and Token Health Scan data.",
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      },
+    ],
   },
   "/privacy": {
     title: `Privacy Policy — ${SITE_NAME}`,
     description: "Privacy policy for Token Health Scan.",
     h1: "Privacy Policy",
     body: `<p>How we handle data. See the live page for the full text.</p>`,
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: `Privacy Policy — ${SITE_NAME}`,
+        url: `${SITE_URL}/privacy`,
+        isPartOf: { "@type": "WebSite", name: SITE_NAME, url: SITE_URL },
+      },
+    ],
   },
   "/terms": {
     title: `Terms of Service — ${SITE_NAME}`,
     description: "Terms of service for Token Health Scan.",
     h1: "Terms of Service",
     body: `<p>The terms governing use of Token Health Scan. See the live page for the full text.</p>`,
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: `Terms of Service — ${SITE_NAME}`,
+        url: `${SITE_URL}/terms`,
+        isPartOf: { "@type": "WebSite", name: SITE_NAME, url: SITE_URL },
+      },
+    ],
   },
   "/ltd": {
     title: `Lifetime Deal — ${SITE_NAME}`,

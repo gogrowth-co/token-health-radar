@@ -61,10 +61,38 @@ async function uploadHtml(path: string, html: string): Promise<void> {
   if (error) throw error;
 }
 
+// Enrichment blocks injected into bucket snapshots by ops tooling
+// (SPA-content extraction, hub link lists). A template re-render must
+// carry them forward, not wipe them — regenerating from STATIC_DEFS
+// alone silently reverted enriched pages to thin stubs (2026-08-05).
+const ENRICHMENT_MARKERS: Array<[string, string]> = [
+  ["<!-- ths-spa-content -->", "<!-- /ths-spa-content -->"],
+  ["<!-- ths-rich-content -->", "<!-- /ths-rich-content -->"],
+  ["<!-- ths-hub-links -->", "<!-- /ths-hub-links -->"],
+];
+
+async function preserveEnrichment(path: string, freshHtml: string): Promise<string> {
+  const key = pathToStorageKey(path);
+  const { data } = await supabase.storage.from("seo-snapshots").download(key);
+  if (!data) return freshHtml;
+  const existing = await data.text();
+  let html = freshHtml;
+  for (const [open, close] of ENRICHMENT_MARKERS) {
+    const start = existing.indexOf(open);
+    const end = existing.indexOf(close);
+    if (start === -1 || end === -1) continue;
+    const block = existing.slice(start, end + close.length);
+    if (!html.includes(open)) {
+      html = html.replace("</main>", `${block}</main>`);
+    }
+  }
+  return html;
+}
+
 async function regenStatic(path: string): Promise<string> {
   const html = renderStaticPage(path);
   if (!html) throw new Error(`Unknown static route: ${path}`);
-  await uploadHtml(path, html);
+  await uploadHtml(path, await preserveEnrichment(path, html));
   return path;
 }
 
