@@ -381,9 +381,12 @@ type StaticKey =
 
 const STATIC_DEFS: Record<StaticKey, { title: string; description: string; h1: string; body: string; jsonLd?: unknown[] }> = {
   "/": {
-    title: `${SITE_NAME} — Crypto Token Risk Analysis & Health Scoring`,
+    // Metadata tuned 2026-08-05: lead with "token scanner" (the 130-impr
+    // GSC demand cluster) and drop the bare "Health Scoring" phrasing that
+    // was pulling wrong-intent "health(care) token" queries.
+    title: `${SITE_NAME} — Free Crypto Token Scanner & Risk Analysis`,
     description:
-      "Scan any crypto token across security, liquidity, tokenomics, community and development. Independent health scores in seconds for Ethereum, Solana, Base, BSC, Polygon, Arbitrum.",
+      "Free crypto token scanner. Check any token for security risks, liquidity traps, tokenomics red flags, community and development health in 60 seconds. Ethereum, Solana, Base, BSC, Polygon, Arbitrum.",
     h1: SITE_NAME,
     body: `
       <p>${SITE_NAME} analyzes any cryptocurrency token across five dimensions to surface hidden risks before you invest.</p>

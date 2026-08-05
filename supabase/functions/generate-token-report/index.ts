@@ -7,7 +7,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+// LLM provider (2026-08-05): switched to OpenRouter — the OpenAI account
+// hit credit_balance_exhausted and froze all report generation. OpenRouter
+// is OpenAI-API-compatible; LLM_MODEL defaults to deepseek-v4-flash (house
+// cheap-pipeline standard). Falls back to direct OpenAI if only
+// OPENAI_API_KEY is set.
+const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
+const openAIApiKey = openRouterKey || Deno.env.get('OPENAI_API_KEY');
+const LLM_BASE_URL = openRouterKey
+  ? 'https://openrouter.ai/api/v1/chat/completions'
+  : 'https://api.openai.com/v1/chat/completions';
+const LLM_MODEL = Deno.env.get('LLM_MODEL') || (openRouterKey ? 'deepseek/deepseek-v4-flash' : 'gpt-4o-mini');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -269,14 +279,14 @@ Make the content informative, balanced, and professional. Include specific data 
     
     // Generate content with OpenAI (with timeout)
     const openAIResponse = await withTimeout(
-      fetch('https://api.openai.com/v1/chat/completions', {
+      fetch(LLM_BASE_URL, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${openAIApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: LLM_MODEL,
           messages: [
             {
               role: 'system',
