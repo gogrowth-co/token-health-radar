@@ -34,6 +34,10 @@ const STORAGE_PROXY_PATHS = {
     url: `${SUPABASE_URL}/storage/v1/object/public/${STATIC_FILE_BUCKET}/llms.txt`,
     contentType: "text/plain; charset=utf-8"
   },
+  "/llms-full.txt": {
+    url: `${SUPABASE_URL}/storage/v1/object/public/${STATIC_FILE_BUCKET}/llms-full.txt`,
+    contentType: "text/plain; charset=utf-8"
+  },
   "/rss.xml": {
     url: `${SUPABASE_URL}/functions/v1/rss-feed`,
     contentType: "application/rss+xml; charset=utf-8"
