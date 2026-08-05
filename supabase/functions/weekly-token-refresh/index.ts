@@ -6,198 +6,227 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 };
 
+// Supabase edge functions hit a ~150s idle timeout. The old implementation
+// looped all tokens serially through run-token-scan (3s delay) then a
+// SECOND full serial loop through generate-token-report (5s delay) — 208s
+// of sleep alone before any API work, and generate-token-report's own call
+// never included the required `userId` (it 400s without one — an admin
+// gate, unrelated to the timeout). Both bugs meant this function has
+// never fully completed a batch since generate-token-report added its
+// admin-role check. Fixed 2026-08-05:
+//   1. One per-token pass (scan -> report), not two.
+//   2. ADMIN_USER_ID env var passed to generate-token-report.
+//   3. Time-budgeted: stop launching new tokens past TIME_BUDGET_MS,
+//      oldest-updated-first, so a truncated run still makes progress and
+//      the next cron tick picks up where this one left off.
+//   4. generate-token-report calls OpenAI directly — a burst of concurrent
+//      calls 429s, so those run at concurrency 1 with backoff; run-token-scan
+//      calls (multiple independent third-party APIs) run at concurrency 3.
+
+const TIME_BUDGET_MS = 110_000; // leave ~40s margin under the 150s gateway limit
+const STALE_AFTER_DAYS = 6; // refresh anything not updated in the last 6 days
+
+interface TokenRow {
+  token_address: string;
+  chain_id: string;
+  token_symbol: string;
+  updated_at: string;
+}
+
 interface RefreshSummary {
-  total: number;
-  successful: number;
-  failed: number;
-  errors: Array<{ token: string; error: string }>;
-  reportsRegenerated?: number;
-  reportsFailed?: number;
+  totalStale: number;
+  attempted: number;
+  scanOk: number;
+  scanFailed: number;
+  reportOk: number;
+  reportFailed: number;
+  truncatedByBudget: boolean;
+  errors: Array<{ token: string; step: string; error: string }>;
   startTime: string;
   endTime: string;
   duration: number;
 }
 
+async function callFn(supabaseUrl: string, serviceKey: string, name: string, body: unknown, timeoutMs = 45000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${supabaseUrl}/functions/v1/${name}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+    const text = await res.text();
+    return { ok: res.ok, status: res.status, text };
+  } catch (e) {
+    return { ok: false, status: 0, text: (e as Error).message };
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+async function withConcurrency<T, R>(items: T[], worker: (item: T) => Promise<R>, concurrency: number): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  async function runner() {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await worker(items[i]);
+    }
+  }
+  await Promise.all(Array.from({ length: concurrency }, runner));
+  return results;
+}
+
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // SECURITY: require x-cron-secret header
   const blocked = requireCronSecret(req, corsHeaders);
   if (blocked) return blocked;
 
   const startTime = new Date();
-  console.log(`[WEEKLY-REFRESH] Starting weekly token refresh at ${startTime.toISOString()}`);
+  const deadline = startTime.getTime() + TIME_BUDGET_MS;
+  console.log(`[WEEKLY-REFRESH] Starting at ${startTime.toISOString()}, budget ${TIME_BUDGET_MS}ms`);
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const adminUserId = Deno.env.get('ADMIN_USER_ID');
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch all token reports
+    if (!adminUserId) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'ADMIN_USER_ID not configured — generate-token-report requires an admin user id' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const staleCutoff = new Date(Date.now() - STALE_AFTER_DAYS * 24 * 60 * 60 * 1000).toISOString();
     const { data: tokenReports, error: fetchError } = await supabase
       .from('token_reports')
-      .select('token_address, chain_id, token_symbol, token_name');
+      .select('token_address, chain_id, token_symbol, updated_at')
+      .lt('updated_at', staleCutoff)
+      .order('updated_at', { ascending: true }); // stalest first — survives truncation
 
     if (fetchError) {
-      console.error('[WEEKLY-REFRESH] Error fetching token reports:', fetchError);
+      console.error('[WEEKLY-REFRESH] fetch error:', fetchError);
       return new Response(
         JSON.stringify({ success: false, error: 'Failed to fetch token reports' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`[WEEKLY-REFRESH] Found ${tokenReports?.length || 0} tokens to refresh`);
-
+    const all = (tokenReports || []) as TokenRow[];
     const summary: RefreshSummary = {
-      total: tokenReports?.length || 0,
-      successful: 0,
-      failed: 0,
+      totalStale: all.length,
+      attempted: 0,
+      scanOk: 0,
+      scanFailed: 0,
+      reportOk: 0,
+      reportFailed: 0,
+      truncatedByBudget: false,
       errors: [],
       startTime: startTime.toISOString(),
       endTime: '',
       duration: 0,
     };
 
-    // Process each token
-    if (tokenReports && tokenReports.length > 0) {
-      for (const token of tokenReports) {
-        console.log(`[WEEKLY-REFRESH] Processing ${token.token_symbol} (${token.token_address}) on chain ${token.chain_id}`);
+    // Slice to what plausibly fits the time budget; oldest-first ordering
+    // means anything left over is picked up by the NEXT cron tick.
+    const batch: TokenRow[] = [];
+    for (const t of all) {
+      if (Date.now() > deadline - 15000) {
+        summary.truncatedByBudget = true;
+        break;
+      }
+      batch.push(t);
+    }
+    console.log(`[WEEKLY-REFRESH] Processing ${batch.length}/${all.length} tokens this run`);
 
-        try {
-          // Call run-token-scan with force_refresh
-          const { data, error } = await supabase.functions.invoke('run-token-scan', {
-            body: {
-              token_address: token.token_address.toLowerCase(),
-              chain_id: token.chain_id,
-              force_refresh: true,
-              user_id: null, // Automated system refresh
-              batch_mode: true, // Indicate this is part of a batch operation
-            },
-          });
-
-          if (error || !data?.success) {
-            console.error(`[WEEKLY-REFRESH] Failed to refresh ${token.token_symbol}:`, error || data?.error);
-            summary.failed++;
-            summary.errors.push({
-              token: `${token.token_symbol} (${token.token_address})`,
-              error: error?.message || data?.error || 'Unknown error',
-            });
-          } else {
-            console.log(`[WEEKLY-REFRESH] Successfully refreshed ${token.token_symbol}`);
-            summary.successful++;
-          }
-        } catch (error: any) {
-          console.error(`[WEEKLY-REFRESH] Exception refreshing ${token.token_symbol}:`, error);
-          summary.failed++;
-          summary.errors.push({
-            token: `${token.token_symbol} (${token.token_address})`,
-            error: error.message || 'Exception during refresh',
-          });
+    // Phase 1: scans, concurrency 3 (independent 3rd-party APIs, no shared quota)
+    await withConcurrency(
+      batch,
+      async (token) => {
+        if (Date.now() > deadline) return;
+        summary.attempted++;
+        const r = await callFn(supabaseUrl, supabaseServiceKey, 'run-token-scan', {
+          token_address: token.token_address.toLowerCase(),
+          chain_id: token.chain_id,
+          force_refresh: true,
+          user_id: null,
+          batch_mode: true,
+        });
+        if (r.ok) {
+          summary.scanOk++;
+        } else {
+          summary.scanFailed++;
+          summary.errors.push({ token: token.token_symbol, step: 'scan', error: r.text.slice(0, 200) });
         }
+      },
+      3
+    );
 
-        // Delay to avoid rate limiting (3 seconds between tokens)
-        await new Delayer(3000);
+    // Phase 2: report generation, concurrency 1 with backoff (shared OpenAI quota)
+    for (const token of batch) {
+      if (Date.now() > deadline) {
+        summary.truncatedByBudget = true;
+        break;
+      }
+      let delay = 4000;
+      let done = false;
+      for (let attempt = 0; attempt <= 3 && !done && Date.now() < deadline; attempt++) {
+        const r = await callFn(supabaseUrl, supabaseServiceKey, 'generate-token-report', {
+          tokenAddress: token.token_address,
+          chainId: token.chain_id,
+          userId: adminUserId,
+        });
+        if (r.ok) {
+          summary.reportOk++;
+          done = true;
+        } else if (r.text.includes('429') && attempt < 3) {
+          await new Promise((res) => setTimeout(res, delay));
+          delay = Math.min(delay * 1.6, 12000);
+        } else {
+          summary.reportFailed++;
+          summary.errors.push({ token: token.token_symbol, step: 'report', error: r.text.slice(0, 200) });
+          done = true;
+        }
       }
     }
 
-    // After all scans complete, regenerate reports with updated data
-    console.log('[WEEKLY-REFRESH] Starting report regeneration for all tokens...');
-    let reportsRegenerated = 0;
-    let reportsFailed = 0;
-
-    if (tokenReports && tokenReports.length > 0) {
-      for (const token of tokenReports) {
-        console.log(`[WEEKLY-REFRESH] Regenerating report for ${token.token_symbol}`);
-
-        try {
-          const response = await fetch(
-            `${supabaseUrl}/functions/v1/generate-token-report`,
-            {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${supabaseServiceKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                tokenAddress: token.token_address,
-                chainId: token.chain_id,
-              }),
-            }
-          );
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[WEEKLY-REFRESH] Failed to regenerate report for ${token.token_symbol}: ${errorText}`);
-            reportsFailed++;
-          } else {
-            console.log(`[WEEKLY-REFRESH] Successfully regenerated report for ${token.token_symbol}`);
-            reportsRegenerated++;
-          }
-        } catch (error: any) {
-          console.error(`[WEEKLY-REFRESH] Exception regenerating report for ${token.token_symbol}:`, error);
-          reportsFailed++;
-        }
-
-        // Rate limiting - 5 seconds between report generations
-        await Delayer(5000);
+    // Only regenerate the sitemap if something actually changed.
+    if (summary.reportOk > 0) {
+      try {
+        await supabase.functions.invoke('generate-sitemap', {
+          body: { trigger_source: 'weekly_refresh', timestamp: new Date().toISOString() },
+        });
+      } catch (e) {
+        console.error('[WEEKLY-REFRESH] sitemap trigger failed:', e);
       }
-    }
-
-    console.log(`[WEEKLY-REFRESH] Report regeneration complete: ${reportsRegenerated} successful, ${reportsFailed} failed`);
-
-    // After all scans and report regeneration complete, trigger sitemap regeneration
-    console.log('[WEEKLY-REFRESH] Triggering sitemap regeneration...');
-    try {
-      await supabase.functions.invoke('generate-sitemap', {
-        body: {
-          trigger_source: 'weekly_refresh',
-          timestamp: new Date().toISOString(),
-        },
-      });
-      console.log('[WEEKLY-REFRESH] Sitemap regeneration triggered successfully');
-    } catch (error: any) {
-      console.error('[WEEKLY-REFRESH] Failed to trigger sitemap regeneration:', error);
-      // Don't fail the whole operation if sitemap generation fails
     }
 
     const endTime = new Date();
     summary.endTime = endTime.toISOString();
     summary.duration = endTime.getTime() - startTime.getTime();
-    summary.reportsRegenerated = reportsRegenerated;
-    summary.reportsFailed = reportsFailed;
 
-    console.log('[WEEKLY-REFRESH] Refresh complete:', summary);
+    console.log('[WEEKLY-REFRESH] done:', JSON.stringify(summary));
 
     return new Response(
       JSON.stringify({
         success: true,
         summary,
-        message: `Refreshed ${summary.successful}/${summary.total} tokens and regenerated ${reportsRegenerated}/${summary.total} reports successfully`,
+        message: `Processed ${summary.attempted}/${summary.totalStale} tokens (scans ${summary.scanOk} ok, reports ${summary.reportOk} ok)${summary.truncatedByBudget ? ' — truncated by time budget, remainder picked up next run' : ''}`,
       }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (error: any) {
-    console.error('[WEEKLY-REFRESH] Fatal error during weekly refresh:', error);
+  } catch (error) {
+    console.error('[WEEKLY-REFRESH] fatal:', error);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message || 'Unknown error during weekly refresh',
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ success: false, error: (error as Error).message || 'Unknown error' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
-
-// Helper function to delay execution
-function Delayer(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
