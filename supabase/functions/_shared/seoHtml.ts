@@ -104,6 +104,36 @@ ${page.bodyHtml}
 </html>`;
 }
 
+
+// Narrative buckets for "Related token reports" cross-links (2026-08-06).
+// Same-bucket siblings get keyword anchors; every token page also links its
+// chain's launchpad directory (de-orphans /solana-launchpads and
+// /ethereum-launchpads — opportunity-map P0/P1). Keep in sync with
+// token-health-scan/scripts/regenerate-token-snapshots.mjs.
+const NARRATIVE: Record<string, string[]> = {
+  meme: ["pepe", "bonk", "trump", "pump"],
+  "cex-dex": ["htx", "nexo", "cro", "leo", "okb", "bgb", "gt", "cake", "jup", "aero"],
+  stablecoin: ["usde", "usd1", "gho", "frax", "usdy", "sky", "ena"],
+  ai: ["fet", "virtual", "coai", "aitech", "kaito", "wld", "rndr"],
+  defi: ["aave", "morpho", "pendle", "ondo", "ldo", "ethfi", "crv", "syrup", "om"],
+  infra: ["arb", "pol", "mnt", "strk", "zro", "skl", "icp", "sei", "link", "api3", "pyth", "ath", "chz", "aster", "avnt", "wlfi", "iq"],
+};
+const BUCKET_OF: Record<string, string> = {};
+for (const [b, syms] of Object.entries(NARRATIVE)) for (const sy of syms) BUCKET_OF[sy] = b;
+const BUCKET_LABEL: Record<string, string> = { meme: "meme tokens", "cex-dex": "exchange & DEX tokens", stablecoin: "stablecoins", ai: "AI tokens", defi: "DeFi tokens", infra: "infrastructure tokens" };
+
+function relatedTokenLinks(sym: string, chain: string | null | undefined): { items: string; label: string } {
+  const lower = sym.toLowerCase();
+  const bucket = BUCKET_OF[lower];
+  const sibs = (NARRATIVE[bucket] || []).filter((x) => x !== lower).slice(0, 4);
+  const items = sibs.map(
+    (x) => `<li><a href="${SITE_URL}/token/${x}">Is ${x.toUpperCase()} safe? ${x.toUpperCase()} token risk analysis</a></li>`
+  );
+  if (chain === "solana") items.push(`<li><a href="${SITE_URL}/solana-launchpads">Solana launchpads directory</a></li>`);
+  else items.push(`<li><a href="${SITE_URL}/ethereum-launchpads">Ethereum launchpads directory</a></li>`);
+  return { items: items.join("\n      "), label: BUCKET_LABEL[bucket] || "tokens" };
+}
+
 function scoreClass(s: unknown): string {
   const n = Number(s);
   if (!Number.isFinite(n)) return "";
@@ -279,7 +309,11 @@ export function renderTokenPage(t: TokenSnapshotInput): string {
 
     <a class="cta" href="${SITE_URL}/scan/${escHtml(t.chain || "ethereum")}/${escHtml(t.address || sym)}">Run a fresh scan →</a>
 
-    <h2>Related</h2>
+    <h2>Related ${relatedTokenLinks(sym, t.chain).label}</h2>
+    <ul>
+      ${relatedTokenLinks(sym, t.chain).items}
+    </ul>
+    <h2>More from Token Health Scan</h2>
     <ul>
       <li><a href="${SITE_URL}/token">All token reports</a></li>
       <li><a href="${SITE_URL}/token-scan-guide">How to read a token health scan</a></li>
