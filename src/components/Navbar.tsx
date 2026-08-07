@@ -22,7 +22,7 @@ export default function Navbar() {
           </Link>
           
           {/* Desktop navigation */}
-          <nav className="hidden md:flex gap-6">
+          <nav className="hidden lg:flex gap-3 xl:gap-6">
             <Link to="/" className="text-sm font-medium transition-colors hover:text-primary">
               Home
             </Link>
@@ -50,11 +50,11 @@ export default function Navbar() {
         <div className="flex items-center gap-1 sm:gap-2">
           <ThemeToggle />
           {/* Desktop scan CTA */}
-          <Button asChild size="sm" className="hidden md:inline-flex">
+          <Button asChild size="sm" className="hidden lg:inline-flex">
             <Link to="/">Scan Your Token →</Link>
           </Button>
           {/* Desktop auth button */}
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <AuthButton />
           </div>
           {/* Mobile navigation */}

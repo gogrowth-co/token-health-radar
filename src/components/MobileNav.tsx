@@ -17,7 +17,7 @@ export default function MobileNav() {
       <Button
         variant="ghost"
         size="icon"
-        className="md:hidden"
+        className="lg:hidden"
         onClick={toggleNav}
         aria-label="Toggle menu"
       >
@@ -26,7 +26,7 @@ export default function MobileNav() {
 
       {/* Mobile menu overlay */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden">
           <div className="fixed inset-0 bg-black/20" onClick={closeNav} />
           <div className="fixed top-0 right-0 bottom-0 w-64 bg-background border-l shadow-lg">
             <div className="flex items-center justify-between p-4 border-b min-h-[56px]">

@@ -34,10 +34,6 @@ const STORAGE_PROXY_PATHS = {
     url: `${SUPABASE_URL}/storage/v1/object/public/${STATIC_FILE_BUCKET}/llms.txt`,
     contentType: "text/plain; charset=utf-8"
   },
-  "/llms-full.txt": {
-    url: `${SUPABASE_URL}/storage/v1/object/public/${STATIC_FILE_BUCKET}/llms-full.txt`,
-    contentType: "text/plain; charset=utf-8"
-  },
   "/rss.xml": {
     url: `${SUPABASE_URL}/functions/v1/rss-feed`,
     contentType: "application/rss+xml; charset=utf-8"
@@ -46,6 +42,16 @@ const STORAGE_PROXY_PATHS = {
     url: `${SUPABASE_URL}/storage/v1/object/public/${STATIC_FILE_BUCKET}/f8a3d2e1b4c7059e6a8f3b2d1e4c7059.txt`,
     contentType: "text/plain; charset=utf-8"
   }
+};
+
+// 301 map for renamed slugs. Renaming a published URL without a redirect
+// strands whatever equity it earned and can leave a duplicate live. Kept
+// as data so future renames are a one-line addition.
+// 2026-08-06: best-token-scanners-2026 -> best-token-scanners (dropped the
+// year so the URL is reusable when the article is refreshed annually; the
+// year stays in the <title> for CTR/freshness).
+const REDIRECTS = {
+  "/publications/best-token-scanners-2026": "/publications/best-token-scanners"
 };
 
 const BOT_UA_REGEX = /bot|crawler|spider|crawling|googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|duckassistbot|slurp|yandexbot|baiduspider|applebot|applebot-extended|gptbot|chatgpt-user|oai-searchbot|claudebot|anthropic-ai|claude-web|perplexitybot|perplexity-user|google-extended|gemini|ccbot|meta-externalagent|meta-externalfetcher|facebookbot|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|discordbot|slackbot|redditbot|pinterestbot|bytespider|amazonbot|cohere-ai|mistralai|xai|grok|diffbot|petalbot|youbot|kagibot|lighthouse|chrome-lighthouse|screaming frog|ahrefsbot|semrushbot|mj12bot|dotbot|sitebulb|mozcrawler/i;
@@ -181,6 +187,11 @@ export default {
   async fetch(request) {
     const url = new URL(request.url);
     const pathname = normalizePath(url.pathname);
+
+    const redirectTo = REDIRECTS[pathname];
+    if (redirectTo) {
+      return Response.redirect(`https://tokenhealthscan.com${redirectTo}`, 301);
+    }
 
     if (STORAGE_PROXY_PATHS[pathname]) {
       const fileResponse = await proxyStaticFile(pathname, request);

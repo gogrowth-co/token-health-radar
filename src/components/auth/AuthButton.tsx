@@ -52,7 +52,11 @@ export function AuthButton() {
 
   return (
     <div className="flex items-center gap-2">
-      <Button variant="outline" size="sm" asChild>
+      {/* Login is hidden below xl so the desktop nav fits at the lg tier
+          (the full cluster measured ~1117px and overflowed every viewport
+          under that). Sign Up routes to the same /auth screen, so no entry
+          point is lost. */}
+      <Button variant="outline" size="sm" asChild className="hidden xl:inline-flex">
         <Link to="/auth">Login</Link>
       </Button>
       <Button size="sm" asChild>
