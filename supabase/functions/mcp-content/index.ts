@@ -16,7 +16,28 @@ const TOOLS = [
 function safeEqual(a: string, b: string) { if (a.length !== b.length) return false; let out = 0; for (let i = 0; i < a.length; i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i); return out === 0; }
 function slugify(s: string) { return s.toLowerCase().trim().replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 120); }
 function supabase() { return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!); }
-async function regenerate(slug?: string) { const base = Deno.env.get("SUPABASE_URL")!; const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!; await Promise.allSettled([fetch(`${base}/functions/v1/generate-cms-rss`, { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" } }), fetch(`${base}/functions/v1/generate-cms-llms-txt`, { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" } }), fetch(`${base}/functions/v1/regenerate-cms-snapshot`, { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(slug ? { slug } : { all: true }) })]); }
+async function regenerate(slug?: string) {
+  const base = Deno.env.get("SUPABASE_URL")!;
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const H = { Authorization: `Bearer ${key}`, "Content-Type": "application/json" };
+  const post = (fn: string, body?: unknown) =>
+    fetch(`${base}/functions/v1/${fn}`, { method: "POST", headers: H, body: body ? JSON.stringify(body) : JSON.stringify({}) });
+  // Publishing/updating a page must refresh EVERY derived surface.
+  // generate-sitemap and submit-indexnow were missing here (fixed
+  // 2026-08-07): sitemap.xml only rebuilt when a token report happened to
+  // regenerate, so a newly published article could sit out of the sitemap
+  // indefinitely, and search engines were never pinged on publish.
+  await Promise.allSettled([
+    post("generate-cms-rss"),
+    post("generate-cms-llms-txt"),
+    post("regenerate-cms-snapshot", slug ? { slug } : { all: true }),
+    post("generate-sitemap", { trigger_source: "cms_publish" }),
+  ]);
+  // IndexNow last, so it announces URLs the sitemap already lists.
+  const urls = ["https://tokenhealthscan.com/publications"];
+  if (slug) urls.push(`https://tokenhealthscan.com/publications/${slug}`);
+  await fetch(`${base}/functions/v1/submit-indexnow`, { method: "POST", headers: H, body: JSON.stringify({ urls }) }).catch(() => {});
+}
 function mapPage(row: any) { const t = Array.isArray(row.page_translations) ? row.page_translations[0] : row.page_translations; return { ...row, translation: t, url: `${SITE_URL}/publications/${t?.slug || row.slug}` }; }
 async function listPages(args: any) { const db = supabase(); let q = db.from("pages").select("*, page_translations(*)").eq("page_translations.language", "en").order("updated_at", { ascending: false }).limit(50); if (args.status && args.status !== "all") q = q.eq("status", args.status); if (args.category) q = q.eq("category", args.category); const { data, error } = await q; if (error) throw error; let rows = (data || []).map(mapPage); if (args.search) rows = rows.filter((p: any) => JSON.stringify(p).toLowerCase().includes(args.search.toLowerCase())); return rows; }
 async function getPage(args: any) { const db = supabase(); let q = db.from("pages").select("*, page_translations(*)").eq("page_translations.language", "en").limit(1); q = args.id ? q.eq("id", args.id) : q.eq("slug", args.slug); const { data, error } = await q.maybeSingle(); if (error) throw error; return data ? mapPage(data) : null; }

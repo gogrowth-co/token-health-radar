@@ -197,8 +197,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Only regenerate the sitemap if something actually changed.
-    if (summary.reportOk > 0) {
+    // Regenerate the sitemap unconditionally. Gating it on reportOk > 0
+    // meant that on days when no token was stale (the common case, given
+    // the staleness filter) the sitemap never rebuilt — so CMS changes
+    // made outside a token refresh had no scheduled safety net.
+    {
       try {
         await supabase.functions.invoke('generate-sitemap', {
           body: { trigger_source: 'weekly_refresh', timestamp: new Date().toISOString() },
