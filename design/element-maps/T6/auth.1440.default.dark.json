@@ -1,0 +1,905 @@
+{
+ "route": "http://127.0.0.1:5173/auth",
+ "slug": "auth",
+ "type": "T6",
+ "breakpoint": "1440",
+ "state": "default",
+ "theme": "dark",
+ "capturedAt": null,
+ "pageTitle": "Sign In | Token Health Scan",
+ "pageHeight": 900,
+ "count": 33,
+ "elements": [
+  {
+   "role": "text",
+   "tag": "ol",
+   "selector": "#root > div > ol.fixed",
+   "text": null,
+   "bbox": {
+    "x": 1020,
+    "y": 868,
+    "w": 420,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h1",
+   "selector": "#root > div.flex > div.hidden > div.max-w-md > h1.text-3xl",
+   "text": "Token Health Scan",
+   "bbox": {
+    "x": 136,
+    "y": 288,
+    "w": 448,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "30px",
+    "weight": "700",
+    "lh": "36px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "#root > div.flex > div.hidden > div.max-w-md > p.text-xl",
+   "text": "Scan any token and get a free health report across 5 key risk factors.",
+   "bbox": {
+    "x": 136,
+    "y": 348,
+    "w": 448,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.max-w-md > div.grid > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 138,
+    "y": 432,
+    "w": 17,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.max-w-md > div.grid > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 144,
+    "y": 433,
+    "w": 11,
+    "h": 8
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.hidden > div.max-w-md > div.grid > div.flex > span",
+   "text": "Security risk assessment",
+   "bbox": {
+    "x": 164,
+    "y": 428,
+    "w": 180,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.max-w-md > div.grid > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 138,
+    "y": 472,
+    "w": 17,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.max-w-md > div.grid > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 144,
+    "y": 473,
+    "w": 11,
+    "h": 8
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.hidden > div.max-w-md > div.grid > div.flex > span",
+   "text": "Liquidity analysis",
+   "bbox": {
+    "x": 164,
+    "y": 468,
+    "w": 123,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.max-w-md > div.grid > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 138,
+    "y": 512,
+    "w": 17,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.max-w-md > div.grid > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 144,
+    "y": 513,
+    "w": 11,
+    "h": 8
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.hidden > div.max-w-md > div.grid > div.flex > span",
+   "text": "Tokenomics evaluation",
+   "bbox": {
+    "x": 164,
+    "y": 508,
+    "w": 164,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.max-w-md > div.grid > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 138,
+    "y": 552,
+    "w": 17,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.max-w-md > div.grid > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 144,
+    "y": 553,
+    "w": 11,
+    "h": 8
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.hidden > div.max-w-md > div.grid > div.flex > span",
+   "text": "Community metrics",
+   "bbox": {
+    "x": 164,
+    "y": 548,
+    "w": 141,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.max-w-md > div.grid > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 138,
+    "y": 592,
+    "w": 17,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.max-w-md > div.grid > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 144,
+    "y": 593,
+    "w": 11,
+    "h": 8
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.hidden > div.max-w-md > div.grid > div.flex > span",
+   "text": "Development activity",
+   "bbox": {
+    "x": 164,
+    "y": 588,
+    "w": 153,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > div.w-full > div.rounded-lg > div.flex > h3.text-2xl",
+   "text": "Welcome to Token Health Scan",
+   "bbox": {
+    "x": 881,
+    "y": 139,
+    "w": 398,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "-0.6px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > div.w-full > div.rounded-lg > div.flex > p.text-sm",
+   "text": "Sign in to your account or create a new one to start scanning tokens",
+   "bbox": {
+    "x": 881,
+    "y": 169,
+    "w": 398,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:r0:-trigger-login",
+   "text": "Sign In",
+   "bbox": {
+    "x": 885,
+    "y": 237,
+    "w": 195,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgb(248, 250, 252)",
+    "border": null,
+    "radius": "4px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:r0:-trigger-register",
+   "text": "Sign Up",
+   "bbox": {
+    "x": 1080,
+    "y": 237,
+    "w": 195,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "4px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:r0:-content-login > div.space-y-4 > button.inline-flex",
+   "text": "Continue with Google",
+   "bbox": {
+    "x": 881,
+    "y": 297,
+    "w": 398,
+    "h": 44
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgb(248, 250, 252)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "#radix-:r0:-content-login > div.space-y-4 > div.relative > div.relative > span.bg-background",
+   "text": "OR",
+   "bbox": {
+    "x": 1063,
+    "y": 357,
+    "w": 33,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgb(248, 250, 252)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "form",
+   "selector": "#radix-:r0:-content-login > div.space-y-4 > form.space-y-4",
+   "text": "Email\nPassword\nSign In",
+   "bbox": {
+    "x": 881,
+    "y": 389,
+    "w": 398,
+    "h": 220
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "label",
+   "selector": "#radix-:r0:-content-login > div.space-y-4 > form.space-y-4 > div.space-y-2 > label.text-sm",
+   "text": "Email",
+   "bbox": {
+    "x": 881,
+    "y": 393,
+    "w": 35,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "14px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "input",
+   "tag": "input",
+   "selector": "#email",
+   "text": null,
+   "bbox": {
+    "x": 881,
+    "y": 421,
+    "w": 398,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgb(248, 250, 252)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "label",
+   "selector": "#radix-:r0:-content-login > div.space-y-4 > form.space-y-4 > div.space-y-2 > label.text-sm",
+   "text": "Password",
+   "bbox": {
+    "x": 881,
+    "y": 481,
+    "w": 64,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "14px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "input",
+   "tag": "input",
+   "selector": "#password",
+   "text": null,
+   "bbox": {
+    "x": 881,
+    "y": 509,
+    "w": 398,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgb(248, 250, 252)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:r0:-content-login > div.space-y-4 > form.space-y-4 > button.inline-flex",
+   "text": "Sign In",
+   "bbox": {
+    "x": 881,
+    "y": 565,
+    "w": 398,
+    "h": 44
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:r0:-content-login > div.mt-4 > p > button.text-primary",
+   "text": "Create one",
+   "bbox": {
+    "x": 1122,
+    "y": 625,
+    "w": 72,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.flex > div.w-full > div.rounded-lg > div.items-center > div.text-sm",
+   "text": "By continuing, you agree to our Terms of Service and Privacy Policy.",
+   "bbox": {
+    "x": 881,
+    "y": 669,
+    "w": 398,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "div.flex > div.w-full > div.rounded-lg > div.items-center > button.inline-flex",
+   "text": "Back to Home",
+   "bbox": {
+    "x": 881,
+    "y": 717,
+    "w": 398,
+    "h": 44
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgb(248, 250, 252)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  }
+ ]
+}

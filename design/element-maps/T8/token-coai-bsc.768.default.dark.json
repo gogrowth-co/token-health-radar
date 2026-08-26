@@ -1,0 +1,5900 @@
+{
+ "route": "https://tokenhealthscan.com/token/coai",
+ "slug": "token-coai-bsc",
+ "type": "T8",
+ "breakpoint": "768",
+ "state": "default",
+ "theme": "dark",
+ "capturedAt": null,
+ "pageTitle": "ChainOpera AI Risk Score & Audit (2026) | Token Health Scan",
+ "pageHeight": 8179,
+ "count": 218,
+ "elements": [
+  {
+   "role": "text",
+   "tag": "ol",
+   "selector": "#root > div > ol.fixed",
+   "text": null,
+   "bbox": {
+    "x": 348,
+    "y": 992,
+    "w": 420,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "header",
+   "selector": "#root > div.min-h-screen > header.sticky",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 0,
+    "y": 0,
+    "w": 768,
+    "h": 65
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(2, 8, 23, 0.95)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.min-h-screen > header.sticky > div.container > div.flex > a.flex",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 24,
+    "y": 16,
+    "w": 205,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.flex > a.flex > div.w-7 > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 33,
+    "y": 25,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.container > div.flex > a.flex > span.font-bold > span.hidden",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 64,
+    "y": 20,
+    "w": 165,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "button",
+   "selector": "div.min-h-screen > header.sticky > div.container > div.flex > button.inline-flex",
+   "text": "Toggle theme",
+   "bbox": {
+    "x": 656,
+    "y": 12,
+    "w": 40,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "button",
+   "selector": "div.min-h-screen > header.sticky > div.container > div.flex > button.inline-flex",
+   "text": "Toggle menu",
+   "bbox": {
+    "x": 704,
+    "y": 12,
+    "w": 40,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8",
+   "text": "Token Header\nChainOpera AI (COAI)\n\nOverall score: 43/100\n\n$0.3435\nMarket cap: $6",
+   "bbox": {
+    "x": 16,
+    "y": 97,
+    "w": 736,
+    "h": 290
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "header",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8 > header.rounded-2xl",
+   "text": "ChainOpera AI (COAI)\n\nOverall score: 43/100\n\n$0.3435\nMarket cap: $65M",
+   "bbox": {
+    "x": 16,
+    "y": 97,
+    "w": 736,
+    "h": 290
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "16px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.min-h-screen > div.container > section.mb-8 > header.rounded-2xl > div.w-full",
+   "text": null,
+   "bbox": {
+    "x": 17,
+    "y": 98,
+    "w": 734,
+    "h": 288
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.mb-8 > header.rounded-2xl > div.absolute > div.h-12 > img.h-full",
+   "text": "COAI logo",
+   "bbox": {
+    "x": 41,
+    "y": 300,
+    "w": 48,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.mb-8 > header.rounded-2xl > div.absolute > div.flex-1 > h2.text-white",
+   "text": "ChainOpera AI (COAI)",
+   "bbox": {
+    "x": 101,
+    "y": 286,
+    "w": 626,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "header.rounded-2xl > div.absolute > div.flex-1 > h2.text-white > span.text-white\\/80",
+   "text": "(COAI)",
+   "bbox": {
+    "x": 265,
+    "y": 288,
+    "w": 75,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgba(255, 255, 255, 0.8)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "header.rounded-2xl > div.absolute > div.flex-1 > div.flex > p.text-white\\/80",
+   "text": "Overall score: 43/100",
+   "bbox": {
+    "x": 101,
+    "y": 318,
+    "w": 626,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgba(255, 255, 255, 0.8)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.absolute > div.flex-1 > div.flex > div.flex > span",
+   "text": "$0.3435",
+   "bbox": {
+    "x": 101,
+    "y": 342,
+    "w": 55,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgba(255, 255, 255, 0.7)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.absolute > div.flex-1 > div.flex > div.flex > span",
+   "text": "Market cap: $65M",
+   "bbox": {
+    "x": 168,
+    "y": 342,
+    "w": 118,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgba(255, 255, 255, 0.7)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "nav",
+   "selector": "#root > div.min-h-screen > div.container > nav.flex",
+   "text": "Home\nToken Reports\nChainOpera AI",
+   "bbox": {
+    "x": 16,
+    "y": 419,
+    "w": 736,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "#root > div.min-h-screen > div.container > nav.flex > a.hover\\:text-primary",
+   "text": "Home",
+   "bbox": {
+    "x": 16,
+    "y": 419,
+    "w": 38,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "span",
+   "selector": "#root > div.min-h-screen > div.container > nav.flex > span",
+   "text": "Token Reports",
+   "bbox": {
+    "x": 86,
+    "y": 419,
+    "w": 93,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "span",
+   "selector": "#root > div.min-h-screen > div.container > nav.flex > span",
+   "text": "ChainOpera AI",
+   "bbox": {
+    "x": 211,
+    "y": 419,
+    "w": 93,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "header",
+   "selector": "#root > div.min-h-screen > div.container > header.mb-8",
+   "text": "ChainOpera AI (COAI) Risk Report\nOverall Score: 43/100\n$0.3435\nMarket Cap: $64,5",
+   "bbox": {
+    "x": 16,
+    "y": 471,
+    "w": 736,
+    "h": 114
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h1",
+   "selector": "#root > div.min-h-screen > div.container > header.mb-8 > h1.text-4xl",
+   "text": "ChainOpera AI (COAI) Risk Report",
+   "bbox": {
+    "x": 16,
+    "y": 471,
+    "w": 736,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "36px",
+    "weight": "700",
+    "lh": "40px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.min-h-screen > div.container > header.mb-8 > div.flex > div.inline-flex",
+   "text": "Overall Score: 43/100",
+   "bbox": {
+    "x": 16,
+    "y": 527,
+    "w": 150,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.min-h-screen > div.container > header.mb-8 > div.flex > div.inline-flex",
+   "text": "$0.3435",
+   "bbox": {
+    "x": 182,
+    "y": 527,
+    "w": 73,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.min-h-screen > div.container > header.mb-8 > div.flex > div.inline-flex",
+   "text": "Market Cap: $64,570,954.22",
+   "bbox": {
+    "x": 270,
+    "y": 527,
+    "w": 192,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "#root > div.min-h-screen > div.container > header.mb-8 > p.text-muted-foreground",
+   "text": "Generated on 8/5/2026 | Updated Weekly | Last Updated: August 2026",
+   "bbox": {
+    "x": 16,
+    "y": 565,
+    "w": 736,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8",
+   "text": "What is ChainOpera AI?\n\nChainOpera AI (COAI) is a token powering a decentralized",
+   "bbox": {
+    "x": 16,
+    "y": 617,
+    "w": 736,
+    "h": 202
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8 > h2.text-2xl",
+   "text": "What is ChainOpera AI?",
+   "bbox": {
+    "x": 16,
+    "y": 617,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > section.mb-8 > div.rounded-lg > div.p-6 > p.text-muted-foreground",
+   "text": "ChainOpera AI (COAI) is a token powering a decentralized AI ecosystem where comm",
+   "bbox": {
+    "x": 41,
+    "y": 690,
+    "w": 686,
+    "h": 104
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8",
+   "text": "Risk Overview\n\nChainOpera AI (COAI) presents a high-risk speculative profile des",
+   "bbox": {
+    "x": 16,
+    "y": 851,
+    "w": 736,
+    "h": 306
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8 > h2.text-2xl",
+   "text": "Risk Overview",
+   "bbox": {
+    "x": 16,
+    "y": 851,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > section.mb-8 > div.rounded-lg > div.p-6 > p.text-muted-foreground",
+   "text": "ChainOpera AI (COAI) presents a high-risk speculative profile despite its ambiti",
+   "bbox": {
+    "x": 41,
+    "y": 924,
+    "w": 686,
+    "h": 208
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8",
+   "text": "Risk Analysis Scores\nSecurity\n30/100\n\nHigh Risk\n\nTokenomics\n49/100\n\nHigh Risk\n\nL",
+   "bbox": {
+    "x": 16,
+    "y": 1189,
+    "w": 736,
+    "h": 470
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8 > h2.text-2xl",
+   "text": "Risk Analysis Scores",
+   "bbox": {
+    "x": 16,
+    "y": 1189,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.mb-8 > div.grid > div.rounded-lg > div.p-6 > h3.tracking-tight",
+   "text": "Security",
+   "bbox": {
+    "x": 41,
+    "y": 1262,
+    "w": 52,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "-0.35px"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.grid > div.rounded-lg > div.p-6 > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 338,
+    "y": 1265,
+    "w": 11,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 43,
+    "y": 1298,
+    "w": 17,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 113, 113)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > div.rounded-lg > div.p-6 > div.flex > div.text-2xl",
+   "text": "30/100",
+   "bbox": {
+    "x": 69,
+    "y": 1290,
+    "w": 82,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "700",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 113, 113)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.mb-8 > div.grid > div.rounded-lg > div.p-6 > p.text-xs",
+   "text": "High Risk",
+   "bbox": {
+    "x": 41,
+    "y": 1326,
+    "w": 310,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.mb-8 > div.grid > div.rounded-lg > div.p-6 > h3.tracking-tight",
+   "text": "Tokenomics",
+   "bbox": {
+    "x": 417,
+    "y": 1262,
+    "w": 75,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "-0.35px"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.grid > div.rounded-lg > div.p-6 > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 715,
+    "y": 1267,
+    "w": 8,
+    "h": 9
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 419,
+    "y": 1298,
+    "w": 17,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 113, 113)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > div.rounded-lg > div.p-6 > div.flex > div.text-2xl",
+   "text": "49/100",
+   "bbox": {
+    "x": 445,
+    "y": 1290,
+    "w": 83,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "700",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 113, 113)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.mb-8 > div.grid > div.rounded-lg > div.p-6 > p.text-xs",
+   "text": "High Risk",
+   "bbox": {
+    "x": 417,
+    "y": 1326,
+    "w": 310,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.mb-8 > div.grid > div.rounded-lg > div.p-6 > h3.tracking-tight",
+   "text": "Liquidity",
+   "bbox": {
+    "x": 41,
+    "y": 1408,
+    "w": 54,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "-0.35px"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 43,
+    "y": 1444,
+    "w": 17,
+    "h": 15
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > div.rounded-lg > div.p-6 > div.flex > div.text-2xl",
+   "text": "65/100",
+   "bbox": {
+    "x": 69,
+    "y": 1436,
+    "w": 82,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "700",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.mb-8 > div.grid > div.rounded-lg > div.p-6 > p.text-xs",
+   "text": "Moderate",
+   "bbox": {
+    "x": 41,
+    "y": 1472,
+    "w": 310,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.mb-8 > div.grid > div.rounded-lg > div.p-6 > h3.tracking-tight",
+   "text": "Community",
+   "bbox": {
+    "x": 417,
+    "y": 1408,
+    "w": 73,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "-0.35px"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 419,
+    "y": 1444,
+    "w": 17,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 113, 113)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > div.rounded-lg > div.p-6 > div.flex > div.text-2xl",
+   "text": "44/100",
+   "bbox": {
+    "x": 445,
+    "y": 1436,
+    "w": 83,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "700",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 113, 113)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.mb-8 > div.grid > div.rounded-lg > div.p-6 > p.text-xs",
+   "text": "High Risk",
+   "bbox": {
+    "x": 417,
+    "y": 1472,
+    "w": 310,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.mb-8 > div.grid > div.rounded-lg > div.p-6 > h3.tracking-tight",
+   "text": "Development",
+   "bbox": {
+    "x": 41,
+    "y": 1554,
+    "w": 84,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "-0.35px"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 43,
+    "y": 1590,
+    "w": 17,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 113, 113)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > div.rounded-lg > div.p-6 > div.flex > div.text-2xl",
+   "text": "25/100",
+   "bbox": {
+    "x": 69,
+    "y": 1582,
+    "w": 81,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "700",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 113, 113)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.mb-8 > div.grid > div.rounded-lg > div.p-6 > p.text-xs",
+   "text": "High Risk",
+   "bbox": {
+    "x": 41,
+    "y": 1618,
+    "w": 310,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8",
+   "text": "Security Score\nWhat is Security?\n\nEvaluates smart contract security, audit statu",
+   "bbox": {
+    "x": 16,
+    "y": 1691,
+    "w": 736,
+    "h": 784
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8 > h2.text-2xl",
+   "text": "Security Score",
+   "bbox": {
+    "x": 16,
+    "y": 1691,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.container > section.mb-8 > h2.text-2xl > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 20,
+    "y": 1697,
+    "w": 16,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 43,
+    "y": 1768,
+    "w": 16,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(59, 130, 246)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h4.font-semibold",
+   "text": "What is Security?",
+   "bbox": {
+    "x": 73,
+    "y": 1764,
+    "w": 654,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > p.text-muted-foreground",
+   "text": "Evaluates smart contract security, audit status, and potential vulnerabilities.",
+   "bbox": {
+    "x": 73,
+    "y": 1796,
+    "w": 654,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h4.font-semibold",
+   "text": "Why it matters",
+   "bbox": {
+    "x": 73,
+    "y": 1831,
+    "w": 654,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > p.text-muted-foreground",
+   "text": "Security flaws can lead to total loss of funds through hacks, exploits, or rug p",
+   "bbox": {
+    "x": 73,
+    "y": 1863,
+    "w": 654,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h4.font-semibold",
+   "text": "Key indicators we evaluate",
+   "bbox": {
+    "x": 73,
+    "y": 1898,
+    "w": 654,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Smart contract audit",
+   "bbox": {
+    "x": 73,
+    "y": 1930,
+    "w": 144,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Code verification",
+   "bbox": {
+    "x": 225,
+    "y": 1930,
+    "w": 123,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Owner privileges",
+   "bbox": {
+    "x": 355,
+    "y": 1930,
+    "w": 122,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Liquidity locks",
+   "bbox": {
+    "x": 485,
+    "y": 1930,
+    "w": 107,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Honeypot detection",
+   "bbox": {
+    "x": 73,
+    "y": 1960,
+    "w": 139,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.mb-8 > div.rounded-lg > div.p-6 > div.prose > p.mb-4",
+   "text": "The security assessment reveals significant concerns due to multiple unknown var",
+   "bbox": {
+    "x": 41,
+    "y": 2064,
+    "w": 686,
+    "h": 78
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "Contract verification status is unknown, meaning the source code may not match t",
+   "bbox": {
+    "x": 41,
+    "y": 2158,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "Ownership renouncement is unknown; if the owner has not renounced, they retain t",
+   "bbox": {
+    "x": 41,
+    "y": 2218,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "Minting capability is unknown; if the contract can mint unlimited tokens, the to",
+   "bbox": {
+    "x": 41,
+    "y": 2278,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "No honeypot test results are available; this leaves the possibility that selling",
+   "bbox": {
+    "x": 41,
+    "y": 2338,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "Liquidity lock status is unknown; without a lock, the liquidity provider could r",
+   "bbox": {
+    "x": 41,
+    "y": 2398,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8",
+   "text": "Liquidity Score\nWhat is Liquidity?\n\nAnalyzes trading volume, market depth, and e",
+   "bbox": {
+    "x": 16,
+    "y": 2507,
+    "w": 736,
+    "h": 720
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8 > h2.text-2xl",
+   "text": "Liquidity Score",
+   "bbox": {
+    "x": 16,
+    "y": 2507,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.container > section.mb-8 > h2.text-2xl > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 18,
+    "y": 2518,
+    "w": 20,
+    "h": 10
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 43,
+    "y": 2583,
+    "w": 17,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(59, 130, 246)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h4.font-semibold",
+   "text": "What is Liquidity?",
+   "bbox": {
+    "x": 73,
+    "y": 2580,
+    "w": 599,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > p.text-muted-foreground",
+   "text": "Analyzes trading volume, market depth, and ease of buying/selling the token.",
+   "bbox": {
+    "x": 73,
+    "y": 2612,
+    "w": 599,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h4.font-semibold",
+   "text": "Why it matters",
+   "bbox": {
+    "x": 73,
+    "y": 2646,
+    "w": 599,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > p.text-muted-foreground",
+   "text": "Poor liquidity can trap investors, prevent exits, and indicate market manipulati",
+   "bbox": {
+    "x": 73,
+    "y": 2678,
+    "w": 599,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h4.font-semibold",
+   "text": "Key indicators we evaluate",
+   "bbox": {
+    "x": 73,
+    "y": 2713,
+    "w": 599,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Trading volume",
+   "bbox": {
+    "x": 73,
+    "y": 2745,
+    "w": 113,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Market depth",
+   "bbox": {
+    "x": 194,
+    "y": 2745,
+    "w": 101,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Exchange listings",
+   "bbox": {
+    "x": 303,
+    "y": 2745,
+    "w": 125,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Slippage tolerance",
+   "bbox": {
+    "x": 436,
+    "y": 2745,
+    "w": 132,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Price impact",
+   "bbox": {
+    "x": 576,
+    "y": 2745,
+    "w": 96,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.mb-8 > div.rounded-lg > div.p-6 > div.prose > p.mb-4",
+   "text": "Liquidity scores a moderate 65/100, but key weaknesses exist: very low DEX depth",
+   "bbox": {
+    "x": 41,
+    "y": 2849,
+    "w": 686,
+    "h": 104
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "24-hour trading volume is $1,954,113.56, which is relatively low for a $64.5M ma",
+   "bbox": {
+    "x": 41,
+    "y": 2969,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "The token is listed on 2 CEXs, offering some accessibility, but the absence of m",
+   "bbox": {
+    "x": 41,
+    "y": 3029,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "DEX depth status is rated 'Very Low,' meaning large buy or sell orders can signi",
+   "bbox": {
+    "x": 41,
+    "y": 3089,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "The combination of low volume and shallow depth makes the token vulnerable to pu",
+   "bbox": {
+    "x": 41,
+    "y": 3149,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8",
+   "text": "Tokenomics Score\nWhat is Tokenomics?\n\nReviews token distribution, supply mechani",
+   "bbox": {
+    "x": 16,
+    "y": 3258,
+    "w": 736,
+    "h": 832
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8 > h2.text-2xl",
+   "text": "Tokenomics Score",
+   "bbox": {
+    "x": 16,
+    "y": 3258,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.container > section.mb-8 > h2.text-2xl > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 22,
+    "y": 3267,
+    "w": 12,
+    "h": 14
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 43,
+    "y": 3335,
+    "w": 17,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(59, 130, 246)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h4.font-semibold",
+   "text": "What is Tokenomics?",
+   "bbox": {
+    "x": 73,
+    "y": 3331,
+    "w": 605,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > p.text-muted-foreground",
+   "text": "Reviews token distribution, supply mechanics, and economic incentives.",
+   "bbox": {
+    "x": 73,
+    "y": 3363,
+    "w": 605,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h4.font-semibold",
+   "text": "Why it matters",
+   "bbox": {
+    "x": 73,
+    "y": 3398,
+    "w": 605,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > p.text-muted-foreground",
+   "text": "Poor tokenomics can lead to inflation, unfair distribution, and unsustainable pr",
+   "bbox": {
+    "x": 73,
+    "y": 3430,
+    "w": 605,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h4.font-semibold",
+   "text": "Key indicators we evaluate",
+   "bbox": {
+    "x": 73,
+    "y": 3465,
+    "w": 605,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Total supply",
+   "bbox": {
+    "x": 73,
+    "y": 3497,
+    "w": 94,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Circulating supply",
+   "bbox": {
+    "x": 175,
+    "y": 3497,
+    "w": 129,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Token distribution",
+   "bbox": {
+    "x": 312,
+    "y": 3497,
+    "w": 129,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Inflation rate",
+   "bbox": {
+    "x": 449,
+    "y": 3497,
+    "w": 98,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Utility mechanics",
+   "bbox": {
+    "x": 554,
+    "y": 3497,
+    "w": 124,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.mb-8 > div.rounded-lg > div.p-6 > div.prose > p.mb-4",
+   "text": "Tokenomics score is 49/100, reflecting extremely high total supply, severe holde",
+   "bbox": {
+    "x": 41,
+    "y": 3601,
+    "w": 686,
+    "h": 78
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "Total supply is 1,000,000,000,000,000,000,000,000,000 (1e+27), an astronomically",
+   "bbox": {
+    "x": 41,
+    "y": 3695,
+    "w": 686,
+    "h": 78
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "Circulating supply is only 188,000,098 tokens, meaning over 99.999999999% of the",
+   "bbox": {
+    "x": 41,
+    "y": 3781,
+    "w": 686,
+    "h": 78
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "Holder concentration is 'Very High,' indicating that a small number of wallets c",
+   "bbox": {
+    "x": 41,
+    "y": 3867,
+    "w": 686,
+    "h": 78
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "Burn mechanism is unknown; without a clear deflationary mechanism, the token lac",
+   "bbox": {
+    "x": 41,
+    "y": 3953,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "The economic model behind the tokenomics is unclear, and the extreme supply disc",
+   "bbox": {
+    "x": 41,
+    "y": 4013,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8",
+   "text": "Community Score\nWhat is Community?\n\nAssesses social media presence, engagement l",
+   "bbox": {
+    "x": 16,
+    "y": 4122,
+    "w": 736,
+    "h": 798
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8 > h2.text-2xl",
+   "text": "Community Score",
+   "bbox": {
+    "x": 16,
+    "y": 4122,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.container > section.mb-8 > h2.text-2xl > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 21,
+    "y": 4129,
+    "w": 8,
+    "h": 8
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 42,
+    "y": 4199,
+    "w": 14,
+    "h": 14
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(59, 130, 246)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h4.font-semibold",
+   "text": "What is Community?",
+   "bbox": {
+    "x": 70,
+    "y": 4195,
+    "w": 657,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > p.text-muted-foreground",
+   "text": "Assesses social media presence, engagement levels, and community growth metrics.",
+   "bbox": {
+    "x": 70,
+    "y": 4227,
+    "w": 657,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h4.font-semibold",
+   "text": "Why it matters",
+   "bbox": {
+    "x": 70,
+    "y": 4261,
+    "w": 657,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > p.text-muted-foreground",
+   "text": "Strong communities drive adoption and price stability, while weak communities of",
+   "bbox": {
+    "x": 70,
+    "y": 4293,
+    "w": 657,
+    "h": 46
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h4.font-semibold",
+   "text": "Key indicators we evaluate",
+   "bbox": {
+    "x": 70,
+    "y": 4351,
+    "w": 657,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Social media followers",
+   "bbox": {
+    "x": 70,
+    "y": 4383,
+    "w": 154,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Engagement rates",
+   "bbox": {
+    "x": 232,
+    "y": 4383,
+    "w": 130,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Community growth",
+   "bbox": {
+    "x": 369,
+    "y": 4383,
+    "w": 134,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Official verification",
+   "bbox": {
+    "x": 512,
+    "y": 4383,
+    "w": 134,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Active discussions",
+   "bbox": {
+    "x": 70,
+    "y": 4413,
+    "w": 132,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.mb-8 > div.rounded-lg > div.p-6 > div.prose > p.mb-4",
+   "text": "Community score of 44/100 indicates moderate engagement, but the lack of verifie",
+   "bbox": {
+    "x": 41,
+    "y": 4517,
+    "w": 686,
+    "h": 104
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "Twitter followers are not available, and the account verification status is unkn",
+   "bbox": {
+    "x": 41,
+    "y": 4637,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "Discord member count is not available, which is unusual for a project claiming t",
+   "bbox": {
+    "x": 41,
+    "y": 4697,
+    "w": 686,
+    "h": 78
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "Telegram has 30,594 members, a moderate number, but without growth metrics or en",
+   "bbox": {
+    "x": 41,
+    "y": 4783,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "The lack of transparency around community platforms and verified accounts raises",
+   "bbox": {
+    "x": 41,
+    "y": 4843,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8",
+   "text": "Development Score\nWhat is Development?\n\nEvaluates code activity, repository heal",
+   "bbox": {
+    "x": 16,
+    "y": 4952,
+    "w": 736,
+    "h": 746
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8 > h2.text-2xl",
+   "text": "Development Score",
+   "bbox": {
+    "x": 16,
+    "y": 4952,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 43,
+    "y": 5029,
+    "w": 16,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(59, 130, 246)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h4.font-semibold",
+   "text": "What is Development?",
+   "bbox": {
+    "x": 72,
+    "y": 5025,
+    "w": 655,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > p.text-muted-foreground",
+   "text": "Evaluates code activity, repository health, and ongoing project maintenance.",
+   "bbox": {
+    "x": 72,
+    "y": 5057,
+    "w": 655,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h4.font-semibold",
+   "text": "Why it matters",
+   "bbox": {
+    "x": 72,
+    "y": 5092,
+    "w": 655,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > p.text-muted-foreground",
+   "text": "Active development indicates a committed team and project longevity, while aband",
+   "bbox": {
+    "x": 72,
+    "y": 5124,
+    "w": 655,
+    "h": 46
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h4.font-semibold",
+   "text": "Key indicators we evaluate",
+   "bbox": {
+    "x": 72,
+    "y": 5181,
+    "w": 655,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Code commits",
+   "bbox": {
+    "x": 72,
+    "y": 5213,
+    "w": 107,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Repository activity",
+   "bbox": {
+    "x": 187,
+    "y": 5213,
+    "w": 133,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Developer count",
+   "bbox": {
+    "x": 328,
+    "y": 5213,
+    "w": 119,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Documentation quality",
+   "bbox": {
+    "x": 455,
+    "y": 5213,
+    "w": 156,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.flex > div > div.flex > div.inline-flex",
+   "text": "Update frequency",
+   "bbox": {
+    "x": 72,
+    "y": 5243,
+    "w": 128,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.mb-8 > div.rounded-lg > div.p-6 > div.prose > p.mb-4",
+   "text": "Development activity is virtually non-existent in public view, earning a score o",
+   "bbox": {
+    "x": 41,
+    "y": 5347,
+    "w": 686,
+    "h": 78
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "The project is not confirmed as open source; without a public repository, indepe",
+   "bbox": {
+    "x": 41,
+    "y": 5441,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "No GitHub repository or contributor data is available, meaning there is no way t",
+   "bbox": {
+    "x": 41,
+    "y": 5501,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "Last commit date is unknown, which could indicate that development has stalled o",
+   "bbox": {
+    "x": 41,
+    "y": 5561,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.rounded-lg > div.p-6 > div.prose > ul.space-y-2 > li.leading-relaxed",
+   "text": "The lack of transparent development activity is a significant red flag, as it pr",
+   "bbox": {
+    "x": 41,
+    "y": 5621,
+    "w": 686,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8",
+   "text": "How We Score\n\nOur scoring system evaluates tokens across five key categories, ea",
+   "bbox": {
+    "x": 16,
+    "y": 5730,
+    "w": 736,
+    "h": 410
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8 > h2.text-2xl",
+   "text": "How We Score",
+   "bbox": {
+    "x": 16,
+    "y": 5730,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.mb-8 > div.rounded-lg > div.p-6 > div.prose > p.mb-4",
+   "text": "Our scoring system evaluates tokens across five key categories, each weighted eq",
+   "bbox": {
+    "x": 41,
+    "y": 5803,
+    "w": 686,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.p-6 > div.prose > ul.space-y-2 > li > strong",
+   "text": "Security (20%):",
+   "bbox": {
+    "x": 41,
+    "y": 5870,
+    "w": 124,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.p-6 > div.prose > ul.space-y-2 > li > strong",
+   "text": "Tokenomics (20%):",
+   "bbox": {
+    "x": 41,
+    "y": 5926,
+    "w": 152,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.p-6 > div.prose > ul.space-y-2 > li > strong",
+   "text": "Liquidity (20%):",
+   "bbox": {
+    "x": 41,
+    "y": 5982,
+    "w": 127,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.p-6 > div.prose > ul.space-y-2 > li > strong",
+   "text": "Community (20%):",
+   "bbox": {
+    "x": 41,
+    "y": 6014,
+    "w": 149,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.p-6 > div.prose > ul.space-y-2 > li > strong",
+   "text": "Development (20%):",
+   "bbox": {
+    "x": 41,
+    "y": 6070,
+    "w": 162,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8",
+   "text": "How to Buy COAI\n1\nSet up a cryptocurrency wallet\n\nDownload and install a compati",
+   "bbox": {
+    "x": 16,
+    "y": 6172,
+    "w": 736,
+    "h": 778
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8 > h2.text-2xl",
+   "text": "How to Buy COAI",
+   "bbox": {
+    "x": 16,
+    "y": 6172,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.container > section.mb-8 > h2.text-2xl > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 19,
+    "y": 6179,
+    "w": 19,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.container > section.mb-8 > h2.text-2xl > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 19,
+    "y": 6181,
+    "w": 18,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.rounded-lg > div.p-6 > div.space-y-4 > div.flex > div.flex-shrink-0",
+   "text": "1",
+   "bbox": {
+    "x": 58,
+    "y": 6262,
+    "w": 32,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(15, 23, 42)",
+    "bg": "rgb(59, 130, 246)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div.flex-1 > h4.font-semibold",
+   "text": "Set up a cryptocurrency wallet",
+   "bbox": {
+    "x": 106,
+    "y": 6262,
+    "w": 568,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div.flex-1 > p.text-muted-foreground",
+   "text": "Download and install a compatible wallet like MetaMask, Trust Wallet, or Binance",
+   "bbox": {
+    "x": 106,
+    "y": 6294,
+    "w": 568,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.rounded-lg > div.p-6 > div.space-y-4 > div.flex > div.flex-shrink-0",
+   "text": "2",
+   "bbox": {
+    "x": 58,
+    "y": 6396,
+    "w": 32,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(15, 23, 42)",
+    "bg": "rgb(59, 130, 246)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div.flex-1 > h4.font-semibold",
+   "text": "Purchase BNB or BUSD",
+   "bbox": {
+    "x": 106,
+    "y": 6396,
+    "w": 568,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div.flex-1 > p.text-muted-foreground",
+   "text": "Buy BNB (Binance Coin) or BUSD (BUSD stablecoin) from a centralized exchange suc",
+   "bbox": {
+    "x": 106,
+    "y": 6428,
+    "w": 568,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.rounded-lg > div.p-6 > div.space-y-4 > div.flex > div.flex-shrink-0",
+   "text": "3",
+   "bbox": {
+    "x": 58,
+    "y": 6530,
+    "w": 32,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(15, 23, 42)",
+    "bg": "rgb(59, 130, 246)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div.flex-1 > h4.font-semibold",
+   "text": "Transfer to your wallet",
+   "bbox": {
+    "x": 106,
+    "y": 6530,
+    "w": 568,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div.flex-1 > p.text-muted-foreground",
+   "text": "Send your BNB or BUSD from the exchange to your personal wallet address on the B",
+   "bbox": {
+    "x": 106,
+    "y": 6562,
+    "w": 568,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.rounded-lg > div.p-6 > div.space-y-4 > div.flex > div.flex-shrink-0",
+   "text": "4",
+   "bbox": {
+    "x": 58,
+    "y": 6664,
+    "w": 32,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(15, 23, 42)",
+    "bg": "rgb(59, 130, 246)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div.flex-1 > h4.font-semibold",
+   "text": "Connect to a DEX",
+   "bbox": {
+    "x": 106,
+    "y": 6664,
+    "w": 568,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div.flex-1 > p.text-muted-foreground",
+   "text": "Visit a decentralized exchange like PancakeSwap (pancakeswap.finance) and connec",
+   "bbox": {
+    "x": 106,
+    "y": 6696,
+    "w": 568,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.rounded-lg > div.p-6 > div.space-y-4 > div.flex > div.flex-shrink-0",
+   "text": "5",
+   "bbox": {
+    "x": 58,
+    "y": 6798,
+    "w": 32,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(15, 23, 42)",
+    "bg": "rgb(59, 130, 246)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div.flex-1 > h4.font-semibold",
+   "text": "Swap for COAI",
+   "bbox": {
+    "x": 106,
+    "y": 6798,
+    "w": 568,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div.flex-1 > p.text-muted-foreground",
+   "text": "Enter the COAI token contract address (0x0a8d6c86e1bce73fe4d0bd531e1a567306836ea",
+   "bbox": {
+    "x": 106,
+    "y": 6830,
+    "w": 568,
+    "h": 78
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8",
+   "text": "Frequently Asked Questions\nIs COAI a good investment?\nWhat are the main risks of",
+   "bbox": {
+    "x": 16,
+    "y": 6982,
+    "w": 736,
+    "h": 383
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8 > h2.text-2xl",
+   "text": "Frequently Asked Questions",
+   "bbox": {
+    "x": 16,
+    "y": 6982,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.rounded-lg > div.p-6 > div.w-full > div.border-b > h3.flex",
+   "text": "Is COAI a good investment?",
+   "bbox": {
+    "x": 41,
+    "y": 7055,
+    "w": 686,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:r0:",
+   "text": "Is COAI a good investment?",
+   "bbox": {
+    "x": 41,
+    "y": 7055,
+    "w": 686,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.rounded-lg > div.p-6 > div.w-full > div.border-b > h3.flex",
+   "text": "What are the main risks of investing in COAI?",
+   "bbox": {
+    "x": 41,
+    "y": 7112,
+    "w": 686,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:r2:",
+   "text": "What are the main risks of investing in COAI?",
+   "bbox": {
+    "x": 41,
+    "y": 7112,
+    "w": 686,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.rounded-lg > div.p-6 > div.w-full > div.border-b > h3.flex",
+   "text": "How secure is the COAI smart contract?",
+   "bbox": {
+    "x": 41,
+    "y": 7169,
+    "w": 686,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:r4:",
+   "text": "How secure is the COAI smart contract?",
+   "bbox": {
+    "x": 41,
+    "y": 7169,
+    "w": 686,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.rounded-lg > div.p-6 > div.w-full > div.border-b > h3.flex",
+   "text": "What makes COAI different from other tokens?",
+   "bbox": {
+    "x": 41,
+    "y": 7226,
+    "w": 686,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:r6:",
+   "text": "What makes COAI different from other tokens?",
+   "bbox": {
+    "x": 41,
+    "y": 7226,
+    "w": 686,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.rounded-lg > div.p-6 > div.w-full > div.border-b > h3.flex",
+   "text": "Where can I track COAI price and market data?",
+   "bbox": {
+    "x": 41,
+    "y": 7283,
+    "w": 686,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:r8:",
+   "text": "Where can I track COAI price and market data?",
+   "bbox": {
+    "x": 41,
+    "y": 7283,
+    "w": 686,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8",
+   "text": "More Resources\nView Contract\nOfficial Website\nTwitter/X",
+   "bbox": {
+    "x": 16,
+    "y": 7397,
+    "w": 736,
+    "h": 214
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8 > h2.text-2xl",
+   "text": "More Resources",
+   "bbox": {
+    "x": 16,
+    "y": 7397,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "section.mb-8 > div.rounded-lg > div.p-6 > div.grid > a.flex",
+   "text": "View Contract",
+   "bbox": {
+    "x": 41,
+    "y": 7470,
+    "w": 335,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.p-6 > div.grid > a.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 56,
+    "y": 7491,
+    "w": 10,
+    "h": 10
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.rounded-lg > div.p-6 > div.grid > a.flex > span",
+   "text": "View Contract",
+   "bbox": {
+    "x": 78,
+    "y": 7483,
+    "w": 103,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "section.mb-8 > div.rounded-lg > div.p-6 > div.grid > a.flex",
+   "text": "Official Website",
+   "bbox": {
+    "x": 392,
+    "y": 7470,
+    "w": 335,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.p-6 > div.grid > a.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 407,
+    "y": 7491,
+    "w": 10,
+    "h": 10
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.rounded-lg > div.p-6 > div.grid > a.flex > span",
+   "text": "Official Website",
+   "bbox": {
+    "x": 429,
+    "y": 7483,
+    "w": 114,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "section.mb-8 > div.rounded-lg > div.p-6 > div.grid > a.flex",
+   "text": "Twitter/X",
+   "bbox": {
+    "x": 41,
+    "y": 7536,
+    "w": 335,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.p-6 > div.grid > a.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 56,
+    "y": 7557,
+    "w": 10,
+    "h": 10
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.rounded-lg > div.p-6 > div.grid > a.flex > span",
+   "text": "Twitter/X",
+   "bbox": {
+    "x": 78,
+    "y": 7549,
+    "w": 65,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > div.container > section.mb-8",
+   "text": "Important Disclaimer\n\nThis analysis is not financial advice and should not be co",
+   "bbox": {
+    "x": 16,
+    "y": 7643,
+    "w": 736,
+    "h": 214
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 44,
+    "y": 7674,
+    "w": 20,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > h3.font-semibold",
+   "text": "Important Disclaimer",
+   "bbox": {
+    "x": 78,
+    "y": 7669,
+    "w": 648,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(254, 240, 138)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > div > p.text-yellow-700",
+   "text": "This analysis is not financial advice and should not be considered as such. Cryp",
+   "bbox": {
+    "x": 78,
+    "y": 7701,
+    "w": 648,
+    "h": 130
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(253, 224, 71)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "footer",
+   "selector": "#root > div.min-h-screen > footer.border-t",
+   "text": "© 2026 TokenHealthScan. All rights reserved.\n\nToken Scan Guide\nvs Token Sniffer\n",
+   "bbox": {
+    "x": 0,
+    "y": 7921,
+    "w": 768,
+    "h": 258
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.min-h-screen > footer.border-t > div.container > div.flex > p.text-center",
+   "text": "© 2026 TokenHealthScan. All rights reserved.",
+   "bbox": {
+    "x": 32,
+    "y": 7972,
+    "w": 190,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "nav",
+   "selector": "div.min-h-screen > footer.border-t > div.container > div.flex > nav.flex",
+   "text": "Token Scan Guide\nvs Token Sniffer\nSolana Launchpads\nEthereum Launchpads\nPricing\n",
+   "bbox": {
+    "x": 222,
+    "y": 7962,
+    "w": 514,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Token Scan Guide",
+   "bbox": {
+    "x": 222,
+    "y": 7962,
+    "w": 38,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "vs Token Sniffer",
+   "bbox": {
+    "x": 284,
+    "y": 7962,
+    "w": 43,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Solana Launchpads",
+   "bbox": {
+    "x": 351,
+    "y": 7962,
+    "w": 79,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Ethereum Launchpads",
+   "bbox": {
+    "x": 454,
+    "y": 7962,
+    "w": 79,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Pricing",
+   "bbox": {
+    "x": 557,
+    "y": 7962,
+    "w": 45,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Privacy",
+   "bbox": {
+    "x": 625,
+    "y": 7962,
+    "w": 47,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Terms",
+   "bbox": {
+    "x": 696,
+    "y": 7962,
+    "w": 40,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.min-h-screen > footer.border-t > div.container > div.max-w-4xl > p.text-sm",
+   "text": "Data from 7+ live APIs. No cached results. Built for protocol teams.",
+   "bbox": {
+    "x": 32,
+    "y": 8046,
+    "w": 704,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.min-h-screen > footer.border-t > div.container > div.max-w-4xl > p.text-xs",
+   "text": "Token Health Scan provides automated token assessments using public data from th",
+   "bbox": {
+    "x": 32,
+    "y": 8081,
+    "w": 704,
+    "h": 59
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "19.5px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  }
+ ]
+}

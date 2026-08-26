@@ -1,0 +1,243 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Cobalt Signal — element catalog (regenerated)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap">
+<style>
+/* ===== Cobalt Signal tokens (design/system/00-foundation.md) ===== */
+:root, .cobalt{
+  --ground:#0A0C10;--surface:#101318;--surface-2:#161A21;
+  --hair:rgba(255,255,255,.085);--hair-2:rgba(255,255,255,.14);
+  --ink:#F2F4F7;--ink-2:#98A1AE;--ink-3:#5D6673;
+  --cobalt:#3B66FF;--cobalt-hi:#6E8CFF;--cobalt-hover:#5479FF;--ember:#FF7A45;
+  --good:#22C55E;--warn:#FFC53D;--bad:#EF4444;
+  --good-t:rgba(34,197,94,.10);--warn-t:rgba(255,197,61,.10);--bad-t:rgba(239,68,68,.10);
+  --sans:"Archivo","Helvetica Neue",Arial,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+.cobalt.light{
+  --ground:#F5F6F8;--surface:#FFFFFF;--surface-2:#EDEFF2;
+  --hair:rgba(16,19,24,.10);--hair-2:rgba(16,19,24,.16);
+  --ink:#13171D;--ink-2:#4A5462;--ink-3:#8A93A0;
+  --cobalt:#3B66FF;--cobalt-hi:#2B4ECC;--cobalt-hover:#2F55E6;--ember:#E85A20;
+  --good:#15803D;--warn:#A16207;--bad:#DC2626;
+  --good-t:rgba(21,128,61,.10);--warn-t:rgba(161,98,7,.10);--bad-t:rgba(220,38,38,.10);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;padding:28px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.cell{border:1px solid var(--hair);background:var(--surface);padding:14px;display:flex;flex-direction:column;gap:10px;min-height:96px}
+.cell > .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.cell > .el{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px}
+h2{font-weight:400;font-size:1.1rem;letter-spacing:-.02em;margin:34px 0 12px;color:var(--ink)}
+.lab{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3)}
+.mono{font-family:var(--mono)}
+
+/* ===== Button ===== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:var(--sans);font-weight:500;font-size:14px;letter-spacing:-.01em;border-radius:4px;border:1px solid transparent;padding:0 16px;height:40px;cursor:pointer;text-decoration:none;transition:background .12s,border-color .12s,color .12s}
+.btn-sm{height:32px;padding:0 12px;font-size:13px}.btn-lg{height:46px;padding:0 22px;font-size:15px}.btn-icon{width:38px;height:38px;padding:0}
+.btn-primary{background:var(--cobalt);border-color:var(--cobalt);color:#fff}
+.btn-primary:hover,.btn-primary.is-hover{background:var(--cobalt-hover);border-color:var(--cobalt-hover)}
+.btn-primary:active,.btn-primary.is-active{background:#2F55E6;transform:translateY(1px)}
+.btn-outline{background:transparent;border-color:var(--hair-2);color:var(--ink)}
+.btn-outline:hover,.btn-outline.is-hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.03)}
+.cobalt.light .btn-outline:hover,.cobalt.light .btn-outline.is-hover{border-color:rgba(16,19,24,.3);background:rgba(16,19,24,.03)}
+.btn-outline:active,.btn-outline.is-active{background:var(--surface-2)}
+.btn-secondary{background:var(--surface-2);border-color:var(--hair);color:var(--ink)}
+.btn-secondary:hover,.btn-secondary.is-hover{border-color:var(--hair-2)}
+.btn-ghost{background:transparent;color:var(--ink-2)}
+.btn-ghost:hover,.btn-ghost.is-hover{color:var(--ink);background:rgba(255,255,255,.04)}
+.cobalt.light .btn-ghost:hover,.cobalt.light .btn-ghost.is-hover{background:rgba(16,19,24,.04)}
+.btn-destructive{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn-destructive:hover,.btn-destructive.is-hover{filter:brightness(.92)}
+.btn-link{background:none;border:0;padding:0;height:auto;color:var(--cobalt-hi);text-decoration:none;border-bottom:1px solid rgba(110,140,255,.3);border-radius:0}
+.btn-link:hover,.btn-link.is-hover{border-bottom-color:var(--cobalt-hi)}
+.btn:focus-visible,.btn.is-focus{outline:2px solid var(--cobalt-hi);outline-offset:2px}
+.btn:disabled,.btn.is-disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn.is-loading{color:transparent;position:relative}.btn.is-loading::after{content:"";position:absolute;width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ===== Badge / chip ===== */
+.badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;padding:4px 9px;border-radius:3px;border:1px solid var(--hair-2);color:var(--ink-2);background:transparent}
+.badge i{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none}
+.badge-brand{color:var(--cobalt-hi);border-color:rgba(59,102,255,.34);background:rgba(59,102,255,.10)}
+.badge-good{color:var(--good);border-color:color-mix(in srgb,var(--good) 30%,transparent);background:var(--good-t)}
+.badge-warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 30%,transparent);background:var(--warn-t)}
+.badge-bad{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 30%,transparent);background:var(--bad-t)}
+.badge-data{color:var(--ember);border-color:color-mix(in srgb,var(--ember) 30%,transparent);background:color-mix(in srgb,var(--ember) 10%,transparent)}
+.badge-solid{background:var(--cobalt);border-color:var(--cobalt);color:#fff}
+
+/* ===== Input / select / textarea ===== */
+.field{font-family:var(--mono);font-size:13px;color:var(--ink);background:var(--surface-2);border:1px solid var(--hair-2);border-radius:4px;padding:10px 12px;min-width:220px;outline:0}
+.field::placeholder{color:var(--ink-3)}
+.field:hover,.field.is-hover{border-color:rgba(255,255,255,.26)}
+.cobalt.light .field:hover,.cobalt.light .field.is-hover{border-color:rgba(16,19,24,.28)}
+.field:focus,.field.is-focus{border-color:var(--cobalt);outline:2px solid rgba(59,102,255,.35);outline-offset:1px}
+.field.is-error{border-color:var(--bad);outline:2px solid var(--bad-t)}
+.field:disabled,.field.is-disabled{opacity:.45}
+select.field{appearance:none;padding-right:28px;background-image:linear-gradient(45deg,transparent 50%,var(--ink-3) 50%),linear-gradient(135deg,var(--ink-3) 50%,transparent 50%);background-position:calc(100% - 15px) 50%,calc(100% - 10px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+.fhelp{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-top:6px}.fhelp.err{color:var(--bad)}
+
+/* ===== Card family ===== */
+.card{border:1px solid var(--hair);background:var(--surface);border-radius:4px;padding:16px;width:100%}
+.card:hover,.card.is-hover{border-color:var(--hair-2)}
+.card .t{font-weight:500;letter-spacing:-.01em}.card .d{color:var(--ink-2);font-size:13.5px;margin-top:6px}
+.instr{border:1px solid var(--hair);background:var(--surface-2);border-radius:0;width:100%}
+.instr .row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:9px 12px;border-bottom:1px solid var(--hair);align-items:center}
+.instr .row:last-child{border-bottom:0}
+.instr .k{font-family:var(--mono);font-size:11px;color:var(--ink-2)}.instr .v{font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums}
+/* score card */
+.score-card{border:1px solid var(--hair);background:var(--surface);border-radius:4px;padding:16px;width:100%;text-align:left}
+.score-card .n{font-family:var(--mono);font-weight:300;font-size:2.4rem;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums}
+.score-card .nm{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-2);margin-top:8px}
+.score-card .bar{height:4px;background:rgba(255,255,255,.07);margin-top:10px;position:relative}
+.cobalt.light .score-card .bar{background:rgba(16,19,24,.08)}
+.score-card .bar b{position:absolute;inset:0 auto 0 0}
+.score-card .wd{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-top:8px}
+.sc-good .n,.sc-good .wd{color:var(--good)}.sc-good .bar b{background:var(--good)}
+.sc-warn .n,.sc-warn .wd{color:var(--warn)}.sc-warn .bar b{background:var(--warn)}
+.sc-bad .n,.sc-bad .wd{color:var(--bad)}.sc-bad .bar b{background:var(--bad)}
+.score-card:hover,.score-card.is-hover{border-color:var(--hair-2)}
+/* overall score */
+.overall .n{font-family:var(--mono);font-weight:300;font-size:4.4rem;letter-spacing:-.055em;line-height:.85;font-variant-numeric:tabular-nums}
+.overall .d{font-family:var(--mono);font-size:1.1rem;color:var(--ink-3)}
+.overall .band{display:flex;gap:3px;margin-top:12px;max-width:170px}.overall .band i{flex:1;height:5px;background:rgba(255,255,255,.09)}
+.cobalt.light .overall .band i{background:rgba(16,19,24,.09)}
+.overall .verdict{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-top:10px}
+.ov-good .n,.ov-good .verdict{color:var(--good)}.ov-good .band i.on{background:var(--good)}
+.ov-warn .n,.ov-warn .verdict{color:var(--warn)}.ov-warn .band i.on{background:var(--warn)}
+.ov-bad .n,.ov-bad .verdict{color:var(--bad)}.ov-bad .band i.on{background:var(--bad)}
+/* gated */
+.gated{position:relative;border:1px solid var(--hair);background:var(--surface);border-radius:4px;padding:16px;width:100%;overflow:hidden}
+.gated .blur{filter:blur(5px);opacity:.55;pointer-events:none;user-select:none}
+.gated .veil{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:color-mix(in srgb,var(--surface-2) 72%,transparent);text-align:center;padding:16px}
+.gated .veil p{margin:0;font-size:13.5px;color:var(--ink-2);max-width:34ch}
+/* pricing */
+.price{border:1px solid var(--hair);background:var(--surface);padding:18px;width:100%;display:flex;flex-direction:column;gap:10px}
+.price.feat{background:var(--surface-2)}
+.price h4{margin:0;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+.price .amt{font-family:var(--mono);font-weight:300;font-size:1.8rem;letter-spacing:-.04em}.price .amt small{font-size:.8rem;color:var(--ink-3)}
+.price ul{margin:0;padding:0;list-style:none;display:grid;gap:6px;font-size:13px;color:var(--ink-2)}
+.price li{padding-left:14px;position:relative}.price li::before{content:"";position:absolute;left:0;top:.55em;width:6px;height:1px;background:var(--ink-3)}
+
+/* ===== Tabs ===== */
+.tabs{display:flex;border-bottom:1px solid var(--hair);width:100%}
+.tab{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);padding:10px 14px;border:0;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer}
+.tab:hover,.tab.is-hover{color:var(--ink)}
+.tab.is-active{color:var(--ink);border-bottom-color:var(--cobalt)}
+.tab:focus-visible,.tab.is-focus{outline:2px solid var(--cobalt-hi);outline-offset:-2px}
+
+/* ===== Accordion ===== */
+.acc{width:100%;border-top:1px solid var(--hair)}
+.acc-item{border-bottom:1px solid var(--hair)}
+.acc-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:13px 0;font-size:15px;cursor:pointer;background:none;border:0;color:var(--ink);width:100%;text-align:left;font-family:var(--sans)}
+.acc-h::after{content:"+";font-family:var(--mono);color:var(--ink-3)}
+.acc-item.is-open .acc-h::after{content:"\2212"}
+.acc-h:hover,.acc-h.is-hover{color:var(--cobalt-hi)}
+.acc-b{padding:0 0 14px;color:var(--ink-2);font-size:14px}
+
+/* ===== Misc ===== */
+.skel{background:var(--surface-2);border-radius:3px;height:14px;width:100%;position:relative;overflow:hidden}
+.skel::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);animation:sh 1.4s infinite}
+@keyframes sh{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.alert{border:1px solid var(--hair);background:var(--surface);padding:11px 14px 11px 30px;width:100%;font-size:13.5px;color:var(--ink-2);border-radius:4px;position:relative}
+.alert::before{content:"";position:absolute;left:14px;top:18px;width:5px;height:5px;border-radius:50%;background:var(--cobalt-hi)}
+.alert b{color:var(--ink);font-weight:500}
+.alert.warn::before{background:var(--warn)}.alert.warn b{color:var(--warn)}
+.alert.bad::before{background:var(--bad)}.alert.bad b{color:var(--bad)}
+.alert.good::before{background:var(--good)}
+.progress{height:4px;background:rgba(255,255,255,.07);width:100%;position:relative}.cobalt.light .progress{background:rgba(16,19,24,.08)}
+.progress b{position:absolute;inset:0 auto 0 0;background:var(--cobalt)}
+.switch{width:38px;height:22px;border-radius:11px;background:var(--surface-2);border:1px solid var(--hair-2);position:relative;cursor:pointer}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--ink-3);transition:.15s}
+.switch.on{background:var(--cobalt);border-color:var(--cobalt)}.switch.on::after{left:18px;background:#fff}
+.switch:focus-visible,.switch.is-focus{outline:2px solid var(--cobalt-hi);outline-offset:2px}
+.ledger{width:100%;border:1px solid var(--hair);background:var(--surface-2)}
+.lrow{display:grid;grid-template-columns:minmax(0,1fr) 56px 40px 66px;gap:12px;padding:8px 12px;border-bottom:1px solid var(--hair);font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
+.lrow:last-child{border-bottom:0}
+.lrow:hover,.lrow.is-hover{background:rgba(255,255,255,.03)}.cobalt.light .lrow:hover,.cobalt.light .lrow.is-hover{background:rgba(16,19,24,.03)}
+.lrow .r{text-align:right;font-variant-numeric:tabular-nums}
+.navl{font-size:13.5px;color:var(--ink-2);text-decoration:none;padding:6px 2px;border-bottom:1px solid transparent}
+.navl:hover,.navl.is-hover{color:var(--ink)}.navl.is-active{color:var(--ink);border-bottom-color:var(--cobalt)}
+.navl:focus-visible,.navl.is-focus{outline:2px solid var(--cobalt-hi);outline-offset:3px;border-radius:2px}
+.toast{border:1px solid var(--hair-2);background:var(--surface);padding:12px 14px;border-radius:4px;width:100%;display:flex;gap:10px;align-items:flex-start;font-size:13.5px}
+.toast i{width:6px;height:6px;border-radius:50%;background:var(--good);flex:none;margin-top:7px}.toast.bad i{background:var(--bad)}
+.toast b{display:block;font-weight:500}.toast span{color:var(--ink-2)}
+.tip{display:inline-block;font-family:var(--mono);font-size:11px;background:var(--surface-2);border:1px solid var(--hair-2);padding:5px 9px;border-radius:3px;color:var(--ink)}
+.askbar{display:flex;gap:8px;align-items:center;border:1px solid var(--hair-2);background:var(--surface-2);border-radius:4px;padding:8px 8px 8px 12px;width:100%}
+.askbar span{flex:1;font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+.askbar.is-focus{border-color:var(--cobalt);outline:2px solid rgba(59,102,255,.35);outline-offset:1px}
+.mark{display:inline-flex;align-items:center;gap:9px;font-weight:600;font-size:14.5px;letter-spacing:-.025em}
+.mark svg{width:21px;height:21px}
+</style>
+<body class="cobalt">
+<script>
+if(location.hash==='#light')document.body.classList.add('light');
+</script>
+
+<h2>Buttons</h2><div class="grid">
+<div class="cell" data-id="btn-primary"><span class="lab">primary · default</span><div class="el"><button class="btn btn-primary">Scan it free</button></div></div>
+<div class="cell" data-id="btn-primary-hover"><span class="lab">primary · hover</span><div class="el"><button class="btn btn-primary is-hover">Scan it free</button></div></div>
+<div class="cell" data-id="btn-primary-focus"><span class="lab">primary · focus</span><div class="el"><button class="btn btn-primary is-focus">Scan it free</button></div></div>
+<div class="cell" data-id="btn-primary-active"><span class="lab">primary · active</span><div class="el"><button class="btn btn-primary is-active">Scan it free</button></div></div>
+<div class="cell" data-id="btn-primary-disabled"><span class="lab">primary · disabled</span><div class="el"><button class="btn btn-primary is-disabled">Scan it free</button></div></div>
+<div class="cell" data-id="btn-primary-loading"><span class="lab">primary · loading</span><div class="el"><button class="btn btn-primary is-loading">Scan it free</button></div></div>
+<div class="cell" data-id="btn-outline"><span class="lab">outline · default / hover / focus</span><div class="el"><button class="btn btn-outline">Sign in</button><button class="btn btn-outline is-hover">Sign in</button><button class="btn btn-outline is-focus">Sign in</button></div></div>
+<div class="cell" data-id="btn-secondary"><span class="lab">secondary · default / hover</span><div class="el"><button class="btn btn-secondary">Read the methodology</button><button class="btn btn-secondary is-hover">Read the methodology</button></div></div>
+<div class="cell" data-id="btn-ghost"><span class="lab">ghost · default / hover</span><div class="el"><button class="btn btn-ghost">Cancel</button><button class="btn btn-ghost is-hover">Cancel</button></div></div>
+<div class="cell" data-id="btn-destructive"><span class="lab">destructive · default / hover / disabled</span><div class="el"><button class="btn btn-destructive">Delete scan</button><button class="btn btn-destructive is-hover">Delete scan</button><button class="btn btn-destructive is-disabled">Delete scan</button></div></div>
+<div class="cell" data-id="btn-link"><span class="lab">link · default / hover</span><div class="el"><a class="btn btn-link" href="#">a blue chip</a><a class="btn btn-link is-hover" href="#">a token that failed</a></div></div>
+<div class="cell" data-id="btn-sizes"><span class="lab">sizes · sm / default / lg / icon</span><div class="el"><button class="btn btn-primary btn-sm">Scan</button><button class="btn btn-primary">Scan</button><button class="btn btn-primary btn-lg">Scan</button><button class="btn btn-outline btn-icon" aria-label="theme">◐</button></div></div>
+</div>
+
+<h2>Badges &amp; chips</h2><div class="grid">
+<div class="cell" data-id="badge-neutral"><span class="lab">neutral / brand / solid</span><div class="el"><span class="badge">ETH / MAINNET</span><span class="badge badge-brand">ERC-8004</span><span class="badge badge-solid">NEW</span></div></div>
+<div class="cell" data-id="badge-semantic"><span class="lab">semantic · healthy / at risk / critical</span><div class="el"><span class="badge badge-good"><i></i>Healthy</span><span class="badge badge-warn"><i></i>At risk</span><span class="badge badge-bad"><i></i>Critical</span></div></div>
+<div class="cell" data-id="badge-data"><span class="lab">data emphasis (ember)</span><div class="el"><span class="badge badge-data">LIVE</span><span class="badge badge-data">$1.84M</span></div></div>
+<div class="cell" data-id="badge-chain"><span class="lab">chain chips</span><div class="el"><span class="badge">ETH</span><span class="badge">BNB</span><span class="badge">BASE</span><span class="badge">ARB</span><span class="badge">MATIC</span><span class="badge">SOL</span></div></div>
+</div>
+
+<h2>Inputs</h2><div class="grid">
+<div class="cell" data-id="input-default"><span class="lab">input · default</span><div class="el"><input class="field" placeholder="0x… paste any contract address"></div></div>
+<div class="cell" data-id="input-hover"><span class="lab">input · hover</span><div class="el"><input class="field is-hover" placeholder="0x… paste any contract address"></div></div>
+<div class="cell" data-id="input-focus"><span class="lab">input · focus</span><div class="el"><input class="field is-focus" value="0x2170Ed0880ac9A755fd"></div></div>
+<div class="cell" data-id="input-error"><span class="lab">input · error</span><div class="el" style="flex-direction:column;align-items:flex-start"><input class="field is-error" value="0xZZZ"><span class="fhelp err">Not a valid contract address on ETH.</span></div></div>
+<div class="cell" data-id="input-disabled"><span class="lab">input · disabled</span><div class="el"><input class="field is-disabled" placeholder="Scanning…" disabled></div></div>
+<div class="cell" data-id="select-chain"><span class="lab">select · default / focus</span><div class="el"><select class="field" style="min-width:110px"><option>ETH</option></select><select class="field is-focus" style="min-width:110px"><option>BNB</option></select></div></div>
+<div class="cell" data-id="textarea"><span class="lab">textarea · default</span><div class="el"><textarea class="field" rows="3" style="width:100%">Why did liquidity drop this week?</textarea></div></div>
+<div class="cell" data-id="askbar"><span class="lab">copilot ask bar · default / focus</span><div class="el" style="flex-direction:column"><div class="askbar"><span>Ask about price, 7d trend, or top pools…</span><button class="btn btn-primary btn-sm">Ask</button></div><div class="askbar is-focus"><span style="color:var(--ink)">why did liquidity drop</span><button class="btn btn-primary btn-sm">Ask</button></div></div></div>
+</div>
+
+<h2>Cards &amp; blocks</h2><div class="grid">
+<div class="cell" data-id="card-default"><span class="lab">card · default</span><div class="el"><div class="card"><div class="t">Security</div><div class="d">Honeypot simulation, mint authority, proxy resolution.</div></div></div></div>
+<div class="cell" data-id="card-hover"><span class="lab">card · hover</span><div class="el"><div class="card is-hover"><div class="t">Security</div><div class="d">Honeypot simulation, mint authority, proxy resolution.</div></div></div></div>
+<div class="cell" data-id="instrument"><span class="lab">instrument panel (0 radius)</span><div class="el"><div class="instr"><div class="row"><span class="k">Honeypot simulation</span><span class="v" style="color:var(--good)">PASS</span></div><div class="row"><span class="k">Mint authority</span><span class="v" style="color:var(--bad)">NOT REVOKED</span></div><div class="row"><span class="k">Transfer tax</span><span class="v">0.00% / 0.00%</span></div></div></div></div>
+<div class="cell" data-id="score-card-good"><span class="lab">category score card · healthy</span><div class="el"><div class="score-card sc-good"><div class="n">86</div><div class="nm">Security</div><div class="bar"><b style="width:86%"></b></div><div class="wd">Excellent</div></div></div></div>
+<div class="cell" data-id="score-card-warn"><span class="lab">category score card · at risk / hover</span><div class="el"><div class="score-card sc-warn is-hover"><div class="n">49</div><div class="nm">Tokenomics</div><div class="bar"><b style="width:49%"></b></div><div class="wd">Watch</div></div></div></div>
+<div class="cell" data-id="score-card-bad"><span class="lab">category score card · critical</span><div class="el"><div class="score-card sc-bad"><div class="n">31</div><div class="nm">Liquidity</div><div class="bar"><b style="width:31%"></b></div><div class="wd">Critical</div></div></div></div>
+<div class="cell" data-id="overall-good"><span class="lab">overall score · healthy</span><div class="el"><div class="overall ov-good"><div><span class="n">84</span> <span class="d">/100</span></div><div class="band"><i></i><i></i><i></i><i class="on"></i><i></i></div><div class="verdict">Healthy</div></div></div></div>
+<div class="cell" data-id="overall-warn"><span class="lab">overall score · at risk</span><div class="el"><div class="overall ov-warn"><div><span class="n">62</span> <span class="d">/100</span></div><div class="band"><i></i><i></i><i class="on"></i><i></i><i></i></div><div class="verdict">At risk</div></div></div></div>
+<div class="cell" data-id="overall-bad"><span class="lab">overall score · critical</span><div class="el"><div class="overall ov-bad"><div><span class="n">29</span> <span class="d">/100</span></div><div class="band"><i class="on"></i><i></i><i></i><i></i><i></i></div><div class="verdict">Critical</div></div></div></div>
+<div class="cell" data-id="gated"><span class="lab">gated detail (free-account veil)</span><div class="el"><div class="gated"><div class="blur"><div class="t">Security analysis</div><div class="d">Contract verified · Honeypot detection · Mint function · Proxy…</div><div class="d">Source verified on Etherscan. No honeypot logic detected. Mint authority not revoked.</div></div><div class="veil"><p>Want the full picture? A free account unlocks the per-check detail.</p><button class="btn btn-primary btn-sm">Create free account</button></div></div></div></div>
+<div class="cell" data-id="price-plain"><span class="lab">pricing card · plain</span><div class="el"><div class="price"><h4>Free</h4><div class="amt">$0<small> forever</small></div><ul><li>Score + 5 category scores</li><li>3 lifetime Pro Scans</li></ul><button class="btn btn-outline btn-sm">Scan a contract</button></div></div></div>
+<div class="cell" data-id="price-featured"><span class="lab">pricing card · featured</span><div class="el"><div class="price feat"><h4>Pro Monthly</h4><div class="amt">$20<small>/mo</small></div><ul><li>10 Pro Scans per month</li><li>Export PDF / CSV</li></ul><button class="btn btn-primary btn-sm">Upgrade now</button></div></div></div>
+<div class="cell" data-id="token-card"><span class="lab">token card (directory)</span><div class="el"><div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="mono" style="font-size:13px">$CAKE</span><span class="mono" style="color:var(--good)">75</span></div><div class="d">PancakeSwap Token · BNB Chain</div><div class="d mono" style="font-size:11px;color:var(--ink-3)">Read at block 21,904,776</div></div></div></div>
+</div>
+
+<h2>Navigation &amp; structure</h2><div class="grid">
+<div class="cell" data-id="nav-link"><span class="lab">nav link · default / hover / active / focus</span><div class="el"><a class="navl" href="#">API</a><a class="navl is-hover" href="#">Methodology</a><a class="navl is-active" href="#">Pricing</a><a class="navl is-focus" href="#">Docs</a></div></div>
+<div class="cell" data-id="mark"><span class="lab">lockup</span><div class="el"><span class="mark"><svg viewBox="0 0 80 80" aria-hidden="true"><defs><clipPath id="m1"><circle cx="40" cy="40" r="32"/></clipPath></defs><circle cx="40" cy="40" r="32" fill="#3B66FF" opacity=".32"/><g clip-path="url(#m1)"><path d="M-6 44 H22 C24 44 24.5 38 27 38 S29.5 44 32 44 C34 44 34.5 22 37.5 22 S41 60 45 60 C48.5 60 49 44 53 44 H86 V-6 H-6 Z" fill="#3B66FF"/></g><path d="M-6 44 H22 C24 44 24.5 38 27 38 S29.5 44 32 44 C34 44 34.5 22 37.5 22 S41 60 45 60 C48.5 60 49 44 53 44 H86" fill="none" stroke="#FF7A45" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>Token Health Scan</span></div></div>
+<div class="cell" data-id="tabs"><span class="lab">tabs · inactive / active / hover / focus</span><div class="el"><div class="tabs"><button class="tab">Security</button><button class="tab is-active">Tokenomics</button><button class="tab is-hover">Liquidity</button><button class="tab is-focus">Community</button></div></div></div>
+<div class="cell" data-id="accordion"><span class="lab">accordion · closed / open / hover</span><div class="el"><div class="acc"><div class="acc-item"><button class="acc-h">What is a crypto launchpad?</button></div><div class="acc-item is-open"><button class="acc-h">Does a high score mean safe?</button><div class="acc-b">No. It means the checks passed at a specific block.</div></div><div class="acc-item"><button class="acc-h is-hover">Which chains are supported?</button></div></div></div></div>
+<div class="cell" data-id="ledger-row"><span class="lab">ledger rows · default / hover</span><div class="el"><div class="ledger"><div class="lrow"><span>0x95aD…7b2E</span><span>BASE</span><span class="r" style="color:var(--good)">84</span><span class="r" style="color:var(--good)">Healthy</span></div><div class="lrow is-hover"><span>0x1f98…F984</span><span>ETH</span><span class="r" style="color:var(--warn)">57</span><span class="r" style="color:var(--warn)">At risk</span></div></div></div></div>
+<div class="cell" data-id="footer-link"><span class="lab">footer link · default / hover</span><div class="el"><a class="navl" style="font-size:13px" href="#">Scoring model</a><a class="navl is-hover" style="font-size:13px" href="#">Data sources</a></div></div>
+</div>
+
+<h2>Feedback &amp; system</h2><div class="grid">
+<div class="cell" data-id="skeleton"><span class="lab">skeleton (loading)</span><div class="el" style="flex-direction:column;gap:8px"><div class="skel" style="width:60%"></div><div class="skel"></div><div class="skel" style="width:80%"></div></div></div>
+<div class="cell" data-id="alert-info"><span class="lab">alert · info / warn / critical</span><div class="el" style="flex-direction:column;gap:8px"><div class="alert"><b>Sample result.</b> Illustrative data.</div><div class="alert warn"><b>A clean score is not a guarantee.</b></div><div class="alert bad"><b>Authentication required.</b> Sign in to view your dashboard.</div></div></div>
+<div class="cell" data-id="progress"><span class="lab">progress · scanning</span><div class="el" style="flex-direction:column;align-items:stretch;gap:8px"><div class="progress"><b style="width:62%"></b></div><span class="lab" style="color:var(--ink-2)">Reading GoPlus · GeckoTerminal · Etherscan</span></div></div>
+<div class="cell" data-id="switch"><span class="lab">switch · off / on / focus</span><div class="el"><span class="switch"></span><span class="switch on"></span><span class="switch on is-focus"></span></div></div>
+<div class="cell" data-id="toast"><span class="lab">toast · success / error</span><div class="el" style="flex-direction:column;gap:8px"><div class="toast"><i></i><div><b>Scan complete</b><span>Read at block 21,904,776</span></div></div><div class="toast bad"><i></i><div><b>Scan failed</b><span>Contract not found on BNB Chain.</span></div></div></div></div>
+<div class="cell" data-id="tooltip"><span class="lab">tooltip</span><div class="el"><span class="tip">Top-10 holders control 41.7% of supply</span></div></div>
+<div class="cell" data-id="stamp"><span class="lab">as-of stamp</span><div class="el"><span class="lab" style="color:var(--ink-2)"><i style="display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--good);margin-right:6px;vertical-align:middle"></i>Read at block <span style="color:var(--cobalt-hi)">21,904,776</span> · as of 21:51 UTC</span></div></div>
+</div>
+</body>

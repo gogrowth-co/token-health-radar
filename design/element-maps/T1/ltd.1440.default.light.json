@@ -1,0 +1,2957 @@
+{
+ "route": "http://127.0.0.1:5173/ltd",
+ "slug": "ltd",
+ "type": "T1",
+ "breakpoint": "1440",
+ "state": "default",
+ "theme": "light",
+ "capturedAt": null,
+ "pageTitle": "Lifetime Deal - 90% OFF | Token Health Scan",
+ "pageHeight": 4633,
+ "count": 109,
+ "elements": [
+  {
+   "role": "text",
+   "tag": "ol",
+   "selector": "#root > div > ol.fixed",
+   "text": null,
+   "bbox": {
+    "x": 1020,
+    "y": 868,
+    "w": 420,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.flex > div.border-b > div.container > div.flex > a.text-2xl",
+   "text": "Token Health Scan",
+   "bbox": {
+    "x": 44,
+    "y": 16,
+    "w": 207,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "700",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.flex > div.border-b > div.container > div.flex > div.inline-flex",
+   "text": "🚀 Limited Time Offer",
+   "bbox": {
+    "x": 1246,
+    "y": 21,
+    "w": 150,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(154, 52, 18)",
+    "bg": "rgb(255, 237, 213)",
+    "border": "rgb(254, 215, 170)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > section.relative",
+   "text": "🚀 Lifetime Deal - 90% OFF\nFind Hidden Risks Before You Dive In\nLifetime Access\n",
+   "bbox": {
+    "x": 0,
+    "y": 65,
+    "w": 1440,
+    "h": 729
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "#root > div.flex > main.flex-1 > section.relative > div.absolute",
+   "text": null,
+   "bbox": {
+    "x": 0,
+    "y": 65,
+    "w": 1440,
+    "h": 729
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "main.flex-1 > section.relative > div.container > div.space-y-4 > div.inline-flex",
+   "text": "🚀 Lifetime Deal - 90% OFF",
+   "bbox": {
+    "x": 628,
+    "y": 196,
+    "w": 184,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(22, 101, 52)",
+    "bg": "rgb(220, 252, 231)",
+    "border": "rgb(187, 247, 208)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h1",
+   "selector": "main.flex-1 > section.relative > div.container > div.space-y-4 > h1.text-3xl",
+   "text": "Find Hidden Risks Before You Dive In\nLifetime Access",
+   "bbox": {
+    "x": 336,
+    "y": 250,
+    "w": 768,
+    "h": 96
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "48px",
+    "weight": "700",
+    "lh": "48px",
+    "ls": "-2.4px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "section.relative > div.container > div.space-y-4 > h1.text-3xl > span.block",
+   "text": "Lifetime Access",
+   "bbox": {
+    "x": 336,
+    "y": 298,
+    "w": 768,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "48px",
+    "weight": "700",
+    "lh": "48px",
+    "ls": "-2.4px"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "main.flex-1 > section.relative > div.container > div.space-y-4 > p.text-xl",
+   "text": "Scan any project and uncover critical risks — from contract flaws to liquidity t",
+   "bbox": {
+    "x": 384,
+    "y": 362,
+    "w": 672,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.relative > div.container > div.flex > div.text-center > div.text-3xl",
+   "text": "$240/year",
+   "bbox": {
+    "x": 552,
+    "y": 460,
+    "w": 149,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "30px",
+    "weight": "700",
+    "lh": "36px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(239, 68, 68)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.relative > div.container > div.flex > div.text-center > div.text-sm",
+   "text": "Regular Price",
+   "bbox": {
+    "x": 552,
+    "y": 496,
+    "w": 149,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "main.flex-1 > section.relative > div.container > div.flex > div.text-4xl",
+   "text": "→",
+   "bbox": {
+    "x": 717,
+    "y": 468,
+    "w": 34,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "36px",
+    "weight": "700",
+    "lh": "40px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.relative > div.container > div.flex > div.text-center > div.text-4xl",
+   "text": "$97",
+   "bbox": {
+    "x": 767,
+    "y": 458,
+    "w": 121,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "36px",
+    "weight": "700",
+    "lh": "40px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(22, 163, 74)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.relative > div.container > div.flex > div.text-center > div.text-sm",
+   "text": "One-time payment",
+   "bbox": {
+    "x": 767,
+    "y": 498,
+    "w": 121,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "div.flex > main.flex-1 > section.relative > div.container > button.inline-flex",
+   "text": "🚀 Unlock Lifetime Access - $97",
+   "bbox": {
+    "x": 568,
+    "y": 558,
+    "w": 305,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > section.relative > div.container > p.text-sm",
+   "text": "No account required. Get instant access after purchase.",
+   "bbox": {
+    "x": 44,
+    "y": 646,
+    "w": 1352,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > section.py-16",
+   "text": "What You Get Forever\n\nPay once, scan tokens for life. Never worry about monthly ",
+   "bbox": {
+    "x": 0,
+    "y": 794,
+    "w": 1440,
+    "h": 606
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgb(241, 245, 249)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "main.flex-1 > section.py-16 > div.container > div.text-center > h2.text-3xl",
+   "text": "What You Get Forever",
+   "bbox": {
+    "x": 44,
+    "y": 858,
+    "w": 1352,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "30px",
+    "weight": "700",
+    "lh": "36px",
+    "ls": "-1.5px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "main.flex-1 > section.py-16 > div.container > div.text-center > p.text-lg",
+   "text": "Pay once, scan tokens for life. Never worry about monthly subscriptions again.",
+   "bbox": {
+    "x": 384,
+    "y": 910,
+    "w": 672,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.space-y-6 > div.flex > div.h-12 > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 423,
+    "y": 1017,
+    "w": 20,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(22, 163, 74)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.space-y-6 > div.flex > div.h-12 > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 430,
+    "y": 1019,
+    "w": 13,
+    "h": 10
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(22, 163, 74)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.space-y-6 > div.flex > div > div.text-xl",
+   "text": "10 Pro Token Scans per Month for LIFE",
+   "bbox": {
+    "x": 473,
+    "y": 1003,
+    "w": 352,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.space-y-6 > div.flex > div > div.text-muted-foreground",
+   "text": "Never expires, scan your favorite tokens monthly",
+   "bbox": {
+    "x": 473,
+    "y": 1039,
+    "w": 352,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.space-y-6 > div.flex > div.h-12 > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 423,
+    "y": 1101,
+    "w": 20,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.space-y-6 > div.flex > div > div.text-xl",
+   "text": "Scan History Access",
+   "bbox": {
+    "x": 473,
+    "y": 1087,
+    "w": 282,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.space-y-6 > div.flex > div > div.text-muted-foreground",
+   "text": "Access all your previous scans anytime",
+   "bbox": {
+    "x": 473,
+    "y": 1123,
+    "w": 282,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.space-y-6 > div.flex > div.h-12 > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 426,
+    "y": 1186,
+    "w": 8,
+    "h": 8
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(147, 51, 234)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.space-y-6 > div.flex > div > div.text-xl",
+   "text": "Priority Support",
+   "bbox": {
+    "x": 473,
+    "y": 1171,
+    "w": 189,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.space-y-6 > div.flex > div > div.text-muted-foreground",
+   "text": "Get help when you need it",
+   "bbox": {
+    "x": 473,
+    "y": 1207,
+    "w": 189,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "main.flex-1 > section.py-16 > div.container > div.text-center > button.inline-flex",
+   "text": "🚀 Secure Your Lifetime Access Now - $97",
+   "bbox": {
+    "x": 530,
+    "y": 1288,
+    "w": 380,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > section.py-16",
+   "text": "How It Works\n\nGet comprehensive token analysis in three simple steps\n\n1\nEnter To",
+   "bbox": {
+    "x": 0,
+    "y": 1400,
+    "w": 1440,
+    "h": 388
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "main.flex-1 > section.py-16 > div.container > div.text-center > h2.text-3xl",
+   "text": "How It Works",
+   "bbox": {
+    "x": 44,
+    "y": 1464,
+    "w": 1352,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "30px",
+    "weight": "700",
+    "lh": "36px",
+    "ls": "-1.5px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "main.flex-1 > section.py-16 > div.container > div.text-center > p.text-lg",
+   "text": "Get comprehensive token analysis in three simple steps",
+   "bbox": {
+    "x": 384,
+    "y": 1508,
+    "w": 672,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.py-16 > div.container > div.grid > div.flex > div.h-12",
+   "text": "1",
+   "bbox": {
+    "x": 235,
+    "y": 1576,
+    "w": 48,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.grid > div.flex > h3.text-lg",
+   "text": "Enter Token",
+   "bbox": {
+    "x": 210,
+    "y": 1640,
+    "w": 97,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "500",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.grid > div.flex > p.text-muted-foreground",
+   "text": "Search by name or paste the contract address of any token",
+   "bbox": {
+    "x": 45,
+    "y": 1676,
+    "w": 428,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.py-16 > div.container > div.grid > div.flex > div.h-12",
+   "text": "2",
+   "bbox": {
+    "x": 696,
+    "y": 1576,
+    "w": 48,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.grid > div.flex > h3.text-lg",
+   "text": "Scan Process",
+   "bbox": {
+    "x": 664,
+    "y": 1640,
+    "w": 111,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "500",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.grid > div.flex > p.text-muted-foreground",
+   "text": "Our system analyzes on-chain and off-chain data sources",
+   "bbox": {
+    "x": 511,
+    "y": 1676,
+    "w": 418,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.py-16 > div.container > div.grid > div.flex > div.h-12",
+   "text": "3",
+   "bbox": {
+    "x": 1157,
+    "y": 1576,
+    "w": 48,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.grid > div.flex > h3.text-lg",
+   "text": "Review Results",
+   "bbox": {
+    "x": 1120,
+    "y": 1640,
+    "w": 123,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "500",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.grid > div.flex > p.text-muted-foreground",
+   "text": "Get detailed insights across all categories with actionable data",
+   "bbox": {
+    "x": 967,
+    "y": 1676,
+    "w": 429,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > section.py-16",
+   "text": "Comprehensive Token Analysis\n\nGet detailed insights across 5 critical categories",
+   "bbox": {
+    "x": 0,
+    "y": 1788,
+    "w": 1440,
+    "h": 1647
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgb(241, 245, 249)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "main.flex-1 > section.py-16 > div.container > div.text-center > h2.text-3xl",
+   "text": "Comprehensive Token Analysis",
+   "bbox": {
+    "x": 44,
+    "y": 1852,
+    "w": 1352,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "30px",
+    "weight": "700",
+    "lh": "36px",
+    "ls": "-1.5px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "main.flex-1 > section.py-16 > div.container > div.text-center > p.text-lg",
+   "text": "Get detailed insights across 5 critical categories with your lifetime access",
+   "bbox": {
+    "x": 384,
+    "y": 1896,
+    "w": 672,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.relative > img.w-full",
+   "text": "Token Health Scan Report Example showing Pendle token analysis",
+   "bbox": {
+    "x": 273,
+    "y": 1965,
+    "w": 894,
+    "h": 953
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "main.flex-1 > section.py-16 > div.container > div.max-w-4xl > p.text-center",
+   "text": "Real report showing smart contract flags, liquidity, and token data",
+   "bbox": {
+    "x": 272,
+    "y": 2935,
+    "w": 896,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.container > div.grid > div.bg-card > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 162,
+    "y": 3023,
+    "w": 21,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.grid > div.bg-card > h3.font-medium",
+   "text": "Security",
+   "bbox": {
+    "x": 61,
+    "y": 3060,
+    "w": 224,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.grid > div.bg-card > p.text-sm",
+   "text": "Contract & vulnerability analysis",
+   "bbox": {
+    "x": 61,
+    "y": 3088,
+    "w": 224,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.container > div.grid > div.bg-card > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 437,
+    "y": 3024,
+    "w": 19,
+    "h": 25
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.grid > div.bg-card > h3.font-medium",
+   "text": "Liquidity",
+   "bbox": {
+    "x": 335,
+    "y": 3060,
+    "w": 224,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.grid > div.bg-card > p.text-sm",
+   "text": "Depth & lock-up periods",
+   "bbox": {
+    "x": 335,
+    "y": 3088,
+    "w": 224,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.container > div.grid > div.bg-card > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 708,
+    "y": 3024,
+    "w": 24,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.grid > div.bg-card > h3.font-medium",
+   "text": "Tokenomics",
+   "bbox": {
+    "x": 608,
+    "y": 3060,
+    "w": 224,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.grid > div.bg-card > p.text-sm",
+   "text": "Supply model & distribution",
+   "bbox": {
+    "x": 608,
+    "y": 3088,
+    "w": 224,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.container > div.grid > div.bg-card > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 980,
+    "y": 3023,
+    "w": 27,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.container > div.grid > div.bg-card > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 988,
+    "y": 3023,
+    "w": 11,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.grid > div.bg-card > h3.font-medium",
+   "text": "Community",
+   "bbox": {
+    "x": 882,
+    "y": 3060,
+    "w": 224,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.grid > div.bg-card > p.text-sm",
+   "text": "Social presence & growth",
+   "bbox": {
+    "x": 882,
+    "y": 3088,
+    "w": 224,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.container > div.grid > div.bg-card > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 1273,
+    "y": 3028,
+    "w": 8,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.container > div.grid > div.bg-card > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 1254,
+    "y": 3028,
+    "w": 8,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.grid > div.bg-card > h3.font-medium",
+   "text": "Development",
+   "bbox": {
+    "x": 1155,
+    "y": 3060,
+    "w": 224,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.grid > div.bg-card > p.text-sm",
+   "text": "Activity & contributor metrics",
+   "bbox": {
+    "x": 1155,
+    "y": 3088,
+    "w": 224,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 411,
+    "y": 3186,
+    "w": 17,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(34, 197, 94)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 417,
+    "y": 3188,
+    "w": 11,
+    "h": 8
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(34, 197, 94)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div > div.font-medium",
+   "text": "10 Pro Token Scans per Month for LIFE",
+   "bbox": {
+    "x": 441,
+    "y": 3182,
+    "w": 314,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div > div.text-sm",
+   "text": "Never expires, scan your favorite tokens monthly",
+   "bbox": {
+    "x": 441,
+    "y": 3206,
+    "w": 314,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 411,
+    "y": 3246,
+    "w": 17,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(34, 197, 94)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div > div.font-medium",
+   "text": "Scan History Access",
+   "bbox": {
+    "x": 441,
+    "y": 3242,
+    "w": 252,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div > div.text-sm",
+   "text": "Access all your previous scans anytime",
+   "bbox": {
+    "x": 441,
+    "y": 3266,
+    "w": 252,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div > div.font-medium",
+   "text": "Priority Support",
+   "bbox": {
+    "x": 441,
+    "y": 3302,
+    "w": 168,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.p-6 > div.space-y-4 > div.flex > div > div.text-sm",
+   "text": "Get help when you need it",
+   "bbox": {
+    "x": 441,
+    "y": 3326,
+    "w": 168,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > section.py-16",
+   "text": "Join 1,000+ users already scanning tokens safely\n\n\"Saved me from investing in a ",
+   "bbox": {
+    "x": 0,
+    "y": 3435,
+    "w": 1440,
+    "h": 330
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.container > div.text-center > div.flex > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 508,
+    "y": 3504,
+    "w": 8,
+    "h": 8
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "section.py-16 > div.container > div.text-center > div.flex > span.text-lg",
+   "text": "Join 1,000+ users already scanning tokens safely",
+   "bbox": {
+    "x": 535,
+    "y": 3499,
+    "w": 402,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "500",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 70,
+    "y": 3586,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 86,
+    "y": 3586,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 102,
+    "y": 3586,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 118,
+    "y": 3586,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 134,
+    "y": 3586,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > p.text-sm",
+   "text": "\"Saved me from investing in a honeypot token. This tool is essential for any DeF",
+   "bbox": {
+    "x": 69,
+    "y": 3608,
+    "w": 385,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > div.text-xs",
+   "text": "- Alex K., Crypto Investor",
+   "bbox": {
+    "x": 69,
+    "y": 3660,
+    "w": 385,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 529,
+    "y": 3586,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 545,
+    "y": 3586,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 561,
+    "y": 3586,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 577,
+    "y": 3586,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 593,
+    "y": 3586,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > p.text-sm",
+   "text": "\"The security analysis is incredibly detailed. I can finally DYOR with confidenc",
+   "bbox": {
+    "x": 528,
+    "y": 3608,
+    "w": 385,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > div.text-xs",
+   "text": "- Sarah M., DeFi Trader",
+   "bbox": {
+    "x": 528,
+    "y": 3660,
+    "w": 385,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 988,
+    "y": 3586,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 1004,
+    "y": 3586,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 1020,
+    "y": 3586,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 1036,
+    "y": 3586,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.rounded-lg > div.p-6 > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 1052,
+    "y": 3586,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(250, 204, 21)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > p.text-sm",
+   "text": "\"Best $97 I've ever spent. Already identified 3 risky tokens in my portfolio.\"",
+   "bbox": {
+    "x": 986,
+    "y": 3608,
+    "w": 385,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > div.text-xs",
+   "text": "- Mike R., Portfolio Manager",
+   "bbox": {
+    "x": 986,
+    "y": 3660,
+    "w": 385,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > section.py-16",
+   "text": "Frequently Asked Questions\nIs this really lifetime access?\n\nYes! Pay once, get 1",
+   "bbox": {
+    "x": 0,
+    "y": 3765,
+    "w": 1440,
+    "h": 550
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgb(241, 245, 249)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > section.py-16 > div.container > h2.text-2xl",
+   "text": "Frequently Asked Questions",
+   "bbox": {
+    "x": 44,
+    "y": 3829,
+    "w": 1352,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "700",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.space-y-4 > div.rounded-lg > div.p-6 > h3.font-medium",
+   "text": "Is this really lifetime access?",
+   "bbox": {
+    "x": 409,
+    "y": 3918,
+    "w": 622,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.space-y-4 > div.rounded-lg > div.p-6 > p.text-sm",
+   "text": "Yes! Pay once, get 10 Pro scans per month for life. No monthly fees, no hidden c",
+   "bbox": {
+    "x": 409,
+    "y": 3950,
+    "w": 622,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.space-y-4 > div.rounded-lg > div.p-6 > h3.font-medium",
+   "text": "What if I'm not satisfied?",
+   "bbox": {
+    "x": 409,
+    "y": 4036,
+    "w": 622,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.space-y-4 > div.rounded-lg > div.p-6 > p.text-sm",
+   "text": "We offer a 30-day money-back guarantee. If you're not satisfied, we'll refund yo",
+   "bbox": {
+    "x": 409,
+    "y": 4068,
+    "w": 622,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.space-y-4 > div.rounded-lg > div.p-6 > h3.font-medium",
+   "text": "How do I access my account after purchase?",
+   "bbox": {
+    "x": 409,
+    "y": 4154,
+    "w": 622,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.space-y-4 > div.rounded-lg > div.p-6 > p.text-sm",
+   "text": "Create an account using the same email address you used for checkout. Your lifet",
+   "bbox": {
+    "x": 409,
+    "y": 4186,
+    "w": 622,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > section.py-16",
+   "text": "Don't Miss This Opportunity\n\nThis lifetime deal is only available for a limited ",
+   "bbox": {
+    "x": 0,
+    "y": 4315,
+    "w": 1440,
+    "h": 318
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "main.flex-1 > section.py-16 > div.container > div.max-w-2xl > h2.text-3xl",
+   "text": "Don't Miss This Opportunity",
+   "bbox": {
+    "x": 384,
+    "y": 4379,
+    "w": 672,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "30px",
+    "weight": "700",
+    "lh": "36px",
+    "ls": "-1.5px"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "main.flex-1 > section.py-16 > div.container > div.max-w-2xl > p.text-lg",
+   "text": "This lifetime deal is only available for a limited time. Secure your access now ",
+   "bbox": {
+    "x": 384,
+    "y": 4431,
+    "w": 672,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "main.flex-1 > section.py-16 > div.container > div.max-w-2xl > button.inline-flex",
+   "text": "🚀 Get Lifetime Access - $97",
+   "bbox": {
+    "x": 579,
+    "y": 4519,
+    "w": 282,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(255, 255, 255)",
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  }
+ ]
+}

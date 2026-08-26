@@ -1,0 +1,1580 @@
+{
+ "route": "http://127.0.0.1:5173/agent-scan",
+ "slug": "agent-scan-landing",
+ "type": "T7",
+ "breakpoint": "768",
+ "state": "default",
+ "theme": "dark",
+ "capturedAt": null,
+ "pageTitle": "AI Agent Trust Score — Scan Any ERC-8004 Agent | Token Health Scan",
+ "pageHeight": 1779,
+ "count": 58,
+ "elements": [
+  {
+   "role": "text",
+   "tag": "ol",
+   "selector": "#root > div > ol.fixed",
+   "text": null,
+   "bbox": {
+    "x": 348,
+    "y": 992,
+    "w": 420,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "header",
+   "selector": "#root > div.min-h-screen > header.sticky",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 0,
+    "y": 0,
+    "w": 768,
+    "h": 65
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(2, 8, 23, 0.95)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.min-h-screen > header.sticky > div.container > div.flex > a.flex",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 24,
+    "y": 16,
+    "w": 205,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.flex > a.flex > div.w-7 > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 33,
+    "y": 25,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.container > div.flex > a.flex > span.font-bold > span.hidden",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 64,
+    "y": 20,
+    "w": 165,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "button",
+   "selector": "div.min-h-screen > header.sticky > div.container > div.flex > button.inline-flex",
+   "text": "Toggle theme",
+   "bbox": {
+    "x": 656,
+    "y": 12,
+    "w": 40,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "button",
+   "selector": "div.min-h-screen > header.sticky > div.container > div.flex > button.inline-flex",
+   "text": "Toggle menu",
+   "bbox": {
+    "x": 704,
+    "y": 12,
+    "w": 40,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > main.flex-1 > section.relative",
+   "text": "Scan Any AI Agent. Get a Trust Score.\n\nThe credit bureau for AI agents. Evaluate",
+   "bbox": {
+    "x": 0,
+    "y": 65,
+    "w": 768,
+    "h": 496
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "#root > div.min-h-screen > main.flex-1 > section.relative > div.absolute",
+   "text": null,
+   "bbox": {
+    "x": 0,
+    "y": 65,
+    "w": 768,
+    "h": 496
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h1",
+   "selector": "div.min-h-screen > main.flex-1 > section.relative > div.container > h1.text-3xl",
+   "text": "Scan Any AI Agent. Get a Trust Score.",
+   "bbox": {
+    "x": 24,
+    "y": 177,
+    "w": 720,
+    "h": 96
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "48px",
+    "weight": "700",
+    "lh": "48px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.min-h-screen > main.flex-1 > section.relative > div.container > p.text-muted-foreground",
+   "text": "The credit bureau for AI agents. Evaluate any ERC-8004 registered agent across i",
+   "bbox": {
+    "x": 96,
+    "y": 297,
+    "w": 576,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "form",
+   "selector": "main.flex-1 > section.relative > div.container > div.max-w-xl > form.flex",
+   "text": "Base\nBase\nEthereum\nPolygon\nArbitrum\nScan",
+   "bbox": {
+    "x": 96,
+    "y": 377,
+    "w": 576,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "section.relative > div.container > div.max-w-xl > form.flex > button.flex",
+   "text": "Base",
+   "bbox": {
+    "x": 96,
+    "y": 377,
+    "w": 120,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(2, 8, 23)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.container > div.max-w-xl > form.flex > button.flex > span",
+   "text": "Base",
+   "bbox": {
+    "x": 109,
+    "y": 391,
+    "w": 32,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.max-w-xl > form.flex > div.relative > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 238,
+    "y": 395,
+    "w": 11,
+    "h": 11
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "input",
+   "tag": "input",
+   "selector": "div.container > div.max-w-xl > form.flex > div.relative > input.flex",
+   "text": null,
+   "bbox": {
+    "x": 224,
+    "y": 377,
+    "w": 371,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(2, 8, 23)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "section.relative > div.container > div.max-w-xl > form.flex > button.inline-flex",
+   "text": "Scan",
+   "bbox": {
+    "x": 603,
+    "y": 377,
+    "w": 69,
+    "h": 44
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(15, 23, 42)",
+    "bg": "rgb(59, 130, 246)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "main.flex-1 > section.relative > div.container > div.max-w-xl > p.text-xs",
+   "text": "Enter an agent name or ID number. 3 free scans included.",
+   "bbox": {
+    "x": 96,
+    "y": 433,
+    "w": 576,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > main.flex-1 > section.py-16",
+   "text": "How It Works\n1\nEnter Agent ID\n\nPaste an agent ID or search by name from the ERC-",
+   "bbox": {
+    "x": 0,
+    "y": 561,
+    "w": 768,
+    "h": 349
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.min-h-screen > main.flex-1 > section.py-16 > div.container > h2.text-2xl",
+   "text": "How It Works",
+   "bbox": {
+    "x": 24,
+    "y": 626,
+    "w": 720,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "700",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.py-16 > div.container > div.grid > div.text-center > div.w-10",
+   "text": "1",
+   "bbox": {
+    "x": 116,
+    "y": 698,
+    "w": 40,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(59, 130, 246)",
+    "bg": "rgba(59, 130, 246, 0.1)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.grid > div.text-center > h3.font-semibold",
+   "text": "Enter Agent ID",
+   "bbox": {
+    "x": 24,
+    "y": 750,
+    "w": 224,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.grid > div.text-center > p.text-sm",
+   "text": "Paste an agent ID or search by name from the ERC-8004 registry",
+   "bbox": {
+    "x": 24,
+    "y": 786,
+    "w": 224,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.py-16 > div.container > div.grid > div.text-center > div.w-10",
+   "text": "2",
+   "bbox": {
+    "x": 364,
+    "y": 698,
+    "w": 40,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(59, 130, 246)",
+    "bg": "rgba(59, 130, 246, 0.1)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.grid > div.text-center > h3.font-semibold",
+   "text": "We Scan Everything",
+   "bbox": {
+    "x": 272,
+    "y": 750,
+    "w": 224,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.grid > div.text-center > p.text-sm",
+   "text": "Onchain registry, marketplace data, and endpoint health checks",
+   "bbox": {
+    "x": 272,
+    "y": 786,
+    "w": 224,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.py-16 > div.container > div.grid > div.text-center > div.w-10",
+   "text": "3",
+   "bbox": {
+    "x": 612,
+    "y": 698,
+    "w": 40,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(59, 130, 246)",
+    "bg": "rgba(59, 130, 246, 0.1)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.grid > div.text-center > h3.font-semibold",
+   "text": "Get Trust Score",
+   "bbox": {
+    "x": 520,
+    "y": 750,
+    "w": 224,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.grid > div.text-center > p.text-sm",
+   "text": "Receive a 0-100 score across 5 dimensions with actionable insights",
+   "bbox": {
+    "x": 520,
+    "y": 786,
+    "w": 224,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > main.flex-1 > section.py-16",
+   "text": "5 Dimensions of Trust\nIdentity Verification\n\nERC-8004 registration, owner addres",
+   "bbox": {
+    "x": 0,
+    "y": 910,
+    "w": 768,
+    "h": 611
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(30, 41, 59, 0.3)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.min-h-screen > main.flex-1 > section.py-16 > div.container > h2.text-2xl",
+   "text": "5 Dimensions of Trust",
+   "bbox": {
+    "x": 24,
+    "y": 975,
+    "w": 720,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "700",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.grid > div.rounded-lg > div.p-6 > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 53,
+    "y": 1074,
+    "w": 16,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(59, 130, 246)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > h3.font-semibold",
+   "text": "Identity Verification",
+   "bbox": {
+    "x": 49,
+    "y": 1104,
+    "w": 302,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > p.text-xs",
+   "text": "ERC-8004 registration, owner address, metadata",
+   "bbox": {
+    "x": 49,
+    "y": 1132,
+    "w": 302,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.grid > div.rounded-lg > div.p-6 > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 423,
+    "y": 1077,
+    "w": 12,
+    "h": 14
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(59, 130, 246)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > h3.font-semibold",
+   "text": "Financial Transparency",
+   "bbox": {
+    "x": 417,
+    "y": 1104,
+    "w": 302,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > p.text-xs",
+   "text": "Token links, marketplace listings, pricing",
+   "bbox": {
+    "x": 417,
+    "y": 1132,
+    "w": 302,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.grid > div.rounded-lg > div.p-6 > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 51,
+    "y": 1216,
+    "w": 20,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(59, 130, 246)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > h3.font-semibold",
+   "text": "Operational Reliability",
+   "bbox": {
+    "x": 49,
+    "y": 1246,
+    "w": 302,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > p.text-xs",
+   "text": "Endpoint health, response times, uptime",
+   "bbox": {
+    "x": 49,
+    "y": 1274,
+    "w": 302,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.grid > div.rounded-lg > div.p-6 > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 419,
+    "y": 1216,
+    "w": 20,
+    "h": 19
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(59, 130, 246)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > h3.font-semibold",
+   "text": "Reputation",
+   "bbox": {
+    "x": 417,
+    "y": 1246,
+    "w": 302,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > p.text-xs",
+   "text": "Marketplace ratings, social presence, documentation",
+   "bbox": {
+    "x": 417,
+    "y": 1274,
+    "w": 302,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.grid > div.rounded-lg > div.p-6 > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 54,
+    "y": 1359,
+    "w": 8,
+    "h": 8
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(59, 130, 246)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > h3.font-semibold",
+   "text": "Compliance",
+   "bbox": {
+    "x": 49,
+    "y": 1388,
+    "w": 302,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.grid > div.rounded-lg > div.p-6 > p.text-xs",
+   "text": "Standard compliance, service classification",
+   "bbox": {
+    "x": 49,
+    "y": 1416,
+    "w": 302,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "footer",
+   "selector": "#root > div.min-h-screen > footer.border-t",
+   "text": "© 2026 TokenHealthScan. All rights reserved.\n\nToken Scan Guide\nvs Token Sniffer\n",
+   "bbox": {
+    "x": 0,
+    "y": 1521,
+    "w": 768,
+    "h": 258
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.min-h-screen > footer.border-t > div.container > div.flex > p.text-center",
+   "text": "© 2026 TokenHealthScan. All rights reserved.",
+   "bbox": {
+    "x": 32,
+    "y": 1572,
+    "w": 190,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "nav",
+   "selector": "div.min-h-screen > footer.border-t > div.container > div.flex > nav.flex",
+   "text": "Token Scan Guide\nvs Token Sniffer\nSolana Launchpads\nEthereum Launchpads\nPricing\n",
+   "bbox": {
+    "x": 222,
+    "y": 1562,
+    "w": 514,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Token Scan Guide",
+   "bbox": {
+    "x": 222,
+    "y": 1562,
+    "w": 38,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "vs Token Sniffer",
+   "bbox": {
+    "x": 284,
+    "y": 1562,
+    "w": 43,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Solana Launchpads",
+   "bbox": {
+    "x": 351,
+    "y": 1562,
+    "w": 79,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Ethereum Launchpads",
+   "bbox": {
+    "x": 454,
+    "y": 1562,
+    "w": 79,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Pricing",
+   "bbox": {
+    "x": 557,
+    "y": 1562,
+    "w": 45,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Privacy",
+   "bbox": {
+    "x": 625,
+    "y": 1562,
+    "w": 47,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Terms",
+   "bbox": {
+    "x": 696,
+    "y": 1562,
+    "w": 40,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.min-h-screen > footer.border-t > div.container > div.max-w-4xl > p.text-sm",
+   "text": "Data from 7+ live APIs. No cached results. Built for protocol teams.",
+   "bbox": {
+    "x": 32,
+    "y": 1646,
+    "w": 704,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.min-h-screen > footer.border-t > div.container > div.max-w-4xl > p.text-xs",
+   "text": "Token Health Scan provides automated token assessments using public data from th",
+   "bbox": {
+    "x": 32,
+    "y": 1681,
+    "w": 704,
+    "h": 59
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "19.5px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  }
+ ]
+}

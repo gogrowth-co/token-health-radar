@@ -1,0 +1,824 @@
+{
+ "route": "http://127.0.0.1:5173/ltd-thank-you",
+ "slug": "ltd-thank-you",
+ "type": "T1",
+ "breakpoint": "375",
+ "state": "default",
+ "theme": "dark",
+ "capturedAt": null,
+ "pageTitle": "Thank You - Lifetime Access Activated | Token Health Scan",
+ "pageHeight": 1625,
+ "count": 30,
+ "elements": [
+  {
+   "role": "text",
+   "tag": "ol",
+   "selector": "#root > div > ol.fixed",
+   "text": null,
+   "bbox": {
+    "x": 0,
+    "y": 0,
+    "w": 375,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.min-h-screen > div.border-b > div.container > div.flex > a.text-2xl",
+   "text": "Token Health Scan",
+   "bbox": {
+    "x": 16,
+    "y": 16,
+    "w": 207,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "700",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.max-w-2xl > div.mb-8 > div.w-20 > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 171,
+    "y": 152,
+    "w": 33,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(22, 163, 74)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.max-w-2xl > div.mb-8 > div.w-20 > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 183,
+    "y": 156,
+    "w": 22,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(22, 163, 74)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h1",
+   "selector": "div.min-h-screen > div.container > div.max-w-2xl > div.mb-8 > h1.text-4xl",
+   "text": "Welcome to Lifetime Access!",
+   "bbox": {
+    "x": 16,
+    "y": 225,
+    "w": 343,
+    "h": 80
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "36px",
+    "weight": "700",
+    "lh": "40px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(22, 163, 74)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.min-h-screen > div.container > div.max-w-2xl > div.mb-8 > p.text-xl",
+   "text": "Your purchase was successful and you're all set.",
+   "bbox": {
+    "x": 16,
+    "y": 313,
+    "w": 343,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-2xl > div.rounded-lg > div.flex > h3.font-semibold",
+   "text": "🎉 Congratulations!",
+   "bbox": {
+    "x": 41,
+    "y": 426,
+    "w": 293,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "-0.6px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.max-w-2xl > div.rounded-lg > div.flex > p.text-sm",
+   "text": "You now have unlimited access to Token Health Scan forever.",
+   "bbox": {
+    "x": 41,
+    "y": 464,
+    "w": 293,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.p-6 > div.bg-blue-50 > div.flex > div.text-left > h3.font-medium",
+   "text": "Important: Access Your Account",
+   "bbox": {
+    "x": 76,
+    "y": 545,
+    "w": 241,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(30, 58, 138)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.p-6 > div.bg-blue-50 > div.flex > div.text-left > p.text-sm",
+   "text": "If you're not logged in, please use the same email address you used during check",
+   "bbox": {
+    "x": 76,
+    "y": 573,
+    "w": 241,
+    "h": 80
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(29, 78, 216)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.grid > div.text-left > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 59,
+    "y": 714,
+    "w": 17,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(22, 163, 74)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.grid > div.text-left > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 65,
+    "y": 715,
+    "w": 11,
+    "h": 8
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(22, 163, 74)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.p-6 > div.grid > div.text-left > div.flex > span.font-medium",
+   "text": "Unlimited Scans",
+   "bbox": {
+    "x": 85,
+    "y": 710,
+    "w": 120,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.rounded-lg > div.p-6 > div.grid > div.text-left > p.text-sm",
+   "text": "Scan as many tokens as you want, forever",
+   "bbox": {
+    "x": 57,
+    "y": 742,
+    "w": 261,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.grid > div.text-left > div.flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 59,
+    "y": 834,
+    "w": 15,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.p-6 > div.grid > div.text-left > div.flex > span.font-medium",
+   "text": "Full Analysis",
+   "bbox": {
+    "x": 85,
+    "y": 830,
+    "w": 92,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.rounded-lg > div.p-6 > div.grid > div.text-left > p.text-sm",
+   "text": "Access all 5 categories of token analysis",
+   "bbox": {
+    "x": 57,
+    "y": 862,
+    "w": 261,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.max-w-2xl > div.rounded-lg > div.p-6 > div.space-y-4 > a",
+   "text": "Sign In to Access Your Account",
+   "bbox": {
+    "x": 41,
+    "y": 934,
+    "w": 293,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "div.rounded-lg > div.p-6 > div.space-y-4 > a > button.inline-flex",
+   "text": "Sign In to Access Your Account",
+   "bbox": {
+    "x": 41,
+    "y": 922,
+    "w": 293,
+    "h": 44
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.min-h-screen > div.container > div.max-w-2xl > div.text-center > h2.text-xl",
+   "text": "What's Next?",
+   "bbox": {
+    "x": 16,
+    "y": 1023,
+    "w": 343,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-2xl > div.text-center > div.grid > div.bg-white > div.text-2xl",
+   "text": "1️⃣",
+   "bbox": {
+    "x": 33,
+    "y": 1084,
+    "w": 309,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "400",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-2xl > div.text-center > div.grid > div.bg-white > div.font-medium",
+   "text": "Sign In",
+   "bbox": {
+    "x": 33,
+    "y": 1124,
+    "w": 309,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-2xl > div.text-center > div.grid > div.bg-white > div.text-muted-foreground",
+   "text": "Use your purchase email to access your account",
+   "bbox": {
+    "x": 33,
+    "y": 1148,
+    "w": 309,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-2xl > div.text-center > div.grid > div.bg-white > div.text-2xl",
+   "text": "2️⃣",
+   "bbox": {
+    "x": 33,
+    "y": 1238,
+    "w": 309,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "400",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-2xl > div.text-center > div.grid > div.bg-white > div.font-medium",
+   "text": "Start Scanning",
+   "bbox": {
+    "x": 33,
+    "y": 1278,
+    "w": 309,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-2xl > div.text-center > div.grid > div.bg-white > div.text-muted-foreground",
+   "text": "Enter any token address to begin analysis",
+   "bbox": {
+    "x": 33,
+    "y": 1302,
+    "w": 309,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-2xl > div.text-center > div.grid > div.bg-white > div.text-2xl",
+   "text": "3️⃣",
+   "bbox": {
+    "x": 33,
+    "y": 1372,
+    "w": 309,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "400",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-2xl > div.text-center > div.grid > div.bg-white > div.font-medium",
+   "text": "Enjoy Forever",
+   "bbox": {
+    "x": 33,
+    "y": 1412,
+    "w": 309,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-2xl > div.text-center > div.grid > div.bg-white > div.text-muted-foreground",
+   "text": "Unlimited scans with no expiration",
+   "bbox": {
+    "x": 33,
+    "y": 1436,
+    "w": 309,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.container > div.max-w-2xl > div.mt-12 > p.text-sm > a.text-primary",
+   "text": "support@tokenhealthscan.com",
+   "bbox": {
+    "x": 87,
+    "y": 1542,
+    "w": 201,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  }
+ ]
+}

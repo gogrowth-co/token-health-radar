@@ -1,0 +1,3985 @@
+{
+  "generatedAt": "2026-08-26T04:11:11.967Z",
+  "themeMechanism": {
+    "strategy": "class",
+    "file": "src/components/ThemeToggle.tsx",
+    "className": "dark on document.documentElement",
+    "storageKey": "theme",
+    "storageValues": [
+      "light",
+      "dark"
+    ],
+    "resolutionOrder": [
+      "localStorage.getItem('theme')",
+      "window.matchMedia('(prefers-color-scheme: dark)')",
+      "default: light"
+    ],
+    "notes": "useEffect on mount: saved theme wins; else system dark preference adds .dark; toggle writes localStorage and toggles class. No theme provider, no context; component-local useState. Default state before effect runs is 'light'."
+  },
+  "stats": {
+    "totalComponents": 176,
+    "shadcnPrimitives": 49,
+    "appComponents": 127,
+    "pages": 32,
+    "hardcodedColorOffenders": 9,
+    "hardcodedColorTotalHits": 91,
+    "componentsUsingTokens": 134,
+    "topOffenders": [
+      {
+        "path": "src/components/TokenProfile.tsx",
+        "count": 63
+      },
+      {
+        "path": "src/components/agent-scan/AgentIdentityCard.tsx",
+        "count": 5
+      },
+      {
+        "path": "src/components/ui/chart.tsx",
+        "count": 5
+      },
+      {
+        "path": "src/components/copilot/blocks/PriceSparkline.tsx",
+        "count": 4
+      },
+      {
+        "path": "src/components/TokenScore.tsx",
+        "count": 4
+      },
+      {
+        "path": "src/components/OverallHealthScore.tsx",
+        "count": 4
+      },
+      {
+        "path": "src/components/agent-scan/AgentDimensionCard.tsx",
+        "count": 3
+      },
+      {
+        "path": "src/components/ui/sidebar.tsx",
+        "count": 2
+      },
+      {
+        "path": "src/components/agent-scan/AgentTrustScoreRing.tsx",
+        "count": 1
+      }
+    ],
+    "sharedChrome": [
+      {
+        "name": "AuthButton",
+        "usedByCount": 28
+      },
+      {
+        "name": "Footer",
+        "usedByCount": 28
+      },
+      {
+        "name": "MobileNav",
+        "usedByCount": 28
+      },
+      {
+        "name": "Navbar",
+        "usedByCount": 28
+      },
+      {
+        "name": "ThemeToggle",
+        "usedByCount": 28
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "button",
+      "path": "src/components/ui/button.tsx",
+      "lines": 58,
+      "usedBy": [
+        "AIAgents",
+        "Admin",
+        "AdminEdit",
+        "AdminNew",
+        "AgentDirectory",
+        "AgentScanSearch",
+        "Auth",
+        "Confirm",
+        "Dashboard",
+        "LTD",
+        "LTDThankYou",
+        "ScanChain",
+        "ScanLoading",
+        "ScanResult",
+        "TokenDirectory",
+        "TokenReport"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "AIAgents (via AgentCrossSell)",
+        "AIAgents (via Navbar)",
+        "Admin (via Navbar)",
+        "Admin (via PageTable)",
+        "AdminEdit (via Navbar)",
+        "AdminEdit (via HeroImageUpload)",
+        "AdminNew (via Navbar)",
+        "AdminNew (via HeroImageUpload)",
+        "AdminUsers (via Navbar)",
+        "AdminUsers (via TokenRefreshPanel)",
+        "AgentDirectory (via Navbar)",
+        "AgentDirectory (via AgentSearchInput)",
+        "AgentScan (via Navbar)",
+        "AgentScan (via AgentSearchInput)",
+        "AgentScanResult (via Navbar)",
+        "AgentScanResult (via AgentIdentityCard)",
+        "AgentScanResult (via AgentCrossSell)",
+        "AgentScanSearch (via Navbar)",
+        "AgentScanSearch (via AgentSearchInput)",
+        "ApiHealth (via ApiHealthDashboard)",
+        "ApiHealth (via Navbar)",
+        "Confirm (via Navbar)",
+        "Copilot (via Navbar)",
+        "Copilot (via TokenSearchAutocomplete)",
+        "Copilot (via CopilotPanel)",
+        "Dashboard (via Navbar)",
+        "Dashboard (via UserProfile)",
+        "DynamicPage (via Navbar)",
+        "EthereumLaunchpads (via Navbar)",
+        "Landing (via Navbar)",
+        "Pricing (via Navbar)",
+        "Pricing (via PricingCard)",
+        "Privacy (via Navbar)",
+        "Publications (via Navbar)",
+        "ScanChain (via Navbar)",
+        "ScanLoading (via Navbar)",
+        "ScanResult (via Navbar)",
+        "ScanResult (via UpgradeModal)",
+        "ScanResult (via RefreshScanButton)",
+        "ScanResult (via GenerateReportButton)",
+        "ScanResult (via TestSocialLinksButton)",
+        "ScanResult (via CopilotPanel)",
+        "SolanaLaunchpads (via Navbar)",
+        "SolanaLaunchpads (via SolanaLaunchpadsHero)",
+        "SolanaLaunchpads (via LaunchPlans)",
+        "SolanaLaunchpads (via KeyTakeaways)",
+        "Terms (via Navbar)",
+        "TokenDirectory (via Navbar)",
+        "TokenReport (via Navbar)",
+        "TokenScanGuide (via Navbar)",
+        "TokenScanGuide (via GuideHeroSection)",
+        "TokenScanGuide (via ScanningProcessSection)",
+        "TokenSnifferComparison (via Navbar)"
+      ],
+      "usedByCount": 31
+    },
+    {
+      "name": "AuthButton",
+      "path": "src/components/auth/AuthButton.tsx",
+      "lines": 68,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "AIAgents (via Navbar)",
+        "Admin (via Navbar)",
+        "AdminEdit (via Navbar)",
+        "AdminNew (via Navbar)",
+        "AdminUsers (via Navbar)",
+        "AgentDirectory (via Navbar)",
+        "AgentScan (via Navbar)",
+        "AgentScanResult (via Navbar)",
+        "AgentScanSearch (via Navbar)",
+        "ApiHealth (via Navbar)",
+        "Confirm (via Navbar)",
+        "Copilot (via Navbar)",
+        "Dashboard (via Navbar)",
+        "DynamicPage (via Navbar)",
+        "EthereumLaunchpads (via Navbar)",
+        "Landing (via Navbar)",
+        "Pricing (via Navbar)",
+        "Privacy (via Navbar)",
+        "Publications (via Navbar)",
+        "ScanChain (via Navbar)",
+        "ScanLoading (via Navbar)",
+        "ScanResult (via Navbar)",
+        "SolanaLaunchpads (via Navbar)",
+        "Terms (via Navbar)",
+        "TokenDirectory (via Navbar)",
+        "TokenReport (via Navbar)",
+        "TokenScanGuide (via Navbar)",
+        "TokenSnifferComparison (via Navbar)"
+      ],
+      "usedByCount": 28
+    },
+    {
+      "name": "Footer",
+      "path": "src/components/Footer.tsx",
+      "lines": 51,
+      "usedBy": [
+        "AIAgents",
+        "Admin",
+        "AdminEdit",
+        "AdminNew",
+        "AdminUsers",
+        "AgentDirectory",
+        "AgentScan",
+        "AgentScanResult",
+        "AgentScanSearch",
+        "ApiHealth",
+        "Confirm",
+        "Copilot",
+        "Dashboard",
+        "DynamicPage",
+        "EthereumLaunchpads",
+        "Landing",
+        "Pricing",
+        "Privacy",
+        "Publications",
+        "ScanChain",
+        "ScanLoading",
+        "ScanResult",
+        "SolanaLaunchpads",
+        "Terms",
+        "TokenDirectory",
+        "TokenReport",
+        "TokenScanGuide",
+        "TokenSnifferComparison"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 28
+    },
+    {
+      "name": "MobileNav",
+      "path": "src/components/MobileNav.tsx",
+      "lines": 91,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "AIAgents (via Navbar)",
+        "Admin (via Navbar)",
+        "AdminEdit (via Navbar)",
+        "AdminNew (via Navbar)",
+        "AdminUsers (via Navbar)",
+        "AgentDirectory (via Navbar)",
+        "AgentScan (via Navbar)",
+        "AgentScanResult (via Navbar)",
+        "AgentScanSearch (via Navbar)",
+        "ApiHealth (via Navbar)",
+        "Confirm (via Navbar)",
+        "Copilot (via Navbar)",
+        "Dashboard (via Navbar)",
+        "DynamicPage (via Navbar)",
+        "EthereumLaunchpads (via Navbar)",
+        "Landing (via Navbar)",
+        "Pricing (via Navbar)",
+        "Privacy (via Navbar)",
+        "Publications (via Navbar)",
+        "ScanChain (via Navbar)",
+        "ScanLoading (via Navbar)",
+        "ScanResult (via Navbar)",
+        "SolanaLaunchpads (via Navbar)",
+        "Terms (via Navbar)",
+        "TokenDirectory (via Navbar)",
+        "TokenReport (via Navbar)",
+        "TokenScanGuide (via Navbar)",
+        "TokenSnifferComparison (via Navbar)"
+      ],
+      "usedByCount": 28
+    },
+    {
+      "name": "Navbar",
+      "path": "src/components/Navbar.tsx",
+      "lines": 67,
+      "usedBy": [
+        "AIAgents",
+        "Admin",
+        "AdminEdit",
+        "AdminNew",
+        "AdminUsers",
+        "AgentDirectory",
+        "AgentScan",
+        "AgentScanResult",
+        "AgentScanSearch",
+        "ApiHealth",
+        "Confirm",
+        "Copilot",
+        "Dashboard",
+        "DynamicPage",
+        "EthereumLaunchpads",
+        "Landing",
+        "Pricing",
+        "Privacy",
+        "Publications",
+        "ScanChain",
+        "ScanLoading",
+        "ScanResult",
+        "SolanaLaunchpads",
+        "Terms",
+        "TokenDirectory",
+        "TokenReport",
+        "TokenScanGuide",
+        "TokenSnifferComparison"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 28
+    },
+    {
+      "name": "ThemeToggle",
+      "path": "src/components/ThemeToggle.tsx",
+      "lines": 33,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "AIAgents (via Navbar)",
+        "Admin (via Navbar)",
+        "AdminEdit (via Navbar)",
+        "AdminNew (via Navbar)",
+        "AdminUsers (via Navbar)",
+        "AgentDirectory (via Navbar)",
+        "AgentScan (via Navbar)",
+        "AgentScanResult (via Navbar)",
+        "AgentScanSearch (via Navbar)",
+        "ApiHealth (via Navbar)",
+        "Confirm (via Navbar)",
+        "Copilot (via Navbar)",
+        "Dashboard (via Navbar)",
+        "DynamicPage (via Navbar)",
+        "EthereumLaunchpads (via Navbar)",
+        "Landing (via Navbar)",
+        "Pricing (via Navbar)",
+        "Privacy (via Navbar)",
+        "Publications (via Navbar)",
+        "ScanChain (via Navbar)",
+        "ScanLoading (via Navbar)",
+        "ScanResult (via Navbar)",
+        "SolanaLaunchpads (via Navbar)",
+        "Terms (via Navbar)",
+        "TokenDirectory (via Navbar)",
+        "TokenReport (via Navbar)",
+        "TokenScanGuide (via Navbar)",
+        "TokenSnifferComparison (via Navbar)"
+      ],
+      "usedByCount": 28
+    },
+    {
+      "name": "badge",
+      "path": "src/components/ui/badge.tsx",
+      "lines": 40,
+      "usedBy": [
+        "AIAgents",
+        "AgentDirectory",
+        "AgentScanSearch",
+        "Copilot",
+        "LTD",
+        "ScanLoading",
+        "TokenDirectory",
+        "TokenReport"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "Admin (via PageTable)",
+        "AgentScanResult (via AgentIdentityCard)",
+        "AgentScanResult (via AgentActionPlan)",
+        "ApiHealth (via ApiHealthDashboard)",
+        "Copilot (via TokenSearchAutocomplete)",
+        "Copilot (via CopilotPanel)",
+        "Dashboard (via UserProfile)",
+        "DynamicPage (via BlogTemplate)",
+        "Pricing (via PricingCard)",
+        "Publications (via PublicationCard)",
+        "ScanResult (via ScanLimitIndicator)",
+        "ScanResult (via UpgradeModal)",
+        "ScanResult (via CopilotPanel)",
+        "TokenSnifferComparison (via TokenSnifferSection)",
+        "TokenSnifferComparison (via TokenHealthScanSection)"
+      ],
+      "usedByCount": 17
+    },
+    {
+      "name": "card",
+      "path": "src/components/ui/card.tsx",
+      "lines": 80,
+      "usedBy": [
+        "AgentDirectory",
+        "AgentScan",
+        "AgentScanSearch",
+        "Auth",
+        "Copilot",
+        "Dashboard",
+        "LTD",
+        "LTDThankYou",
+        "ScanLoading",
+        "TokenDirectory",
+        "TokenReport"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "AdminUsers (via TokenRefreshPanel)",
+        "AgentScanResult (via AgentActionPlan)",
+        "ApiHealth (via ApiHealthDashboard)",
+        "Copilot (via CopilotPanel)",
+        "Dashboard (via UserProfile)",
+        "Pricing (via PricingCard)",
+        "ScanResult (via TokenProfile)",
+        "ScanResult (via CategoryTabs)",
+        "ScanResult (via ScanLimitIndicator)",
+        "ScanResult (via CopilotPanel)"
+      ],
+      "usedByCount": 16
+    },
+    {
+      "name": "input",
+      "path": "src/components/ui/input.tsx",
+      "lines": 23,
+      "usedBy": [
+        "AdminEdit",
+        "AdminNew",
+        "Auth",
+        "TokenDirectory"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "AdminEdit (via HeroImageUpload)",
+        "AdminEdit (via EnglishContentSection)",
+        "AdminNew (via HeroImageUpload)",
+        "AdminNew (via EnglishContentSection)",
+        "AdminUsers (via UserSearchFilters)",
+        "AgentDirectory (via AgentSearchInput)",
+        "AgentScan (via AgentSearchInput)",
+        "AgentScanSearch (via AgentSearchInput)",
+        "Confirm (via TokenSearchForm)",
+        "Copilot (via TokenSearchAutocomplete)"
+      ],
+      "usedByCount": 10
+    },
+    {
+      "name": "helmet",
+      "path": "src/components/ui/helmet.tsx",
+      "lines": 5,
+      "usedBy": [
+        "AIAgents",
+        "AgentDirectory",
+        "AgentScan",
+        "AgentScanResult",
+        "AgentScanSearch",
+        "EthereumLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "TokenReport (via SeoHead)"
+      ],
+      "usedByCount": 7
+    },
+    {
+      "name": "alert",
+      "path": "src/components/ui/alert.tsx",
+      "lines": 61,
+      "usedBy": [
+        "Dashboard",
+        "Pricing"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "AIAgents (via AgentCrossSell)",
+        "AgentScanResult (via AgentCrossSell)",
+        "Copilot (via CopilotPanel)",
+        "ScanResult (via CopilotPanel)"
+      ],
+      "usedByCount": 6
+    },
+    {
+      "name": "select",
+      "path": "src/components/ui/select.tsx",
+      "lines": 159,
+      "usedBy": [
+        "AgentDirectory",
+        "TokenDirectory"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "AdminUsers (via UserSearchFilters)",
+        "AgentDirectory (via AgentSearchInput)",
+        "AgentScan (via AgentSearchInput)",
+        "AgentScanSearch (via AgentSearchInput)"
+      ],
+      "usedByCount": 5
+    },
+    {
+      "name": "accordion",
+      "path": "src/components/ui/accordion.tsx",
+      "lines": 57,
+      "usedBy": [
+        "Pricing",
+        "TokenReport"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "EthereumLaunchpads (via EthereumFAQ)",
+        "SolanaLaunchpads (via SolanaFAQ)"
+      ],
+      "usedByCount": 4
+    },
+    {
+      "name": "AgentSearchInput",
+      "path": "src/components/agent-scan/AgentSearchInput.tsx",
+      "lines": 63,
+      "usedBy": [
+        "AgentDirectory",
+        "AgentScan",
+        "AgentScanSearch"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Landing (via HeroSection)"
+      ],
+      "usedByCount": 4
+    },
+    {
+      "name": "skeleton",
+      "path": "src/components/ui/skeleton.tsx",
+      "lines": 16,
+      "usedBy": [
+        "AIAgents",
+        "AgentDirectory",
+        "AgentScanSearch"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "AgentScanResult (via AgentScanLoading)"
+      ],
+      "usedByCount": 4
+    },
+    {
+      "name": "textarea",
+      "path": "src/components/ui/textarea.tsx",
+      "lines": 25,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "AdminEdit (via EnglishContentSection)",
+        "AdminEdit (via SchemaEditor)",
+        "AdminNew (via EnglishContentSection)",
+        "AdminNew (via SchemaEditor)",
+        "Copilot (via CopilotPanel)",
+        "ScanResult (via CopilotPanel)"
+      ],
+      "usedByCount": 4
+    },
+    {
+      "name": "label",
+      "path": "src/components/ui/label.tsx",
+      "lines": 25,
+      "usedBy": [
+        "AdminEdit",
+        "AdminNew",
+        "Auth"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "AdminEdit (via HeroImageUpload)",
+        "AdminEdit (via EnglishContentSection)",
+        "AdminEdit (via SchemaEditor)",
+        "AdminNew (via HeroImageUpload)",
+        "AdminNew (via EnglishContentSection)",
+        "AdminNew (via SchemaEditor)"
+      ],
+      "usedByCount": 3
+    },
+    {
+      "name": "tabs",
+      "path": "src/components/ui/tabs.tsx",
+      "lines": 54,
+      "usedBy": [
+        "Auth"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "Landing (via HeroSection)",
+        "ScanResult (via CategoryTabs)"
+      ],
+      "usedByCount": 3
+    },
+    {
+      "name": "AgentCrossSell",
+      "path": "src/components/agent-scan/AgentCrossSell.tsx",
+      "lines": 61,
+      "usedBy": [
+        "AIAgents",
+        "AgentScanResult"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 2
+    },
+    {
+      "name": "CategoryTags",
+      "path": "src/components/copilot/blocks/CategoryTags.tsx",
+      "lines": 53,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Copilot (via CopilotPanel)",
+        "ScanResult (via CopilotPanel)"
+      ],
+      "usedByCount": 2
+    },
+    {
+      "name": "ChangeCard",
+      "path": "src/components/copilot/blocks/ChangeCard.tsx",
+      "lines": 48,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Copilot (via CopilotPanel)",
+        "ScanResult (via CopilotPanel)"
+      ],
+      "usedByCount": 2
+    },
+    {
+      "name": "CommunityCard",
+      "path": "src/components/copilot/blocks/CommunityCard.tsx",
+      "lines": 142,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Copilot (via CopilotPanel)",
+        "ScanResult (via CopilotPanel)"
+      ],
+      "usedByCount": 2
+    },
+    {
+      "name": "CopilotPanel",
+      "path": "src/components/copilot/CopilotPanel.tsx",
+      "lines": 431,
+      "usedBy": [
+        "Copilot",
+        "ScanResult"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 2
+    },
+    {
+      "name": "DevelopmentCard",
+      "path": "src/components/copilot/blocks/DevelopmentCard.tsx",
+      "lines": 173,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Copilot (via CopilotPanel)",
+        "ScanResult (via CopilotPanel)"
+      ],
+      "usedByCount": 2
+    },
+    {
+      "name": "EnglishContentSection",
+      "path": "src/components/cms/EnglishContentSection.tsx",
+      "lines": 36,
+      "usedBy": [
+        "AdminEdit",
+        "AdminNew"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 2
+    },
+    {
+      "name": "HeroImageUpload",
+      "path": "src/components/cms/HeroImageUpload.tsx",
+      "lines": 50,
+      "usedBy": [
+        "AdminEdit",
+        "AdminNew"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 2
+    },
+    {
+      "name": "HoldersTable",
+      "path": "src/components/copilot/blocks/HoldersTable.tsx",
+      "lines": 127,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Copilot (via CopilotPanel)",
+        "ScanResult (via CopilotPanel)"
+      ],
+      "usedByCount": 2
+    },
+    {
+      "name": "MetricCards",
+      "path": "src/components/copilot/blocks/MetricCards.tsx",
+      "lines": 126,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Copilot (via CopilotPanel)",
+        "ScanResult (via CopilotPanel)"
+      ],
+      "usedByCount": 2
+    },
+    {
+      "name": "PoolsTable",
+      "path": "src/components/copilot/blocks/PoolsTable.tsx",
+      "lines": 103,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Copilot (via CopilotPanel)",
+        "ScanResult (via CopilotPanel)"
+      ],
+      "usedByCount": 2
+    },
+    {
+      "name": "PriceSparkline",
+      "path": "src/components/copilot/blocks/PriceSparkline.tsx",
+      "lines": 73,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 4,
+        "samples": [
+          "L63: stroke={isPositive ? \"#22c55e\" : \"#ef4444\"}",
+          "L66: activeDot={{ r: 3, fill: isPositive ? \"#22c55e\" : \"#ef4444\" }}"
+        ]
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Copilot (via CopilotPanel)",
+        "ScanResult (via CopilotPanel)"
+      ],
+      "usedByCount": 2
+    },
+    {
+      "name": "progress",
+      "path": "src/components/ui/progress.tsx",
+      "lines": 27,
+      "usedBy": [
+        "ScanLoading"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "ScanResult (via ScanLimitIndicator)"
+      ],
+      "usedByCount": 2
+    },
+    {
+      "name": "RichTextEditor",
+      "path": "src/components/cms/RichTextEditor.tsx",
+      "lines": 58,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "AdminEdit (via EnglishContentSection)",
+        "AdminNew (via EnglishContentSection)"
+      ],
+      "usedByCount": 2
+    },
+    {
+      "name": "SchemaEditor",
+      "path": "src/components/cms/SchemaEditor.tsx",
+      "lines": 28,
+      "usedBy": [
+        "AdminEdit",
+        "AdminNew"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 2
+    },
+    {
+      "name": "scroll-area",
+      "path": "src/components/ui/scroll-area.tsx",
+      "lines": 47,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "Copilot (via CopilotPanel)",
+        "ScanResult (via CopilotPanel)"
+      ],
+      "usedByCount": 2
+    },
+    {
+      "name": "SecurityCard",
+      "path": "src/components/copilot/blocks/SecurityCard.tsx",
+      "lines": 164,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Copilot (via CopilotPanel)",
+        "ScanResult (via CopilotPanel)"
+      ],
+      "usedByCount": 2
+    },
+    {
+      "name": "switch",
+      "path": "src/components/ui/switch.tsx",
+      "lines": 28,
+      "usedBy": [
+        "AdminEdit",
+        "AdminNew"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 2
+    },
+    {
+      "name": "table",
+      "path": "src/components/ui/table.tsx",
+      "lines": 118,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "Admin (via PageTable)",
+        "AdminUsers (via UsersTable)"
+      ],
+      "usedByCount": 2
+    },
+    {
+      "name": "TokenomicsCard",
+      "path": "src/components/copilot/blocks/TokenomicsCard.tsx",
+      "lines": 122,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Copilot (via CopilotPanel)",
+        "ScanResult (via CopilotPanel)"
+      ],
+      "usedByCount": 2
+    },
+    {
+      "name": "tooltip",
+      "path": "src/components/ui/tooltip.tsx",
+      "lines": 29,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "Copilot (via CopilotPanel)",
+        "ScanResult (via TokenProfile)",
+        "ScanResult (via CategoryTabs)",
+        "ScanResult (via CopilotPanel)"
+      ],
+      "usedByCount": 2
+    },
+    {
+      "name": "AdminConfirmDialog",
+      "path": "src/components/admin/AdminConfirmDialog.tsx",
+      "lines": 83,
+      "usedBy": [
+        "AdminUsers"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "AgentActionPlan",
+      "path": "src/components/agent-scan/AgentActionPlan.tsx",
+      "lines": 70,
+      "usedBy": [
+        "AgentScanResult"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "AgentDimensionCard",
+      "path": "src/components/agent-scan/AgentDimensionCard.tsx",
+      "lines": 81,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 3,
+        "samples": [
+          "L12: if (pct >= 80) return \"#10b981\";",
+          "L13: if (pct >= 40) return \"#f59e0b\";",
+          "L14: return \"#ef4444\";"
+        ]
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "AgentScanResult (via AgentDimensionGrid)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "AgentDimensionGrid",
+      "path": "src/components/agent-scan/AgentDimensionGrid.tsx",
+      "lines": 17,
+      "usedBy": [
+        "AgentScanResult"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "AgentIdentityCard",
+      "path": "src/components/agent-scan/AgentIdentityCard.tsx",
+      "lines": 92,
+      "usedBy": [
+        "AgentScanResult"
+      ],
+      "hardcodedColors": {
+        "count": 5,
+        "samples": [
+          "L16: base: { label: \"Base\", color: \"#0052ff\" },",
+          "L17: ethereum: { label: \"Ethereum\", color: \"#627eea\" },",
+          "L18: polygon: { label: \"Polygon\", color: \"#8247e5\" },"
+        ]
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "AgentScanLoading",
+      "path": "src/components/agent-scan/AgentScanLoading.tsx",
+      "lines": 44,
+      "usedBy": [
+        "AgentScanResult"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "AgentTrustScoreRing",
+      "path": "src/components/agent-scan/AgentTrustScoreRing.tsx",
+      "lines": 66,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 1,
+        "samples": [
+          "L31: stroke=\"hsl(var(--muted))\""
+        ]
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "AgentScanResult (via AgentIdentityCard)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "alert-dialog",
+      "path": "src/components/ui/alert-dialog.tsx",
+      "lines": 140,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "AdminUsers (via AdminConfirmDialog)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "ApiHealthDashboard",
+      "path": "src/components/ApiHealthDashboard.tsx",
+      "lines": 271,
+      "usedBy": [
+        "ApiHealth"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "BenefitsSection",
+      "path": "src/components/landing/BenefitsSection.tsx",
+      "lines": 48,
+      "usedBy": [
+        "Landing"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "BlogTemplate",
+      "path": "src/components/cms/BlogTemplate.tsx",
+      "lines": 22,
+      "usedBy": [
+        "DynamicPage"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "BlurredCategoryOverlay",
+      "path": "src/components/BlurredCategoryOverlay.tsx",
+      "lines": 44,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "ScanResult (via CategoryTabs)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "CategoryFeatureGrid",
+      "path": "src/components/CategoryFeatureGrid.tsx",
+      "lines": 60,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "ScanResult (via CategoryTabs)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "CategoryScoreCard",
+      "path": "src/components/CategoryScoreCard.tsx",
+      "lines": 93,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "ScanResult (via CategoryScoresGrid)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "CategoryScoresGrid",
+      "path": "src/components/CategoryScoresGrid.tsx",
+      "lines": 91,
+      "usedBy": [
+        "ScanResult"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "CategoryTabs",
+      "path": "src/components/CategoryTabs.tsx",
+      "lines": 234,
+      "usedBy": [
+        "ScanResult"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "ComparativeAnalysis",
+      "path": "src/components/solana/ComparativeAnalysis.tsx",
+      "lines": 187,
+      "usedBy": [
+        "SolanaLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "ComparisonHero",
+      "path": "src/components/comparison/ComparisonHero.tsx",
+      "lines": 18,
+      "usedBy": [
+        "TokenSnifferComparison"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "DataFreshnessIndicator",
+      "path": "src/components/DataFreshnessIndicator.tsx",
+      "lines": 57,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "ScanResult (via TokenProfile)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "dialog",
+      "path": "src/components/ui/dialog.tsx",
+      "lines": 121,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [
+        "ScanResult (via UpgradeModal)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "EthereumEmergingGapsSection",
+      "path": "src/components/ethereum/EthereumEmergingGapsSection.tsx",
+      "lines": 64,
+      "usedBy": [
+        "EthereumLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "EthereumFAQ",
+      "path": "src/components/ethereum/EthereumFAQ.tsx",
+      "lines": 63,
+      "usedBy": [
+        "EthereumLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "EthereumFounderEvaluation",
+      "path": "src/components/ethereum/EthereumFounderEvaluation.tsx",
+      "lines": 76,
+      "usedBy": [
+        "EthereumLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "EthereumHowToSection",
+      "path": "src/components/ethereum/EthereumHowToSection.tsx",
+      "lines": 82,
+      "usedBy": [
+        "EthereumLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "EthereumIntroSection",
+      "path": "src/components/ethereum/EthereumIntroSection.tsx",
+      "lines": 45,
+      "usedBy": [
+        "EthereumLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "EthereumLaunchpadsHero",
+      "path": "src/components/ethereum/EthereumLaunchpadsHero.tsx",
+      "lines": 24,
+      "usedBy": [
+        "EthereumLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "EthereumPlatformTypes",
+      "path": "src/components/ethereum/EthereumPlatformTypes.tsx",
+      "lines": 215,
+      "usedBy": [
+        "EthereumLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "EthereumSocialEngagement",
+      "path": "src/components/ethereum/EthereumSocialEngagement.tsx",
+      "lines": 77,
+      "usedBy": [
+        "EthereumLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "EthereumWhyMattersSection",
+      "path": "src/components/ethereum/EthereumWhyMattersSection.tsx",
+      "lines": 64,
+      "usedBy": [
+        "EthereumLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "FAQSection",
+      "path": "src/components/comparison/FAQSection.tsx",
+      "lines": 93,
+      "usedBy": [
+        "TokenSnifferComparison"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "FeatureComparisonTable",
+      "path": "src/components/comparison/FeatureComparisonTable.tsx",
+      "lines": 67,
+      "usedBy": [
+        "TokenSnifferComparison"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "FounderFit",
+      "path": "src/components/solana/FounderFit.tsx",
+      "lines": 111,
+      "usedBy": [
+        "SolanaLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "GenerateReportButton",
+      "path": "src/components/GenerateReportButton.tsx",
+      "lines": 85,
+      "usedBy": [
+        "ScanResult"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "GuideHeroSection",
+      "path": "src/components/guide/GuideHeroSection.tsx",
+      "lines": 21,
+      "usedBy": [
+        "TokenScanGuide"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "GuideIntroSection",
+      "path": "src/components/guide/GuideIntroSection.tsx",
+      "lines": 34,
+      "usedBy": [
+        "TokenScanGuide"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "HeroSection",
+      "path": "src/components/landing/HeroSection.tsx",
+      "lines": 57,
+      "usedBy": [
+        "Landing"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "KeyTakeaways",
+      "path": "src/components/solana/KeyTakeaways.tsx",
+      "lines": 84,
+      "usedBy": [
+        "SolanaLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "LaunchMechanics",
+      "path": "src/components/solana/LaunchMechanics.tsx",
+      "lines": 87,
+      "usedBy": [
+        "SolanaLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "LaunchpadSpectrum",
+      "path": "src/components/solana/LaunchpadSpectrum.tsx",
+      "lines": 150,
+      "usedBy": [
+        "SolanaLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "LaunchPlans",
+      "path": "src/components/solana/LaunchPlans.tsx",
+      "lines": 81,
+      "usedBy": [
+        "SolanaLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "LazySection",
+      "path": "src/components/landing/LazySection.tsx",
+      "lines": 62,
+      "usedBy": [
+        "Landing"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "OptimizedTokenLogo",
+      "path": "src/components/OptimizedTokenLogo.tsx",
+      "lines": 47,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "ScanResult (via TokenProfile)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "PageTable",
+      "path": "src/components/cms/PageTable.tsx",
+      "lines": 52,
+      "usedBy": [
+        "Admin"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "PricingCard",
+      "path": "src/components/PricingCard.tsx",
+      "lines": 83,
+      "usedBy": [
+        "Pricing"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "PublicationCard",
+      "path": "src/components/cms/PublicationCard.tsx",
+      "lines": 25,
+      "usedBy": [
+        "Publications"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "RefreshScanButton",
+      "path": "src/components/RefreshScanButton.tsx",
+      "lines": 92,
+      "usedBy": [
+        "ScanResult"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "ScanResult (via TokenProfile)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "ScanLimitIndicator",
+      "path": "src/components/ScanLimitIndicator.tsx",
+      "lines": 74,
+      "usedBy": [
+        "ScanResult"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "ScanningProcessSection",
+      "path": "src/components/guide/ScanningProcessSection.tsx",
+      "lines": 130,
+      "usedBy": [
+        "TokenScanGuide"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "SearchErrorState",
+      "path": "src/components/token/SearchErrorState.tsx",
+      "lines": 43,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Confirm (via TokenSearchResults)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "SearchLoadingState",
+      "path": "src/components/token/SearchLoadingState.tsx",
+      "lines": 14,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Confirm (via TokenSearchResults)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "SeoHead",
+      "path": "src/components/seo/SeoHead.tsx",
+      "lines": 81,
+      "usedBy": [
+        "TokenReport"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "separator",
+      "path": "src/components/ui/separator.tsx",
+      "lines": 30,
+      "usedBy": [
+        "Auth"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "ShareScanResult",
+      "path": "src/components/ShareScanResult.tsx",
+      "lines": 180,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "ScanResult (via TokenProfile)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "SolanaFAQ",
+      "path": "src/components/solana/SolanaFAQ.tsx",
+      "lines": 85,
+      "usedBy": [
+        "SolanaLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "SolanaLaunchpadsHero",
+      "path": "src/components/solana/SolanaLaunchpadsHero.tsx",
+      "lines": 72,
+      "usedBy": [
+        "SolanaLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "TestSocialLinksButton",
+      "path": "src/components/TestSocialLinksButton.tsx",
+      "lines": 55,
+      "usedBy": [
+        "ScanResult"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "TokenDistribution",
+      "path": "src/components/solana/TokenDistribution.tsx",
+      "lines": 65,
+      "usedBy": [
+        "SolanaLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "TokenHeaderHero",
+      "path": "src/components/token/TokenHeaderHero.tsx",
+      "lines": 104,
+      "usedBy": [
+        "TokenReport"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "TokenHealthScanSection",
+      "path": "src/components/comparison/TokenHealthScanSection.tsx",
+      "lines": 85,
+      "usedBy": [
+        "TokenSnifferComparison"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "TokenLogo",
+      "path": "src/components/TokenLogo.tsx",
+      "lines": 14,
+      "usedBy": [
+        "TokenDirectory"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "TokenLogo",
+      "path": "src/components/token/TokenLogo.tsx",
+      "lines": 161,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Copilot (via TokenSearchAutocomplete)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "TokenProfile",
+      "path": "src/components/TokenProfile.tsx",
+      "lines": 560,
+      "usedBy": [
+        "ScanResult"
+      ],
+      "hardcodedColors": {
+        "count": 63,
+        "samples": [
+          "L36: stroke=\"#232334\"",
+          "L45: stroke=\"#F59E0B\"",
+          "L64: <span className={`${isMobile ? 'text-[12px]' : 'text-[14.4px]'} font-medium mt-1 text-[#9CA3AF] dark:text-[#A3A3B3]`}>"
+        ]
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "TokenRefreshPanel",
+      "path": "src/components/admin/TokenRefreshPanel.tsx",
+      "lines": 130,
+      "usedBy": [
+        "AdminUsers"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "TokenResultsList",
+      "path": "src/components/token/TokenResultsList.tsx",
+      "lines": 53,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Confirm (via TokenSearchResults)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "TokenScore",
+      "path": "src/components/TokenScore.tsx",
+      "lines": 46,
+      "usedBy": [
+        "TokenDirectory"
+      ],
+      "hardcodedColors": {
+        "count": 4,
+        "samples": [
+          "L10: if (score >= 70) return \"#10b981\"; // green",
+          "L11: if (score >= 40) return \"#f59e0b\"; // amber",
+          "L12: return \"#ef4444\"; // red"
+        ]
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "TokenSearchAutocomplete",
+      "path": "src/components/token/TokenSearchAutocomplete.tsx",
+      "lines": 430,
+      "usedBy": [
+        "Copilot"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "TokenSearchForm",
+      "path": "src/components/token/TokenSearchForm.tsx",
+      "lines": 46,
+      "usedBy": [
+        "Confirm"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "TokenSearchInput",
+      "path": "src/components/TokenSearchInput.tsx",
+      "lines": 101,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "Landing (via HeroSection)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "TokenSearchResults",
+      "path": "src/components/token/TokenSearchResults.tsx",
+      "lines": 41,
+      "usedBy": [
+        "Confirm"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "TokenSnifferSection",
+      "path": "src/components/comparison/TokenSnifferSection.tsx",
+      "lines": 71,
+      "usedBy": [
+        "TokenSnifferComparison"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "ToolsDashboards",
+      "path": "src/components/solana/ToolsDashboards.tsx",
+      "lines": 87,
+      "usedBy": [
+        "SolanaLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "TypesOfScansSection",
+      "path": "src/components/guide/TypesOfScansSection.tsx",
+      "lines": 94,
+      "usedBy": [
+        "TokenScanGuide"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "UpgradeModal",
+      "path": "src/components/UpgradeModal.tsx",
+      "lines": 99,
+      "usedBy": [
+        "ScanResult"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "UserProfile",
+      "path": "src/components/auth/UserProfile.tsx",
+      "lines": 262,
+      "usedBy": [
+        "Dashboard"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "UserSearchFilters",
+      "path": "src/components/admin/UserSearchFilters.tsx",
+      "lines": 42,
+      "usedBy": [
+        "AdminUsers"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "UsersTable",
+      "path": "src/components/admin/UsersTable.tsx",
+      "lines": 57,
+      "usedBy": [
+        "AdminUsers"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "UserTableRow",
+      "path": "src/components/admin/UserTableRow.tsx",
+      "lines": 88,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "AdminUsers (via UsersTable)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "UXOnboarding",
+      "path": "src/components/solana/UXOnboarding.tsx",
+      "lines": 99,
+      "usedBy": [
+        "SolanaLaunchpads"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "WebacyRiskFlags",
+      "path": "src/components/WebacyRiskFlags.tsx",
+      "lines": 130,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [
+        "ScanResult (via CategoryTabs)"
+      ],
+      "usedByCount": 1
+    },
+    {
+      "name": "WhatIsTokenScanSection",
+      "path": "src/components/guide/WhatIsTokenScanSection.tsx",
+      "lines": 57,
+      "usedBy": [
+        "TokenScanGuide"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "WhyTokenScanningMattersSection",
+      "path": "src/components/guide/WhyTokenScanningMattersSection.tsx",
+      "lines": 61,
+      "usedBy": [
+        "TokenScanGuide"
+      ],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 1
+    },
+    {
+      "name": "AdminRoute",
+      "path": "src/components/admin/AdminRoute.tsx",
+      "lines": 109,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "AdminUserBadge",
+      "path": "src/components/admin/AdminUserBadge.tsx",
+      "lines": 33,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "aspect-ratio",
+      "path": "src/components/ui/aspect-ratio.tsx",
+      "lines": 6,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "AuthCheckWrapper",
+      "path": "src/components/token/AuthCheckWrapper.tsx",
+      "lines": 56,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "AuthModal",
+      "path": "src/components/auth/AuthModal.tsx",
+      "lines": 92,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "avatar",
+      "path": "src/components/ui/avatar.tsx",
+      "lines": 49,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "breadcrumb",
+      "path": "src/components/ui/breadcrumb.tsx",
+      "lines": 116,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "calendar",
+      "path": "src/components/ui/calendar.tsx",
+      "lines": 65,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "carousel",
+      "path": "src/components/ui/carousel.tsx",
+      "lines": 261,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "CategoryFeatureCard",
+      "path": "src/components/CategoryFeatureCard.tsx",
+      "lines": 60,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "CategoryFeatureExample",
+      "path": "src/components/CategoryFeatureExample.tsx",
+      "lines": 47,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "CategoryTabsErrorBoundary",
+      "path": "src/components/CategoryTabsErrorBoundary.tsx",
+      "lines": 38,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "chart",
+      "path": "src/components/ui/chart.tsx",
+      "lines": 370,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 5,
+        "samples": [
+          "L53: \"flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cart"
+        ]
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "ChartPreviewGrid",
+      "path": "src/components/report/ChartPreviewGrid.tsx",
+      "lines": 34,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "checkbox",
+      "path": "src/components/ui/checkbox.tsx",
+      "lines": 29,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "collapsible",
+      "path": "src/components/ui/collapsible.tsx",
+      "lines": 10,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "command",
+      "path": "src/components/ui/command.tsx",
+      "lines": 154,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "context-menu",
+      "path": "src/components/ui/context-menu.tsx",
+      "lines": 199,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "drawer",
+      "path": "src/components/ui/drawer.tsx",
+      "lines": 117,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "dropdown-menu",
+      "path": "src/components/ui/dropdown-menu.tsx",
+      "lines": 199,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "ErrorBoundary",
+      "path": "src/components/ErrorBoundary.tsx",
+      "lines": 87,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "FeatureGridSection",
+      "path": "src/components/landing/FeatureGridSection.tsx",
+      "lines": 71,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "FinalCTASection",
+      "path": "src/components/landing/FinalCTASection.tsx",
+      "lines": 33,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "form",
+      "path": "src/components/ui/form.tsx",
+      "lines": 177,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "HeroBackground",
+      "path": "src/components/report/HeroBackground.tsx",
+      "lines": 70,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "HeroComposer",
+      "path": "src/components/report/HeroComposer.tsx",
+      "lines": 46,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "hover-card",
+      "path": "src/components/ui/hover-card.tsx",
+      "lines": 28,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "HowItWorksSection",
+      "path": "src/components/landing/HowItWorksSection.tsx",
+      "lines": 51,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "input-otp",
+      "path": "src/components/ui/input-otp.tsx",
+      "lines": 70,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "menubar",
+      "path": "src/components/ui/menubar.tsx",
+      "lines": 235,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "navigation-menu",
+      "path": "src/components/ui/navigation-menu.tsx",
+      "lines": 129,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "OverallHealthScore",
+      "path": "src/components/OverallHealthScore.tsx",
+      "lines": 69,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 4,
+        "samples": [
+          "L36: stroke=\"#e5e7eb\"",
+          "L44: stroke={score >= 70 ? \"#10b981\" : score >= 40 ? \"#f59e0b\" : \"#ef4444\"}"
+        ]
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "pagination",
+      "path": "src/components/ui/pagination.tsx",
+      "lines": 118,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "popover",
+      "path": "src/components/ui/popover.tsx",
+      "lines": 30,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "PricingTeaserSection",
+      "path": "src/components/landing/PricingTeaserSection.tsx",
+      "lines": 102,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "radio-group",
+      "path": "src/components/ui/radio-group.tsx",
+      "lines": 43,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "ReportPreviewSection",
+      "path": "src/components/landing/ReportPreviewSection.tsx",
+      "lines": 35,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "resizable",
+      "path": "src/components/ui/resizable.tsx",
+      "lines": 44,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "ScanLimitDialog",
+      "path": "src/components/token/ScanLimitDialog.tsx",
+      "lines": 51,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "sheet",
+      "path": "src/components/ui/sheet.tsx",
+      "lines": 132,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "sidebar",
+      "path": "src/components/ui/sidebar.tsx",
+      "lines": 762,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 2,
+        "samples": [
+          "L519: \"bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foregroun"
+        ]
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "slider",
+      "path": "src/components/ui/slider.tsx",
+      "lines": 27,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "SocialProofSection",
+      "path": "src/components/landing/SocialProofSection.tsx",
+      "lines": 23,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "SolanaBadge",
+      "path": "src/components/SolanaBadge.tsx",
+      "lines": 35,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "sonner",
+      "path": "src/components/ui/sonner.tsx",
+      "lines": 30,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "toast",
+      "path": "src/components/ui/toast.tsx",
+      "lines": 128,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "toaster",
+      "path": "src/components/ui/toaster.tsx",
+      "lines": 34,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "toggle",
+      "path": "src/components/ui/toggle.tsx",
+      "lines": 44,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "toggle-group",
+      "path": "src/components/ui/toggle-group.tsx",
+      "lines": 60,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": true,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "TokenActions",
+      "path": "src/components/TokenActions.tsx",
+      "lines": 20,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": false,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "TokenCard",
+      "path": "src/components/TokenCard.tsx",
+      "lines": 168,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "TokenInfo",
+      "path": "src/components/TokenInfo.tsx",
+      "lines": 24,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "TokenPrice",
+      "path": "src/components/TokenPrice.tsx",
+      "lines": 82,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "TokenResult",
+      "path": "src/components/TokenResult.tsx",
+      "lines": 216,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "TokenResult",
+      "path": "src/components/token/TokenResult.tsx",
+      "lines": 216,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    },
+    {
+      "name": "TokenSocialLinks",
+      "path": "src/components/TokenSocialLinks.tsx",
+      "lines": 85,
+      "usedBy": [],
+      "hardcodedColors": {
+        "count": 0,
+        "samples": []
+      },
+      "usesTokens": true,
+      "isShadcn": false,
+      "usedByIndirect": [],
+      "usedByCount": 0
+    }
+  ],
+  "pages": [
+    {
+      "name": "AIAgents",
+      "imports": [
+        "src/components/agent-scan/AgentCrossSell.tsx",
+        "src/components/ui/helmet.tsx",
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/ui/badge.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/skeleton.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/agent-scan/AgentCrossSell.tsx": [
+          "src/components/ui/alert.tsx",
+          "src/components/ui/button.tsx"
+        ],
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ]
+      }
+    },
+    {
+      "name": "Admin",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/cms/PageTable.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/cms/PageTable.tsx": [
+          "src/components/ui/badge.tsx",
+          "src/components/ui/button.tsx",
+          "src/components/ui/table.tsx"
+        ]
+      }
+    },
+    {
+      "name": "AdminEdit",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/input.tsx",
+        "src/components/ui/label.tsx",
+        "src/components/ui/switch.tsx",
+        "src/components/cms/HeroImageUpload.tsx",
+        "src/components/cms/EnglishContentSection.tsx",
+        "src/components/cms/SchemaEditor.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/cms/HeroImageUpload.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ui/input.tsx",
+          "src/components/ui/label.tsx",
+          "src/components/ui/use-toast.ts"
+        ],
+        "src/components/cms/EnglishContentSection.tsx": [
+          "src/components/ui/input.tsx",
+          "src/components/ui/label.tsx",
+          "src/components/ui/textarea.tsx",
+          "src/components/cms/RichTextEditor.tsx"
+        ],
+        "src/components/cms/SchemaEditor.tsx": [
+          "src/components/ui/textarea.tsx",
+          "src/components/ui/label.tsx"
+        ]
+      }
+    },
+    {
+      "name": "AdminNew",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/input.tsx",
+        "src/components/ui/label.tsx",
+        "src/components/ui/switch.tsx",
+        "src/components/cms/HeroImageUpload.tsx",
+        "src/components/cms/EnglishContentSection.tsx",
+        "src/components/cms/SchemaEditor.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/cms/HeroImageUpload.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ui/input.tsx",
+          "src/components/ui/label.tsx",
+          "src/components/ui/use-toast.ts"
+        ],
+        "src/components/cms/EnglishContentSection.tsx": [
+          "src/components/ui/input.tsx",
+          "src/components/ui/label.tsx",
+          "src/components/ui/textarea.tsx",
+          "src/components/cms/RichTextEditor.tsx"
+        ],
+        "src/components/cms/SchemaEditor.tsx": [
+          "src/components/ui/textarea.tsx",
+          "src/components/ui/label.tsx"
+        ]
+      }
+    },
+    {
+      "name": "AdminUsers",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/admin/UserSearchFilters.tsx",
+        "src/components/admin/UsersTable.tsx",
+        "src/components/admin/AdminConfirmDialog.tsx",
+        "src/components/admin/TokenRefreshPanel.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/admin/UserSearchFilters.tsx": [
+          "src/components/ui/input.tsx",
+          "src/components/ui/select.tsx"
+        ],
+        "src/components/admin/UsersTable.tsx": [
+          "src/components/ui/table.tsx",
+          "src/components/admin/UserTableRow.tsx"
+        ],
+        "src/components/admin/AdminConfirmDialog.tsx": [
+          "src/components/ui/alert-dialog.tsx"
+        ],
+        "src/components/admin/TokenRefreshPanel.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ui/card.tsx"
+        ]
+      }
+    },
+    {
+      "name": "AgentDirectory",
+      "imports": [
+        "src/components/ui/helmet.tsx",
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/agent-scan/AgentSearchInput.tsx",
+        "src/components/ui/card.tsx",
+        "src/components/ui/badge.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/skeleton.tsx",
+        "src/components/ui/select.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/agent-scan/AgentSearchInput.tsx": [
+          "src/components/ui/input.tsx",
+          "src/components/ui/button.tsx",
+          "src/components/ui/select.tsx"
+        ]
+      }
+    },
+    {
+      "name": "AgentScan",
+      "imports": [
+        "src/components/ui/helmet.tsx",
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/agent-scan/AgentSearchInput.tsx",
+        "src/components/ui/card.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/agent-scan/AgentSearchInput.tsx": [
+          "src/components/ui/input.tsx",
+          "src/components/ui/button.tsx",
+          "src/components/ui/select.tsx"
+        ]
+      }
+    },
+    {
+      "name": "AgentScanResult",
+      "imports": [
+        "src/components/ui/helmet.tsx",
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/agent-scan/AgentDimensionGrid.tsx",
+        "src/components/agent-scan/AgentIdentityCard.tsx",
+        "src/components/agent-scan/AgentActionPlan.tsx",
+        "src/components/agent-scan/AgentCrossSell.tsx",
+        "src/components/agent-scan/AgentScanLoading.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/agent-scan/AgentDimensionGrid.tsx": [
+          "src/components/agent-scan/AgentDimensionCard.tsx"
+        ],
+        "src/components/agent-scan/AgentIdentityCard.tsx": [
+          "src/components/ui/badge.tsx",
+          "src/components/ui/button.tsx",
+          "src/components/agent-scan/AgentTrustScoreRing.tsx"
+        ],
+        "src/components/agent-scan/AgentActionPlan.tsx": [
+          "src/components/ui/card.tsx",
+          "src/components/ui/badge.tsx"
+        ],
+        "src/components/agent-scan/AgentCrossSell.tsx": [
+          "src/components/ui/alert.tsx",
+          "src/components/ui/button.tsx"
+        ],
+        "src/components/agent-scan/AgentScanLoading.tsx": [
+          "src/components/ui/skeleton.tsx"
+        ]
+      }
+    },
+    {
+      "name": "AgentScanSearch",
+      "imports": [
+        "src/components/ui/helmet.tsx",
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/agent-scan/AgentSearchInput.tsx",
+        "src/components/ui/card.tsx",
+        "src/components/ui/badge.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/skeleton.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/agent-scan/AgentSearchInput.tsx": [
+          "src/components/ui/input.tsx",
+          "src/components/ui/button.tsx",
+          "src/components/ui/select.tsx"
+        ]
+      }
+    },
+    {
+      "name": "ApiHealth",
+      "imports": [
+        "src/components/ApiHealthDashboard.tsx",
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/ApiHealthDashboard.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ui/card.tsx",
+          "src/components/ui/badge.tsx"
+        ],
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ]
+      }
+    },
+    {
+      "name": "Auth",
+      "imports": [
+        "src/components/ui/button.tsx",
+        "src/components/ui/input.tsx",
+        "src/components/ui/card.tsx",
+        "src/components/ui/tabs.tsx",
+        "src/components/ui/label.tsx",
+        "src/components/ui/separator.tsx",
+        "src/components/ui/use-toast.ts"
+      ],
+      "oneLevelDeep": {}
+    },
+    {
+      "name": "Confirm",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/token/TokenSearchForm.tsx",
+        "src/components/token/TokenSearchResults.tsx",
+        "src/components/token/useTokenSelection.ts"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/token/TokenSearchForm.tsx": [
+          "src/components/ui/input.tsx"
+        ],
+        "src/components/token/TokenSearchResults.tsx": [
+          "src/components/token/types.ts",
+          "src/components/token/SearchLoadingState.tsx",
+          "src/components/token/SearchErrorState.tsx",
+          "src/components/token/TokenResultsList.tsx"
+        ],
+        "src/components/token/useTokenSelection.ts": [
+          "src/components/token/types.ts"
+        ]
+      }
+    },
+    {
+      "name": "Copilot",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/ui/card.tsx",
+        "src/components/ui/badge.tsx",
+        "src/components/token/TokenSearchAutocomplete.tsx",
+        "src/components/copilot/CopilotPanel.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/token/TokenSearchAutocomplete.tsx": [
+          "src/components/ui/input.tsx",
+          "src/components/ui/button.tsx",
+          "src/components/ui/badge.tsx",
+          "src/components/token/TokenLogo.tsx"
+        ],
+        "src/components/copilot/CopilotPanel.tsx": [
+          "src/components/ui/card.tsx",
+          "src/components/ui/textarea.tsx",
+          "src/components/ui/button.tsx",
+          "src/components/ui/badge.tsx",
+          "src/components/ui/tooltip.tsx",
+          "src/components/ui/alert.tsx",
+          "src/components/ui/scroll-area.tsx",
+          "src/components/copilot/blocks/MetricCards.tsx",
+          "src/components/copilot/blocks/PriceSparkline.tsx",
+          "src/components/copilot/blocks/PoolsTable.tsx",
+          "src/components/copilot/blocks/CategoryTags.tsx",
+          "src/components/copilot/blocks/HoldersTable.tsx",
+          "src/components/copilot/blocks/ChangeCard.tsx",
+          "src/components/copilot/blocks/TokenomicsCard.tsx",
+          "src/components/copilot/blocks/CommunityCard.tsx",
+          "src/components/copilot/blocks/SecurityCard.tsx",
+          "src/components/copilot/blocks/DevelopmentCard.tsx"
+        ]
+      }
+    },
+    {
+      "name": "Dashboard",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/auth/UserProfile.tsx",
+        "src/components/ui/card.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/alert.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/auth/UserProfile.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ui/card.tsx",
+          "src/components/ui/use-toast.ts",
+          "src/components/ui/badge.tsx"
+        ]
+      }
+    },
+    {
+      "name": "DynamicPage",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/cms/BlogTemplate.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/cms/BlogTemplate.tsx": [
+          "src/components/ui/badge.tsx"
+        ]
+      }
+    },
+    {
+      "name": "EthereumLaunchpads",
+      "imports": [
+        "src/components/ui/helmet.tsx",
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/ethereum/EthereumLaunchpadsHero.tsx",
+        "src/components/ethereum/EthereumIntroSection.tsx",
+        "src/components/ethereum/EthereumWhyMattersSection.tsx",
+        "src/components/ethereum/EthereumPlatformTypes.tsx",
+        "src/components/ethereum/EthereumSocialEngagement.tsx",
+        "src/components/ethereum/EthereumFounderEvaluation.tsx",
+        "src/components/ethereum/EthereumEmergingGapsSection.tsx",
+        "src/components/ethereum/EthereumHowToSection.tsx",
+        "src/components/ethereum/EthereumFAQ.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/ethereum/EthereumFAQ.tsx": [
+          "src/components/ui/accordion.tsx"
+        ]
+      }
+    },
+    {
+      "name": "LTD",
+      "imports": [
+        "src/components/ui/button.tsx",
+        "src/components/ui/card.tsx",
+        "src/components/ui/badge.tsx"
+      ],
+      "oneLevelDeep": {}
+    },
+    {
+      "name": "LTDThankYou",
+      "imports": [
+        "src/components/ui/card.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/use-toast.ts"
+      ],
+      "oneLevelDeep": {}
+    },
+    {
+      "name": "Landing",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/landing/HeroSection.tsx",
+        "src/components/landing/BenefitsSection.tsx",
+        "src/components/landing/LazySection.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/landing/HeroSection.tsx": [
+          "src/components/TokenSearchInput.tsx",
+          "src/components/agent-scan/AgentSearchInput.tsx",
+          "src/components/ui/tabs.tsx"
+        ]
+      }
+    },
+    {
+      "name": "NotFound",
+      "imports": [],
+      "oneLevelDeep": {}
+    },
+    {
+      "name": "Pricing",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/PricingCard.tsx",
+        "src/components/ui/accordion.tsx",
+        "src/components/ui/alert.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/PricingCard.tsx": [
+          "src/components/ui/card.tsx",
+          "src/components/ui/button.tsx",
+          "src/components/ui/badge.tsx"
+        ]
+      }
+    },
+    {
+      "name": "Privacy",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ]
+      }
+    },
+    {
+      "name": "Publications",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/cms/PublicationCard.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/cms/PublicationCard.tsx": [
+          "src/components/ui/badge.tsx"
+        ]
+      }
+    },
+    {
+      "name": "ScanChain",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/ui/button.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ]
+      }
+    },
+    {
+      "name": "ScanLoading",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/ui/progress.tsx",
+        "src/components/ui/card.tsx",
+        "src/components/ui/badge.tsx",
+        "src/components/ui/button.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ]
+      }
+    },
+    {
+      "name": "ScanResult",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/TokenProfile.tsx",
+        "src/components/CategoryTabs.tsx",
+        "src/components/CategoryScoresGrid.tsx",
+        "src/components/ScanLimitIndicator.tsx",
+        "src/components/UpgradeModal.tsx",
+        "src/components/RefreshScanButton.tsx",
+        "src/components/GenerateReportButton.tsx",
+        "src/components/TestSocialLinksButton.tsx",
+        "src/components/copilot/CopilotPanel.tsx",
+        "src/components/ui/button.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/TokenProfile.tsx": [
+          "src/components/ui/card.tsx",
+          "src/components/ui/tooltip.tsx",
+          "src/components/OptimizedTokenLogo.tsx",
+          "src/components/RefreshScanButton.tsx",
+          "src/components/DataFreshnessIndicator.tsx",
+          "src/components/ShareScanResult.tsx"
+        ],
+        "src/components/CategoryTabs.tsx": [
+          "src/components/ui/tabs.tsx",
+          "src/components/ui/card.tsx",
+          "src/components/ui/tooltip.tsx",
+          "src/components/CategoryFeatureGrid.tsx",
+          "src/components/WebacyRiskFlags.tsx",
+          "src/components/BlurredCategoryOverlay.tsx"
+        ],
+        "src/components/CategoryScoresGrid.tsx": [
+          "src/components/CategoryScoreCard.tsx"
+        ],
+        "src/components/ScanLimitIndicator.tsx": [
+          "src/components/ui/badge.tsx",
+          "src/components/ui/progress.tsx",
+          "src/components/ui/card.tsx"
+        ],
+        "src/components/UpgradeModal.tsx": [
+          "src/components/ui/dialog.tsx",
+          "src/components/ui/button.tsx",
+          "src/components/ui/badge.tsx"
+        ],
+        "src/components/RefreshScanButton.tsx": [
+          "src/components/ui/button.tsx"
+        ],
+        "src/components/GenerateReportButton.tsx": [
+          "src/components/ui/button.tsx"
+        ],
+        "src/components/TestSocialLinksButton.tsx": [
+          "src/components/ui/button.tsx"
+        ],
+        "src/components/copilot/CopilotPanel.tsx": [
+          "src/components/ui/card.tsx",
+          "src/components/ui/textarea.tsx",
+          "src/components/ui/button.tsx",
+          "src/components/ui/badge.tsx",
+          "src/components/ui/tooltip.tsx",
+          "src/components/ui/alert.tsx",
+          "src/components/ui/scroll-area.tsx",
+          "src/components/copilot/blocks/MetricCards.tsx",
+          "src/components/copilot/blocks/PriceSparkline.tsx",
+          "src/components/copilot/blocks/PoolsTable.tsx",
+          "src/components/copilot/blocks/CategoryTags.tsx",
+          "src/components/copilot/blocks/HoldersTable.tsx",
+          "src/components/copilot/blocks/ChangeCard.tsx",
+          "src/components/copilot/blocks/TokenomicsCard.tsx",
+          "src/components/copilot/blocks/CommunityCard.tsx",
+          "src/components/copilot/blocks/SecurityCard.tsx",
+          "src/components/copilot/blocks/DevelopmentCard.tsx"
+        ]
+      }
+    },
+    {
+      "name": "SolanaLaunchpads",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/solana/SolanaLaunchpadsHero.tsx",
+        "src/components/solana/LaunchpadSpectrum.tsx",
+        "src/components/solana/ComparativeAnalysis.tsx",
+        "src/components/solana/LaunchMechanics.tsx",
+        "src/components/solana/TokenDistribution.tsx",
+        "src/components/solana/UXOnboarding.tsx",
+        "src/components/solana/FounderFit.tsx",
+        "src/components/solana/LaunchPlans.tsx",
+        "src/components/solana/ToolsDashboards.tsx",
+        "src/components/solana/KeyTakeaways.tsx",
+        "src/components/solana/SolanaFAQ.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/solana/SolanaLaunchpadsHero.tsx": [
+          "src/components/ui/button.tsx"
+        ],
+        "src/components/solana/LaunchPlans.tsx": [
+          "src/components/ui/button.tsx"
+        ],
+        "src/components/solana/KeyTakeaways.tsx": [
+          "src/components/ui/button.tsx"
+        ],
+        "src/components/solana/SolanaFAQ.tsx": [
+          "src/components/ui/accordion.tsx"
+        ]
+      }
+    },
+    {
+      "name": "Terms",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ]
+      }
+    },
+    {
+      "name": "TokenDirectory",
+      "imports": [
+        "src/components/ui/input.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/badge.tsx",
+        "src/components/ui/card.tsx",
+        "src/components/ui/select.tsx",
+        "src/components/TokenLogo.tsx",
+        "src/components/TokenScore.tsx",
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ]
+      }
+    },
+    {
+      "name": "TokenReport",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/seo/SeoHead.tsx",
+        "src/components/ui/badge.tsx",
+        "src/components/ui/card.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/accordion.tsx",
+        "src/components/token/TokenHeaderHero.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/seo/SeoHead.tsx": [
+          "src/components/ui/helmet.tsx"
+        ]
+      }
+    },
+    {
+      "name": "TokenScanGuide",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/guide/GuideHeroSection.tsx",
+        "src/components/guide/GuideIntroSection.tsx",
+        "src/components/guide/WhatIsTokenScanSection.tsx",
+        "src/components/guide/WhyTokenScanningMattersSection.tsx",
+        "src/components/guide/TypesOfScansSection.tsx",
+        "src/components/guide/ScanningProcessSection.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/guide/GuideHeroSection.tsx": [
+          "src/components/ui/button.tsx"
+        ],
+        "src/components/guide/ScanningProcessSection.tsx": [
+          "src/components/ui/button.tsx"
+        ]
+      }
+    },
+    {
+      "name": "TokenSnifferComparison",
+      "imports": [
+        "src/components/Navbar.tsx",
+        "src/components/Footer.tsx",
+        "src/components/comparison/ComparisonHero.tsx",
+        "src/components/comparison/TokenSnifferSection.tsx",
+        "src/components/comparison/TokenHealthScanSection.tsx",
+        "src/components/comparison/FeatureComparisonTable.tsx",
+        "src/components/comparison/FAQSection.tsx"
+      ],
+      "oneLevelDeep": {
+        "src/components/Navbar.tsx": [
+          "src/components/ui/button.tsx",
+          "src/components/ThemeToggle.tsx",
+          "src/components/auth/AuthButton.tsx",
+          "src/components/MobileNav.tsx"
+        ],
+        "src/components/comparison/TokenSnifferSection.tsx": [
+          "src/components/ui/badge.tsx"
+        ],
+        "src/components/comparison/TokenHealthScanSection.tsx": [
+          "src/components/ui/badge.tsx"
+        ]
+      }
+    }
+  ]
+}

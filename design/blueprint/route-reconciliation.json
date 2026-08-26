@@ -1,0 +1,94 @@
+{
+  "generatedAt": "2026-08-25",
+  "sources": {
+    "appTsx": {
+      "path": "/Users/gabrielmangabeira/Documents/token-health-radar/src/App.tsx",
+      "role": "canonical",
+      "repoHead": "9b2e06d 2026-08-07"
+    },
+    "productInfo": {
+      "path": "/Users/gabrielmangabeira/Documents/Gabriel Mangabeira/token-health-scan/_context/product-info.md",
+      "block": "Live Routes"
+    },
+    "workerRepoCopy": {
+      "path": "/Users/gabrielmangabeira/Documents/token-health-radar/workers/bot-prerender.js",
+      "header": "v2.0 — 2026-08-05",
+      "lastCommit": "563c113 2026-08-06 (commit msg: 'synced to deployed v2.2')"
+    },
+    "workerOpsCopy": {
+      "path": "/Users/gabrielmangabeira/Documents/Gabriel Mangabeira/token-health-scan/workers/tokenhealthscan-bot-prerender-v2/index.js",
+      "header": "v2.0 — 2026-08-05",
+      "newestDatedEdit": "2026-08-07 (snapshot TTL rationale comment)",
+      "verdict": "live-truth"
+    },
+    "linkIntelligence": {
+      "path": "/Users/gabrielmangabeira/Documents/Gabriel Mangabeira/token-health-scan/seo/research/link-intelligence-ths-2026-08-06.json",
+      "nodes": 79
+    }
+  },
+  "routes": [
+    { "path": "/sitemap.xml", "component": "StaticFileRoute", "loading": "eager", "pageType": "U", "authTier": "public", "inAppTsx": true, "inProductInfo": false, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": ["Worker STORAGE_PROXY_PATHS intercepts and serves from Supabase sitemaps bucket before the SPA route ever runs"] },
+    { "path": "/robots.txt", "component": "StaticFileRoute", "loading": "eager", "pageType": "U", "authTier": "public", "inAppTsx": true, "inProductInfo": false, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": ["Not in worker STORAGE_PROXY_PATHS — served by origin static hosting only"] },
+    { "path": "/rss.xml", "component": "RSSFeedRoute", "loading": "eager", "pageType": "U", "authTier": "public", "inAppTsx": true, "inProductInfo": false, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": ["Both worker copies proxy it to Supabase rss-feed edge function; SPA route is a client-side redirect fallback"] },
+    { "path": "/feed.xml", "component": "RSSFeedRoute", "loading": "eager", "pageType": "U", "authTier": "public", "inAppTsx": true, "inProductInfo": false, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": ["Not in either worker's STORAGE_PROXY_PATHS or STATIC_ROUTES — a bot hitting /feed.xml gets the SPA shell with X-Robots-Tag: noindex, never the feed"] },
+    { "path": "/", "component": "Landing", "loading": "eager", "pageType": "T1", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": true, "liveUrls": ["/"], "gscImpressions": 114, "isMoney": false, "discrepancies": [] },
+    { "path": "/auth", "component": "Auth", "loading": "eager", "pageType": "T6", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": [] },
+    { "path": "/confirm", "component": "Confirm", "loading": "eager", "pageType": "T6", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": [] },
+    { "path": "/scan/:chain/:address", "component": "ScanChain", "loading": "eager", "pageType": "T7", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": [] },
+    { "path": "/scan-loading", "component": "ScanLoading", "loading": "eager", "pageType": "T7", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": ["Uses useAuth for optional user attribution; no guard"] },
+    { "path": "/scan-result", "component": "ScanResult", "loading": "eager", "pageType": "T7", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": ["Public page; pro features gated inside via checkUserHasProAccess(), no route-level guard"] },
+    { "path": "/pricing", "component": "Pricing", "loading": "eager", "pageType": "T1", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": true, "liveUrls": ["/pricing"], "gscImpressions": 0, "isMoney": true, "discrepancies": [] },
+    { "path": "/copilot", "component": "Copilot", "loading": "eager", "pageType": "T10", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": true, "liveUrls": ["/copilot"], "gscImpressions": 2, "isMoney": false, "discrepancies": ["No auth guard found in Copilot.tsx despite being an app surface; also in worker STATIC_ROUTES (bot-indexable)"] },
+    { "path": "/dashboard", "component": "Dashboard", "loading": "eager", "pageType": "T10", "authTier": "free", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": ["No hard redirect for logged-out users; renders empty state (if (!user) early-return in data fetch)"] },
+    { "path": "/ltd", "component": "LTD", "loading": "eager", "pageType": "T1", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": true, "liveUrls": [], "gscImpressions": 0, "isMoney": true, "discrepancies": ["In worker STATIC_ROUTES but absent from the crawl — no internal links reach it"] },
+    { "path": "/ltd-thank-you", "component": "LTDThankYou", "loading": "eager", "pageType": "T1", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": [] },
+    { "path": "/privacy", "component": "Privacy", "loading": "eager", "pageType": "T5", "authTier": "public", "inAppTsx": true, "inProductInfo": false, "inWorkerStatic": true, "liveUrls": ["/privacy"], "gscImpressions": 0, "isMoney": false, "discrepancies": ["Omitted from product-info.md Live Routes block"] },
+    { "path": "/terms", "component": "Terms", "loading": "eager", "pageType": "T5", "authTier": "public", "inAppTsx": true, "inProductInfo": false, "inWorkerStatic": true, "liveUrls": ["/terms"], "gscImpressions": 0, "isMoney": false, "discrepancies": ["Omitted from product-info.md Live Routes block"] },
+    { "path": "/token-scan-guide", "component": "TokenScanGuide", "loading": "eager", "pageType": "T2", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": true, "liveUrls": ["/token-scan-guide"], "gscImpressions": 82, "isMoney": false, "discrepancies": [] },
+    { "path": "/token-sniffer-vs-tokenhealthscan", "component": "TokenSnifferComparison", "loading": "eager", "pageType": "T2", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": true, "liveUrls": ["/token-sniffer-vs-tokenhealthscan"], "gscImpressions": 109, "isMoney": false, "discrepancies": ["Workers also list legacy alias /token-sniffer-comparison which has no App.tsx route and no redirect"] },
+    { "path": "/solana-launchpads", "component": "SolanaLaunchpads", "loading": "eager", "pageType": "T2", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": true, "liveUrls": ["/solana-launchpads"], "gscImpressions": 24, "isMoney": false, "discrepancies": [] },
+    { "path": "/ethereum-launchpads", "component": "EthereumLaunchpads", "loading": "eager", "pageType": "T2", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": true, "liveUrls": ["/ethereum-launchpads"], "gscImpressions": 8, "isMoney": false, "discrepancies": [] },
+    { "path": "/ai-agents", "component": "AIAgents", "loading": "eager", "pageType": "T2", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": true, "liveUrls": ["/ai-agents"], "gscImpressions": 1, "isMoney": false, "discrepancies": ["Admin-only UI section rendered conditionally via useUserRole().isAdmin"] },
+    { "path": "/agent-scan", "component": "AgentScan", "loading": "eager", "pageType": "T7", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": true, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": ["In worker STATIC_ROUTES but absent from the crawl"] },
+    { "path": "/agent-scan/search", "component": "AgentScanSearch", "loading": "eager", "pageType": "T9", "authTier": "public", "inAppTsx": true, "inProductInfo": false, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": ["Omitted from product-info.md Live Routes block"] },
+    { "path": "/agent-scan/:chain/:agentId", "component": "AgentScanResult", "loading": "eager", "pageType": "T7", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": ["Covered by worker DYNAMIC_ROUTES regex (hard 404 propagation); zero live URLs crawled"] },
+    { "path": "/agent-directory", "component": "AgentDirectory", "loading": "eager", "pageType": "T9", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": true, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": ["In worker STATIC_ROUTES but absent from the crawl"] },
+    { "path": "/token", "component": "TokenDirectory", "loading": "eager", "pageType": "T9", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": true, "liveUrls": ["/token"], "gscImpressions": 32, "isMoney": false, "discrepancies": ["Workers also list legacy alias /token-directory which has no App.tsx route and no redirect"] },
+    { "path": "/token/:symbol", "component": "TokenReport", "loading": "eager", "pageType": "T8", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": false, "liveUrls": ["/token/jup", "/token/pyth", "/token/usd1", "/token/chz", "/token/trump", "/token/htx", "/token/bonk", "/token/pump", "/token/cake", "/token/bgb", "/token/mnt", "/token/crv", "/token/ldo", "/token/ethfi", "/token/cro", "/token/nexo", "/token/aave", "/token/iq", "/token/gt", "/token/okb", "/token/arb", "/token/pol", "/token/sky", "/token/frax", "/token/gho", "/token/leo", "/token/wld", "/token/usdy", "/token/virtual", "/token/pepe", "/token/coai", "/token/link", "/token/api3", "/token/icp", "/token/usde", "/token/ena", "/token/aero", "/token/avnt", "/token/syrup", "/token/kaito", "/token/ondo", "/token/sei", "/token/fet", "/token/ath", "/token/aster", "/token/skl", "/token/aitech", "/token/zro", "/token/pendle", "/token/strk", "/token/morpho", "/token/rndr", "/token/wlfi", "/token/om"], "gscImpressions": 125, "isMoney": false, "discrepancies": [] },
+    { "path": "/publications", "component": "Publications", "loading": "eager", "pageType": "T3", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": true, "liveUrls": ["/publications"], "gscImpressions": 0, "isMoney": false, "discrepancies": [] },
+    { "path": "/publications/:slug", "component": "DynamicPage", "loading": "eager", "pageType": "T4", "authTier": "public", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": false, "liveUrls": ["/publications/defi-exploits-may-2026", "/publications/how-token-health-scan-scores-a-protocol", "/publications/ada-whale-concentration-tokenomics", "/publications/defillama-tvl-vs-liquidity-health", "/publications/defi-audit-admin-key-failure", "/publications/smart-contract-audit-not-enough-2026", "/publications/defi-exploits-june-2026", "/publications/token-health-scan-early-findings-defi-protocols", "/publications/whale-moat-defi-collapse-pattern", "/publications/5-onchain-signals-defi-exploits", "/publications/iron-finance-collapse-case-study", "/publications/defi-exploits-july-2026", "/publications/defi-token-collapse-patterns"], "gscImpressions": 31, "isMoney": false, "discrepancies": ["Worker REDIRECTS 301s renamed slugs: best-token-scanners-2026 (both copies), state-of-token-health-q3-2026 (ops copy only)"] },
+    { "path": "/admin", "component": "Admin", "loading": "lazy", "pageType": "T11", "authTier": "admin", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": ["Guarded by AdminRoute (isAuthenticated + user.id + isAdmin)"] },
+    { "path": "/admin/new", "component": "AdminNew", "loading": "lazy", "pageType": "T11", "authTier": "admin", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": [] },
+    { "path": "/admin/edit/:id", "component": "AdminEdit", "loading": "lazy", "pageType": "T11", "authTier": "admin", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": [] },
+    { "path": "/admin/users", "component": "AdminUsers", "loading": "lazy", "pageType": "T11", "authTier": "admin", "inAppTsx": true, "inProductInfo": true, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": [] },
+    { "path": "*", "component": "NotFound", "loading": "eager", "pageType": "U", "authTier": "public", "inAppTsx": true, "inProductInfo": false, "inWorkerStatic": false, "liveUrls": [], "gscImpressions": 0, "isMoney": false, "discrepancies": ["Bots on unknown routes get X-Robots-Tag: noindex from both worker copies; humans get SPA 404 at HTTP 200"] }
+  ],
+  "workerDiff": {
+    "identicalIn": ["STATIC_ROUTES (17 entries, byte-identical)", "DYNAMIC_ROUTES (3 regexes)", "BOT_UA_REGEX", "noindex rules (unknown-route noindex header, dynamic-route hard 404 with meta noindex, snapshot index,follow)", "og-image fix", "404 page"],
+    "repoCopyOnly": [],
+    "opsCopyOnly": [
+      "STORAGE_PROXY_PATHS includes /llms-full.txt",
+      "REDIRECTS includes /publications/state-of-token-health-q3-2026 -> /publications/state-of-token-health",
+      "Snapshot cache TTLs shortened: cf.cacheTtl 120 (was 300), cache-control max-age=120 s-maxage=300 swr=1800 (was 300/86400/604800), with dated 2026-08-07 rationale (no edge purge path; CLOUDFLARE_API_TOKEN_CLAUDE lacks Zone.Cache Purge scope)"
+    ],
+    "liveTruth": "opsCopy (token-health-scan/workers/tokenhealthscan-bot-prerender-v2/index.js)",
+    "reasoning": "Both headers say v2.0 2026-08-05 (stale markers). Repo copy was last synced 2026-08-06 (commit 563c113, msg claims 'deployed v2.2') and that sync REMOVED /llms-full.txt which commit eb56367 (2026-08-05, 'Worker v2.1') had added — a suspect sync. Ops copy carries a dated 2026-08-07 edit (TTL fix) plus everything the repo copy has and more, so it is the newest known deployed state.",
+    "anomalies": [
+      "Version markers unreliable: both files claim v2.0 while commit messages reference v2.1 and v2.2",
+      "Repo copy's 2026-08-06 'sync to deployed' dropped /llms-full.txt one day after it was added and deployed — if repo copy is ever redeployed as-is, /llms-full.txt breaks"
+    ]
+  },
+  "orphanLiveUrls": [],
+  "deadStaticRoutes": [
+    { "path": "/token-directory", "inBothWorkers": true, "stillTruePostPull": true, "note": "No App.tsx route, no redirect. Bot hit -> seo-snapshot; on snapshot 404 falls through to SPA shell = index.html 200 rendering NotFound (soft 404). TokenDirectory component actually mounts at /token." },
+    { "path": "/token-sniffer-comparison", "inBothWorkers": true, "stillTruePostPull": true, "note": "Same failure mode. TokenSnifferComparison component actually mounts at /token-sniffer-vs-tokenhealthscan." }
+  ],
+  "unroutedComponents": [
+    { "component": "ApiHealth", "file": "src/pages/ApiHealth.tsx", "note": "Declares canonical https://tokenhealthscan.com/api-health but App.tsx has no /api-health route — unreachable page component (falls to catch-all 404)." }
+  ],
+  "productInfoDelta": {
+    "omitted": ["/privacy", "/terms", "/agent-scan/search", "/sitemap.xml", "/robots.txt", "/rss.xml", "/feed.xml", "* (catch-all 404)"],
+    "invented": []
+  },
+  "counts": { "routesTotal": 34, "discrepancies": 17, "orphanLiveUrls": 0, "deadStaticRoutes": 2 }
+}

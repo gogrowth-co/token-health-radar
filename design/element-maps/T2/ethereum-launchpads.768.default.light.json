@@ -1,0 +1,5036 @@
+{
+ "route": "http://127.0.0.1:5173/ethereum-launchpads",
+ "slug": "ethereum-launchpads",
+ "type": "T2",
+ "breakpoint": "768",
+ "state": "default",
+ "theme": "light",
+ "capturedAt": null,
+ "pageTitle": "Ethereum Launchpads Explained: Platforms, Projects, and Best Practices",
+ "pageHeight": 14627,
+ "count": 186,
+ "elements": [
+  {
+   "role": "text",
+   "tag": "ol",
+   "selector": "#root > div > ol.fixed",
+   "text": null,
+   "bbox": {
+    "x": 348,
+    "y": 992,
+    "w": 420,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "header",
+   "selector": "#root > div.min-h-screen > header.sticky",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 0,
+    "y": 0,
+    "w": 768,
+    "h": 65
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(248, 250, 252, 0.95)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.min-h-screen > header.sticky > div.container > div.flex > a.flex",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 24,
+    "y": 16,
+    "w": 205,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.flex > a.flex > div.w-7 > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 33,
+    "y": 25,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.container > div.flex > a.flex > span.font-bold > span.hidden",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 64,
+    "y": 20,
+    "w": 165,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "button",
+   "selector": "div.min-h-screen > header.sticky > div.container > div.flex > button.inline-flex",
+   "text": "Toggle theme",
+   "bbox": {
+    "x": 656,
+    "y": 12,
+    "w": 40,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.container > div.flex > button.inline-flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 670,
+    "y": 26,
+    "w": 12,
+    "h": 12
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "button",
+   "selector": "div.min-h-screen > header.sticky > div.container > div.flex > button.inline-flex",
+   "text": "Toggle menu",
+   "bbox": {
+    "x": 704,
+    "y": 12,
+    "w": 40,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > main.pt-16 > section.relative",
+   "text": "Ethereum Launchpads Explained: Platforms, Projects, and Best Practices\n\nExplore ",
+   "bbox": {
+    "x": 0,
+    "y": 129,
+    "w": 768,
+    "h": 985
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "main.pt-16 > section.relative > div.container > div.mb-8 > img.mx-auto",
+   "text": "A glowing, translucent Ethereum-themed digital launchpad interface showing 'Toke",
+   "bbox": {
+    "x": 16,
+    "y": 209,
+    "w": 736,
+    "h": 413
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h1",
+   "selector": "div.min-h-screen > main.pt-16 > section.relative > div.container > h1.text-4xl",
+   "text": "Ethereum Launchpads Explained: Platforms, Projects, and Best Practices",
+   "bbox": {
+    "x": 16,
+    "y": 654,
+    "w": 736,
+    "h": 240
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "60px",
+    "weight": "700",
+    "lh": "60px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgba(0, 0, 0, 0)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.min-h-screen > main.pt-16 > section.relative > div.container > p.text-xl",
+   "text": "Explore the top Ethereum launchpads of 2025, how they work, and what builders ne",
+   "bbox": {
+    "x": 16,
+    "y": 918,
+    "w": 736,
+    "h": 84
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > main.pt-16 > section.py-16",
+   "text": "Ethereum Launchpads 2025 – Full Landscape & Analysis\nWhat Is an Ethereum Token L",
+   "bbox": {
+    "x": 0,
+    "y": 1114,
+    "w": 768,
+    "h": 826
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgb(248, 250, 252)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "main.pt-16 > section.py-16 > div.container > div.max-w-4xl > h2.text-3xl",
+   "text": "Ethereum Launchpads 2025 – Full Landscape & Analysis",
+   "bbox": {
+    "x": 16,
+    "y": 1178,
+    "w": 736,
+    "h": 80
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "36px",
+    "weight": "700",
+    "lh": "40px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.prose > h3.text-2xl",
+   "text": "What Is an Ethereum Token Launchpad?",
+   "bbox": {
+    "x": 16,
+    "y": 1290,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.prose > p.mb-6",
+   "text": "An Ethereum token launchpad is a platform that helps new crypto projects raise c",
+   "bbox": {
+    "x": 16,
+    "y": 1338,
+    "w": 736,
+    "h": 78
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.container > div.max-w-4xl > div.prose > p.mb-6 > strong",
+   "text": "Ethereum staking launchpad",
+   "bbox": {
+    "x": 93,
+    "y": 1444,
+    "w": 221,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.max-w-4xl > div.prose > div.bg-secondary\\/10 > p.mb-4",
+   "text": "While every launchpad has its own focus—gaming, DeFi, AI, or general-purpose—mos",
+   "bbox": {
+    "x": 40,
+    "y": 1592,
+    "w": 688,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.prose > div.bg-secondary\\/10 > ol.list-decimal > li > strong.text-foreground",
+   "text": "Fundraising:",
+   "bbox": {
+    "x": 58,
+    "y": 1659,
+    "w": 97,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.prose > div.bg-secondary\\/10 > ol.list-decimal > li > strong.text-foreground",
+   "text": "Community building:",
+   "bbox": {
+    "x": 58,
+    "y": 1695,
+    "w": 161,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.prose > div.bg-secondary\\/10 > ol.list-decimal > li > strong.text-foreground",
+   "text": "Launch support:",
+   "bbox": {
+    "x": 58,
+    "y": 1731,
+    "w": 127,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.prose > p.text-muted-foreground",
+   "text": "Ethereum's deep liquidity, dev tooling, and regulatory mindshare make it a natur",
+   "bbox": {
+    "x": 16,
+    "y": 1824,
+    "w": 736,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > main.pt-16 > section.py-16",
+   "text": "Why Ethereum Launchpads Still Matter\n\nIn a cycle dominated by fast-moving chains",
+   "bbox": {
+    "x": 0,
+    "y": 1940,
+    "w": 768,
+    "h": 1405
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(241, 245, 249, 0.05)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "main.pt-16 > section.py-16 > div.container > div.max-w-4xl > h2.text-3xl",
+   "text": "Why Ethereum Launchpads Still Matter",
+   "bbox": {
+    "x": 16,
+    "y": 2004,
+    "w": 736,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "36px",
+    "weight": "700",
+    "lh": "40px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.mb-8 > img.w-full",
+   "text": "A sleek, glowing Ethereum tower serves as a central launchpad, with vibrant purp",
+   "bbox": {
+    "x": 16,
+    "y": 2076,
+    "w": 736,
+    "h": 401
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.prose > p.mb-6",
+   "text": "In a cycle dominated by fast-moving chains and meme-fueled launches, Ethereum mi",
+   "bbox": {
+    "x": 16,
+    "y": 2509,
+    "w": 736,
+    "h": 78
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "em",
+   "selector": "div.container > div.max-w-4xl > div.prose > p.mb-6 > em.text-foreground",
+   "text": "structure",
+   "bbox": {
+    "x": 78,
+    "y": 2641,
+    "w": 70,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.max-w-4xl > div.prose > div.bg-primary\\/10 > p.mb-4",
+   "text": "While Solana's launchpad wave leaned into instant launches and viral velocity, E",
+   "bbox": {
+    "x": 40,
+    "y": 2737,
+    "w": 688,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.prose > div.bg-primary\\/10 > ul.list-disc > li > strong.text-foreground",
+   "text": "DeFi-native tooling",
+   "bbox": {
+    "x": 62,
+    "y": 2804,
+    "w": 147,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.prose > div.bg-primary\\/10 > ul.list-disc > li > strong.text-foreground",
+   "text": "Real-world asset (RWA)",
+   "bbox": {
+    "x": 62,
+    "y": 2836,
+    "w": 184,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.prose > div.bg-primary\\/10 > ul.list-disc > li > strong.text-foreground",
+   "text": "AI project incubation",
+   "bbox": {
+    "x": 62,
+    "y": 2868,
+    "w": 161,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.prose > div.bg-primary\\/10 > ul.list-disc > li > strong.text-foreground",
+   "text": "Multichain deployment paths",
+   "bbox": {
+    "x": 62,
+    "y": 2900,
+    "w": 225,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.prose > p.mb-6",
+   "text": "This makes Ethereum launchpads the go-to for projects with long-term goals — esp",
+   "bbox": {
+    "x": 16,
+    "y": 2969,
+    "w": 736,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.max-w-4xl > div.prose > div.bg-gradient-to-r > p.text-lg",
+   "text": "TL;DR: Ethereum isn't where you go to \"launch fast.\"",
+   "bbox": {
+    "x": 40,
+    "y": 3069,
+    "w": 688,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "500",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "em",
+   "selector": "div.max-w-4xl > div.prose > div.bg-gradient-to-r > p.text-lg > em",
+   "text": "launch right",
+   "bbox": {
+    "x": 416,
+    "y": 3108,
+    "w": 103,
+    "h": 21
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.max-w-4xl > div.prose > div.mt-8 > p.text-sm > strong",
+   "text": "Note:",
+   "bbox": {
+    "x": 32,
+    "y": 3206,
+    "w": 38,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "700",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.max-w-4xl > div.prose > div.mt-8 > p.text-sm > a.text-primary",
+   "text": "launchpad.ethereum.org",
+   "bbox": {
+    "x": 203,
+    "y": 3246,
+    "w": 158,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > main.pt-16 > section.py-16",
+   "text": "Types of Ethereum Launchpads – Who's Who\n\nEthereum's launchpad ecosystem is dive",
+   "bbox": {
+    "x": 0,
+    "y": 3345,
+    "w": 768,
+    "h": 3826
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgb(248, 250, 252)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "main.pt-16 > section.py-16 > div.container > div.max-w-6xl > h2.text-3xl",
+   "text": "Types of Ethereum Launchpads – Who's Who",
+   "bbox": {
+    "x": 16,
+    "y": 3409,
+    "w": 736,
+    "h": 80
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "36px",
+    "weight": "700",
+    "lh": "40px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "main.pt-16 > section.py-16 > div.container > div.max-w-6xl > p.text-lg",
+   "text": "Ethereum's launchpad ecosystem is diverse, but not chaotic. Each platform has ev",
+   "bbox": {
+    "x": 16,
+    "y": 3521,
+    "w": 736,
+    "h": 84
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.max-w-6xl > div.mb-16 > h3.text-2xl",
+   "text": "DeFi-Native Platforms",
+   "bbox": {
+    "x": 16,
+    "y": 3653,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "700",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.max-w-6xl > div.mb-16 > p.text-muted-foreground",
+   "text": "These launchpads built their reputations in the early DeFi cycles and continue t",
+   "bbox": {
+    "x": 16,
+    "y": 3709,
+    "w": 736,
+    "h": 104
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.max-w-6xl > div.mb-16 > div.grid > div.bg-secondary\\/10 > h4.text-xl",
+   "text": "DAO Maker",
+   "bbox": {
+    "x": 40,
+    "y": 3869,
+    "w": 304,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "div.mb-16 > div.grid > div.bg-secondary\\/10 > div.mb-4 > img.w-full",
+   "text": "DAO Maker launchpad",
+   "bbox": {
+    "x": 40,
+    "y": 3913,
+    "w": 304,
+    "h": 192
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgba(226, 232, 240, 0.5)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.mb-16 > div.grid > div.bg-secondary\\/10 > p.text-muted-foreground > strong",
+   "text": "Strong Holder Offerings (SHOs)",
+   "bbox": {
+    "x": 40,
+    "y": 4172,
+    "w": 299,
+    "h": 42
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.max-w-6xl > div.mb-16 > div.grid > div.bg-secondary\\/10 > h4.text-xl",
+   "text": "Poolz Finance",
+   "bbox": {
+    "x": 424,
+    "y": 3869,
+    "w": 304,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "div.mb-16 > div.grid > div.bg-secondary\\/10 > div.mb-4 > img.w-full",
+   "text": "Poolz Finance Launchpad",
+   "bbox": {
+    "x": 424,
+    "y": 3913,
+    "w": 304,
+    "h": 192
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgba(226, 232, 240, 0.5)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.mb-16 > div.grid > div.bg-secondary\\/10 > p.text-muted-foreground > a.text-primary",
+   "text": "Poolz Finance",
+   "bbox": {
+    "x": 424,
+    "y": 4124,
+    "w": 101,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.max-w-6xl > div.mb-16 > h3.text-2xl",
+   "text": "AI-Focused Launchpads",
+   "bbox": {
+    "x": 16,
+    "y": 4401,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "700",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.max-w-6xl > div.mb-16 > p.text-muted-foreground",
+   "text": "AI-native platforms like ChainGPT Pad have emerged to serve the growing number o",
+   "bbox": {
+    "x": 16,
+    "y": 4457,
+    "w": 736,
+    "h": 104
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.container > div.max-w-6xl > div.mb-16 > div.bg-secondary\\/10 > h4.text-xl",
+   "text": "ChainGPT Pad",
+   "bbox": {
+    "x": 40,
+    "y": 4617,
+    "w": 624,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "div.max-w-6xl > div.mb-16 > div.bg-secondary\\/10 > div.mb-4 > img.w-full",
+   "text": "ChainGPT Pad",
+   "bbox": {
+    "x": 40,
+    "y": 4661,
+    "w": 624,
+    "h": 192
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgba(226, 232, 240, 0.5)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.max-w-6xl > div.mb-16 > div.bg-secondary\\/10 > p.text-muted-foreground > strong",
+   "text": "ChainGPT AI ecosystem",
+   "bbox": {
+    "x": 384,
+    "y": 4872,
+    "w": 185,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.max-w-6xl > div.mb-16 > h3.text-2xl",
+   "text": "Gaming and Metaverse Launchpads",
+   "bbox": {
+    "x": 16,
+    "y": 5077,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "700",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.max-w-6xl > div.mb-16 > p.text-muted-foreground",
+   "text": "These platforms specialize in community-heavy verticals like GameFi, NFTs, and m",
+   "bbox": {
+    "x": 16,
+    "y": 5133,
+    "w": 736,
+    "h": 78
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.max-w-6xl > div.mb-16 > div.grid > div.bg-secondary\\/10 > h4.text-xl",
+   "text": "Seedify",
+   "bbox": {
+    "x": 40,
+    "y": 5267,
+    "w": 304,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "div.mb-16 > div.grid > div.bg-secondary\\/10 > div.mb-4 > img.w-full",
+   "text": "Seedify Launchpad",
+   "bbox": {
+    "x": 40,
+    "y": 5311,
+    "w": 304,
+    "h": 192
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgba(226, 232, 240, 0.5)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "a",
+   "selector": "div.mb-16 > div.grid > div.bg-secondary\\/10 > p.text-muted-foreground > a.text-primary",
+   "text": "Seedify",
+   "bbox": {
+    "x": 40,
+    "y": 5522,
+    "w": 55,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.max-w-6xl > div.mb-16 > div.grid > div.bg-secondary\\/10 > h4.text-xl",
+   "text": "Enjinstarter",
+   "bbox": {
+    "x": 424,
+    "y": 5267,
+    "w": 304,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "div.mb-16 > div.grid > div.bg-secondary\\/10 > div.mb-4 > img.w-full",
+   "text": "Enjinstarter Launchpad",
+   "bbox": {
+    "x": 424,
+    "y": 5311,
+    "w": 304,
+    "h": 192
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgba(226, 232, 240, 0.5)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.mb-16 > div.grid > div.bg-secondary\\/10 > p.text-muted-foreground > a.text-primary",
+   "text": "Enjinstarter",
+   "bbox": {
+    "x": 424,
+    "y": 5522,
+    "w": 82,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.max-w-6xl > div.mb-16 > h3.text-2xl",
+   "text": "Generalist Launchpads",
+   "bbox": {
+    "x": 16,
+    "y": 5823,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "700",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.max-w-6xl > div.mb-16 > p.text-muted-foreground",
+   "text": "General-purpose platforms that prioritize accessibility and launch variety. They",
+   "bbox": {
+    "x": 16,
+    "y": 5879,
+    "w": 736,
+    "h": 78
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.max-w-6xl > div.mb-16 > div.grid > div.bg-secondary\\/10 > h4.text-xl",
+   "text": "Kommunitas",
+   "bbox": {
+    "x": 40,
+    "y": 6013,
+    "w": 304,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "div.mb-16 > div.grid > div.bg-secondary\\/10 > div.mb-4 > img.w-full",
+   "text": "Kommunitas Launchpad",
+   "bbox": {
+    "x": 40,
+    "y": 6057,
+    "w": 304,
+    "h": 192
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgba(226, 232, 240, 0.5)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.mb-16 > div.grid > div.bg-secondary\\/10 > p.text-muted-foreground > a.text-primary",
+   "text": "Kommunitas",
+   "bbox": {
+    "x": 40,
+    "y": 6268,
+    "w": 90,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.max-w-6xl > div.mb-16 > div.grid > div.bg-secondary\\/10 > h4.text-xl",
+   "text": "TrustPad",
+   "bbox": {
+    "x": 424,
+    "y": 6013,
+    "w": 304,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "div.mb-16 > div.grid > div.bg-secondary\\/10 > div.mb-4 > img.w-full",
+   "text": "Trustpad Launchpad",
+   "bbox": {
+    "x": 424,
+    "y": 6057,
+    "w": 304,
+    "h": 192
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgba(226, 232, 240, 0.5)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.mb-16 > div.grid > div.bg-secondary\\/10 > p.text-muted-foreground > a.text-primary",
+   "text": "TrustPad",
+   "bbox": {
+    "x": 424,
+    "y": 6268,
+    "w": 65,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.max-w-6xl > div > h3.text-2xl",
+   "text": "High-Variance / Experimental Platforms",
+   "bbox": {
+    "x": 16,
+    "y": 6545,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "700",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.max-w-6xl > div > p.text-muted-foreground",
+   "text": "These are newer or less-established platforms that may offer aggressive terms, l",
+   "bbox": {
+    "x": 16,
+    "y": 6601,
+    "w": 736,
+    "h": 78
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h4",
+   "selector": "div.container > div.max-w-6xl > div > div.bg-secondary\\/10 > h4.text-xl",
+   "text": "Spores",
+   "bbox": {
+    "x": 40,
+    "y": 6735,
+    "w": 624,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "div.max-w-6xl > div > div.bg-secondary\\/10 > div.mb-4 > img.w-full",
+   "text": "Spores Launchpad",
+   "bbox": {
+    "x": 40,
+    "y": 6779,
+    "w": 624,
+    "h": 192
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgba(226, 232, 240, 0.5)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.max-w-6xl > div > div.bg-secondary\\/10 > p.text-muted-foreground > a.text-primary",
+   "text": "Spores Network",
+   "bbox": {
+    "x": 40,
+    "y": 6990,
+    "w": 116,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > main.pt-16 > section.py-16",
+   "text": "Social Engagement as a Launch Strategy\n\nIn 2025, community traction isn't a side",
+   "bbox": {
+    "x": 0,
+    "y": 7171,
+    "w": 768,
+    "h": 1685
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(241, 245, 249, 0.05)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "main.pt-16 > section.py-16 > div.container > div.max-w-4xl > h2.text-3xl",
+   "text": "Social Engagement as a Launch Strategy",
+   "bbox": {
+    "x": 16,
+    "y": 7235,
+    "w": 736,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "36px",
+    "weight": "700",
+    "lh": "40px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "main.pt-16 > section.py-16 > div.container > div.max-w-4xl > p.text-lg",
+   "text": "In 2025, community traction isn't a side benefit — it's core infrastructure. Eth",
+   "bbox": {
+    "x": 16,
+    "y": 7307,
+    "w": 736,
+    "h": 84
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.mb-12 > h3.text-2xl",
+   "text": "Engagement Builds Momentum",
+   "bbox": {
+    "x": 16,
+    "y": 7439,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "div.container > div.max-w-4xl > div.mb-12 > div.mb-8 > img.w-full",
+   "text": "A glowing Ethereum token at the center of a vibrant, interconnected digital netw",
+   "bbox": {
+    "x": 16,
+    "y": 7495,
+    "w": 736,
+    "h": 421
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.mb-12 > p.text-muted-foreground",
+   "text": "DAO Maker and Poolz lead not just in project count but in attention. Their Twitt",
+   "bbox": {
+    "x": 16,
+    "y": 7948,
+    "w": 736,
+    "h": 104
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.mb-12 > p.text-muted-foreground",
+   "text": "Seedify, despite a high launch volume, shows limited traction per post. Most twe",
+   "bbox": {
+    "x": 16,
+    "y": 8076,
+    "w": 736,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.mb-12 > h3.text-2xl",
+   "text": "Virality Is Engineered",
+   "bbox": {
+    "x": 16,
+    "y": 8176,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.max-w-4xl > div.mb-12 > div.bg-primary\\/10 > p.mb-4",
+   "text": "Top-performing launchpads use coordinated messaging strategies:",
+   "bbox": {
+    "x": 40,
+    "y": 8256,
+    "w": 688,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.max-w-4xl > div.mb-12 > div.bg-primary\\/10 > ul.list-disc > li",
+   "text": "Countdown tweets before listing events",
+   "bbox": {
+    "x": 40,
+    "y": 8296,
+    "w": 688,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.max-w-4xl > div.mb-12 > div.bg-primary\\/10 > ul.list-disc > li",
+   "text": "Co-promotion with KOLs or IDO partners",
+   "bbox": {
+    "x": 40,
+    "y": 8328,
+    "w": 688,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.max-w-4xl > div.mb-12 > div.bg-primary\\/10 > ul.list-disc > li",
+   "text": "Urgency-based calls to action tied to staking or access windows",
+   "bbox": {
+    "x": 40,
+    "y": 8360,
+    "w": 688,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.max-w-4xl > div.mb-12 > div.bg-primary\\/10 > ul.list-disc > li",
+   "text": "Verified account amplification via quote tweets and reply networks",
+   "bbox": {
+    "x": 40,
+    "y": 8392,
+    "w": 688,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.mb-12 > p.text-muted-foreground",
+   "text": "These tactics aren't accidental. They're playbook-driven, repeatable, and measur",
+   "bbox": {
+    "x": 16,
+    "y": 8464,
+    "w": 736,
+    "h": 26
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div > h3.text-2xl",
+   "text": "Community Sentiment is a Launchpad Asset",
+   "bbox": {
+    "x": 16,
+    "y": 8538,
+    "w": 736,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "24px",
+    "weight": "600",
+    "lh": "32px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div > p.text-muted-foreground",
+   "text": "Strong social velocity isn't just about impressions — it's about perceived legit",
+   "bbox": {
+    "x": 16,
+    "y": 8594,
+    "w": 736,
+    "h": 78
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.max-w-4xl > div > div.bg-gradient-to-r > p.text-foreground",
+   "text": "If a launchpad consistently drives positive sentiment around its projects, that ",
+   "bbox": {
+    "x": 40,
+    "y": 8720,
+    "w": 688,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > main.pt-16 > section.py-16",
+   "text": "How Founders Should Evaluate Ethereum Launchpads\n\nChoosing a launchpad is no lon",
+   "bbox": {
+    "x": 0,
+    "y": 8856,
+    "w": 768,
+    "h": 1681
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgb(248, 250, 252)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "main.pt-16 > section.py-16 > div.container > div.max-w-4xl > h2.text-3xl",
+   "text": "How Founders Should Evaluate Ethereum Launchpads",
+   "bbox": {
+    "x": 16,
+    "y": 8920,
+    "w": 736,
+    "h": 80
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "36px",
+    "weight": "700",
+    "lh": "40px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "main.pt-16 > section.py-16 > div.container > div.max-w-4xl > p.text-lg",
+   "text": "Choosing a launchpad is no longer just about getting listed. Founders need to ev",
+   "bbox": {
+    "x": 16,
+    "y": 9032,
+    "w": 736,
+    "h": 84
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.mb-12 > img.w-full",
+   "text": "An overhead, photorealistic view of several professionals seated around a modern",
+   "bbox": {
+    "x": 16,
+    "y": 9164,
+    "w": 736,
+    "h": 401
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-secondary\\/10 > h3.text-xl",
+   "text": "Align With the Right Audience",
+   "bbox": {
+    "x": 40,
+    "y": 9637,
+    "w": 304,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-secondary\\/10 > p.text-muted-foreground",
+   "text": "Different launchpads attract different user bases. Gaming projects tend to get b",
+   "bbox": {
+    "x": 40,
+    "y": 9681,
+    "w": 304,
+    "h": 234
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-secondary\\/10 > h3.text-xl",
+   "text": "Evaluate the Infrastructure",
+   "bbox": {
+    "x": 424,
+    "y": 9637,
+    "w": 304,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-secondary\\/10 > p.text-muted-foreground",
+   "text": "Founders should dig beyond the UI. Critical infrastructure factors include:",
+   "bbox": {
+    "x": 424,
+    "y": 9681,
+    "w": 304,
+    "h": 52
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.max-w-4xl > div.grid > div.bg-secondary\\/10 > ul.list-disc > li",
+   "text": "Onboarding flow (KYC requirements, token gating)",
+   "bbox": {
+    "x": 424,
+    "y": 9749,
+    "w": 304,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.max-w-4xl > div.grid > div.bg-secondary\\/10 > ul.list-disc > li",
+   "text": "Audit transparency (links to CertiK, Hacken, or in-house assessments)",
+   "bbox": {
+    "x": 424,
+    "y": 9793,
+    "w": 304,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.max-w-4xl > div.grid > div.bg-secondary\\/10 > ul.list-disc > li",
+   "text": "Dev support (launchpad-run testnets, integration docs, or L2 deployments)",
+   "bbox": {
+    "x": 424,
+    "y": 9837,
+    "w": 304,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "div.max-w-4xl > div.grid > div.bg-secondary\\/10 > ul.list-disc > li",
+   "text": "Post-launch incentives (staking, governance hooks, or continued exposure)",
+   "bbox": {
+    "x": 424,
+    "y": 9881,
+    "w": 304,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-secondary\\/10 > h3.text-xl",
+   "text": "Check for Real Community Depth",
+   "bbox": {
+    "x": 40,
+    "y": 10017,
+    "w": 304,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-secondary\\/10 > p.text-muted-foreground",
+   "text": "Join the launchpad's Discord or Telegram. Ask questions. Monitor how long it tak",
+   "bbox": {
+    "x": 40,
+    "y": 10089,
+    "w": 304,
+    "h": 208
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-secondary\\/10 > h3.text-xl",
+   "text": "Use On-Chain and Social Data",
+   "bbox": {
+    "x": 424,
+    "y": 10017,
+    "w": 304,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-secondary\\/10 > p.text-muted-foreground",
+   "text": "Don't rely on pitch decks or platform rankings alone. Check wallet overlap with ",
+   "bbox": {
+    "x": 424,
+    "y": 10061,
+    "w": 304,
+    "h": 182
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.mt-12 > p.text-lg",
+   "text": "A polished website is not enough. Look for how much the platform actually helps ",
+   "bbox": {
+    "x": 40,
+    "y": 10393,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "500",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > main.pt-16 > section.py-16",
+   "text": "Emerging Gaps and Future Signals\n\nEthereum's launchpad landscape may look crowde",
+   "bbox": {
+    "x": 0,
+    "y": 10537,
+    "w": 768,
+    "h": 1471
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(241, 245, 249, 0.05)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "main.pt-16 > section.py-16 > div.container > div.max-w-4xl > h2.text-3xl",
+   "text": "Emerging Gaps and Future Signals",
+   "bbox": {
+    "x": 16,
+    "y": 10601,
+    "w": 736,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "36px",
+    "weight": "700",
+    "lh": "40px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "main.pt-16 > section.py-16 > div.container > div.max-w-4xl > p.text-lg",
+   "text": "Ethereum's launchpad landscape may look crowded, but several strategic gaps rema",
+   "bbox": {
+    "x": 16,
+    "y": 10673,
+    "w": 736,
+    "h": 84
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.mb-12 > img.w-full",
+   "text": "A conceptual image showing a futuristic bridge extending from an 'Ethereum Netwo",
+   "bbox": {
+    "x": 16,
+    "y": 10805,
+    "w": 736,
+    "h": 401
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-background > h3.text-xl",
+   "text": "1. AI-Native Project Incubation",
+   "bbox": {
+    "x": 41,
+    "y": 11280,
+    "w": 302,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-background > p.text-muted-foreground",
+   "text": "While ChainGPT Pad leads AI launches, no platform offers full technical incubati",
+   "bbox": {
+    "x": 41,
+    "y": 11324,
+    "w": 302,
+    "h": 208
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-background > h3.text-xl",
+   "text": "2. RWA-Focused Infrastructure",
+   "bbox": {
+    "x": 425,
+    "y": 11280,
+    "w": 302,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-background > p.text-muted-foreground",
+   "text": "Real-world asset (RWA) tokenization is gaining traction, but Ethereum lacks a pu",
+   "bbox": {
+    "x": 425,
+    "y": 11324,
+    "w": 302,
+    "h": 234
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-background > h3.text-xl",
+   "text": "3. Regulatory-Ready Enterprise Onboarding",
+   "bbox": {
+    "x": 41,
+    "y": 11640,
+    "w": 302,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-background > p.text-muted-foreground",
+   "text": "As traditional enterprises explore tokenization, there's no clear entry point vi",
+   "bbox": {
+    "x": 41,
+    "y": 11712,
+    "w": 302,
+    "h": 208
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-background > h3.text-xl",
+   "text": "4. Community Ownership Beyond the Token",
+   "bbox": {
+    "x": 425,
+    "y": 11640,
+    "w": 302,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.container > div.max-w-4xl > div.grid > div.bg-background > p.text-muted-foreground",
+   "text": "Most launchpads treat governance as a secondary layer. There's room for platform",
+   "bbox": {
+    "x": 425,
+    "y": 11712,
+    "w": 302,
+    "h": 182
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "26px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > main.pt-16 > section.py-16",
+   "text": "How to Launch a Token on Ethereum\n\nFollow these essential steps to successfully ",
+   "bbox": {
+    "x": 0,
+    "y": 12009,
+    "w": 768,
+    "h": 1460
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.text-center > h2.text-3xl",
+   "text": "How to Launch a Token on Ethereum",
+   "bbox": {
+    "x": 16,
+    "y": 12073,
+    "w": 736,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "30px",
+    "weight": "700",
+    "lh": "36px",
+    "ls": "-0.75px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.py-16 > div.container > div.max-w-4xl > div.text-center > p.text-lg",
+   "text": "Follow these essential steps to successfully launch your token on the Ethereum n",
+   "bbox": {
+    "x": 16,
+    "y": 12125,
+    "w": 736,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-shrink-0 > div.w-8",
+   "text": "1",
+   "bbox": {
+    "x": 41,
+    "y": 12226,
+    "w": 32,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-1 > h3.text-lg",
+   "text": "Define Your Token Purpose",
+   "bbox": {
+    "x": 89,
+    "y": 12226,
+    "w": 638,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.flex > div.flex-1 > h3.text-lg > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 325,
+    "y": 12233,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(34, 197, 94)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-1 > p.text-muted-foreground",
+   "text": "Clearly articulate your token's utility, target audience, and value proposition ",
+   "bbox": {
+    "x": 89,
+    "y": 12262,
+    "w": 638,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-shrink-0 > div.w-8",
+   "text": "2",
+   "bbox": {
+    "x": 41,
+    "y": 12384,
+    "w": 32,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-1 > h3.text-lg",
+   "text": "Choose Development Approach",
+   "bbox": {
+    "x": 89,
+    "y": 12384,
+    "w": 638,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.flex > div.flex-1 > h3.text-lg > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 364,
+    "y": 12391,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(34, 197, 94)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-1 > p.text-muted-foreground",
+   "text": "Decide between custom smart contract development or using established token stan",
+   "bbox": {
+    "x": 89,
+    "y": 12420,
+    "w": 638,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-shrink-0 > div.w-8",
+   "text": "3",
+   "bbox": {
+    "x": 41,
+    "y": 12542,
+    "w": 32,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-1 > h3.text-lg",
+   "text": "Select Launchpad Platform",
+   "bbox": {
+    "x": 89,
+    "y": 12542,
+    "w": 638,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.flex > div.flex-1 > h3.text-lg > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 326,
+    "y": 12549,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(34, 197, 94)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-1 > p.text-muted-foreground",
+   "text": "Research and choose between permissionless platforms (like Uniswap) or curated l",
+   "bbox": {
+    "x": 89,
+    "y": 12578,
+    "w": 638,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-shrink-0 > div.w-8",
+   "text": "4",
+   "bbox": {
+    "x": 41,
+    "y": 12700,
+    "w": 32,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-1 > h3.text-lg",
+   "text": "Prepare Documentation",
+   "bbox": {
+    "x": 89,
+    "y": 12700,
+    "w": 638,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.flex > div.flex-1 > h3.text-lg > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 298,
+    "y": 12707,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(34, 197, 94)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-1 > p.text-muted-foreground",
+   "text": "Create comprehensive whitepaper, tokenomics documentation, and technical specifi",
+   "bbox": {
+    "x": 89,
+    "y": 12736,
+    "w": 638,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-shrink-0 > div.w-8",
+   "text": "5",
+   "bbox": {
+    "x": 41,
+    "y": 12858,
+    "w": 32,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-1 > h3.text-lg",
+   "text": "Complete Security Audits",
+   "bbox": {
+    "x": 89,
+    "y": 12858,
+    "w": 638,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.flex > div.flex-1 > h3.text-lg > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 312,
+    "y": 12865,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(34, 197, 94)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-1 > p.text-muted-foreground",
+   "text": "Conduct thorough smart contract audits and security assessments to ensure platfo",
+   "bbox": {
+    "x": 89,
+    "y": 12894,
+    "w": 638,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-shrink-0 > div.w-8",
+   "text": "6",
+   "bbox": {
+    "x": 41,
+    "y": 13016,
+    "w": 32,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-1 > h3.text-lg",
+   "text": "Build Community",
+   "bbox": {
+    "x": 89,
+    "y": 13016,
+    "w": 638,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.flex > div.flex-1 > h3.text-lg > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 242,
+    "y": 13023,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(34, 197, 94)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-1 > p.text-muted-foreground",
+   "text": "Establish social media presence, engage with potential users, and create anticip",
+   "bbox": {
+    "x": 89,
+    "y": 13052,
+    "w": 638,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-shrink-0 > div.w-8",
+   "text": "7",
+   "bbox": {
+    "x": 41,
+    "y": 13174,
+    "w": 32,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "600",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-1 > h3.text-lg",
+   "text": "Launch and Marketing",
+   "bbox": {
+    "x": 89,
+    "y": 13174,
+    "w": 638,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.flex > div.flex-1 > h3.text-lg > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 285,
+    "y": 13181,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "600",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(34, 197, 94)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.max-w-4xl > div.space-y-6 > div.flex > div.flex-1 > p.text-muted-foreground",
+   "text": "Execute your launch strategy with coordinated marketing efforts and community en",
+   "bbox": {
+    "x": 89,
+    "y": 13210,
+    "w": 638,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "div.container > div.max-w-4xl > div.mt-8 > p.text-sm > strong",
+   "text": "Pro Tip:",
+   "bbox": {
+    "x": 47,
+    "y": 13341,
+    "w": 53,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "700",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.min-h-screen > main.pt-16 > section.py-16",
+   "text": "Frequently Asked Questions\nWhat is an Ethereum launchpad?\nHow are Ethereum launc",
+   "bbox": {
+    "x": 0,
+    "y": 13469,
+    "w": 768,
+    "h": 768
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgb(248, 250, 252)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "main.pt-16 > section.py-16 > div.container > div.max-w-4xl > h2.text-3xl",
+   "text": "Frequently Asked Questions",
+   "bbox": {
+    "x": 16,
+    "y": 13533,
+    "w": 736,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "36px",
+    "weight": "700",
+    "lh": "40px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.w-full > div.border-b > h3.flex",
+   "text": "What is an Ethereum launchpad?",
+   "bbox": {
+    "x": 40,
+    "y": 13605,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:r0:",
+   "text": "What is an Ethereum launchpad?",
+   "bbox": {
+    "x": 40,
+    "y": 13605,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.w-full > div.border-b > h3.flex",
+   "text": "How are Ethereum launchpads different from Solana launchpads?",
+   "bbox": {
+    "x": 40,
+    "y": 13678,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:r2:",
+   "text": "How are Ethereum launchpads different from Solana launchpads?",
+   "bbox": {
+    "x": 40,
+    "y": 13678,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.w-full > div.border-b > h3.flex",
+   "text": "Which types of projects use Ethereum launchpads?",
+   "bbox": {
+    "x": 40,
+    "y": 13751,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:r4:",
+   "text": "Which types of projects use Ethereum launchpads?",
+   "bbox": {
+    "x": 40,
+    "y": 13751,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.w-full > div.border-b > h3.flex",
+   "text": "What should founders look for in a launchpad?",
+   "bbox": {
+    "x": 40,
+    "y": 13824,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:r6:",
+   "text": "What should founders look for in a launchpad?",
+   "bbox": {
+    "x": 40,
+    "y": 13824,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.w-full > div.border-b > h3.flex",
+   "text": "Do all Ethereum launchpads require KYC?",
+   "bbox": {
+    "x": 40,
+    "y": 13897,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:r8:",
+   "text": "Do all Ethereum launchpads require KYC?",
+   "bbox": {
+    "x": 40,
+    "y": 13897,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.w-full > div.border-b > h3.flex",
+   "text": "Is it better to launch on multiple platforms?",
+   "bbox": {
+    "x": 40,
+    "y": 13970,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:ra:",
+   "text": "Is it better to launch on multiple platforms?",
+   "bbox": {
+    "x": 40,
+    "y": 13970,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.w-full > div.border-b > h3.flex",
+   "text": "How can I track Ethereum launchpad performance?",
+   "bbox": {
+    "x": 40,
+    "y": 14043,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:rc:",
+   "text": "How can I track Ethereum launchpad performance?",
+   "bbox": {
+    "x": 40,
+    "y": 14043,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.container > div.max-w-4xl > div.w-full > div.border-b > h3.flex",
+   "text": "What's the difference between Ethereum's staking launchpad and token launchpads?",
+   "bbox": {
+    "x": 40,
+    "y": 14116,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "button",
+   "selector": "#radix-:re:",
+   "text": "What's the difference between Ethereum's staking launchpad and token launchpads?",
+   "bbox": {
+    "x": 40,
+    "y": 14116,
+    "w": 688,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "footer",
+   "selector": "#root > div.min-h-screen > footer.bg-secondary\\/10",
+   "text": "Last Updated: 2026-08-26 | Author: Token Health Scan Team\n\nSources: Platform web",
+   "bbox": {
+    "x": 0,
+    "y": 14237,
+    "w": 768,
+    "h": 132
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(241, 245, 249, 0.1)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "strong",
+   "selector": "div.min-h-screen > footer.bg-secondary\\/10 > div.container > p > strong",
+   "text": "Last Updated:",
+   "bbox": {
+    "x": 180,
+    "y": 14270,
+    "w": 97,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "700",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "strong",
+   "selector": "div.min-h-screen > footer.bg-secondary\\/10 > div.container > p > strong",
+   "text": "Author:",
+   "bbox": {
+    "x": 374,
+    "y": 14270,
+    "w": 52,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "700",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "strong",
+   "selector": "div.min-h-screen > footer.bg-secondary\\/10 > div.container > p.mt-2 > strong",
+   "text": "Sources:",
+   "bbox": {
+    "x": 43,
+    "y": 14298,
+    "w": 61,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "700",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "footer",
+   "selector": "#root > div.min-h-screen > footer.border-t",
+   "text": "© 2026 TokenHealthScan. All rights reserved.\n\nToken Scan Guide\nvs Token Sniffer\n",
+   "bbox": {
+    "x": 0,
+    "y": 14369,
+    "w": 768,
+    "h": 258
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.min-h-screen > footer.border-t > div.container > div.flex > p.text-center",
+   "text": "© 2026 TokenHealthScan. All rights reserved.",
+   "bbox": {
+    "x": 32,
+    "y": 14420,
+    "w": 190,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "nav",
+   "selector": "div.min-h-screen > footer.border-t > div.container > div.flex > nav.flex",
+   "text": "Token Scan Guide\nvs Token Sniffer\nSolana Launchpads\nEthereum Launchpads\nPricing\n",
+   "bbox": {
+    "x": 222,
+    "y": 14410,
+    "w": 514,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Token Scan Guide",
+   "bbox": {
+    "x": 222,
+    "y": 14410,
+    "w": 38,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "vs Token Sniffer",
+   "bbox": {
+    "x": 284,
+    "y": 14410,
+    "w": 43,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Solana Launchpads",
+   "bbox": {
+    "x": 351,
+    "y": 14410,
+    "w": 79,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Ethereum Launchpads",
+   "bbox": {
+    "x": 454,
+    "y": 14410,
+    "w": 79,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Pricing",
+   "bbox": {
+    "x": 557,
+    "y": 14410,
+    "w": 45,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Privacy",
+   "bbox": {
+    "x": 625,
+    "y": 14410,
+    "w": 47,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Terms",
+   "bbox": {
+    "x": 696,
+    "y": 14410,
+    "w": 40,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.min-h-screen > footer.border-t > div.container > div.max-w-4xl > p.text-sm",
+   "text": "Data from 7+ live APIs. No cached results. Built for protocol teams.",
+   "bbox": {
+    "x": 32,
+    "y": 14494,
+    "w": 704,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.min-h-screen > footer.border-t > div.container > div.max-w-4xl > p.text-xs",
+   "text": "Token Health Scan provides automated token assessments using public data from th",
+   "bbox": {
+    "x": 32,
+    "y": 14529,
+    "w": 704,
+    "h": 59
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "19.5px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  }
+ ]
+}

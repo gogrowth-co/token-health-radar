@@ -1,0 +1,4145 @@
+{
+ "route": "http://127.0.0.1:5173/token-sniffer-vs-tokenhealthscan",
+ "slug": "token-sniffer-comparison",
+ "type": "T2",
+ "breakpoint": "1440",
+ "state": "default",
+ "theme": "light",
+ "capturedAt": null,
+ "pageTitle": "Token Sniffer vs TokenHealthScan: What's Better for Scanning Tokens?",
+ "pageHeight": 6153,
+ "count": 153,
+ "elements": [
+  {
+   "role": "text",
+   "tag": "ol",
+   "selector": "#root > div > ol.fixed",
+   "text": null,
+   "bbox": {
+    "x": 1020,
+    "y": 868,
+    "w": 420,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "header",
+   "selector": "#root > div.flex > header.sticky",
+   "text": "TokenHealthScan\nHome\nCopilot\nAI Agents\nAgent Scan\nToken Reports\nPublications\nPri",
+   "bbox": {
+    "x": 0,
+    "y": 0,
+    "w": 1440,
+    "h": 65
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(248, 250, 252, 0.95)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.flex > header.sticky > div.container > div.flex > a.flex",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 44,
+    "y": 16,
+    "w": 205,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.flex > a.flex > div.w-7 > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 53,
+    "y": 25,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.container > div.flex > a.flex > span.font-bold > span.hidden",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 84,
+    "y": 20,
+    "w": 165,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "nav",
+   "selector": "div.flex > header.sticky > div.container > div.flex > nav.hidden",
+   "text": "Home\nCopilot\nAI Agents\nAgent Scan\nToken Reports\nPublications\nPricing",
+   "bbox": {
+    "x": 273,
+    "y": 22,
+    "w": 609,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Home",
+   "bbox": {
+    "x": 273,
+    "y": 22,
+    "w": 39,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Copilot",
+   "bbox": {
+    "x": 336,
+    "y": 22,
+    "w": 47,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "AI Agents",
+   "bbox": {
+    "x": 408,
+    "y": 22,
+    "w": 63,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Agent Scan",
+   "bbox": {
+    "x": 495,
+    "y": 22,
+    "w": 94,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "path",
+   "selector": "div.flex > nav.hidden > a.text-sm > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 497,
+    "y": 26,
+    "w": 9,
+    "h": 12
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Token Reports",
+   "bbox": {
+    "x": 612,
+    "y": 22,
+    "w": 95,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Publications",
+   "bbox": {
+    "x": 731,
+    "y": 22,
+    "w": 81,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Pricing",
+   "bbox": {
+    "x": 836,
+    "y": 22,
+    "w": 46,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "button",
+   "selector": "div.flex > header.sticky > div.container > div.flex > button.inline-flex",
+   "text": "Toggle theme",
+   "bbox": {
+    "x": 1044,
+    "y": 12,
+    "w": 40,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.container > div.flex > button.inline-flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 1058,
+    "y": 26,
+    "w": 12,
+    "h": 12
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.flex > header.sticky > div.container > div.flex > a.items-center",
+   "text": "Scan Your Token →",
+   "bbox": {
+    "x": 1092,
+    "y": 14,
+    "w": 150,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.container > div.flex > div.hidden > div.flex > a.items-center",
+   "text": "Login",
+   "bbox": {
+    "x": 1250,
+    "y": 14,
+    "w": 62,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgb(248, 250, 252)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.container > div.flex > div.hidden > div.flex > a.inline-flex",
+   "text": "Sign Up",
+   "bbox": {
+    "x": 1320,
+    "y": 14,
+    "w": 76,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "article",
+   "selector": "#root > div.flex > main.flex-1 > article.container",
+   "text": "Token Sniffer vs TokenHealthScan: What's Better for Scanning Tokens?\nWhat Are To",
+   "bbox": {
+    "x": 272,
+    "y": 65,
+    "w": 896,
+    "h": 5889
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > article.container > section.mb-12",
+   "text": "Token Sniffer vs TokenHealthScan: What's Better for Scanning Tokens?",
+   "bbox": {
+    "x": 288,
+    "y": 97,
+    "w": 864,
+    "h": 614
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "div.flex > main.flex-1 > article.container > section.mb-12 > img.w-full",
+   "text": "Split-screen image comparing Token Sniffer's basic interface with TokenHealthSca",
+   "bbox": {
+    "x": 288,
+    "y": 97,
+    "w": 864,
+    "h": 486
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "12px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h1",
+   "selector": "div.flex > main.flex-1 > article.container > section.mb-12 > h1.hero-title",
+   "text": "Token Sniffer vs TokenHealthScan: What's Better for Scanning Tokens?",
+   "bbox": {
+    "x": 288,
+    "y": 615,
+    "w": 864,
+    "h": 96
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "48px",
+    "weight": "700",
+    "lh": "48px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > article.container > section.mb-12",
+   "text": "What Are Token Scanners and Why Are They Important?\n\nToken scanners analyze bloc",
+   "bbox": {
+    "x": 288,
+    "y": 759,
+    "w": 864,
+    "h": 963
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > section.mb-12 > h2.text-2xl",
+   "text": "What Are Token Scanners and Why Are They Important?",
+   "bbox": {
+    "x": 288,
+    "y": 759,
+    "w": 864,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "30px",
+    "weight": "700",
+    "lh": "36px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > section.mb-12 > p.text-lg > a.text-primary",
+   "text": "complete token scanning guide",
+   "bbox": {
+    "x": 853,
+    "y": 882,
+    "w": 256,
+    "h": 21
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "500",
+    "lh": "29.25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "div.flex > main.flex-1 > article.container > section.mb-12 > img.w-full",
+   "text": "Illustration showing the contrast between investing in a scam token without scan",
+   "bbox": {
+    "x": 288,
+    "y": 931,
+    "w": 864,
+    "h": 576
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > section.mb-12 > p.text-lg > a.text-primary",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 676,
+    "y": 1593,
+    "w": 144,
+    "h": 21
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "500",
+    "lh": "29.25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > section.mb-12 > p.text-lg > a.text-primary",
+   "text": "Token Sniffer",
+   "bbox": {
+    "x": 460,
+    "y": 1668,
+    "w": 108,
+    "h": 21
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "500",
+    "lh": "29.25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > article.container > section.mb-12",
+   "text": "Token Sniffer: Quick Safety Checks, Limited Context\n\nToken Sniffer is a free, us",
+   "bbox": {
+    "x": 288,
+    "y": 1770,
+    "w": 864,
+    "h": 707
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > section.mb-12 > h2.text-2xl",
+   "text": "Token Sniffer: Quick Safety Checks, Limited Context",
+   "bbox": {
+    "x": 288,
+    "y": 1770,
+    "w": 864,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "30px",
+    "weight": "700",
+    "lh": "36px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > section.mb-12 > p.text-lg > a.text-primary",
+   "text": "Token Sniffer",
+   "bbox": {
+    "x": 288,
+    "y": 1834,
+    "w": 108,
+    "h": 21
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "500",
+    "lh": "29.25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > div.inline-flex",
+   "text": "✅",
+   "bbox": {
+    "x": 288,
+    "y": 1943,
+    "w": 37,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(34, 197, 94)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > span",
+   "text": "Smart Contract Risk Score (0–100) based on common vulnerabilities",
+   "bbox": {
+    "x": 333,
+    "y": 1942,
+    "w": 495,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > div.inline-flex",
+   "text": "✅",
+   "bbox": {
+    "x": 288,
+    "y": 1979,
+    "w": 37,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(34, 197, 94)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > span",
+   "text": "Honeypot Detection — flags contracts that trap buyers",
+   "bbox": {
+    "x": 333,
+    "y": 1978,
+    "w": 395,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > div.inline-flex",
+   "text": "✅",
+   "bbox": {
+    "x": 288,
+    "y": 2015,
+    "w": 37,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(34, 197, 94)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > span",
+   "text": "Buy/Sell Tax Analysis",
+   "bbox": {
+    "x": 333,
+    "y": 2014,
+    "w": 150,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > div.inline-flex",
+   "text": "✅",
+   "bbox": {
+    "x": 288,
+    "y": 2051,
+    "w": 37,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(34, 197, 94)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > span",
+   "text": "Mint Function Detection",
+   "bbox": {
+    "x": 333,
+    "y": 2050,
+    "w": 174,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > div.inline-flex",
+   "text": "✅",
+   "bbox": {
+    "x": 288,
+    "y": 2087,
+    "w": 37,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(34, 197, 94)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > span",
+   "text": "Free and Anonymous access — no login needed",
+   "bbox": {
+    "x": 333,
+    "y": 2086,
+    "w": 346,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > section.mb-12 > p.text-lg",
+   "text": "Token Sniffer is ideal for fast, one-click checks before impulse trades or DEX s",
+   "bbox": {
+    "x": 288,
+    "y": 2134,
+    "w": 864,
+    "h": 29
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "400",
+    "lh": "29.25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > section.mb-12 > h3.text-xl",
+   "text": "Token Sniffer Limitations",
+   "bbox": {
+    "x": 288,
+    "y": 2187,
+    "w": 864,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "data",
+   "tag": "table",
+   "selector": "main.flex-1 > article.container > section.mb-12 > div.overflow-x-auto > table.w-full",
+   "text": "Limitation\tDescription\n❌ No Liquidity Data\tNo visibility into volume, locks, or ",
+   "bbox": {
+    "x": 288,
+    "y": 2231,
+    "w": 864,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.overflow-x-auto > table.w-full > thead > tr.bg-muted > th.border",
+   "text": "Limitation",
+   "bbox": {
+    "x": 289,
+    "y": 2232,
+    "w": 372,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.overflow-x-auto > table.w-full > thead > tr.bg-muted > th.border",
+   "text": "Description",
+   "bbox": {
+    "x": 661,
+    "y": 2232,
+    "w": 491,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "❌ No Liquidity Data",
+   "bbox": {
+    "x": 289,
+    "y": 2281,
+    "w": 372,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "No visibility into volume, locks, or top holders",
+   "bbox": {
+    "x": 661,
+    "y": 2281,
+    "w": 491,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "❌ No Tokenomics Breakdown",
+   "bbox": {
+    "x": 289,
+    "y": 2330,
+    "w": 372,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "Doesn't explain supply, emissions, or vesting",
+   "bbox": {
+    "x": 661,
+    "y": 2330,
+    "w": 491,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "❌ No Community or Dev Metrics",
+   "bbox": {
+    "x": 289,
+    "y": 2379,
+    "w": 372,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "Can't gauge project activity or credibility",
+   "bbox": {
+    "x": 661,
+    "y": 2379,
+    "w": 491,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "❌ No Ongoing Monitoring",
+   "bbox": {
+    "x": 289,
+    "y": 2428,
+    "w": 372,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "Only provides a one-time snapshot",
+   "bbox": {
+    "x": 661,
+    "y": 2428,
+    "w": 491,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > article.container > section.mb-12",
+   "text": "TokenHealthScan: Multi-Dimensional Token Due Diligence\nWhat Is TokenHealthScan?\n",
+   "bbox": {
+    "x": 288,
+    "y": 2525,
+    "w": 864,
+    "h": 1745
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > section.mb-12 > h2.text-2xl",
+   "text": "TokenHealthScan: Multi-Dimensional Token Due Diligence",
+   "bbox": {
+    "x": 288,
+    "y": 2525,
+    "w": 864,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "30px",
+    "weight": "700",
+    "lh": "36px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > section.mb-12 > h3.text-xl",
+   "text": "What Is TokenHealthScan?",
+   "bbox": {
+    "x": 288,
+    "y": 2585,
+    "w": 864,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > section.mb-12 > p.text-lg > a.text-primary",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 288,
+    "y": 2633,
+    "w": 144,
+    "h": 21
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "500",
+    "lh": "29.25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "div.flex > main.flex-1 > article.container > section.mb-12 > img.w-full",
+   "text": "TokenHealthScan dashboard interface showing token risk analysis, liquidity data,",
+   "bbox": {
+    "x": 288,
+    "y": 2741,
+    "w": 864,
+    "h": 921
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > div.inline-flex",
+   "text": "Security",
+   "bbox": {
+    "x": 288,
+    "y": 3687,
+    "w": 71,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgb(59, 130, 246)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > span",
+   "text": "Contract audits, honeypot tests, ownership risks",
+   "bbox": {
+    "x": 367,
+    "y": 3686,
+    "w": 350,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > div.inline-flex",
+   "text": "Liquidity",
+   "bbox": {
+    "x": 288,
+    "y": 3723,
+    "w": 73,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgb(59, 130, 246)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > span",
+   "text": "Volume, locked liquidity, top holders, slippage risk",
+   "bbox": {
+    "x": 369,
+    "y": 3722,
+    "w": 361,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > div.inline-flex",
+   "text": "Tokenomics",
+   "bbox": {
+    "x": 288,
+    "y": 3759,
+    "w": 92,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgb(59, 130, 246)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > span",
+   "text": "Supply structure, emissions, utility mechanics",
+   "bbox": {
+    "x": 388,
+    "y": 3758,
+    "w": 331,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > div.inline-flex",
+   "text": "Community",
+   "bbox": {
+    "x": 288,
+    "y": 3795,
+    "w": 90,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgb(59, 130, 246)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > span",
+   "text": "Social engagement, holder behavior, team visibility",
+   "bbox": {
+    "x": 386,
+    "y": 3794,
+    "w": 367,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > div.inline-flex",
+   "text": "Development",
+   "bbox": {
+    "x": 288,
+    "y": 3831,
+    "w": 100,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgb(59, 130, 246)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "article.container > section.mb-12 > div.grid > div.flex > span",
+   "text": "GitHub activity, roadmap progress, and repository health",
+   "bbox": {
+    "x": 396,
+    "y": 3830,
+    "w": 410,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > section.mb-12 > p.text-lg > a.text-primary",
+   "text": "Token Sniffer",
+   "bbox": {
+    "x": 363,
+    "y": 3882,
+    "w": 108,
+    "h": 21
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "500",
+    "lh": "29.25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > section.mb-12 > h3.text-xl",
+   "text": "Verified Data Sources",
+   "bbox": {
+    "x": 288,
+    "y": 3932,
+    "w": 864,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "data",
+   "tag": "table",
+   "selector": "main.flex-1 > article.container > section.mb-12 > div.overflow-x-auto > table.w-full",
+   "text": "Source\tPurpose\nGoPlus Security\tContract audits, honeypot detection\nGeckoTerminal",
+   "bbox": {
+    "x": 288,
+    "y": 3976,
+    "w": 864,
+    "h": 295
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.overflow-x-auto > table.w-full > thead > tr.bg-muted > th.border",
+   "text": "Source",
+   "bbox": {
+    "x": 289,
+    "y": 3976,
+    "w": 363,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.overflow-x-auto > table.w-full > thead > tr.bg-muted > th.border",
+   "text": "Purpose",
+   "bbox": {
+    "x": 651,
+    "y": 3976,
+    "w": 500,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "GoPlus Security",
+   "bbox": {
+    "x": 289,
+    "y": 4025,
+    "w": 363,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "Contract audits, honeypot detection",
+   "bbox": {
+    "x": 651,
+    "y": 4025,
+    "w": 500,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "GeckoTerminal / Etherscan",
+   "bbox": {
+    "x": 289,
+    "y": 4074,
+    "w": 363,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "Liquidity locks, top wallets",
+   "bbox": {
+    "x": 651,
+    "y": 4074,
+    "w": 500,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "table.w-full > tbody > tr > td.border > a.text-primary",
+   "text": "CoinGecko",
+   "bbox": {
+    "x": 301,
+    "y": 4139,
+    "w": 81,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "Price, market cap, TVL",
+   "bbox": {
+    "x": 651,
+    "y": 4123,
+    "w": 500,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "Twitter (via Apify)",
+   "bbox": {
+    "x": 289,
+    "y": 4172,
+    "w": 363,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "Community and team visibility",
+   "bbox": {
+    "x": 651,
+    "y": 4172,
+    "w": 500,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "GitHub",
+   "bbox": {
+    "x": 289,
+    "y": 4221,
+    "w": 363,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "Developer activity and commit history",
+   "bbox": {
+    "x": 651,
+    "y": 4221,
+    "w": 500,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > article.container > section.mb-12",
+   "text": "TokenHealthScan vs Token Sniffer: Feature Comparison\nFeature\tToken Sniffer\tToken",
+   "bbox": {
+    "x": 288,
+    "y": 4319,
+    "w": 864,
+    "h": 551
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > section.mb-12 > h2.text-2xl",
+   "text": "TokenHealthScan vs Token Sniffer: Feature Comparison",
+   "bbox": {
+    "x": 288,
+    "y": 4319,
+    "w": 864,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "30px",
+    "weight": "700",
+    "lh": "36px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "data",
+   "tag": "table",
+   "selector": "main.flex-1 > article.container > section.mb-12 > div.overflow-x-auto > table.w-full",
+   "text": "Feature\tToken Sniffer\tTokenHealthScan\nContract Risk Score\t✅\t✅\nLiquidity Analysis",
+   "bbox": {
+    "x": 288,
+    "y": 4379,
+    "w": 864,
+    "h": 491
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.overflow-x-auto > table.w-full > thead > tr.bg-muted > th.border",
+   "text": "Feature",
+   "bbox": {
+    "x": 289,
+    "y": 4379,
+    "w": 342,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.overflow-x-auto > table.w-full > thead > tr.bg-muted > th.border",
+   "text": "Token Sniffer",
+   "bbox": {
+    "x": 631,
+    "y": 4379,
+    "w": 221,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.overflow-x-auto > table.w-full > thead > tr.bg-muted > th.border",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 852,
+    "y": 4379,
+    "w": 300,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "600",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "Contract Risk Score",
+   "bbox": {
+    "x": 289,
+    "y": 4428,
+    "w": 342,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "✅",
+   "bbox": {
+    "x": 631,
+    "y": 4428,
+    "w": 221,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "✅",
+   "bbox": {
+    "x": 852,
+    "y": 4428,
+    "w": 300,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "Liquidity Analysis",
+   "bbox": {
+    "x": 289,
+    "y": 4477,
+    "w": 342,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "❌",
+   "bbox": {
+    "x": 631,
+    "y": 4477,
+    "w": 221,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "✅",
+   "bbox": {
+    "x": 852,
+    "y": 4477,
+    "w": 300,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "Tokenomics Evaluation",
+   "bbox": {
+    "x": 289,
+    "y": 4526,
+    "w": 342,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "❌",
+   "bbox": {
+    "x": 631,
+    "y": 4526,
+    "w": 221,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "✅",
+   "bbox": {
+    "x": 852,
+    "y": 4526,
+    "w": 300,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "Community Metrics",
+   "bbox": {
+    "x": 289,
+    "y": 4575,
+    "w": 342,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "❌",
+   "bbox": {
+    "x": 631,
+    "y": 4575,
+    "w": 221,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "✅",
+   "bbox": {
+    "x": 852,
+    "y": 4575,
+    "w": 300,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "GitHub/Dev Activity",
+   "bbox": {
+    "x": 289,
+    "y": 4624,
+    "w": 342,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "❌",
+   "bbox": {
+    "x": 631,
+    "y": 4624,
+    "w": 221,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "✅",
+   "bbox": {
+    "x": 852,
+    "y": 4624,
+    "w": 300,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "Scan History / Alerts",
+   "bbox": {
+    "x": 289,
+    "y": 4673,
+    "w": 342,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "❌",
+   "bbox": {
+    "x": 631,
+    "y": 4673,
+    "w": 221,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "✅ (Pro)",
+   "bbox": {
+    "x": 852,
+    "y": 4673,
+    "w": 300,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "UI/UX",
+   "bbox": {
+    "x": 289,
+    "y": 4722,
+    "w": 342,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "Simple",
+   "bbox": {
+    "x": 631,
+    "y": 4722,
+    "w": 221,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "Visual + Interactive",
+   "bbox": {
+    "x": 852,
+    "y": 4722,
+    "w": 300,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "Free Tier",
+   "bbox": {
+    "x": 289,
+    "y": 4771,
+    "w": 342,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "✅",
+   "bbox": {
+    "x": 631,
+    "y": 4771,
+    "w": 221,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr.bg-muted\\/50 > td.border",
+   "text": "✅ (3 Pro scans)",
+   "bbox": {
+    "x": 852,
+    "y": 4771,
+    "w": 300,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "Paid Plan",
+   "bbox": {
+    "x": 289,
+    "y": 4820,
+    "w": 342,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "500",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "❌",
+   "bbox": {
+    "x": 631,
+    "y": 4820,
+    "w": 221,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.overflow-x-auto > table.w-full > tbody > tr > td.border",
+   "text": "✅ ($20/mo for Pro)",
+   "bbox": {
+    "x": 852,
+    "y": 4820,
+    "w": 300,
+    "h": 49
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > article.container > section.mb-12",
+   "text": "Frequently Asked Questions (FAQ)\nIs Token Sniffer the same as TokenHealthScan?\n\n",
+   "bbox": {
+    "x": 288,
+    "y": 4918,
+    "w": 864,
+    "h": 588
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > section.mb-12 > h2.text-2xl",
+   "text": "Frequently Asked Questions (FAQ)",
+   "bbox": {
+    "x": 288,
+    "y": 4918,
+    "w": 864,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "30px",
+    "weight": "700",
+    "lh": "36px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "article.container > section.mb-12 > div.space-y-6 > div > h3.text-xl",
+   "text": "Is Token Sniffer the same as TokenHealthScan?",
+   "bbox": {
+    "x": 288,
+    "y": 4978,
+    "w": 864,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "article.container > section.mb-12 > div.space-y-6 > div > p.text-lg",
+   "text": "No. Token Sniffer checks for basic red flags. TokenHealthScan offers a full-spec",
+   "bbox": {
+    "x": 288,
+    "y": 5018,
+    "w": 864,
+    "h": 59
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "400",
+    "lh": "29.25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "article.container > section.mb-12 > div.space-y-6 > div > h3.text-xl",
+   "text": "What is the main benefit of TokenHealthScan?",
+   "bbox": {
+    "x": 288,
+    "y": 5100,
+    "w": 864,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "article.container > section.mb-12 > div.space-y-6 > div > p.text-lg",
+   "text": "Depth and clarity. It answers not just \"Is this token safe?\" but also \"Is this t",
+   "bbox": {
+    "x": 288,
+    "y": 5140,
+    "w": 864,
+    "h": 59
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "400",
+    "lh": "29.25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "article.container > section.mb-12 > div.space-y-6 > div > h3.text-xl",
+   "text": "Is TokenHealthScan free?",
+   "bbox": {
+    "x": 288,
+    "y": 5223,
+    "w": 864,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "article.container > section.mb-12 > div.space-y-6 > div > p.text-lg",
+   "text": "Yes. You get 3 full scans for free. For ongoing monitoring and historical compar",
+   "bbox": {
+    "x": 288,
+    "y": 5263,
+    "w": 864,
+    "h": 59
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "400",
+    "lh": "29.25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "article.container > section.mb-12 > div.space-y-6 > div > h3.text-xl",
+   "text": "Who should use TokenHealthScan?",
+   "bbox": {
+    "x": 288,
+    "y": 5345,
+    "w": 864,
+    "h": 28
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.space-y-6 > div > ul.space-y-2 > li.flex > span",
+   "text": "DeFi investors seeking deeper due diligence",
+   "bbox": {
+    "x": 303,
+    "y": 5385,
+    "w": 319,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.space-y-6 > div > ul.space-y-2 > li.flex > span",
+   "text": "Analysts evaluating early-stage tokens",
+   "bbox": {
+    "x": 303,
+    "y": 5417,
+    "w": 279,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.space-y-6 > div > ul.space-y-2 > li.flex > span",
+   "text": "Builders checking their own projects",
+   "bbox": {
+    "x": 303,
+    "y": 5449,
+    "w": 263,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.space-y-6 > div > ul.space-y-2 > li.flex > span",
+   "text": "Traders avoiding low-liquidity, overhyped coins",
+   "bbox": {
+    "x": 303,
+    "y": 5481,
+    "w": 339,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > article.container > section.mb-12",
+   "text": "Final Verdict: Which Scanner Should You Use?\n\nIf you only want fast contract che",
+   "bbox": {
+    "x": 288,
+    "y": 5553,
+    "w": 864,
+    "h": 164
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > section.mb-12 > h2.text-2xl",
+   "text": "Final Verdict: Which Scanner Should You Use?",
+   "bbox": {
+    "x": 288,
+    "y": 5553,
+    "w": 864,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "30px",
+    "weight": "700",
+    "lh": "36px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > section.mb-12 > p.text-lg > a.text-primary",
+   "text": "Token Sniffer",
+   "bbox": {
+    "x": 591,
+    "y": 5617,
+    "w": 108,
+    "h": 21
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "500",
+    "lh": "29.25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > section.mb-12 > p.text-lg > a.text-primary",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 875,
+    "y": 5662,
+    "w": 144,
+    "h": 21
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "500",
+    "lh": "29.25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > section.mb-12 > p.text-lg > a.text-primary",
+   "text": "CoinGecko",
+   "bbox": {
+    "x": 757,
+    "y": 5692,
+    "w": 90,
+    "h": 21
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "500",
+    "lh": "29.25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(37, 99, 235)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "footer",
+   "selector": "#root > div.flex > main.flex-1 > article.container > footer.border-t",
+   "text": "Updated: June 2025\n\nAuthor: Token Health Scan Editors\n\nSources: GoPlus, CoinGeck",
+   "bbox": {
+    "x": 288,
+    "y": 5765,
+    "w": 864,
+    "h": 157
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > footer.border-t > p.mb-2 > strong",
+   "text": "Updated:",
+   "bbox": {
+    "x": 288,
+    "y": 5799,
+    "w": 64,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "700",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > footer.border-t > p.mb-2 > strong",
+   "text": "Author:",
+   "bbox": {
+    "x": 288,
+    "y": 5827,
+    "w": 52,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "700",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > footer.border-t > p.mb-2 > strong",
+   "text": "Sources:",
+   "bbox": {
+    "x": 288,
+    "y": 5855,
+    "w": 61,
+    "h": 17
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "700",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > footer.border-t > p.italic",
+   "text": "Note: Always DYOR (Do Your Own Research). Scanning tools are useful, but no tool",
+   "bbox": {
+    "x": 288,
+    "y": 5882,
+    "w": 864,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "footer",
+   "selector": "#root > div.flex > footer.border-t",
+   "text": "© 2026 TokenHealthScan. All rights reserved.\n\nToken Scan Guide\nvs Token Sniffer\n",
+   "bbox": {
+    "x": 0,
+    "y": 5954,
+    "w": 1440,
+    "h": 199
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.flex > footer.border-t > div.container > div.flex > p.text-center",
+   "text": "© 2026 TokenHealthScan. All rights reserved.",
+   "bbox": {
+    "x": 52,
+    "y": 5995,
+    "w": 295,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "nav",
+   "selector": "div.flex > footer.border-t > div.container > div.flex > nav.flex",
+   "text": "Token Scan Guide\nvs Token Sniffer\nSolana Launchpads\nEthereum Launchpads\nPricing\n",
+   "bbox": {
+    "x": 623,
+    "y": 5995,
+    "w": 765,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Token Scan Guide",
+   "bbox": {
+    "x": 623,
+    "y": 5995,
+    "w": 116,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "vs Token Sniffer",
+   "bbox": {
+    "x": 763,
+    "y": 5995,
+    "w": 103,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Solana Launchpads",
+   "bbox": {
+    "x": 890,
+    "y": 5995,
+    "w": 126,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Ethereum Launchpads",
+   "bbox": {
+    "x": 1040,
+    "y": 5995,
+    "w": 145,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Pricing",
+   "bbox": {
+    "x": 1209,
+    "y": 5995,
+    "w": 45,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Privacy",
+   "bbox": {
+    "x": 1277,
+    "y": 5995,
+    "w": 47,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Terms",
+   "bbox": {
+    "x": 1348,
+    "y": 5995,
+    "w": 40,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.flex > footer.border-t > div.container > div.max-w-4xl > p.text-sm",
+   "text": "Data from 7+ live APIs. No cached results. Built for protocol teams.",
+   "bbox": {
+    "x": 272,
+    "y": 6039,
+    "w": 896,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.flex > footer.border-t > div.container > div.max-w-4xl > p.text-xs",
+   "text": "Token Health Scan provides automated token assessments using public data from th",
+   "bbox": {
+    "x": 272,
+    "y": 6074,
+    "w": 896,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "19.5px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  }
+ ]
+}

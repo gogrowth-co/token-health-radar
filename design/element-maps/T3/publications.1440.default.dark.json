@@ -1,0 +1,5522 @@
+{
+ "route": "http://127.0.0.1:5173/publications",
+ "slug": "publications",
+ "type": "T3",
+ "breakpoint": "1440",
+ "state": "default",
+ "theme": "dark",
+ "capturedAt": null,
+ "pageTitle": "Token Research Publications | Token Health Scan",
+ "pageHeight": 4499,
+ "count": 204,
+ "elements": [
+  {
+   "role": "text",
+   "tag": "ol",
+   "selector": "#root > div > ol.fixed",
+   "text": null,
+   "bbox": {
+    "x": 1020,
+    "y": 868,
+    "w": 420,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "header",
+   "selector": "#root > div.flex > header.sticky",
+   "text": "TokenHealthScan\nHome\nCopilot\nAI Agents\nAgent Scan\nToken Reports\nPublications\nPri",
+   "bbox": {
+    "x": 0,
+    "y": 0,
+    "w": 1440,
+    "h": 65
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(2, 8, 23, 0.95)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.flex > header.sticky > div.container > div.flex > a.flex",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 44,
+    "y": 16,
+    "w": 205,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.flex > a.flex > div.w-7 > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 53,
+    "y": 25,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.container > div.flex > a.flex > span.font-bold > span.hidden",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 84,
+    "y": 20,
+    "w": 165,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "nav",
+   "selector": "div.flex > header.sticky > div.container > div.flex > nav.hidden",
+   "text": "Home\nCopilot\nAI Agents\nAgent Scan\nToken Reports\nPublications\nPricing",
+   "bbox": {
+    "x": 273,
+    "y": 22,
+    "w": 609,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Home",
+   "bbox": {
+    "x": 273,
+    "y": 22,
+    "w": 39,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Copilot",
+   "bbox": {
+    "x": 336,
+    "y": 22,
+    "w": 47,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "AI Agents",
+   "bbox": {
+    "x": 408,
+    "y": 22,
+    "w": 63,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Agent Scan",
+   "bbox": {
+    "x": 495,
+    "y": 22,
+    "w": 94,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "path",
+   "selector": "div.flex > nav.hidden > a.text-sm > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 497,
+    "y": 26,
+    "w": 9,
+    "h": 12
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Token Reports",
+   "bbox": {
+    "x": 612,
+    "y": 22,
+    "w": 95,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Publications",
+   "bbox": {
+    "x": 731,
+    "y": 22,
+    "w": 81,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Pricing",
+   "bbox": {
+    "x": 836,
+    "y": 22,
+    "w": 46,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "button",
+   "selector": "div.flex > header.sticky > div.container > div.flex > button.inline-flex",
+   "text": "Toggle theme",
+   "bbox": {
+    "x": 1044,
+    "y": 12,
+    "w": 40,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.flex > header.sticky > div.container > div.flex > a.items-center",
+   "text": "Scan Your Token →",
+   "bbox": {
+    "x": 1092,
+    "y": 14,
+    "w": 150,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(15, 23, 42)",
+    "bg": "rgb(59, 130, 246)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.container > div.flex > div.hidden > div.flex > a.items-center",
+   "text": "Login",
+   "bbox": {
+    "x": 1250,
+    "y": 14,
+    "w": 62,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(2, 8, 23)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.container > div.flex > div.hidden > div.flex > a.inline-flex",
+   "text": "Sign Up",
+   "bbox": {
+    "x": 1320,
+    "y": 14,
+    "w": 76,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(15, 23, 42)",
+    "bg": "rgb(59, 130, 246)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > section.border-b",
+   "text": "Token research publications\n\nActionable guides for reading token health across s",
+   "bbox": {
+    "x": 0,
+    "y": 65,
+    "w": 1440,
+    "h": 249
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(30, 41, 59, 0.3)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h1",
+   "selector": "div.flex > main.flex-1 > section.border-b > div.container > h1.max-w-3xl",
+   "text": "Token research publications",
+   "bbox": {
+    "x": 36,
+    "y": 129,
+    "w": 768,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "48px",
+    "weight": "700",
+    "lh": "48px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > section.border-b > div.container > p.mt-4",
+   "text": "Actionable guides for reading token health across security, liquidity, tokenomic",
+   "bbox": {
+    "x": 36,
+    "y": 193,
+    "w": 672,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "18px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "section",
+   "selector": "#root > div.flex > main.flex-1 > section.container",
+   "text": "publications\nToken Sniffer Alternatives (2026)\n\nTokenSniffer cleared a token? Th",
+   "bbox": {
+    "x": 20,
+    "y": 314,
+    "w": 1400,
+    "h": 3986
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\nToken Sniffer Alternatives (2026)\n\nTokenSniffer cleared a token? Th",
+   "bbox": {
+    "x": 36,
+    "y": 354,
+    "w": 440,
+    "h": 472
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 37,
+    "y": 355,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "Token Sniffer Alternatives (2026)",
+   "bbox": {
+    "x": 37,
+    "y": 355,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 57,
+    "y": 621,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "Token Sniffer Alternatives (2026)",
+   "bbox": {
+    "x": 57,
+    "y": 655,
+    "w": 398,
+    "h": 25
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "Token Sniffer Alternatives (2026)",
+   "bbox": {
+    "x": 57,
+    "y": 656,
+    "w": 305,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "TokenSniffer cleared a token? That's step one. Here are 5 tools to run next, cov",
+   "bbox": {
+    "x": 57,
+    "y": 692,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 7",
+   "bbox": {
+    "x": 57,
+    "y": 764,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\nBest Token Scanners in 2026 (7 Tools Compared)\n\nWhich token scanner",
+   "bbox": {
+    "x": 500,
+    "y": 354,
+    "w": 440,
+    "h": 472
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 501,
+    "y": 355,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "Best Token Scanners in 2026 (7 Tools Compared)",
+   "bbox": {
+    "x": 501,
+    "y": 355,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 521,
+    "y": 621,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "Best Token Scanners in 2026 (7 Tools Compared)",
+   "bbox": {
+    "x": 521,
+    "y": 655,
+    "w": 398,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "Best Token Scanners in 2026 (7 Tools Compared)",
+   "bbox": {
+    "x": 521,
+    "y": 656,
+    "w": 343,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "Which token scanner should you use? Compare 7 tools on chains, pricing, features",
+   "bbox": {
+    "x": 521,
+    "y": 717,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 9",
+   "bbox": {
+    "x": 521,
+    "y": 789,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\nThe State of Token Health: Q3 2026\n\n54 tokens, 1,385 scans, real da",
+   "bbox": {
+    "x": 964,
+    "y": 354,
+    "w": 440,
+    "h": 472
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 965,
+    "y": 355,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "The State of Token Health: Q3 2026",
+   "bbox": {
+    "x": 965,
+    "y": 355,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 985,
+    "y": 621,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "The State of Token Health: Q3 2026",
+   "bbox": {
+    "x": 985,
+    "y": 655,
+    "w": 398,
+    "h": 25
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "The State of Token Health: Q3 2026",
+   "bbox": {
+    "x": 985,
+    "y": 656,
+    "w": 328,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "54 tokens, 1,385 scans, real data. Development and Community are the weakest dim",
+   "bbox": {
+    "x": 985,
+    "y": 692,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 9",
+   "bbox": {
+    "x": 985,
+    "y": 764,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\nHoneypot.is vs Token Health Scan (2026)\n\nHoneypot.is answers one qu",
+   "bbox": {
+    "x": 36,
+    "y": 850,
+    "w": 440,
+    "h": 447
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 37,
+    "y": 851,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "Honeypot.is vs Token Health Scan (2026)",
+   "bbox": {
+    "x": 37,
+    "y": 851,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 57,
+    "y": 1118,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "Honeypot.is vs Token Health Scan (2026)",
+   "bbox": {
+    "x": 57,
+    "y": 1152,
+    "w": 398,
+    "h": 25
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "Honeypot.is vs Token Health Scan (2026)",
+   "bbox": {
+    "x": 57,
+    "y": 1153,
+    "w": 380,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "Honeypot.is answers one question for free: can you sell this token? Token Health",
+   "bbox": {
+    "x": 57,
+    "y": 1189,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 6",
+   "bbox": {
+    "x": 57,
+    "y": 1261,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\nQuick Intel vs Token Health Scan (2026)\n\nQuick Intel is the cheapes",
+   "bbox": {
+    "x": 500,
+    "y": 850,
+    "w": 440,
+    "h": 447
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 501,
+    "y": 851,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "Quick Intel vs Token Health Scan (2026)",
+   "bbox": {
+    "x": 501,
+    "y": 851,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 521,
+    "y": 1118,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "Quick Intel vs Token Health Scan (2026)",
+   "bbox": {
+    "x": 521,
+    "y": 1152,
+    "w": 398,
+    "h": 25
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "Quick Intel vs Token Health Scan (2026)",
+   "bbox": {
+    "x": 521,
+    "y": 1153,
+    "w": 367,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "Quick Intel is the cheapest paid scanner at $4.99/mo across 30+ chains. Token He",
+   "bbox": {
+    "x": 521,
+    "y": 1189,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 6",
+   "bbox": {
+    "x": 521,
+    "y": 1261,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\nDe.Fi vs Token Health Scan (2026)\n\nDe.Fi manages wallet approvals a",
+   "bbox": {
+    "x": 964,
+    "y": 850,
+    "w": 440,
+    "h": 447
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 965,
+    "y": 851,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "De.Fi vs Token Health Scan (2026)",
+   "bbox": {
+    "x": 965,
+    "y": 851,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 985,
+    "y": 1118,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "De.Fi vs Token Health Scan (2026)",
+   "bbox": {
+    "x": 985,
+    "y": 1152,
+    "w": 398,
+    "h": 25
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "De.Fi vs Token Health Scan (2026)",
+   "bbox": {
+    "x": 985,
+    "y": 1153,
+    "w": 316,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "De.Fi manages wallet approvals across 40+ chains. Token Health Scan scores five ",
+   "bbox": {
+    "x": 985,
+    "y": 1189,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 6",
+   "bbox": {
+    "x": 985,
+    "y": 1261,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\nGoPlus vs Token Health Scan (2026)\n\nGoPlus covers 40+ chains and AI",
+   "bbox": {
+    "x": 36,
+    "y": 1322,
+    "w": 440,
+    "h": 472
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 37,
+    "y": 1323,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "GoPlus vs Token Health Scan (2026)",
+   "bbox": {
+    "x": 37,
+    "y": 1323,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 57,
+    "y": 1589,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "GoPlus vs Token Health Scan (2026)",
+   "bbox": {
+    "x": 57,
+    "y": 1623,
+    "w": 398,
+    "h": 25
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "GoPlus vs Token Health Scan (2026)",
+   "bbox": {
+    "x": 57,
+    "y": 1624,
+    "w": 335,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "GoPlus covers 40+ chains and AI-agent security infrastructure. Token Health Scan",
+   "bbox": {
+    "x": 57,
+    "y": 1660,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 6",
+   "bbox": {
+    "x": 57,
+    "y": 1732,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\nRugCheck vs Token Health Scan (Solana, 2026)\n\nRugCheck is Solana-na",
+   "bbox": {
+    "x": 500,
+    "y": 1322,
+    "w": 440,
+    "h": 472
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 501,
+    "y": 1323,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "RugCheck vs Token Health Scan (Solana, 2026)",
+   "bbox": {
+    "x": 501,
+    "y": 1323,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 521,
+    "y": 1589,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "RugCheck vs Token Health Scan (Solana, 2026)",
+   "bbox": {
+    "x": 521,
+    "y": 1623,
+    "w": 398,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "RugCheck vs Token Health Scan (Solana, 2026)",
+   "bbox": {
+    "x": 521,
+    "y": 1624,
+    "w": 375,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "RugCheck is Solana-native with zero conflict of interest. Token Health Scan runs",
+   "bbox": {
+    "x": 521,
+    "y": 1685,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 6",
+   "bbox": {
+    "x": 521,
+    "y": 1757,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\nDEXTools vs Token Health Scan (2026)\n\nDEXTools shows a chart and a ",
+   "bbox": {
+    "x": 964,
+    "y": 1322,
+    "w": 440,
+    "h": 472
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 965,
+    "y": 1323,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "DEXTools vs Token Health Scan (2026)",
+   "bbox": {
+    "x": 965,
+    "y": 1323,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 985,
+    "y": 1589,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "DEXTools vs Token Health Scan (2026)",
+   "bbox": {
+    "x": 985,
+    "y": 1623,
+    "w": 398,
+    "h": 25
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "DEXTools vs Token Health Scan (2026)",
+   "bbox": {
+    "x": 985,
+    "y": 1624,
+    "w": 357,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "DEXTools shows a chart and a compressed Score column. Token Health Scan shows wh",
+   "bbox": {
+    "x": 985,
+    "y": 1660,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 6",
+   "bbox": {
+    "x": 985,
+    "y": 1732,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\n10 DeFi Exploits in July 2026: The Month Governance Went Wrong Agai",
+   "bbox": {
+    "x": 36,
+    "y": 1818,
+    "w": 440,
+    "h": 472
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 37,
+    "y": 1819,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "10 DeFi Exploits in July 2026: The Month Governance Went Wrong Again",
+   "bbox": {
+    "x": 37,
+    "y": 1819,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 57,
+    "y": 2086,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "10 DeFi Exploits in July 2026: The Month Governance Went Wrong Again",
+   "bbox": {
+    "x": 57,
+    "y": 2120,
+    "w": 398,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "10 DeFi Exploits in July 2026: The Month Governance Went Wrong Again",
+   "bbox": {
+    "x": 57,
+    "y": 2121,
+    "w": 372,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "$210M lost in July 2026, including a $70M+ hardware wallet flaw. BonkDAO's gover",
+   "bbox": {
+    "x": 57,
+    "y": 2182,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 8",
+   "bbox": {
+    "x": 57,
+    "y": 2254,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\n11 DeFi Exploits in June 2026: Private Keys and Protocol Governance",
+   "bbox": {
+    "x": 500,
+    "y": 1818,
+    "w": 440,
+    "h": 472
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 501,
+    "y": 1819,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "11 DeFi Exploits in June 2026: Private Keys and Protocol Governance",
+   "bbox": {
+    "x": 501,
+    "y": 1819,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 521,
+    "y": 2086,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "11 DeFi Exploits in June 2026: Private Keys and Protocol Governance",
+   "bbox": {
+    "x": 521,
+    "y": 2120,
+    "w": 398,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "11 DeFi Exploits in June 2026: Private Keys and Protocol Governance",
+   "bbox": {
+    "x": 521,
+    "y": 2121,
+    "w": 390,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "$76.5M lost across 45 incidents in June 2026. Admin key compromise dominated. Ev",
+   "bbox": {
+    "x": 521,
+    "y": 2182,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 7",
+   "bbox": {
+    "x": 521,
+    "y": 2254,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\n5 DeFi Token Collapse Patterns (And How to Fix Each One)\n\nFive name",
+   "bbox": {
+    "x": 964,
+    "y": 1818,
+    "w": 440,
+    "h": 472
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 985,
+    "y": 1839,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "5 DeFi Token Collapse Patterns (And How to Fix Each One)",
+   "bbox": {
+    "x": 985,
+    "y": 1873,
+    "w": 398,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "5 DeFi Token Collapse Patterns (And How to Fix Each One)",
+   "bbox": {
+    "x": 985,
+    "y": 1874,
+    "w": 380,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "Five named DeFi token collapse patterns, the on-chain signals that identify each",
+   "bbox": {
+    "x": 985,
+    "y": 1935,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 12",
+   "bbox": {
+    "x": 985,
+    "y": 2007,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "case-study\nIron Finance: The $2B Collapse That Every On-Chain Signal Predicted\n\n",
+   "bbox": {
+    "x": 36,
+    "y": 2315,
+    "w": 440,
+    "h": 475
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 37,
+    "y": 2316,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "Iron Finance TITAN token price crash — the $2B DeFi collapse case study",
+   "bbox": {
+    "x": 37,
+    "y": 2316,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "case-study",
+   "bbox": {
+    "x": 57,
+    "y": 2582,
+    "w": 89,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "Iron Finance: The $2B Collapse That Every On-Chain Signal Predicted",
+   "bbox": {
+    "x": 57,
+    "y": 2616,
+    "w": 398,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "Iron Finance: The $2B Collapse That Every On-Chain Signal Predicted",
+   "bbox": {
+    "x": 57,
+    "y": 2617,
+    "w": 387,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "Iron Finance lost $2B in 24 hours on June 16, 2021. The on-chain signals were vi",
+   "bbox": {
+    "x": 57,
+    "y": 2678,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 7 min read",
+   "bbox": {
+    "x": 57,
+    "y": 2750,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "The Whale Moat: DeFi's Quietest Collapse Pattern (And How to Reverse It)\n\nThe Wh",
+   "bbox": {
+    "x": 500,
+    "y": 2315,
+    "w": 440,
+    "h": 475
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 501,
+    "y": 2316,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "The Whale Moat DeFi collapse pattern — Token Health Scan",
+   "bbox": {
+    "x": 501,
+    "y": 2316,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "The Whale Moat: DeFi's Quietest Collapse Pattern (And How to Reverse It)",
+   "bbox": {
+    "x": 521,
+    "y": 2594,
+    "w": 398,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "The Whale Moat: DeFi's Quietest Collapse Pattern (And How to Reverse It)",
+   "bbox": {
+    "x": 521,
+    "y": 2595,
+    "w": 383,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "The Whale Moat is DeFi's quietest token collapse pattern. No crash, no rug. Just",
+   "bbox": {
+    "x": 521,
+    "y": 2656,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 8 min read",
+   "bbox": {
+    "x": 521,
+    "y": 2728,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "Your DeFiLlama TVL and Your Actual Liquidity Score Are Different Numbers. Here's",
+   "bbox": {
+    "x": 964,
+    "y": 2315,
+    "w": 440,
+    "h": 475
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 965,
+    "y": 2316,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "DeFiLlama TVL vs liquidity health score — Token Health Scan",
+   "bbox": {
+    "x": 965,
+    "y": 2316,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "Your DeFiLlama TVL and Your Actual Liquidity Score Are Different Numbers. Here's",
+   "bbox": {
+    "x": 985,
+    "y": 2594,
+    "w": 398,
+    "h": 75
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "Your DeFiLlama TVL and Your Actual Liquidity Score Are Different Numbers. Here's",
+   "bbox": {
+    "x": 985,
+    "y": 2595,
+    "w": 354,
+    "h": 73
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "DeFiLlama TVL and protocol dashboard numbers measure different things. Neither a",
+   "bbox": {
+    "x": 985,
+    "y": 2681,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 8 min read",
+   "bbox": {
+    "x": 985,
+    "y": 2753,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "ADA's Whale Concentration Hit a 6-Year High. Here's What the Tokenomics Score Sh",
+   "bbox": {
+    "x": 36,
+    "y": 2814,
+    "w": 440,
+    "h": 475
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 37,
+    "y": 2815,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "ADA whale concentration tokenomics — Token Health Scan",
+   "bbox": {
+    "x": 37,
+    "y": 2815,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "ADA's Whale Concentration Hit a 6-Year High. Here's What the Tokenomics Score Sh",
+   "bbox": {
+    "x": 57,
+    "y": 3093,
+    "w": 398,
+    "h": 75
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "ADA's Whale Concentration Hit a 6-Year High. Here's What the Tokenomics Score Sh",
+   "bbox": {
+    "x": 57,
+    "y": 3094,
+    "w": 374,
+    "h": 73
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "67% of ADA supply is now in wallets holding over 1M ADA, a 6-year high. CT is sp",
+   "bbox": {
+    "x": 57,
+    "y": 3180,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 8 min read",
+   "bbox": {
+    "x": 57,
+    "y": 3252,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\nWhy Passing a Smart Contract Audit No Longer Means Your Token Is Sa",
+   "bbox": {
+    "x": 500,
+    "y": 2814,
+    "w": 440,
+    "h": 475
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 501,
+    "y": 2815,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "Smart contract audit not enough 2026 — three operational failure modes audits mi",
+   "bbox": {
+    "x": 501,
+    "y": 2815,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 521,
+    "y": 3081,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "Why Passing a Smart Contract Audit No Longer Means Your Token Is Safe in 2026",
+   "bbox": {
+    "x": 521,
+    "y": 3115,
+    "w": 398,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "Why Passing a Smart Contract Audit No Longer Means Your Token Is Safe in 2026",
+   "bbox": {
+    "x": 521,
+    "y": 3116,
+    "w": 377,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "Smart contract audits check code. In 2026, $1B+ was lost from audited protocols.",
+   "bbox": {
+    "x": 521,
+    "y": 3177,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 8",
+   "bbox": {
+    "x": 521,
+    "y": 3249,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\nHow the Echo Protocol $76.7M Exploit Escaped Every Audit\n\nEcho Prot",
+   "bbox": {
+    "x": 964,
+    "y": 2814,
+    "w": 440,
+    "h": 475
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 965,
+    "y": 2815,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "Echo Protocol admin key exploit — THS Security scan flags single EOA mint author",
+   "bbox": {
+    "x": 965,
+    "y": 2815,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 985,
+    "y": 3081,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "How the Echo Protocol $76.7M Exploit Escaped Every Audit",
+   "bbox": {
+    "x": 985,
+    "y": 3115,
+    "w": 398,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "How the Echo Protocol $76.7M Exploit Escaped Every Audit",
+   "bbox": {
+    "x": 985,
+    "y": 3116,
+    "w": 349,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "Echo Protocol passed every smart contract audit and lost $76.7M to a single admi",
+   "bbox": {
+    "x": 985,
+    "y": 3177,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 8",
+   "bbox": {
+    "x": 985,
+    "y": 3249,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "Research\nWe Scanned 5 Mid-Cap DeFi Protocols. The Same Pattern Showed Up Every T",
+   "bbox": {
+    "x": 36,
+    "y": 3313,
+    "w": 440,
+    "h": 472
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 37,
+    "y": 3314,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "5 mid-cap DeFi protocols overall score hero chart — Token Health Scan",
+   "bbox": {
+    "x": 37,
+    "y": 3314,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "Research",
+   "bbox": {
+    "x": 57,
+    "y": 3581,
+    "w": 77,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "We Scanned 5 Mid-Cap DeFi Protocols. The Same Pattern Showed Up Every Time.",
+   "bbox": {
+    "x": 57,
+    "y": 3615,
+    "w": 398,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "We Scanned 5 Mid-Cap DeFi Protocols. The Same Pattern Showed Up Every Time.",
+   "bbox": {
+    "x": 57,
+    "y": 3616,
+    "w": 385,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "We ran Token Health Scan on 5 mid-cap DeFi protocols. Scores ranged from 35 to 7",
+   "bbox": {
+    "x": 57,
+    "y": 3677,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 5 min",
+   "bbox": {
+    "x": 57,
+    "y": 3749,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\n15 DeFi Exploits in May 2026: The Pattern Behind the Losses\n\n15 DeF",
+   "bbox": {
+    "x": 500,
+    "y": 3313,
+    "w": 440,
+    "h": 472
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 501,
+    "y": 3314,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "15 DeFi exploits May 2026 — $1B+ total mapped to three operational failure modes",
+   "bbox": {
+    "x": 501,
+    "y": 3314,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 521,
+    "y": 3581,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "15 DeFi Exploits in May 2026: The Pattern Behind the Losses",
+   "bbox": {
+    "x": 521,
+    "y": 3615,
+    "w": 398,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "15 DeFi Exploits in May 2026: The Pattern Behind the Losses",
+   "bbox": {
+    "x": 521,
+    "y": 3616,
+    "w": 380,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "15 DeFi exploits in May 2026. $1B+ total. Every one traces back to three failure",
+   "bbox": {
+    "x": 521,
+    "y": 3677,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 6",
+   "bbox": {
+    "x": 521,
+    "y": 3749,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "publications\nThe 5 On-Chain Signals That Predicted Every Major DeFi Exploit in 2",
+   "bbox": {
+    "x": 964,
+    "y": 3313,
+    "w": 440,
+    "h": 472
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 965,
+    "y": 3314,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "5 on-chain signals that predicted major DeFi exploits in 2026 — THS dimensions m",
+   "bbox": {
+    "x": 965,
+    "y": 3314,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.grid > article.group > div.space-y-3 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 985,
+    "y": 3581,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(30, 41, 59)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "The 5 On-Chain Signals That Predicted Every Major DeFi Exploit in 2026",
+   "bbox": {
+    "x": 985,
+    "y": 3615,
+    "w": 398,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "The 5 On-Chain Signals That Predicted Every Major DeFi Exploit in 2026",
+   "bbox": {
+    "x": 985,
+    "y": 3616,
+    "w": 357,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "Every major DeFi exploit in 2026 had on-chain signals first. Mint authority, thi",
+   "bbox": {
+    "x": 985,
+    "y": 3677,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan · 7",
+   "bbox": {
+    "x": 985,
+    "y": 3749,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "card",
+   "tag": "article",
+   "selector": "div.flex > main.flex-1 > section.container > div.grid > article.group",
+   "text": "How Token Health Scan Scores a Protocol: The 5-Dimension Methodology\n\nToken Heal",
+   "bbox": {
+    "x": 36,
+    "y": 3810,
+    "w": 440,
+    "h": 450
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(15, 23, 42)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > section.container > div.grid > article.group > a",
+   "text": null,
+   "bbox": {
+    "x": 37,
+    "y": 3811,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "section.container > div.grid > article.group > a > img.aspect-\\[16\\/9\\]",
+   "text": "How Token Health Scan Scores a Protocol: The 5-Dimension Methodology",
+   "bbox": {
+    "x": 37,
+    "y": 3811,
+    "w": 438,
+    "h": 246
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > h2.text-xl",
+   "text": "How Token Health Scan Scores a Protocol: The 5-Dimension Methodology",
+   "bbox": {
+    "x": 57,
+    "y": 4089,
+    "w": 398,
+    "h": 50
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.grid > article.group > div.space-y-3 > h2.text-xl > a.hover\\:text-primary",
+   "text": "How Token Health Scan Scores a Protocol: The 5-Dimension Methodology",
+   "bbox": {
+    "x": 57,
+    "y": 4090,
+    "w": 388,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "600",
+    "lh": "25px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > p.line-clamp-3",
+   "text": "Token Health Scan scores any DeFi protocol 0-100 across 5 dimensions: Security, ",
+   "bbox": {
+    "x": 57,
+    "y": 4151,
+    "w": 398,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "section.container > div.grid > article.group > div.space-y-3 > div.text-xs",
+   "text": "Token Health Scan",
+   "bbox": {
+    "x": 57,
+    "y": 4223,
+    "w": 398,
+    "h": 16
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "footer",
+   "selector": "#root > div.flex > footer.border-t",
+   "text": "© 2026 TokenHealthScan. All rights reserved.\n\nToken Scan Guide\nvs Token Sniffer\n",
+   "bbox": {
+    "x": 0,
+    "y": 4300,
+    "w": 1440,
+    "h": 199
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(30, 41, 59)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.flex > footer.border-t > div.container > div.flex > p.text-center",
+   "text": "© 2026 TokenHealthScan. All rights reserved.",
+   "bbox": {
+    "x": 52,
+    "y": 4341,
+    "w": 295,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "nav",
+   "selector": "div.flex > footer.border-t > div.container > div.flex > nav.flex",
+   "text": "Token Scan Guide\nvs Token Sniffer\nSolana Launchpads\nEthereum Launchpads\nPricing\n",
+   "bbox": {
+    "x": 623,
+    "y": 4341,
+    "w": 765,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Token Scan Guide",
+   "bbox": {
+    "x": 623,
+    "y": 4341,
+    "w": 116,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "vs Token Sniffer",
+   "bbox": {
+    "x": 763,
+    "y": 4341,
+    "w": 103,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Solana Launchpads",
+   "bbox": {
+    "x": 890,
+    "y": 4341,
+    "w": 126,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Ethereum Launchpads",
+   "bbox": {
+    "x": 1040,
+    "y": 4341,
+    "w": 145,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Pricing",
+   "bbox": {
+    "x": 1209,
+    "y": 4341,
+    "w": 45,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Privacy",
+   "bbox": {
+    "x": 1277,
+    "y": 4341,
+    "w": 47,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Terms",
+   "bbox": {
+    "x": 1348,
+    "y": 4341,
+    "w": 40,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.flex > footer.border-t > div.container > div.max-w-4xl > p.text-sm",
+   "text": "Data from 7+ live APIs. No cached results. Built for protocol teams.",
+   "bbox": {
+    "x": 272,
+    "y": 4385,
+    "w": 896,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.flex > footer.border-t > div.container > div.max-w-4xl > p.text-xs",
+   "text": "Token Health Scan provides automated token assessments using public data from th",
+   "bbox": {
+    "x": 272,
+    "y": 4420,
+    "w": 896,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "19.5px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(148, 163, 184)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  }
+ ]
+}

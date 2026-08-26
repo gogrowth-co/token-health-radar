@@ -1,0 +1,505 @@
+{
+ "generatedAt": "2026-08-26",
+ "source": "route-reconciliation.json + link-intelligence-ths-2026-08-06.json",
+ "pageTypes": {
+  "T1": "marketing-landing",
+  "T2": "seo-landing",
+  "T3": "content-index",
+  "T4": "content-article",
+  "T5": "legal-doc",
+  "T6": "auth-flow",
+  "T7": "scan-flow",
+  "T8": "seo-report",
+  "T9": "directory-search",
+  "T10": "app-dashboard",
+  "T11": "admin-console",
+  "U": "utility"
+ },
+ "routes": [
+  {
+   "path": "/sitemap.xml",
+   "component": "StaticFileRoute",
+   "pageType": "U",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": [
+    "Worker STORAGE_PROXY_PATHS intercepts and serves from Supabase sitemaps bucket before the SPA route ever runs"
+   ]
+  },
+  {
+   "path": "/robots.txt",
+   "component": "StaticFileRoute",
+   "pageType": "U",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": [
+    "Not in worker STORAGE_PROXY_PATHS \u2014 served by origin static hosting only"
+   ]
+  },
+  {
+   "path": "/rss.xml",
+   "component": "RSSFeedRoute",
+   "pageType": "U",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": [
+    "Both worker copies proxy it to Supabase rss-feed edge function; SPA route is a client-side redirect fallback"
+   ]
+  },
+  {
+   "path": "/feed.xml",
+   "component": "RSSFeedRoute",
+   "pageType": "U",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": [
+    "Not in either worker's STORAGE_PROXY_PATHS or STATIC_ROUTES \u2014 a bot hitting /feed.xml gets the SPA shell with X-Robots-Tag: noindex, never the feed"
+   ]
+  },
+  {
+   "path": "/",
+   "component": "Landing",
+   "pageType": "T1",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 114,
+   "liveUrls": [
+    "/"
+   ],
+   "discrepancies": []
+  },
+  {
+   "path": "/auth",
+   "component": "Auth",
+   "pageType": "T6",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": []
+  },
+  {
+   "path": "/confirm",
+   "component": "Confirm",
+   "pageType": "T6",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": []
+  },
+  {
+   "path": "/scan/:chain/:address",
+   "component": "ScanChain",
+   "pageType": "T7",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": []
+  },
+  {
+   "path": "/scan-loading",
+   "component": "ScanLoading",
+   "pageType": "T7",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": [
+    "Uses useAuth for optional user attribution; no guard"
+   ]
+  },
+  {
+   "path": "/scan-result",
+   "component": "ScanResult",
+   "pageType": "T7",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": [
+    "Public page; pro features gated inside via checkUserHasProAccess(), no route-level guard"
+   ]
+  },
+  {
+   "path": "/pricing",
+   "component": "Pricing",
+   "pageType": "T1",
+   "authTier": "public",
+   "isMoney": true,
+   "gscImpressions": 0,
+   "liveUrls": [
+    "/pricing"
+   ],
+   "discrepancies": []
+  },
+  {
+   "path": "/copilot",
+   "component": "Copilot",
+   "pageType": "T10",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 2,
+   "liveUrls": [
+    "/copilot"
+   ],
+   "discrepancies": [
+    "No auth guard found in Copilot.tsx despite being an app surface; also in worker STATIC_ROUTES (bot-indexable)"
+   ]
+  },
+  {
+   "path": "/dashboard",
+   "component": "Dashboard",
+   "pageType": "T10",
+   "authTier": "free",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": [
+    "No hard redirect for logged-out users; renders empty state (if (!user) early-return in data fetch)"
+   ]
+  },
+  {
+   "path": "/ltd",
+   "component": "LTD",
+   "pageType": "T1",
+   "authTier": "public",
+   "isMoney": true,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": [
+    "In worker STATIC_ROUTES but absent from the crawl \u2014 no internal links reach it"
+   ]
+  },
+  {
+   "path": "/ltd-thank-you",
+   "component": "LTDThankYou",
+   "pageType": "T1",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": []
+  },
+  {
+   "path": "/privacy",
+   "component": "Privacy",
+   "pageType": "T5",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [
+    "/privacy"
+   ],
+   "discrepancies": [
+    "Omitted from product-info.md Live Routes block"
+   ]
+  },
+  {
+   "path": "/terms",
+   "component": "Terms",
+   "pageType": "T5",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [
+    "/terms"
+   ],
+   "discrepancies": [
+    "Omitted from product-info.md Live Routes block"
+   ]
+  },
+  {
+   "path": "/token-scan-guide",
+   "component": "TokenScanGuide",
+   "pageType": "T2",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 82,
+   "liveUrls": [
+    "/token-scan-guide"
+   ],
+   "discrepancies": []
+  },
+  {
+   "path": "/token-sniffer-vs-tokenhealthscan",
+   "component": "TokenSnifferComparison",
+   "pageType": "T2",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 109,
+   "liveUrls": [
+    "/token-sniffer-vs-tokenhealthscan"
+   ],
+   "discrepancies": [
+    "Workers also list legacy alias /token-sniffer-comparison which has no App.tsx route and no redirect"
+   ]
+  },
+  {
+   "path": "/solana-launchpads",
+   "component": "SolanaLaunchpads",
+   "pageType": "T2",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 24,
+   "liveUrls": [
+    "/solana-launchpads"
+   ],
+   "discrepancies": []
+  },
+  {
+   "path": "/ethereum-launchpads",
+   "component": "EthereumLaunchpads",
+   "pageType": "T2",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 8,
+   "liveUrls": [
+    "/ethereum-launchpads"
+   ],
+   "discrepancies": []
+  },
+  {
+   "path": "/ai-agents",
+   "component": "AIAgents",
+   "pageType": "T2",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 1,
+   "liveUrls": [
+    "/ai-agents"
+   ],
+   "discrepancies": [
+    "Admin-only UI section rendered conditionally via useUserRole().isAdmin"
+   ]
+  },
+  {
+   "path": "/agent-scan",
+   "component": "AgentScan",
+   "pageType": "T7",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": [
+    "In worker STATIC_ROUTES but absent from the crawl"
+   ]
+  },
+  {
+   "path": "/agent-scan/search",
+   "component": "AgentScanSearch",
+   "pageType": "T9",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": [
+    "Omitted from product-info.md Live Routes block"
+   ]
+  },
+  {
+   "path": "/agent-scan/:chain/:agentId",
+   "component": "AgentScanResult",
+   "pageType": "T7",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": [
+    "Covered by worker DYNAMIC_ROUTES regex (hard 404 propagation); zero live URLs crawled"
+   ]
+  },
+  {
+   "path": "/agent-directory",
+   "component": "AgentDirectory",
+   "pageType": "T9",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": [
+    "In worker STATIC_ROUTES but absent from the crawl"
+   ]
+  },
+  {
+   "path": "/token",
+   "component": "TokenDirectory",
+   "pageType": "T9",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 32,
+   "liveUrls": [
+    "/token"
+   ],
+   "discrepancies": [
+    "Workers also list legacy alias /token-directory which has no App.tsx route and no redirect"
+   ]
+  },
+  {
+   "path": "/token/:symbol",
+   "component": "TokenReport",
+   "pageType": "T8",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 125,
+   "liveUrls": [
+    "/token/jup",
+    "/token/pyth",
+    "/token/usd1",
+    "/token/chz",
+    "/token/trump",
+    "/token/htx",
+    "/token/bonk",
+    "/token/pump",
+    "/token/cake",
+    "/token/bgb",
+    "/token/mnt",
+    "/token/crv",
+    "/token/ldo",
+    "/token/ethfi",
+    "/token/cro",
+    "/token/nexo",
+    "/token/aave",
+    "/token/iq",
+    "/token/gt",
+    "/token/okb",
+    "/token/arb",
+    "/token/pol",
+    "/token/sky",
+    "/token/frax",
+    "/token/gho",
+    "/token/leo",
+    "/token/wld",
+    "/token/usdy",
+    "/token/virtual",
+    "/token/pepe",
+    "/token/coai",
+    "/token/link",
+    "/token/api3",
+    "/token/icp",
+    "/token/usde",
+    "/token/ena",
+    "/token/aero",
+    "/token/avnt",
+    "/token/syrup",
+    "/token/kaito",
+    "/token/ondo",
+    "/token/sei",
+    "/token/fet",
+    "/token/ath",
+    "/token/aster",
+    "/token/skl",
+    "/token/aitech",
+    "/token/zro",
+    "/token/pendle",
+    "/token/strk",
+    "/token/morpho",
+    "/token/rndr",
+    "/token/wlfi",
+    "/token/om"
+   ],
+   "discrepancies": []
+  },
+  {
+   "path": "/publications",
+   "component": "Publications",
+   "pageType": "T3",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [
+    "/publications"
+   ],
+   "discrepancies": []
+  },
+  {
+   "path": "/publications/:slug",
+   "component": "DynamicPage",
+   "pageType": "T4",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 31,
+   "liveUrls": [
+    "/publications/defi-exploits-may-2026",
+    "/publications/how-token-health-scan-scores-a-protocol",
+    "/publications/ada-whale-concentration-tokenomics",
+    "/publications/defillama-tvl-vs-liquidity-health",
+    "/publications/defi-audit-admin-key-failure",
+    "/publications/smart-contract-audit-not-enough-2026",
+    "/publications/defi-exploits-june-2026",
+    "/publications/token-health-scan-early-findings-defi-protocols",
+    "/publications/whale-moat-defi-collapse-pattern",
+    "/publications/5-onchain-signals-defi-exploits",
+    "/publications/iron-finance-collapse-case-study",
+    "/publications/defi-exploits-july-2026",
+    "/publications/defi-token-collapse-patterns"
+   ],
+   "discrepancies": [
+    "Worker REDIRECTS 301s renamed slugs: best-token-scanners-2026 (both copies), state-of-token-health-q3-2026 (ops copy only)"
+   ]
+  },
+  {
+   "path": "/admin",
+   "component": "Admin",
+   "pageType": "T11",
+   "authTier": "admin",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": [
+    "Guarded by AdminRoute (isAuthenticated + user.id + isAdmin)"
+   ]
+  },
+  {
+   "path": "/admin/new",
+   "component": "AdminNew",
+   "pageType": "T11",
+   "authTier": "admin",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": []
+  },
+  {
+   "path": "/admin/edit/:id",
+   "component": "AdminEdit",
+   "pageType": "T11",
+   "authTier": "admin",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": []
+  },
+  {
+   "path": "/admin/users",
+   "component": "AdminUsers",
+   "pageType": "T11",
+   "authTier": "admin",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": []
+  },
+  {
+   "path": "*",
+   "component": "NotFound",
+   "pageType": "U",
+   "authTier": "public",
+   "isMoney": false,
+   "gscImpressions": 0,
+   "liveUrls": [],
+   "discrepancies": [
+    "Bots on unknown routes get X-Robots-Tag: noindex from both worker copies; humans get SPA 404 at HTTP 200"
+   ]
+  }
+ ]
+}

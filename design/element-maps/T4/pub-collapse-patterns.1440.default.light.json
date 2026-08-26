@@ -1,0 +1,8060 @@
+{
+ "route": "https://tokenhealthscan.com/publications/defi-token-collapse-patterns",
+ "slug": "pub-collapse-patterns",
+ "type": "T4",
+ "breakpoint": "1440",
+ "state": "default",
+ "theme": "light",
+ "capturedAt": null,
+ "pageTitle": "5 DeFi Token Collapse Patterns (And How to Fix Each One) | Token Health Scan",
+ "pageHeight": 12618,
+ "count": 298,
+ "elements": [
+  {
+   "role": "text",
+   "tag": "ol",
+   "selector": "#root > div > ol.fixed",
+   "text": null,
+   "bbox": {
+    "x": 1020,
+    "y": 868,
+    "w": 420,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "header",
+   "selector": "#root > div.flex > header.sticky",
+   "text": "TokenHealthScan\nHome\nCopilot\nAI Agents\nAgent Scan\nToken Reports\nPublications\nPri",
+   "bbox": {
+    "x": 0,
+    "y": 0,
+    "w": 1440,
+    "h": 65
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(248, 250, 252, 0.95)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.flex > header.sticky > div.container > div.flex > a.flex",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 44,
+    "y": 16,
+    "w": 205,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.flex > a.flex > div.w-7 > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 53,
+    "y": 25,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.container > div.flex > a.flex > span.font-bold > span.hidden",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 84,
+    "y": 20,
+    "w": 165,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "nav",
+   "selector": "div.flex > header.sticky > div.container > div.flex > nav.hidden",
+   "text": "Home\nCopilot\nAI Agents\nAgent Scan\nToken Reports\nPublications\nPricing",
+   "bbox": {
+    "x": 273,
+    "y": 22,
+    "w": 609,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Home",
+   "bbox": {
+    "x": 273,
+    "y": 22,
+    "w": 39,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Copilot",
+   "bbox": {
+    "x": 336,
+    "y": 22,
+    "w": 47,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "AI Agents",
+   "bbox": {
+    "x": 408,
+    "y": 22,
+    "w": 63,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Agent Scan",
+   "bbox": {
+    "x": 495,
+    "y": 22,
+    "w": 94,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "path",
+   "selector": "div.flex > nav.hidden > a.text-sm > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 497,
+    "y": 26,
+    "w": 9,
+    "h": 12
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Token Reports",
+   "bbox": {
+    "x": 612,
+    "y": 22,
+    "w": 95,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Publications",
+   "bbox": {
+    "x": 731,
+    "y": 22,
+    "w": 81,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "header.sticky > div.container > div.flex > nav.hidden > a.text-sm",
+   "text": "Pricing",
+   "bbox": {
+    "x": 836,
+    "y": 22,
+    "w": 46,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "button",
+   "selector": "div.flex > header.sticky > div.container > div.flex > button.inline-flex",
+   "text": "Toggle theme",
+   "bbox": {
+    "x": 1044,
+    "y": 12,
+    "w": 40,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.container > div.flex > button.inline-flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 1058,
+    "y": 26,
+    "w": 12,
+    "h": 12
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.flex > header.sticky > div.container > div.flex > a.items-center",
+   "text": "Scan Your Token →",
+   "bbox": {
+    "x": 1092,
+    "y": 14,
+    "w": 150,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.container > div.flex > div.hidden > div.flex > a.items-center",
+   "text": "Login",
+   "bbox": {
+    "x": 1250,
+    "y": 14,
+    "w": 62,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgb(248, 250, 252)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.container > div.flex > div.hidden > div.flex > a.inline-flex",
+   "text": "Sign Up",
+   "bbox": {
+    "x": 1320,
+    "y": 14,
+    "w": 76,
+    "h": 36
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(248, 250, 252)",
+    "bg": "rgb(37, 99, 235)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "article",
+   "selector": "#root > div.flex > main.flex-1 > article.container",
+   "text": "publications\ndefi\ntokenomics\ntoken-health\ncollapse-patterns\n5 DeFi Token Collaps",
+   "bbox": {
+    "x": 272,
+    "y": 65,
+    "w": 896,
+    "h": 12354
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "header",
+   "selector": "#root > div.flex > main.flex-1 > article.container > header.mb-8",
+   "text": "publications\ndefi\ntokenomics\ntoken-health\ncollapse-patterns\n5 DeFi Token Collaps",
+   "bbox": {
+    "x": 288,
+    "y": 121,
+    "w": 864,
+    "h": 254
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "main.flex-1 > article.container > header.mb-8 > div.flex > div.inline-flex",
+   "text": "publications",
+   "bbox": {
+    "x": 288,
+    "y": 121,
+    "w": 95,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(15, 23, 42)",
+    "bg": "rgb(241, 245, 249)",
+    "border": "rgba(0, 0, 0, 0)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "main.flex-1 > article.container > header.mb-8 > div.flex > div.inline-flex",
+   "text": "defi",
+   "bbox": {
+    "x": 391,
+    "y": 121,
+    "w": 45,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "main.flex-1 > article.container > header.mb-8 > div.flex > div.inline-flex",
+   "text": "tokenomics",
+   "bbox": {
+    "x": 443,
+    "y": 121,
+    "w": 90,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "main.flex-1 > article.container > header.mb-8 > div.flex > div.inline-flex",
+   "text": "token-health",
+   "bbox": {
+    "x": 541,
+    "y": 121,
+    "w": 98,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "main.flex-1 > article.container > header.mb-8 > div.flex > div.inline-flex",
+   "text": "collapse-patterns",
+   "bbox": {
+    "x": 647,
+    "y": 121,
+    "w": 127,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h1",
+   "selector": "div.flex > main.flex-1 > article.container > header.mb-8 > h1.text-4xl",
+   "text": "5 DeFi Token Collapse Patterns (And How to Fix Each One)",
+   "bbox": {
+    "x": 288,
+    "y": 163,
+    "w": 864,
+    "h": 96
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "48px",
+    "weight": "700",
+    "lh": "48px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > header.mb-8 > p.text-lg",
+   "text": "Five named DeFi token collapse patterns, the on-chain signals that identify each",
+   "bbox": {
+    "x": 288,
+    "y": 279,
+    "w": 864,
+    "h": 56
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.flex > main.flex-1 > article.container > header.mb-8 > div.text-sm",
+   "text": "Token Health Scan · 8/5/2026 · 12",
+   "bbox": {
+    "x": 288,
+    "y": 355,
+    "w": 864,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "published: 2026-05-18",
+   "bbox": {
+    "x": 288,
+    "y": 456,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "dateModified: 2026-08-05",
+   "bbox": {
+    "x": 288,
+    "y": 495,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "author: Token Health Scan",
+   "bbox": {
+    "x": 288,
+    "y": 534,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "target_keyword: DeFi token collapse patterns",
+   "bbox": {
+    "x": 288,
+    "y": 574,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "slug: defi-token-collapse-patterns",
+   "bbox": {
+    "x": 288,
+    "y": 613,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "meta_description: Five named DeFi token collapse patterns, the on-chain signals ",
+   "bbox": {
+    "x": 288,
+    "y": 652,
+    "w": 864,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "cta: Run a free scan at tokenhealthscan.com",
+   "bbox": {
+    "x": 288,
+    "y": 718,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > div.prose > p > a",
+   "text": "5 DeFi Token Collapse Patterns — Token Health Scan hero image showing five signa",
+   "bbox": {
+    "x": 288,
+    "y": 831,
+    "w": 820,
+    "h": 45
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(31, 182, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "Most DeFi tokens don't fail from a contract exploit. They fail from structural p",
+   "bbox": {
+    "x": 288,
+    "y": 893,
+    "w": 864,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "I've now scanned 17 protocols across DeFi. The ones in distress don't fail in ra",
+   "bbox": {
+    "x": 288,
+    "y": 959,
+    "w": 864,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "Here are the five patterns, the on-chain signals that identify each one, a real ",
+   "bbox": {
+    "x": 288,
+    "y": 1026,
+    "w": 864,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > div.prose > p > a",
+   "text": "5 DeFi Token Collapse Patterns at a Glance — reference card showing pattern name",
+   "bbox": {
+    "x": 288,
+    "y": 1165,
+    "w": 839,
+    "h": 45
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(31, 182, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "Pattern 1: The Distribution Pressure Trap",
+   "bbox": {
+    "x": 288,
+    "y": 1279,
+    "w": 864,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Q: What is the Distribution Pressure Trap in DeFi?",
+   "bbox": {
+    "x": 288,
+    "y": 1332,
+    "w": 380,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "A:",
+   "bbox": {
+    "x": 288,
+    "y": 1371,
+    "w": 17,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Definition:",
+   "bbox": {
+    "x": 288,
+    "y": 1465,
+    "w": 81,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "Signals THS Would Flag",
+   "bbox": {
+    "x": 288,
+    "y": 1554,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > div.prose > p > a",
+   "text": "how Token Health Scan scores a protocol",
+   "bbox": {
+    "x": 647,
+    "y": 1624,
+    "w": 299,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(31, 182, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "data",
+   "tag": "table",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > table",
+   "text": "Signal\tTHS Dimension\tSeverity\nTop-wallet concentration above standard ranges for",
+   "bbox": {
+    "x": 288,
+    "y": 1671,
+    "w": 864,
+    "h": 239
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Signal",
+   "bbox": {
+    "x": 288,
+    "y": 1671,
+    "w": 613,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "THS Dimension",
+   "bbox": {
+    "x": 901,
+    "y": 1671,
+    "w": 154,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Severity",
+   "bbox": {
+    "x": 1056,
+    "y": 1671,
+    "w": 96,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Top-wallet concentration above standard ranges for the market cap tier",
+   "bbox": {
+    "x": 288,
+    "y": 1709,
+    "w": 613,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Tokenomics",
+   "bbox": {
+    "x": 901,
+    "y": 1709,
+    "w": 154,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Critical",
+   "bbox": {
+    "x": 1056,
+    "y": 1709,
+    "w": 96,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Gini coefficient above normal distribution thresholds",
+   "bbox": {
+    "x": 288,
+    "y": 1750,
+    "w": 613,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Tokenomics",
+   "bbox": {
+    "x": 901,
+    "y": 1750,
+    "w": 154,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Critical",
+   "bbox": {
+    "x": 1056,
+    "y": 1750,
+    "w": 96,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Unlock schedule extends beyond 24 months",
+   "bbox": {
+    "x": 288,
+    "y": 1789,
+    "w": 613,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Tokenomics",
+   "bbox": {
+    "x": 901,
+    "y": 1789,
+    "w": 154,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Warning",
+   "bbox": {
+    "x": 1056,
+    "y": 1789,
+    "w": 96,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "FDV significantly above circulating market cap",
+   "bbox": {
+    "x": 288,
+    "y": 1829,
+    "w": 613,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Tokenomics",
+   "bbox": {
+    "x": 901,
+    "y": 1829,
+    "w": 154,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Warning",
+   "bbox": {
+    "x": 1056,
+    "y": 1829,
+    "w": 96,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Near-term advisor or investor cliff unlock",
+   "bbox": {
+    "x": 288,
+    "y": 1869,
+    "w": 613,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Tokenomics",
+   "bbox": {
+    "x": 901,
+    "y": 1869,
+    "w": 154,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Critical",
+   "bbox": {
+    "x": 1056,
+    "y": 1869,
+    "w": 96,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "The Token Example: $MAV",
+   "bbox": {
+    "x": 288,
+    "y": 1948,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > div.prose > p > a",
+   "text": "$MAV",
+   "bbox": {
+    "x": 412,
+    "y": 1991,
+    "w": 43,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(31, 182, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The data behind that score: 90%+ of MAV supply sits in large wallets. 46% of the",
+   "bbox": {
+    "x": 288,
+    "y": 2026,
+    "w": 864,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "This is the Distribution Pressure Trap in its clearest form. Any buying pressure",
+   "bbox": {
+    "x": 288,
+    "y": 2119,
+    "w": 864,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The protocol's campaign flywheel breaks before it starts.",
+   "bbox": {
+    "x": 288,
+    "y": 2213,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "The Fix",
+   "bbox": {
+    "x": 288,
+    "y": 2279,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Vote to extend vesting schedules through governance.",
+   "bbox": {
+    "x": 312,
+    "y": 2324,
+    "w": 422,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Establish a transparent token buy-back program funded by protocol fees.",
+   "bbox": {
+    "x": 312,
+    "y": 2403,
+    "w": 568,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Build concentrated liquidity incentives before the next cliff unlock.",
+   "bbox": {
+    "x": 312,
+    "y": 2457,
+    "w": 513,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Run a holder distribution campaign.",
+   "bbox": {
+    "x": 312,
+    "y": 2512,
+    "w": 276,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "Pattern 2: The Liquidity Mirage",
+   "bbox": {
+    "x": 288,
+    "y": 2662,
+    "w": 864,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Q: What signals indicate dangerously thin liquidity in a DeFi token?",
+   "bbox": {
+    "x": 288,
+    "y": 2714,
+    "w": 513,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "A:",
+   "bbox": {
+    "x": 288,
+    "y": 2753,
+    "w": 17,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Definition:",
+   "bbox": {
+    "x": 288,
+    "y": 2847,
+    "w": 81,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "Signals THS Would Flag",
+   "bbox": {
+    "x": 288,
+    "y": 2936,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "data",
+   "tag": "table",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > table",
+   "text": "Signal\tTHS Dimension\tSeverity\nPool depth vs FDV ratio below benchmark for market",
+   "bbox": {
+    "x": 288,
+    "y": 2987,
+    "w": 864,
+    "h": 239
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Signal",
+   "bbox": {
+    "x": 288,
+    "y": 2987,
+    "w": 648,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "THS Dimension",
+   "bbox": {
+    "x": 936,
+    "y": 2987,
+    "w": 133,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Severity",
+   "bbox": {
+    "x": 1069,
+    "y": 2987,
+    "w": 83,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Pool depth vs FDV ratio below benchmark for market cap tier",
+   "bbox": {
+    "x": 288,
+    "y": 3025,
+    "w": 648,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Liquidity",
+   "bbox": {
+    "x": 936,
+    "y": 3025,
+    "w": 133,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Critical",
+   "bbox": {
+    "x": 1069,
+    "y": 3025,
+    "w": 83,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Primary LP positions not locked",
+   "bbox": {
+    "x": 288,
+    "y": 3065,
+    "w": 648,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Liquidity",
+   "bbox": {
+    "x": 936,
+    "y": 3065,
+    "w": 133,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Critical",
+   "bbox": {
+    "x": 1069,
+    "y": 3065,
+    "w": 83,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Concentrated LP positions held by a small number of providers",
+   "bbox": {
+    "x": 288,
+    "y": 3105,
+    "w": 648,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Liquidity",
+   "bbox": {
+    "x": 936,
+    "y": 3105,
+    "w": 133,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Warning",
+   "bbox": {
+    "x": 1069,
+    "y": 3105,
+    "w": 83,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "7-day DEX volume declining while price holds",
+   "bbox": {
+    "x": 288,
+    "y": 3145,
+    "w": 648,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Liquidity",
+   "bbox": {
+    "x": 936,
+    "y": 3145,
+    "w": 133,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Warning",
+   "bbox": {
+    "x": 1069,
+    "y": 3145,
+    "w": 83,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Slippage above acceptable range for the token's market cap tier on standard trad",
+   "bbox": {
+    "x": 288,
+    "y": 3185,
+    "w": 648,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Liquidity",
+   "bbox": {
+    "x": 936,
+    "y": 3185,
+    "w": 133,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Critical",
+   "bbox": {
+    "x": 1069,
+    "y": 3185,
+    "w": 83,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "The Token Example: Iron Finance and $MAV",
+   "bbox": {
+    "x": 288,
+    "y": 3264,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > div.prose > p > a",
+   "text": "my early DeFi protocol scan findings",
+   "bbox": {
+    "x": 397,
+    "y": 3334,
+    "w": 263,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(31, 182, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "Iron Finance collapsed on June 16, 2021. $2B in losses. TITAN had gained 600%+ i",
+   "bbox": {
+    "x": 288,
+    "y": 3369,
+    "w": 864,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "Here is what the on-chain data showed: large liquidity providers began removing ",
+   "bbox": {
+    "x": 288,
+    "y": 3435,
+    "w": 864,
+    "h": 109
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The pool looked deep enough to support the market. It wasn't. When the LPs left,",
+   "bbox": {
+    "x": 288,
+    "y": 3556,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The same signal appeared in $MAV. At $14M market cap, a $30K sell order moved th",
+   "bbox": {
+    "x": 288,
+    "y": 3595,
+    "w": 864,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "The Fix",
+   "bbox": {
+    "x": 288,
+    "y": 3715,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Lock primary LP positions for a defined period.",
+   "bbox": {
+    "x": 312,
+    "y": 3761,
+    "w": 361,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Build pool depth before the next major unlock or catalyst.",
+   "bbox": {
+    "x": 312,
+    "y": 3815,
+    "w": 443,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Create LP incentive programs that reward deep liquidity over short-term yield ch",
+   "bbox": {
+    "x": 312,
+    "y": 3870,
+    "w": 669,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Consider a governance proposal for a circuit breaker.",
+   "bbox": {
+    "x": 312,
+    "y": 3924,
+    "w": 409,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "Pattern 3: The Cliff Release Cascade",
+   "bbox": {
+    "x": 288,
+    "y": 4074,
+    "w": 864,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Q: Why do token cliff unlocks cause price collapse in DeFi?",
+   "bbox": {
+    "x": 288,
+    "y": 4127,
+    "w": 451,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "A:",
+   "bbox": {
+    "x": 288,
+    "y": 4166,
+    "w": 17,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Definition:",
+   "bbox": {
+    "x": 288,
+    "y": 4287,
+    "w": 81,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "Signals THS Would Flag",
+   "bbox": {
+    "x": 288,
+    "y": 4375,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "data",
+   "tag": "table",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > table",
+   "text": "Signal\tTHS Dimension\tSeverity\nSignificant supply unlock relative to circulating ",
+   "bbox": {
+    "x": 288,
+    "y": 4426,
+    "w": 864,
+    "h": 239
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Signal",
+   "bbox": {
+    "x": 288,
+    "y": 4426,
+    "w": 580,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "THS Dimension",
+   "bbox": {
+    "x": 868,
+    "y": 4426,
+    "w": 175,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Severity",
+   "bbox": {
+    "x": 1043,
+    "y": 4426,
+    "w": 109,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Significant supply unlock relative to circulating float",
+   "bbox": {
+    "x": 288,
+    "y": 4465,
+    "w": 580,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Tokenomics",
+   "bbox": {
+    "x": 868,
+    "y": 4465,
+    "w": 175,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Critical",
+   "bbox": {
+    "x": 1043,
+    "y": 4465,
+    "w": 109,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "FDV significantly above circulating market cap",
+   "bbox": {
+    "x": 288,
+    "y": 4505,
+    "w": 580,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Tokenomics",
+   "bbox": {
+    "x": 868,
+    "y": 4505,
+    "w": 175,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Warning",
+   "bbox": {
+    "x": 1043,
+    "y": 4505,
+    "w": 109,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "TVL trending down in the 30 days before scheduled unlock",
+   "bbox": {
+    "x": 288,
+    "y": 4545,
+    "w": 580,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Liquidity",
+   "bbox": {
+    "x": 868,
+    "y": 4545,
+    "w": 175,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Warning",
+   "bbox": {
+    "x": 1043,
+    "y": 4545,
+    "w": 109,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Pool depth has not grown ahead of the unlock event",
+   "bbox": {
+    "x": 288,
+    "y": 4585,
+    "w": 580,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Liquidity",
+   "bbox": {
+    "x": 868,
+    "y": 4585,
+    "w": 175,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Critical",
+   "bbox": {
+    "x": 1043,
+    "y": 4585,
+    "w": 109,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Social engagement declining while price holds",
+   "bbox": {
+    "x": 288,
+    "y": 4625,
+    "w": 580,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Community",
+   "bbox": {
+    "x": 868,
+    "y": 4625,
+    "w": 175,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Warning",
+   "bbox": {
+    "x": 1043,
+    "y": 4625,
+    "w": 109,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "The Token Example: $ENA",
+   "bbox": {
+    "x": 288,
+    "y": 4703,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > div.prose > p > a",
+   "text": "$ENA",
+   "bbox": {
+    "x": 288,
+    "y": 4746,
+    "w": 41,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(31, 182, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The context behind that score: Ethena's TVL was at $4.44B at the time of the sca",
+   "bbox": {
+    "x": 288,
+    "y": 4809,
+    "w": 864,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "This is the Cliff Release Cascade setup in its textbook form. A large block of t",
+   "bbox": {
+    "x": 288,
+    "y": 4902,
+    "w": 864,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The scan caught this configuration before the event date. As of May 2026, Ethena",
+   "bbox": {
+    "x": 288,
+    "y": 4996,
+    "w": 864,
+    "h": 136
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > div.prose > p > a",
+   "text": "Ethena (ENA) TVL chart on DefiLlama showing $5.384B total value locked as of May",
+   "bbox": {
+    "x": 288,
+    "y": 5148,
+    "w": 861,
+    "h": 45
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(31, 182, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "The Fix",
+   "bbox": {
+    "x": 288,
+    "y": 5236,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Restructure cliff unlocks as linear releases through governance.",
+   "bbox": {
+    "x": 312,
+    "y": 5282,
+    "w": 494,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Build pool depth before the unlock date.",
+   "bbox": {
+    "x": 312,
+    "y": 5361,
+    "w": 309,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Establish a buyback escrow funded from protocol fees that activates at unlock ev",
+   "bbox": {
+    "x": 312,
+    "y": 5415,
+    "w": 666,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Communicate the unlock timeline publicly, in advance.",
+   "bbox": {
+    "x": 312,
+    "y": 5469,
+    "w": 420,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "Pattern 4: The Community Exodus",
+   "bbox": {
+    "x": 288,
+    "y": 5619,
+    "w": 864,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Q: How do you detect when a DeFi community is in decline before the price drops?",
+   "bbox": {
+    "x": 288,
+    "y": 5672,
+    "w": 633,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "A:",
+   "bbox": {
+    "x": 288,
+    "y": 5711,
+    "w": 17,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Definition:",
+   "bbox": {
+    "x": 288,
+    "y": 5805,
+    "w": 81,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "Signals THS Would Flag",
+   "bbox": {
+    "x": 288,
+    "y": 5894,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "data",
+   "tag": "table",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > table",
+   "text": "Signal\tTHS Dimension\tSeverity\n30-day holder count declining\tCommunity\tWarning\nEn",
+   "bbox": {
+    "x": 288,
+    "y": 5944,
+    "w": 864,
+    "h": 239
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Signal",
+   "bbox": {
+    "x": 288,
+    "y": 5944,
+    "w": 607,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "THS Dimension",
+   "bbox": {
+    "x": 895,
+    "y": 5944,
+    "w": 158,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Severity",
+   "bbox": {
+    "x": 1053,
+    "y": 5944,
+    "w": 99,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "30-day holder count declining",
+   "bbox": {
+    "x": 288,
+    "y": 5983,
+    "w": 607,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Community",
+   "bbox": {
+    "x": 895,
+    "y": 5983,
+    "w": 158,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Warning",
+   "bbox": {
+    "x": 1053,
+    "y": 5983,
+    "w": 99,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Engagement-to-follower ratio above normal range (bot anomaly flag)",
+   "bbox": {
+    "x": 288,
+    "y": 6023,
+    "w": 607,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Community",
+   "bbox": {
+    "x": 895,
+    "y": 6023,
+    "w": 158,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Warning",
+   "bbox": {
+    "x": 1053,
+    "y": 6023,
+    "w": 99,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Social sentiment score rising while holder count falls",
+   "bbox": {
+    "x": 288,
+    "y": 6063,
+    "w": 607,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Community",
+   "bbox": {
+    "x": 895,
+    "y": 6063,
+    "w": 158,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Critical",
+   "bbox": {
+    "x": 1053,
+    "y": 6063,
+    "w": 99,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Telegram and Discord member counts not growing",
+   "bbox": {
+    "x": 288,
+    "y": 6103,
+    "w": 607,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Community",
+   "bbox": {
+    "x": 895,
+    "y": 6103,
+    "w": 158,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Warning",
+   "bbox": {
+    "x": 1053,
+    "y": 6103,
+    "w": 99,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Price flat or rising while these signals compound",
+   "bbox": {
+    "x": 288,
+    "y": 6143,
+    "w": 607,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Community",
+   "bbox": {
+    "x": 895,
+    "y": 6143,
+    "w": 158,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Critical",
+   "bbox": {
+    "x": 1053,
+    "y": 6143,
+    "w": 99,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "The Token Example: Early Warning Pattern",
+   "bbox": {
+    "x": 288,
+    "y": 6221,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "I ran $PENDLE in the same five-protocol scan. It scored 66 out of 100. The prima",
+   "bbox": {
+    "x": 288,
+    "y": 6260,
+    "w": 864,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "PENDLE's other dimensions were in reasonable shape. No upcoming cliff unlocks. F",
+   "bbox": {
+    "x": 288,
+    "y": 6327,
+    "w": 864,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "This is what the Community Exodus pattern looks like in its early stage: one dim",
+   "bbox": {
+    "x": 288,
+    "y": 6393,
+    "w": 864,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > div.prose > p > a",
+   "text": "THS scoring methodology",
+   "bbox": {
+    "x": 288,
+    "y": 6518,
+    "w": 808,
+    "h": 45
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(31, 182, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "When this pattern goes unaddressed for 3–6 months, it compounds. Token price dec",
+   "bbox": {
+    "x": 288,
+    "y": 6607,
+    "w": 864,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "The Fix",
+   "bbox": {
+    "x": 288,
+    "y": 6700,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Run a holder incentive program focused on active participation, not just holding",
+   "bbox": {
+    "x": 312,
+    "y": 6746,
+    "w": 619,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Audit your Telegram and Discord channels.",
+   "bbox": {
+    "x": 312,
+    "y": 6824,
+    "w": 331,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Create genuine governance moments.",
+   "bbox": {
+    "x": 312,
+    "y": 6879,
+    "w": 294,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Watch the engagement-to-follower ratio weekly.",
+   "bbox": {
+    "x": 312,
+    "y": 6957,
+    "w": 374,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "Pattern 5: The Silent Codebase",
+   "bbox": {
+    "x": 288,
+    "y": 7107,
+    "w": 864,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Q: What does development inactivity signal about a DeFi protocol's future?",
+   "bbox": {
+    "x": 288,
+    "y": 7160,
+    "w": 577,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "A:",
+   "bbox": {
+    "x": 288,
+    "y": 7199,
+    "w": 17,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Definition:",
+   "bbox": {
+    "x": 288,
+    "y": 7293,
+    "w": 81,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "Signals THS Would Flag",
+   "bbox": {
+    "x": 288,
+    "y": 7381,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "data",
+   "tag": "table",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > table",
+   "text": "Signal\tTHS Dimension\tSeverity\nLast public commit 90+ days ago\tDevelopment\tCritic",
+   "bbox": {
+    "x": 288,
+    "y": 7432,
+    "w": 864,
+    "h": 239
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Signal",
+   "bbox": {
+    "x": 288,
+    "y": 7432,
+    "w": 545,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "THS Dimension",
+   "bbox": {
+    "x": 833,
+    "y": 7432,
+    "w": 197,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Severity",
+   "bbox": {
+    "x": 1029,
+    "y": 7432,
+    "w": 123,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Last public commit 90+ days ago",
+   "bbox": {
+    "x": 288,
+    "y": 7471,
+    "w": 545,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Development",
+   "bbox": {
+    "x": 833,
+    "y": 7471,
+    "w": 197,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Critical",
+   "bbox": {
+    "x": 1029,
+    "y": 7471,
+    "w": 123,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Single active contributor in last 90 days",
+   "bbox": {
+    "x": 288,
+    "y": 7511,
+    "w": 545,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Development",
+   "bbox": {
+    "x": 833,
+    "y": 7511,
+    "w": 197,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Critical",
+   "bbox": {
+    "x": 1029,
+    "y": 7511,
+    "w": 123,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "No external security audit in documented history",
+   "bbox": {
+    "x": 288,
+    "y": 7551,
+    "w": 545,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Development",
+   "bbox": {
+    "x": 833,
+    "y": 7551,
+    "w": 197,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Warning",
+   "bbox": {
+    "x": 1029,
+    "y": 7551,
+    "w": 123,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "No public GitHub repository",
+   "bbox": {
+    "x": 288,
+    "y": 7591,
+    "w": 545,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Development",
+   "bbox": {
+    "x": 833,
+    "y": 7591,
+    "w": 197,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Critical",
+   "bbox": {
+    "x": 1029,
+    "y": 7591,
+    "w": 123,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Open/closed issue ratio deteriorating",
+   "bbox": {
+    "x": 288,
+    "y": 7631,
+    "w": 545,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Development",
+   "bbox": {
+    "x": 833,
+    "y": 7631,
+    "w": 197,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Warning",
+   "bbox": {
+    "x": 1029,
+    "y": 7631,
+    "w": 123,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "The Token Example: Saddle Finance ($SDL)",
+   "bbox": {
+    "x": 288,
+    "y": 7709,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "Saddle Finance is the cleanest documented example of the Silent Codebase pattern",
+   "bbox": {
+    "x": 288,
+    "y": 7748,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "Saddle was an Ethereum-based stablecoin AMM. It raised $14.3M from venture backe",
+   "bbox": {
+    "x": 288,
+    "y": 7787,
+    "w": 864,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "code",
+   "selector": "main.flex-1 > article.container > div.prose > p > code",
+   "text": "saddle-finance/saddle-contract",
+   "bbox": {
+    "x": 583,
+    "y": 7885,
+    "w": 270,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-monospace",
+    "size": "14.4px",
+    "weight": "400",
+    "lh": "24.48px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgb(243, 244, 246)",
+    "border": null,
+    "radius": "3px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "Development had effectively stopped before the shutdown announcement. The commit",
+   "bbox": {
+    "x": 288,
+    "y": 8002,
+    "w": 864,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > div.prose > p > a",
+   "text": "Saddle Finance saddle-contract GitHub repository showing \"Public archive\" status",
+   "bbox": {
+    "x": 288,
+    "y": 8099,
+    "w": 847,
+    "h": 45
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(31, 182, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "By the time Srivatsa's post went out, Saddle's TVL had fallen to approximately $",
+   "bbox": {
+    "x": 288,
+    "y": 8162,
+    "w": 864,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The pattern here is exact: the codebase went silent before the public announceme",
+   "bbox": {
+    "x": 288,
+    "y": 8228,
+    "w": 864,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "In every DeFi failure I've reviewed, development silence preceded public awarene",
+   "bbox": {
+    "x": 288,
+    "y": 8294,
+    "w": 864,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "This pattern is the slowest-moving of the five. It's also the hardest to reverse",
+   "bbox": {
+    "x": 288,
+    "y": 8388,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "The Fix",
+   "bbox": {
+    "x": 288,
+    "y": 8453,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Procure an external security audit from a recognized firm and publish the report",
+   "bbox": {
+    "x": 312,
+    "y": 8499,
+    "w": 622,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Make the repository public if it isn't already.",
+   "bbox": {
+    "x": 312,
+    "y": 8554,
+    "w": 339,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Onboard a second active contributor.",
+   "bbox": {
+    "x": 312,
+    "y": 8608,
+    "w": 287,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "article.container > div.prose > ol > li > strong",
+   "text": "Establish a public roadmap with verifiable delivery milestones.",
+   "bbox": {
+    "x": 312,
+    "y": 8662,
+    "w": 482,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "Pattern Quick Reference",
+   "bbox": {
+    "x": 288,
+    "y": 8812,
+    "w": 864,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "data",
+   "tag": "table",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > table",
+   "text": "Pattern\tPrimary Dimension\tKey Signal\tFirst Action\nDistribution Pressure Trap\tTok",
+   "bbox": {
+    "x": 288,
+    "y": 8870,
+    "w": 864,
+    "h": 306
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Pattern",
+   "bbox": {
+    "x": 288,
+    "y": 8870,
+    "w": 179,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Primary Dimension",
+   "bbox": {
+    "x": 467,
+    "y": 8870,
+    "w": 145,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Key Signal",
+   "bbox": {
+    "x": 612,
+    "y": 8870,
+    "w": 315,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "First Action",
+   "bbox": {
+    "x": 927,
+    "y": 8870,
+    "w": 225,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Distribution Pressure Trap",
+   "bbox": {
+    "x": 288,
+    "y": 8930,
+    "w": 179,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Tokenomics",
+   "bbox": {
+    "x": 467,
+    "y": 8930,
+    "w": 145,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Concentrated top-wallet supply + multi-year unlock",
+   "bbox": {
+    "x": 612,
+    "y": 8930,
+    "w": 315,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Governance vote to extend vesting",
+   "bbox": {
+    "x": 927,
+    "y": 8930,
+    "w": 225,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Liquidity Mirage",
+   "bbox": {
+    "x": 288,
+    "y": 8993,
+    "w": 179,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Liquidity",
+   "bbox": {
+    "x": 467,
+    "y": 8993,
+    "w": 145,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Unlocked LP + thin pool depth",
+   "bbox": {
+    "x": 612,
+    "y": 8993,
+    "w": 315,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Lock LP and build depth",
+   "bbox": {
+    "x": 927,
+    "y": 8993,
+    "w": 225,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Cliff Release Cascade",
+   "bbox": {
+    "x": 288,
+    "y": 9033,
+    "w": 179,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Tokenomics",
+   "bbox": {
+    "x": 467,
+    "y": 9033,
+    "w": 145,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Large unlock into declining TVL",
+   "bbox": {
+    "x": 612,
+    "y": 9033,
+    "w": 315,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Restructure to linear release",
+   "bbox": {
+    "x": 927,
+    "y": 9033,
+    "w": 225,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Community Exodus",
+   "bbox": {
+    "x": 288,
+    "y": 9073,
+    "w": 179,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Community",
+   "bbox": {
+    "x": 467,
+    "y": 9073,
+    "w": 145,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Holder decline + bot ratio anomaly",
+   "bbox": {
+    "x": 612,
+    "y": 9073,
+    "w": 315,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Holder incentive program",
+   "bbox": {
+    "x": 927,
+    "y": 9073,
+    "w": 225,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Silent Codebase",
+   "bbox": {
+    "x": 288,
+    "y": 9112,
+    "w": 179,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Development",
+   "bbox": {
+    "x": 467,
+    "y": 9112,
+    "w": 145,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "90+ days no commit activity",
+   "bbox": {
+    "x": 612,
+    "y": 9112,
+    "w": 315,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Procure and publish security audit",
+   "bbox": {
+    "x": 927,
+    "y": 9112,
+    "w": 225,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "Mid-2026 Update: The Patterns Recur at Larger Scale",
+   "bbox": {
+    "x": 288,
+    "y": 9281,
+    "w": 864,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "Since May, I've tracked every DeFi exploit published by Halborn, PeckShield, and",
+   "bbox": {
+    "x": 288,
+    "y": 9329,
+    "w": 864,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Governance concentration",
+   "bbox": {
+    "x": 288,
+    "y": 9400,
+    "w": 205,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > div.prose > p > a",
+   "text": "Read the full July analysis.",
+   "bbox": {
+    "x": 598,
+    "y": 9535,
+    "w": 190,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(31, 182, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Bridge validator key centralization",
+   "bbox": {
+    "x": 288,
+    "y": 9575,
+    "w": 264,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Oracle single-source manipulation",
+   "bbox": {
+    "x": 288,
+    "y": 9750,
+    "w": 266,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Cliff release cascade",
+   "bbox": {
+    "x": 288,
+    "y": 9871,
+    "w": 162,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > div.prose > p > a",
+   "text": "Track all June incidents here.",
+   "bbox": {
+    "x": 475,
+    "y": 9991,
+    "w": 210,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(31, 182, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "What These Patterns Have in Common",
+   "bbox": {
+    "x": 288,
+    "y": 10119,
+    "w": 864,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "None of them required reading a whitepaper to catch. Every signal in every patte",
+   "bbox": {
+    "x": 288,
+    "y": 10168,
+    "w": 864,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > div.prose > p > a",
+   "text": "security-only token scanner",
+   "bbox": {
+    "x": 288,
+    "y": 10320,
+    "w": 837,
+    "h": 45
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(31, 182, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "Iron Finance's post-mortem described the collapse as \"a classic bank run.\" Bank ",
+   "bbox": {
+    "x": 288,
+    "y": 10382,
+    "w": 864,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "That's what Token Health Scan was built to do.",
+   "bbox": {
+    "x": 288,
+    "y": 10449,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "FAQ",
+   "bbox": {
+    "x": 288,
+    "y": 10581,
+    "w": 864,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Q: What is the most common cause of DeFi token collapse?",
+   "bbox": {
+    "x": 288,
+    "y": 10634,
+    "w": 455,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "A: Based on the scans I've run, the most common root cause is tokenomics failure",
+   "bbox": {
+    "x": 288,
+    "y": 10669,
+    "w": 864,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Q: What's the difference between a rug pull and a structural token collapse?",
+   "bbox": {
+    "x": 288,
+    "y": 10766,
+    "w": 586,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "A: A rug pull is intentional. The deployer removes LP, transfers the treasury, a",
+   "bbox": {
+    "x": 288,
+    "y": 10802,
+    "w": 864,
+    "h": 136
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Q: Can a protocol recover from a cliff release event?",
+   "bbox": {
+    "x": 288,
+    "y": 10953,
+    "w": 400,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "A: Yes, but the recovery requires active intervention, not patience. Protocols t",
+   "bbox": {
+    "x": 288,
+    "y": 10989,
+    "w": 864,
+    "h": 109
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Q: How does Token Health Scan detect community bot activity?",
+   "bbox": {
+    "x": 288,
+    "y": 11113,
+    "w": 490,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "A: The community dimension compares social engagement volume (from LunarCrush) a",
+   "bbox": {
+    "x": 288,
+    "y": 11149,
+    "w": 864,
+    "h": 109
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Q: What should a protocol team do first if their token health score drops below ",
+   "bbox": {
+    "x": 288,
+    "y": 11273,
+    "w": 637,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > div.prose > p > a",
+   "text": "THS scoring methodology",
+   "bbox": {
+    "x": 792,
+    "y": 11421,
+    "w": 189,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(31, 182, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > div.prose > p > a",
+   "text": "run a scan",
+   "bbox": {
+    "x": 717,
+    "y": 11448,
+    "w": 75,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(31, 182, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Q: Are these collapse patterns specific to EVM chains or do they apply to Solana",
+   "bbox": {
+    "x": 288,
+    "y": 11515,
+    "w": 655,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "A: All five patterns apply across chains. The signals map to the same five THS d",
+   "bbox": {
+    "x": 288,
+    "y": 11550,
+    "w": 864,
+    "h": 109
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "References",
+   "bbox": {
+    "x": 288,
+    "y": 11764,
+    "w": 864,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "main.flex-1 > article.container > div.prose > ul > li",
+   "text": "Iron Finance Official Post-Mortem, June 17, 2021",
+   "bbox": {
+    "x": 312,
+    "y": 11813,
+    "w": 840,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "main.flex-1 > article.container > div.prose > ul > li",
+   "text": "Federal Reserve FEDS Notes: \"Runs on Algorithmic Stablecoins,\" June 2022",
+   "bbox": {
+    "x": 312,
+    "y": 11843,
+    "w": 840,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "main.flex-1 > article.container > div.prose > ul > li",
+   "text": "CoinDesk Iron Finance collapse coverage, June 2021",
+   "bbox": {
+    "x": 312,
+    "y": 11874,
+    "w": 840,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "main.flex-1 > article.container > div.prose > ul > li",
+   "text": "tokenomist.ai: $MAV and $ENA unlock schedule data, as of April 30, 2026; ENA nex",
+   "bbox": {
+    "x": 312,
+    "y": 11904,
+    "w": 840,
+    "h": 48
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "main.flex-1 > article.container > div.prose > ul > li",
+   "text": "DefiLlama: Ethena TVL $5.37B and annualized fees $177M, as of May 19, 2026",
+   "bbox": {
+    "x": 312,
+    "y": 11959,
+    "w": 840,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "main.flex-1 > article.container > div.prose > ul > li",
+   "text": "CoinGecko: $MAV market cap and volume data, as of April 30, 2026; $ENA price $0.",
+   "bbox": {
+    "x": 312,
+    "y": 11989,
+    "w": 840,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "main.flex-1 > article.container > div.prose > ul > li",
+   "text": "CoinDesk: \"Venture-Backed Saddle Finance Proposes Wind-Down, Dissolution,\" Augus",
+   "bbox": {
+    "x": 312,
+    "y": 12019,
+    "w": 840,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "main.flex-1 > article.container > div.prose > ul > li",
+   "text": "Saddle Finance DAO: SIP-54 wind-down vote, August 2023",
+   "bbox": {
+    "x": 312,
+    "y": 12050,
+    "w": 840,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "li",
+   "selector": "main.flex-1 > article.container > div.prose > ul > li",
+   "text": "GitHub: saddle-finance/saddle-contract, last commit June 30, 2023; archived Febr",
+   "bbox": {
+    "x": 312,
+    "y": 12080,
+    "w": 840,
+    "h": 24
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "Run a Free Scan",
+   "bbox": {
+    "x": 288,
+    "y": 12209,
+    "w": 864,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "If your token shows any of these patterns, the remediation checklist tells you w",
+   "bbox": {
+    "x": 288,
+    "y": 12258,
+    "w": 864,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "main.flex-1 > article.container > div.prose > p > a",
+   "text": "tokenhealthscan.com",
+   "bbox": {
+    "x": 614,
+    "y": 12301,
+    "w": 155,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(31, 182, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "footer",
+   "selector": "#root > div.flex > footer.border-t",
+   "text": "© 2026 TokenHealthScan. All rights reserved.\n\nToken Scan Guide\nvs Token Sniffer\n",
+   "bbox": {
+    "x": 0,
+    "y": 12419,
+    "w": 1440,
+    "h": 199
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.flex > footer.border-t > div.container > div.flex > p.text-center",
+   "text": "© 2026 TokenHealthScan. All rights reserved.",
+   "bbox": {
+    "x": 52,
+    "y": 12460,
+    "w": 295,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "nav",
+   "selector": "div.flex > footer.border-t > div.container > div.flex > nav.flex",
+   "text": "Token Scan Guide\nvs Token Sniffer\nSolana Launchpads\nEthereum Launchpads\nPricing\n",
+   "bbox": {
+    "x": 623,
+    "y": 12460,
+    "w": 765,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Token Scan Guide",
+   "bbox": {
+    "x": 623,
+    "y": 12460,
+    "w": 116,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "vs Token Sniffer",
+   "bbox": {
+    "x": 763,
+    "y": 12460,
+    "w": 103,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Solana Launchpads",
+   "bbox": {
+    "x": 890,
+    "y": 12460,
+    "w": 126,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Ethereum Launchpads",
+   "bbox": {
+    "x": 1040,
+    "y": 12460,
+    "w": 145,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Pricing",
+   "bbox": {
+    "x": 1209,
+    "y": 12460,
+    "w": 45,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Privacy",
+   "bbox": {
+    "x": 1277,
+    "y": 12460,
+    "w": 47,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Terms",
+   "bbox": {
+    "x": 1348,
+    "y": 12460,
+    "w": 40,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.flex > footer.border-t > div.container > div.max-w-4xl > p.text-sm",
+   "text": "Data from 7+ live APIs. No cached results. Built for protocol teams.",
+   "bbox": {
+    "x": 272,
+    "y": 12504,
+    "w": 896,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.flex > footer.border-t > div.container > div.max-w-4xl > p.text-xs",
+   "text": "Token Health Scan provides automated token assessments using public data from th",
+   "bbox": {
+    "x": 272,
+    "y": 12539,
+    "w": 896,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "19.5px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  }
+ ]
+}

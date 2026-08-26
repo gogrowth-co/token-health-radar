@@ -1,0 +1,3119 @@
+{
+ "route": "https://tokenhealthscan.com/publications/whale-moat-defi-collapse-pattern",
+ "slug": "pub-whale-moat",
+ "type": "T4",
+ "breakpoint": "768",
+ "state": "default",
+ "theme": "light",
+ "capturedAt": null,
+ "pageTitle": "The Whale Moat: DeFi's Quietest Collapse Pattern (And How to Reverse It) | Token Health Scan",
+ "pageHeight": 9018,
+ "count": 115,
+ "elements": [
+  {
+   "role": "text",
+   "tag": "ol",
+   "selector": "#root > div > ol.fixed",
+   "text": null,
+   "bbox": {
+    "x": 348,
+    "y": 992,
+    "w": 420,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "header",
+   "selector": "#root > div.flex > header.sticky",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 0,
+    "y": 0,
+    "w": 768,
+    "h": 65
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(248, 250, 252, 0.95)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "cta",
+   "tag": "a",
+   "selector": "div.flex > header.sticky > div.container > div.flex > a.flex",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 24,
+    "y": 16,
+    "w": 205,
+    "h": 32
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "circle",
+   "selector": "div.flex > a.flex > div.w-7 > svg > circle",
+   "text": null,
+   "bbox": {
+    "x": 33,
+    "y": 25,
+    "w": 13,
+    "h": 13
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(255, 255, 255)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "span",
+   "selector": "div.container > div.flex > a.flex > span.font-bold > span.hidden",
+   "text": "TokenHealthScan",
+   "bbox": {
+    "x": 64,
+    "y": 20,
+    "w": 165,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "700",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "button",
+   "selector": "div.flex > header.sticky > div.container > div.flex > button.inline-flex",
+   "text": "Toggle theme",
+   "bbox": {
+    "x": 656,
+    "y": 12,
+    "w": 40,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "path",
+   "selector": "div.container > div.flex > button.inline-flex > svg > path",
+   "text": null,
+   "bbox": {
+    "x": 670,
+    "y": 26,
+    "w": 12,
+    "h": 12
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "button",
+   "selector": "div.flex > header.sticky > div.container > div.flex > button.inline-flex",
+   "text": "Toggle menu",
+   "bbox": {
+    "x": 704,
+    "y": 12,
+    "w": 40,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "6px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "article",
+   "selector": "#root > div.flex > main.flex-1 > article.container",
+   "text": "DeFi\nToken Health\nTokenomics\nThe Whale Moat: DeFi's Quietest Collapse Pattern (A",
+   "bbox": {
+    "x": 0,
+    "y": 65,
+    "w": 768,
+    "h": 8695
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "header",
+   "selector": "#root > div.flex > main.flex-1 > article.container > header.mb-8",
+   "text": "DeFi\nToken Health\nTokenomics\nThe Whale Moat: DeFi's Quietest Collapse Pattern (A",
+   "bbox": {
+    "x": 16,
+    "y": 121,
+    "w": 736,
+    "h": 330
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "main.flex-1 > article.container > header.mb-8 > div.flex > div.inline-flex",
+   "text": "DeFi",
+   "bbox": {
+    "x": 16,
+    "y": 121,
+    "w": 48,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "main.flex-1 > article.container > header.mb-8 > div.flex > div.inline-flex",
+   "text": "Token Health",
+   "bbox": {
+    "x": 72,
+    "y": 121,
+    "w": 99,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "main.flex-1 > article.container > header.mb-8 > div.flex > div.inline-flex",
+   "text": "Tokenomics",
+   "bbox": {
+    "x": 179,
+    "y": 121,
+    "w": 92,
+    "h": 22
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "600",
+    "lh": "16px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "9999px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h1",
+   "selector": "div.flex > main.flex-1 > article.container > header.mb-8 > h1.text-4xl",
+   "text": "The Whale Moat: DeFi's Quietest Collapse Pattern (And How to Reverse It)",
+   "bbox": {
+    "x": 16,
+    "y": 163,
+    "w": 736,
+    "h": 144
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "48px",
+    "weight": "700",
+    "lh": "48px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > header.mb-8 > p.text-lg",
+   "text": "The Whale Moat is DeFi's quietest token collapse pattern. No crash, no rug. Just",
+   "bbox": {
+    "x": 16,
+    "y": 327,
+    "w": 736,
+    "h": 84
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "20px",
+    "weight": "400",
+    "lh": "28px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "div",
+   "selector": "div.flex > main.flex-1 > article.container > header.mb-8 > div.text-sm",
+   "text": "Token Health Scan · 5/26/2026 · 8 min read",
+   "bbox": {
+    "x": 16,
+    "y": 431,
+    "w": 736,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "#root > div.flex > main.flex-1 > article.container > img.mb-8",
+   "text": "The Whale Moat DeFi collapse pattern — Token Health Scan",
+   "bbox": {
+    "x": 16,
+    "y": 483,
+    "w": 736,
+    "h": 414
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "Most DeFi collapses announce themselves. An exploit goes public. A stablecoin de",
+   "bbox": {
+    "x": 16,
+    "y": 929,
+    "w": 736,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The Whale Moat is different. There's no single moment of crisis. No thread that ",
+   "bbox": {
+    "x": 16,
+    "y": 995,
+    "w": 736,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "What you get instead: a token that's technically alive and structurally frozen. ",
+   "bbox": {
+    "x": 16,
+    "y": 1062,
+    "w": 736,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "I named this Pattern #3 in THS's collapse library. ADA is showing every signal r",
+   "bbox": {
+    "x": 16,
+    "y": 1155,
+    "w": 736,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "What the Whale Moat Is (And What It Isn't)",
+   "bbox": {
+    "x": 16,
+    "y": 1288,
+    "w": 736,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The Whale Moat forms when three signals appear together and stay that way for tw",
+   "bbox": {
+    "x": 16,
+    "y": 1336,
+    "w": 736,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "data",
+   "tag": "table",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > table",
+   "text": "Signal\tThreshold\tWhy it matters\nWhale concentration\t>60% of supply in top wallet",
+   "bbox": {
+    "x": 16,
+    "y": 1387,
+    "w": 736,
+    "h": 227
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Signal",
+   "bbox": {
+    "x": 16,
+    "y": 1387,
+    "w": 152,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Threshold",
+   "bbox": {
+    "x": 168,
+    "y": 1387,
+    "w": 272,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Why it matters",
+   "bbox": {
+    "x": 440,
+    "y": 1387,
+    "w": 312,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Whale concentration",
+   "bbox": {
+    "x": 16,
+    "y": 1426,
+    "w": 152,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": ">60% of supply in top wallets",
+   "bbox": {
+    "x": 168,
+    "y": 1426,
+    "w": 272,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Compresses the float available for retail price discovery",
+   "bbox": {
+    "x": 440,
+    "y": 1426,
+    "w": 312,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Holder count trend",
+   "bbox": {
+    "x": 16,
+    "y": 1489,
+    "w": 152,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Declining month-over-month",
+   "bbox": {
+    "x": 168,
+    "y": 1489,
+    "w": 272,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Fewer participants, less distributed demand",
+   "bbox": {
+    "x": 440,
+    "y": 1489,
+    "w": 312,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Social velocity",
+   "bbox": {
+    "x": 16,
+    "y": 1552,
+    "w": 152,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Plateauing or declining engagement per holder",
+   "bbox": {
+    "x": 168,
+    "y": 1552,
+    "w": 272,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Community boredom preceding exit",
+   "bbox": {
+    "x": 440,
+    "y": 1552,
+    "w": 312,
+    "h": 63
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "None of these signals, on their own, is a collapse. Whale concentration can refl",
+   "bbox": {
+    "x": 16,
+    "y": 1639,
+    "w": 736,
+    "h": 109
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "I also want to be direct about what this pattern is not.",
+   "bbox": {
+    "x": 16,
+    "y": 1759,
+    "w": 736,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "It's not a rug pull. The large holders aren't exiting. It's not an exploit or a ",
+   "bbox": {
+    "x": 16,
+    "y": 1799,
+    "w": 736,
+    "h": 109
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The signals are consistent with a token entering a low-liquidity, low-participat",
+   "bbox": {
+    "x": 16,
+    "y": 1919,
+    "w": 736,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "How the Whale Moat Forms",
+   "bbox": {
+    "x": 16,
+    "y": 2079,
+    "w": 736,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The pattern doesn't appear overnight. It builds through six phases, and each pha",
+   "bbox": {
+    "x": 16,
+    "y": 2127,
+    "w": 736,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Phase 1: Concentration rises.",
+   "bbox": {
+    "x": 16,
+    "y": 2198,
+    "w": 226,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Phase 2: LP thins.",
+   "bbox": {
+    "x": 16,
+    "y": 2291,
+    "w": 138,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Phase 3: Slippage rises.",
+   "bbox": {
+    "x": 16,
+    "y": 2412,
+    "w": 185,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Phase 4: Volume drops.",
+   "bbox": {
+    "x": 16,
+    "y": 2506,
+    "w": 183,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Phase 5: Community stalls.",
+   "bbox": {
+    "x": 16,
+    "y": 2599,
+    "w": 211,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Phase 6: Exit by boredom.",
+   "bbox": {
+    "x": 16,
+    "y": 2720,
+    "w": 202,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The outcome is harder to reverse than a single crisis event. A crisis gives team",
+   "bbox": {
+    "x": 16,
+    "y": 2837,
+    "w": 736,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "ADA's Whale Moat: Live Data, May 2026",
+   "bbox": {
+    "x": 16,
+    "y": 2996,
+    "w": 736,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "ADA is showing all three trigger signals as of May 2026.",
+   "bbox": {
+    "x": 16,
+    "y": 3045,
+    "w": 736,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "According to Santiment data, 67% of ADA's circulating supply is now held by wall",
+   "bbox": {
+    "x": 16,
+    "y": 3084,
+    "w": 736,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "Holder count has declined month-over-month through the first half of 2026. Socia",
+   "bbox": {
+    "x": 16,
+    "y": 3177,
+    "w": 736,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "59/100",
+   "bbox": {
+    "x": 518,
+    "y": 3248,
+    "w": 55,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The current CT debate around ADA's concentration is worth naming directly, becau",
+   "bbox": {
+    "x": 16,
+    "y": 3310,
+    "w": 736,
+    "h": 163
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "THS doesn't resolve that debate. What it measures is structural health: whether ",
+   "bbox": {
+    "x": 16,
+    "y": 3485,
+    "w": 736,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "One important qualifier for the ADA case: ADA is L1 infrastructure, not a DeFi p",
+   "bbox": {
+    "x": 16,
+    "y": 3579,
+    "w": 736,
+    "h": 136
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "Early Warning: How to Catch the Whale Moat Before It Locks In",
+   "bbox": {
+    "x": 16,
+    "y": 3820,
+    "w": 736,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The Whale Moat is reversible. The difficulty of reversal scales with how far the",
+   "bbox": {
+    "x": 16,
+    "y": 3868,
+    "w": 736,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "At 45% whale concentration with an upward trend, a distribution campaign can shi",
+   "bbox": {
+    "x": 16,
+    "y": 3935,
+    "w": 736,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The early-warning profile looks like this: whale concentration is in the 40-50% ",
+   "bbox": {
+    "x": 16,
+    "y": 4028,
+    "w": 736,
+    "h": 109
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "In 2026, several mid-size L2 governance tokens are showing this early-stage prof",
+   "bbox": {
+    "x": 16,
+    "y": 4149,
+    "w": 736,
+    "h": 109
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The window to act is while the concentration number is still moving. Run a Token",
+   "bbox": {
+    "x": 16,
+    "y": 4270,
+    "w": 736,
+    "h": 136
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "How THS Scores the Whale Moat Pattern",
+   "bbox": {
+    "x": 16,
+    "y": 4511,
+    "w": 736,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The Tokenomics dimension in THS captures two distinct but related concentration ",
+   "bbox": {
+    "x": 16,
+    "y": 4559,
+    "w": 736,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "data",
+   "tag": "table",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > table",
+   "text": "Sub-signal\tWhat it measures\nGini coefficient\tDistribution across all holders, fr",
+   "bbox": {
+    "x": 16,
+    "y": 4611,
+    "w": 736,
+    "h": 159
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "Sub-signal",
+   "bbox": {
+    "x": 16,
+    "y": 4611,
+    "w": 243,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "th",
+   "selector": "div.prose > table > thead > tr > th",
+   "text": "What it measures",
+   "bbox": {
+    "x": 259,
+    "y": 4611,
+    "w": 493,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14.4px",
+    "weight": "600",
+    "lh": "21.6px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Gini coefficient",
+   "bbox": {
+    "x": 16,
+    "y": 4649,
+    "w": 243,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Distribution across all holders, from largest to smallest",
+   "bbox": {
+    "x": 259,
+    "y": 4649,
+    "w": 493,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Top-wallet concentration",
+   "bbox": {
+    "x": 16,
+    "y": 4690,
+    "w": 243,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Percentage of supply in top 10, 50, and 100 wallets",
+   "bbox": {
+    "x": 259,
+    "y": 4690,
+    "w": 493,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Holder count trend",
+   "bbox": {
+    "x": 16,
+    "y": 4729,
+    "w": 243,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "td",
+   "selector": "div.prose > table > tbody > tr > td",
+   "text": "Month-over-month change in total holder count",
+   "bbox": {
+    "x": 259,
+    "y": 4729,
+    "w": 493,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "15.2px",
+    "weight": "400",
+    "lh": "22.8px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The Gini coefficient and top-wallet percentage don't always move together, and b",
+   "bbox": {
+    "x": 16,
+    "y": 4794,
+    "w": 736,
+    "h": 109
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "THS weights both signals. A token that looks well-distributed by Gini but shows ",
+   "bbox": {
+    "x": 16,
+    "y": 4914,
+    "w": 736,
+    "h": 109
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "When all three inputs move in the wrong direction simultaneously, the Tokenomics",
+   "bbox": {
+    "x": 16,
+    "y": 5035,
+    "w": 736,
+    "h": 109
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "main.flex-1 > article.container > div.prose > figure > img",
+   "text": "Whale Moat trigger signals: whale concentration threshold, holder count decline ",
+   "bbox": {
+    "x": 16,
+    "y": 5225,
+    "w": 736,
+    "h": 411
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "figcaption",
+   "selector": "main.flex-1 > article.container > div.prose > figure > figcaption",
+   "text": "The three-signal Whale Moat trigger cluster. All three must be active simultaneo",
+   "bbox": {
+    "x": 16,
+    "y": 5642,
+    "w": 736,
+    "h": 39
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "13.12px",
+    "weight": "400",
+    "lh": "19.68px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(107, 114, 128)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "Reversing the Whale Moat: The Remediation Checklist",
+   "bbox": {
+    "x": 16,
+    "y": 5746,
+    "w": 736,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The path out of Whale Moat formation isn't a single campaign. It's a structural ",
+   "bbox": {
+    "x": 16,
+    "y": 5794,
+    "w": 736,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Distribution campaigns targeting mid-range wallets.",
+   "bbox": {
+    "x": 16,
+    "y": 5892,
+    "w": 405,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "LP incentive restructuring.",
+   "bbox": {
+    "x": 16,
+    "y": 6094,
+    "w": 206,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "strong",
+   "selector": "main.flex-1 > article.container > div.prose > p > strong",
+   "text": "Governance design that gives smaller holders real weight.",
+   "bbox": {
+    "x": 16,
+    "y": 6269,
+    "w": 447,
+    "h": 18
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "700",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "None of these approaches works in isolation. A distribution campaign without LP ",
+   "bbox": {
+    "x": 16,
+    "y": 6413,
+    "w": 736,
+    "h": 109
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "image",
+   "tag": "img",
+   "selector": "main.flex-1 > article.container > div.prose > figure > img",
+   "text": "Whale Moat remediation: 1. Distribution to mid-range wallets, 2. LP incentive re",
+   "bbox": {
+    "x": 16,
+    "y": 6603,
+    "w": 736,
+    "h": 411
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "8px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "figcaption",
+   "selector": "main.flex-1 > article.container > div.prose > figure > figcaption",
+   "text": "Whale Moat remediation approaches ranked by impact. Token Health Scan remediatio",
+   "bbox": {
+    "x": 16,
+    "y": 7020,
+    "w": 736,
+    "h": 20
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "13.12px",
+    "weight": "400",
+    "lh": "19.68px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(107, 114, 128)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "Run the Scan Before the Moat Forms",
+   "bbox": {
+    "x": 16,
+    "y": 7104,
+    "w": 736,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The Whale Moat is the quietest pattern in the THS collapse library. That's what ",
+   "bbox": {
+    "x": 16,
+    "y": 7153,
+    "w": 736,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "There's no alarm. No exploit alert. No community revolt. Just a slow structural ",
+   "bbox": {
+    "x": 16,
+    "y": 7192,
+    "w": 736,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The signal is there months before the momentum is gone. Run a free Tokenomics sc",
+   "bbox": {
+    "x": 16,
+    "y": 7285,
+    "w": 736,
+    "h": 82
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "For the full collapse pattern library, including all five named patterns, see: h",
+   "bbox": {
+    "x": 16,
+    "y": 7379,
+    "w": 736,
+    "h": 54
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h2",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h2",
+   "text": "Frequently Asked Questions",
+   "bbox": {
+    "x": 16,
+    "y": 7538,
+    "w": 736,
+    "h": 33
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "25.6px",
+    "weight": "700",
+    "lh": "33.28px",
+    "ls": "-0.256px"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "What is the Whale Moat in DeFi?",
+   "bbox": {
+    "x": 16,
+    "y": 7610,
+    "w": 736,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "The Whale Moat is a named DeFi token collapse pattern that forms when three sign",
+   "bbox": {
+    "x": 16,
+    "y": 7649,
+    "w": 736,
+    "h": 136
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "Is high whale concentration always bad for a token?",
+   "bbox": {
+    "x": 16,
+    "y": 7823,
+    "w": 736,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "Not automatically. High whale concentration becomes a structural problem when it",
+   "bbox": {
+    "x": 16,
+    "y": 7862,
+    "w": 736,
+    "h": 136
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "How do you fix high whale concentration in a DeFi token?",
+   "bbox": {
+    "x": 16,
+    "y": 8036,
+    "w": 736,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "Three approaches work in combination. First, run distribution campaigns specific",
+   "bbox": {
+    "x": 16,
+    "y": 8075,
+    "w": 736,
+    "h": 163
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "What is a token health score?",
+   "bbox": {
+    "x": 16,
+    "y": 8277,
+    "w": 736,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "A token health score is a 0-100 composite score that measures a token's structur",
+   "bbox": {
+    "x": 16,
+    "y": 8316,
+    "w": 736,
+    "h": 136
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "heading",
+   "tag": "h3",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > h3",
+   "text": "How does Token Health Scan detect collapse patterns?",
+   "bbox": {
+    "x": 16,
+    "y": 8490,
+    "w": 736,
+    "h": 27
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "19.2px",
+    "weight": "600",
+    "lh": "26.88px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "text",
+   "tag": "p",
+   "selector": "div.flex > main.flex-1 > article.container > div.prose > p",
+   "text": "THS detects collapse patterns by monitoring the combination of signals across it",
+   "bbox": {
+    "x": 16,
+    "y": 8529,
+    "w": 736,
+    "h": 163
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "27.2px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "footer",
+   "selector": "#root > div.flex > footer.border-t",
+   "text": "© 2026 TokenHealthScan. All rights reserved.\n\nToken Scan Guide\nvs Token Sniffer\n",
+   "bbox": {
+    "x": 0,
+    "y": 8760,
+    "w": 768,
+    "h": 258
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": "rgb(226, 232, 240)",
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.flex > footer.border-t > div.container > div.flex > p.text-center",
+   "text": "© 2026 TokenHealthScan. All rights reserved.",
+   "bbox": {
+    "x": 32,
+    "y": 8811,
+    "w": 190,
+    "h": 40
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "nav",
+   "selector": "div.flex > footer.border-t > div.container > div.flex > nav.flex",
+   "text": "Token Scan Guide\nvs Token Sniffer\nSolana Launchpads\nEthereum Launchpads\nPricing\n",
+   "bbox": {
+    "x": 222,
+    "y": 8801,
+    "w": 514,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "16px",
+    "weight": "400",
+    "lh": "24px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Token Scan Guide",
+   "bbox": {
+    "x": 222,
+    "y": 8801,
+    "w": 38,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "vs Token Sniffer",
+   "bbox": {
+    "x": 284,
+    "y": 8801,
+    "w": 43,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Solana Launchpads",
+   "bbox": {
+    "x": 351,
+    "y": 8801,
+    "w": 79,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Ethereum Launchpads",
+   "bbox": {
+    "x": 454,
+    "y": 8801,
+    "w": 79,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Pricing",
+   "bbox": {
+    "x": 557,
+    "y": 8801,
+    "w": 45,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Privacy",
+   "bbox": {
+    "x": 625,
+    "y": 8801,
+    "w": 47,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "nav",
+   "tag": "a",
+   "selector": "footer.border-t > div.container > div.flex > nav.flex > a.text-sm",
+   "text": "Terms",
+   "bbox": {
+    "x": 696,
+    "y": 8801,
+    "w": 40,
+    "h": 60
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "400",
+    "lh": "20px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.flex > footer.border-t > div.container > div.max-w-4xl > p.text-sm",
+   "text": "Data from 7+ live APIs. No cached results. Built for protocol teams.",
+   "bbox": {
+    "x": 32,
+    "y": 8885,
+    "w": 704,
+    "h": 23
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "14px",
+    "weight": "500",
+    "lh": "22.75px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(2, 8, 23)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  },
+  {
+   "role": "footer",
+   "tag": "p",
+   "selector": "div.flex > footer.border-t > div.container > div.max-w-4xl > p.text-xs",
+   "text": "Token Health Scan provides automated token assessments using public data from th",
+   "bbox": {
+    "x": 32,
+    "y": 8920,
+    "w": 704,
+    "h": 59
+   },
+   "typography": {
+    "family": "ui-sans-serif",
+    "size": "12px",
+    "weight": "400",
+    "lh": "19.5px",
+    "ls": "normal"
+   },
+   "colors": {
+    "fg": "rgb(100, 116, 139)",
+    "bg": "rgba(0, 0, 0, 0)",
+    "border": null,
+    "radius": "0px"
+   },
+   "component": null,
+   "cobaltTarget": null
+  }
+ ]
+}

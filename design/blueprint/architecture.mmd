@@ -1,0 +1,74 @@
+flowchart TB
+  subgraph EDGE["Cloudflare Worker (bot prerender · redirects · storage proxy)"]
+    W1[bot? → seo-snapshot]
+    W2[sitemap/rss → Supabase Storage]
+  end
+  EDGE --> SPA
+  subgraph T1["T1 marketing-landing (4)"]
+    T1_["/"]
+    T1_pricing["/pricing"]
+    T1_ltd["/ltd"]
+    T1_ltdthankyou["/ltd-thank-you"]
+  end
+  SPA --> T1
+  subgraph T2["T2 seo-landing (5)"]
+    T2_tokenscanguide["/token-scan-guide"]
+    T2_tokensniffervstokenhealthscan["/token-sniffer-vs-tokenhealthscan"]
+    T2_solanalaunchpads["/solana-launchpads"]
+    T2_ethereumlaunchpads["/ethereum-launchpads"]
+    T2_aiagents["/ai-agents"]
+  end
+  SPA --> T2
+  subgraph T3["T3 content-index (1)"]
+    T3_publications["/publications"]
+  end
+  SPA --> T3
+  subgraph T4["T4 content-article (1)"]
+    T4_publications_slug["/publications/:slug"]
+  end
+  SPA --> T4
+  subgraph T5["T5 legal-doc (2)"]
+    T5_privacy["/privacy"]
+    T5_terms["/terms"]
+  end
+  SPA --> T5
+  subgraph T6["T6 auth-flow (2)"]
+    T6_auth["/auth"]
+    T6_confirm["/confirm"]
+  end
+  SPA --> T6
+  subgraph T7["T7 scan-flow (5)"]
+    T7_scan_chain_address["/scan/:chain/:address"]
+    T7_scanloading["/scan-loading"]
+    T7_scanresult["/scan-result"]
+    T7_agentscan["/agent-scan"]
+    T7_agentscan_chain_agentId["/agent-scan/:chain/:agentId"]
+  end
+  SPA --> T7
+  subgraph T8["T8 seo-report (1)"]
+    T8_token_symbol["/token/:symbol"]
+  end
+  SPA --> T8
+  subgraph T9["T9 directory-search (3)"]
+    T9_agentscan_search["/agent-scan/search"]
+    T9_agentdirectory["/agent-directory"]
+    T9_token["/token"]
+  end
+  SPA --> T9
+  subgraph T10["T10 app-dashboard (2)"]
+    T10_copilot["/copilot"]
+    T10_dashboard["🔒 /dashboard"]
+  end
+  SPA --> T10
+  subgraph T11["T11 admin-console (4)"]
+    T11_admin["🔒 /admin"]
+    T11_admin_new["🔒 /admin/new"]
+    T11_admin_edit_id["🔒 /admin/edit/:id"]
+    T11_admin_users["🔒 /admin/users"]
+  end
+  SPA --> T11
+  T7 --> EF["Supabase Edge Functions (40+): scan, moralis-token-search, agent-scan, copilot-chat…"]
+  T10 --> EF
+  T8 --> EF
+  T4 --> CMS[("CMS pages table")]
+  EF --> DB[("Postgres + Storage")]
