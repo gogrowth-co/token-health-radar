@@ -13,8 +13,8 @@ const HeroSection = memo(() => {
         {/* Notification Banner */}
         <div className="flex justify-center mb-6">
           <div className="inline-flex items-center rounded-full text-sm font-medium overflow-hidden">
-            <span className="px-3 py-2 bg-blue-600 text-white">Built for protocol founders</span>
-            <span className="px-4 py-2 bg-blue-900 text-white">Live data · Instant verdict</span>
+            <span className="px-3 py-2 bg-primary text-primary-foreground">Built for protocol founders</span>
+            <span className="px-4 py-2 bg-foreground/90 text-background">Live data · Instant verdict</span>
           </div>
         </div>
         <div className="space-y-3 md:space-y-4 max-w-4xl mx-auto">

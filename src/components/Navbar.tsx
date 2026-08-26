@@ -12,8 +12,8 @@ export default function Navbar() {
       <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
         <div className="flex items-center gap-4 sm:gap-6">
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center">
-              <Search className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary flex items-center justify-center">
+              <Search className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
             </div>
             <span className="font-bold text-base sm:text-lg md:text-xl">
               <span className="hidden sm:inline">TokenHealthScan</span>

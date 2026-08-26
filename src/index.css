@@ -83,6 +83,116 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  /* ==========================================================================
+     Cobalt Signal — additive theme (design/blueprint/token-audit.json)
+     Activation: wrapper class="cobalt dark" (primary, dark-first) or
+     "cobalt cobalt-light". .cobalt must pair with .dark wherever dark:
+     utilities are used (darkMode: ["class"]). :root/.dark above are
+     byte-identical to pre-redesign — this block is purely additive.
+     ========================================================================== */
+  .cobalt {
+    --background: 220 23.1% 5.1%;      /* #0A0C10 ground */
+    --foreground: 216 23.8% 95.9%;     /* #F2F4F7 ink */
+
+    --card: 217.5 20% 7.8%;            /* #101318 surface */
+    --card-foreground: 216 23.8% 95.9%;
+
+    --popover: 218.2 20% 10.8%;        /* #161A21 surface-2 */
+    --popover-foreground: 216 23.8% 95.9%;
+
+    --primary: 226.8 100% 61.6%;       /* #3B66FF brand cobalt */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 218.2 20% 10.8%;      /* #161A21 */
+    --secondary-foreground: 216 23.8% 95.9%;
+
+    --muted: 218.2 20% 10.8%;
+    --muted-foreground: 215.5 12% 63.9%;  /* #98A1AE ink-2 */
+
+    --accent: 218.2 20% 10.8%;
+    --accent-foreground: 216 23.8% 95.9%;
+
+    --destructive: 0 84.2% 60.2%;      /* #EF4444 */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 216 7.5% 13.1%;          /* #1F2124 — rgba(255,255,255,.085) over ground */
+    --input: 216 5.4% 18.2%;           /* #2C2E31 — rgba(255,255,255,.14) over ground */
+    --ring: 226.8 100% 61.6%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 220 23.1% 5.1%;
+    --sidebar-foreground: 216 23.8% 95.9%;
+    --sidebar-primary: 226.8 100% 61.6%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 218.2 20% 10.8%;
+    --sidebar-accent-foreground: 216 23.8% 95.9%;
+    --sidebar-border: 216 7.5% 13.1%;
+    --sidebar-ring: 226.8 100% 61.6%;
+
+    /* new tokens — no shadcn equivalent */
+    --surface-2: 218.2 20% 10.8%;              /* #161A21 */
+    --hairline: rgba(255, 255, 255, 0.085);
+    --hairline-2: rgba(255, 255, 255, 0.14);
+    --primary-hi: 227.6 100% 71.6%;            /* #6E8CFF — 4.5:1-safe cobalt for body text */
+    --primary-hover: 227 100% 66.5%;           /* #5479FF */
+    --data-accent: 17.1 100% 63.5%;            /* #FF7A45 Ember — data emphasis only, never CTAs */
+    --score-healthy: 142.1 70.6% 45.3%;        /* #22C55E */
+    --score-risk: 42.1 100% 62%;               /* #FFC53D */
+    --score-critical: 0 84.2% 60.2%;           /* #EF4444 */
+
+    font-family: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .cobalt.cobalt-light {
+    --background: 220 17.6% 96.7%;     /* #F5F6F8 */
+    --foreground: 218.2 21.6% 10%;     /* #14181F */
+
+    --card: 0 0% 100%;
+    --card-foreground: 218.2 21.6% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 218.2 21.6% 10%;
+
+    --primary: 226.8 100% 61.6%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 20% 94.1%;        /* #EDEFF3 */
+    --secondary-foreground: 218.2 21.6% 10%;
+
+    --muted: 220 20% 94.1%;
+    --muted-foreground: 208.4 11.9% 31.2%;  /* #465059 */
+
+    --accent: 220 20% 94.1%;
+    --accent-foreground: 218.2 21.6% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 4.8% 87.6%;          /* #DEDFE1 */
+    --input: 210 4.3% 82%;             /* #CFD1D3 */
+    --ring: 226.8 100% 61.6%;
+
+    --sidebar-background: 210 33.3% 98.8%;  /* #FBFCFD */
+    --sidebar-foreground: 218.2 21.6% 10%;
+    --sidebar-primary: 226.8 100% 61.6%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 94.1%;
+    --sidebar-accent-foreground: 218.2 21.6% 10%;
+    --sidebar-border: 220 4.8% 87.6%;
+    --sidebar-ring: 226.8 100% 61.6%;
+
+    --surface-2: 220 20% 94.1%;                /* #EDEFF3 */
+    --hairline: rgba(10, 12, 16, 0.1);
+    --hairline-2: rgba(10, 12, 16, 0.16);
+    --primary-hi: 227.2 69.9% 51.6%;           /* #2E50D9 */
+    --primary-hover: 227.2 69.9% 51.6%;
+    --data-accent: 17.4 81.3% 51.8%;           /* #E85A20 */
+    --score-healthy: 145.3 71.7% 29.2%;        /* #15803D */
+    --score-risk: 36.1 87.3% 32.4%;            /* #A16207 */
+    --score-critical: 0 72.2% 50.6%;           /* #DC2626 */
+  }
 }
 
 @layer base {

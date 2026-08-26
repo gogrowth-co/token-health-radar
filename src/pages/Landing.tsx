@@ -16,7 +16,7 @@ import {
 export default function Landing() {
   
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="cobalt dark flex flex-col min-h-screen bg-background text-foreground">
       <Helmet>
         <title>Token Health Scan — Your token is struggling. Find out why.</title>
         <meta name="description" content="Get a 0–100 health score across all 5 dimensions for your protocol's token in 60 seconds — plus a ranked list of what to fix. Free scan, no login." />

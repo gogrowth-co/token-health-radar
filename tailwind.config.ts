@@ -69,6 +69,20 @@ export default {
         warning: "#f59e0b",
         danger: "#ef4444",
         info: "#3b82f6",
+        // Cobalt Signal — additive theme tokens (design/blueprint/token-audit.json)
+        "surface-2": "hsl(var(--surface-2))",
+        "primary-hi": "hsl(var(--primary-hi))",
+        "primary-hover": "hsl(var(--primary-hover))",
+        "data-accent": "hsl(var(--data-accent))",
+        "score-healthy": "hsl(var(--score-healthy))",
+        "score-risk": "hsl(var(--score-risk))",
+        "score-critical": "hsl(var(--score-critical))",
+        hairline: "var(--hairline)",
+        "hairline-2": "var(--hairline-2)",
+      },
+      fontFamily: {
+        archivo: ['"Archivo"', '"Helvetica Neue"', "Arial", "sans-serif"],
+        jbmono: ['"JetBrains Mono"', "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
       borderRadius: {
         lg: "var(--radius)",
