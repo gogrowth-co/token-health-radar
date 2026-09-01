@@ -2,6 +2,9 @@
 User-agent: *
 Allow: /
 
+# Content Signals (https://contentsignals.org/) - AI usage preferences
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
+
 # Sitemap & LLM accessibility guide
 Sitemap: https://tokenhealthscan.com/sitemap.xml
 Llms-Txt: https://tokenhealthscan.com/llms.txt
