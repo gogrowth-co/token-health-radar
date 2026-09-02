@@ -51,7 +51,7 @@ Lovable commits to `main` as `gpt-engineer-app[bot]`. Local work also commits to
 
 ## CORE RULES
 
-1. **No commits to main without verifying the change works.** Lovable auto-deploys on every push — a bad commit goes live immediately.
+1. **No commits to main without verifying the change works.** A commit to `main` syncs to Lovable and rebuilds the preview; reaching the live domain needs an explicit Lovable publish (see Deploy, above). Verify on the live site before claiming a change shipped.
 
 2. **Edge function secrets go in Supabase dashboard AND `.env`.** Adding a key to `.env` does NOT deploy it to the live function. Set it in Supabase dashboard: `dashboard.supabase.com/project/qaqebpcqespvzbfwawlp/functions` → Secrets. (See `shared/decisions.md` — 2026-05-11.)
 
