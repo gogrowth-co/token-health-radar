@@ -8,10 +8,10 @@
 This is the **code layer** for tokenhealthscan.com.
 
 - **Frontend:** Vite + React 18 + TypeScript, shadcn-ui, Tailwind CSS, react-router-dom v6
-- **Backend:** Supabase (Postgres + Auth + Storage + 40+ Edge Functions in Deno) — project ref `qaqebpcqespvzbfwawlp`
+- **Backend:** Supabase (Postgres + Auth + Storage + 37 Edge Functions in Deno) — project ref `qaqebpcqespvzbfwawlp`
 - **Build layer:** Lovable.dev — pushes directly to this repo's `main` branch as `gpt-engineer-app[bot]`
 - **SEO/Bot rendering:** Cloudflare Worker at `workers/bot-prerender.js` — serves static snapshots to crawlers
-- **Deploy:** Every commit to `main` triggers a Lovable deploy automatically. No staging branch.
+- **Deploy:** A commit to `main` syncs to Lovable and rebuilds the preview at the editor URL. Publishing to the custom domain (`tokenhealthscan.com`) requires an explicit Lovable publish via the Lovable UI. Always verify the live site before claiming a change is live.
 
 ---
 
@@ -26,6 +26,8 @@ This repo is one of three layers. Know which layer owns what.
 | **Orchestration** | `~/Documents/Gabriel Mangabeira/shared/` | Cross-project decisions, portfolio-wide rules |
 
 **Before writing any UI copy or changing product framing:** read the context files in the marketing layer first.
+
+**See also:** `~/Documents/Gabriel Mangabeira/shared/CONTEXT-MAP.md` — portfolio-wide topology index for all projects.
 
 | Read this file | When... |
 |---|---|
@@ -78,62 +80,3 @@ If a code change affects what the product can do or how marketing describes it, 
 - Route added, changed, or removed
 - Free vs. Pro tier limits changed
 - Pricing changed
-- Data source added or removed
-- Scoring dimension or weight changed
-- Edge function added or deprecated
-- UI copy on landing page or pricing page changed
-
-**Not log-worthy:** bug fixes, refactors with no user-facing impact, CI config, dependency updates, styling-only tweaks.
-
----
-
-## SUPABASE EDGE FUNCTIONS
-
-All functions live in `supabase/functions/`. Key ones:
-
-| Function | What it does |
-|---|---|
-| `run-token-scan` | Main EVM token scan orchestrator |
-| `scan-agent` | ERC-8004 AI agent scan |
-| `moralis-token-search` | Resolves ticker → chain + address for homepage search |
-| `mcp-content` | CMS content CRUD (publications/blog) |
-| `generate-sitemap` | Sitemap generation |
-| `stripe-webhook` | Stripe payment events |
-| `kiwify-webhook` | Lifetime deal (Kiwify) events |
-| `check-scan-access` | Free vs. Pro gating logic |
-
-Deploy command: `supabase functions deploy <function-name> --project-ref qaqebpcqespvzbfwawlp`
-
----
-
-## LIVE ROUTES
-
-```
-/                              Homepage (Landing.tsx)
-/auth, /confirm                Auth
-/scan/:chain/:address          Token scan → /scan-loading → /scan-result
-/pricing                       Pricing (Stripe)
-/ltd, /ltd-thank-you           Lifetime deal (Kiwify)
-/dashboard                     User dashboard
-/copilot                       AI Copilot (MCP chat)
-/token                         Token directory
-/token/:symbol                 Per-token SEO report page
-/agent-scan                    AI Agent Trust Score
-/agent-scan/:chain/:agentId    Per-agent scan
-/agent-directory, /ai-agents   Agent directory
-/publications, /publications/:slug  CMS / blog
-/token-scan-guide              SEO guide
-/token-sniffer-vs-tokenhealthscan  Comparison landing page
-/solana-launchpads             SEO landing page
-/ethereum-launchpads           SEO landing page
-/admin*                        Admin console (gated)
-```
-
-Scan URL requires chain ID + contract address (not a ticker). Homepage uses `moralis-token-search` edge function to resolve ticker → chain + address before redirecting.
-
----
-
-## SUPPORTED CHAINS
-
-EVM: Ethereum (`0x1`), BSC (`0x38`), Polygon (`0x89`), Arbitrum (`0xa4b1`), Base (`0x2105`), Optimism.
-Non-EVM: Solana (separate `solanaAPI.ts` scoring path).
