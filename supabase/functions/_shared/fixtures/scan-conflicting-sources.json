@@ -1,0 +1,52 @@
+{
+  "requestId": "fixture_conflicting_sources_001",
+  "chain": "base",
+  "tokenAddress": "0x4444444444444444444444444444444444dddd",
+  "tier": "deep",
+  "retrievedAt": "2026-09-14T12:15:00Z",
+  "categories": {
+    "security": {
+      "score": 78,
+      "coverage": 0.9,
+      "findings": [],
+      "evidenceRefs": ["ev_goplus_4"]
+    },
+    "liquidity": {
+      "score": 55,
+      "coverage": 0.4,
+      "findings": [
+        { "severity": "medium", "claim": "24h trading volume is disputed between two sources for this pool; treated as unresolved, not averaged.", "evidence_refs": ["ev_moralis_pairs_4", "ev_coingecko_fallback_4"] }
+      ],
+      "evidenceRefs": ["ev_moralis_pairs_4", "ev_coingecko_fallback_4"]
+    },
+    "tokenomics": {
+      "score": 70,
+      "coverage": 0.8,
+      "findings": [],
+      "evidenceRefs": ["ev_moralis_owners_4"]
+    },
+    "community": {
+      "score": 60,
+      "coverage": 0.7,
+      "findings": [],
+      "evidenceRefs": ["ev_lunarcrush_4"]
+    },
+    "development": {
+      "score": 65,
+      "coverage": 0.8,
+      "findings": [],
+      "evidenceRefs": ["ev_github_4"]
+    }
+  },
+  "evidence": [
+    { "id": "ev_goplus_4", "source": "goplus", "source_url": "https://basescan.org/address/0x4444444444444444444444444444444444dddd", "retrieved_at": "2026-09-14T12:15:00Z", "block_number": 12345900, "freshness": "fresh" },
+    { "id": "ev_moralis_pairs_4", "source": "moralis", "source_url": null, "retrieved_at": "2026-09-14T12:15:00Z", "block_number": null, "freshness": "fresh" },
+    { "id": "ev_coingecko_fallback_4", "source": "coingecko", "source_url": null, "retrieved_at": "2026-09-14T12:14:40Z", "block_number": null, "freshness": "fresh" },
+    { "id": "ev_moralis_owners_4", "source": "moralis", "source_url": null, "retrieved_at": "2026-09-14T12:15:00Z", "block_number": null, "freshness": "fresh" },
+    { "id": "ev_lunarcrush_4", "source": "lunarcrush", "source_url": null, "retrieved_at": "2026-09-14T12:15:00Z", "block_number": null, "freshness": "fresh" },
+    { "id": "ev_github_4", "source": "github", "source_url": "https://github.com/example/repo4", "retrieved_at": "2026-09-14T12:15:00Z", "block_number": null, "freshness": "fresh" }
+  ],
+  "limitations": [
+    "Liquidity volume disagreement between Moralis and the CoinGecko fallback for this pool; both observations preserved as separate evidence records, no aggregate conclusion was applied (Cascade B handling — full conflict-detection automation is a Phase 1 task, this fixture proves the shape survives it)."
+  ]
+}

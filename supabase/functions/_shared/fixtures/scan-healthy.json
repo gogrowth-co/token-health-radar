@@ -1,0 +1,48 @@
+{
+  "requestId": "fixture_healthy_001",
+  "chain": "base",
+  "tokenAddress": "0x1111111111111111111111111111111111aaaa",
+  "tier": "deep",
+  "retrievedAt": "2026-09-14T12:00:00Z",
+  "categories": {
+    "security": {
+      "score": 92,
+      "coverage": 1.0,
+      "findings": [],
+      "evidenceRefs": ["ev_goplus_1"]
+    },
+    "liquidity": {
+      "score": 88,
+      "coverage": 0.9,
+      "findings": [],
+      "evidenceRefs": ["ev_moralis_pairs_1"]
+    },
+    "tokenomics": {
+      "score": 85,
+      "coverage": 0.9,
+      "findings": [],
+      "evidenceRefs": ["ev_moralis_owners_1"]
+    },
+    "community": {
+      "score": 80,
+      "coverage": 0.8,
+      "findings": [],
+      "evidenceRefs": ["ev_lunarcrush_1", "ev_discord_1"]
+    },
+    "development": {
+      "score": 90,
+      "coverage": 1.0,
+      "findings": [],
+      "evidenceRefs": ["ev_github_1"]
+    }
+  },
+  "evidence": [
+    { "id": "ev_goplus_1", "source": "goplus", "source_url": "https://basescan.org/address/0x1111111111111111111111111111111111aaaa", "retrieved_at": "2026-09-14T12:00:00Z", "block_number": 12345678, "freshness": "fresh" },
+    { "id": "ev_moralis_pairs_1", "source": "moralis", "source_url": null, "retrieved_at": "2026-09-14T12:00:00Z", "block_number": null, "freshness": "fresh" },
+    { "id": "ev_moralis_owners_1", "source": "moralis", "source_url": null, "retrieved_at": "2026-09-14T12:00:00Z", "block_number": null, "freshness": "fresh" },
+    { "id": "ev_lunarcrush_1", "source": "lunarcrush", "source_url": null, "retrieved_at": "2026-09-14T12:00:00Z", "block_number": null, "freshness": "fresh" },
+    { "id": "ev_discord_1", "source": "discord", "source_url": "https://discord.gg/example", "retrieved_at": "2026-09-14T12:00:00Z", "block_number": null, "freshness": "fresh" },
+    { "id": "ev_github_1", "source": "github", "source_url": "https://github.com/example/repo", "retrieved_at": "2026-09-14T12:00:00Z", "block_number": null, "freshness": "fresh" }
+  ],
+  "limitations": []
+}

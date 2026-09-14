@@ -1,0 +1,47 @@
+{
+  "requestId": "fixture_missing_data_001",
+  "chain": "base",
+  "tokenAddress": "0x3333333333333333333333333333333333cccc",
+  "tier": "quick",
+  "retrievedAt": "2026-09-14T12:10:00Z",
+  "categories": {
+    "security": {
+      "score": 30,
+      "coverage": 0.2,
+      "findings": [],
+      "evidenceRefs": []
+    },
+    "liquidity": {
+      "score": 30,
+      "coverage": 0.3,
+      "findings": [],
+      "evidenceRefs": ["ev_moralis_pairs_3"]
+    },
+    "tokenomics": {
+      "score": 20,
+      "coverage": 0.1,
+      "findings": [],
+      "evidenceRefs": []
+    },
+    "community": {
+      "score": 25,
+      "coverage": 0.0,
+      "findings": [],
+      "evidenceRefs": []
+    },
+    "development": {
+      "score": 25,
+      "coverage": 0.0,
+      "findings": [],
+      "evidenceRefs": []
+    }
+  },
+  "evidence": [
+    { "id": "ev_moralis_pairs_3", "source": "moralis", "source_url": null, "retrieved_at": "2026-09-14T12:10:00Z", "block_number": null, "freshness": "fresh" }
+  ],
+  "limitations": [
+    "GoPlus returned no data for this contract on this chain — Security is unknown, not zero.",
+    "No verified source code repository was found — Development is unknown, not zero.",
+    "No Discord, Telegram, or LunarCrush social signal was found — Community is unknown, not zero."
+  ]
+}
