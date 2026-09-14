@@ -198,7 +198,7 @@ export function calculateTokenomicsScore(
   statsData: any = null,
   ownersData: any = null,
   pairsData: any = null,
-  chainbaseData: { top_10_pct_of_supply?: number | null; volatility_pct?: number | null; period_days?: number } | null = null
+  concentrationData: { top_10_pct_of_supply?: number | null; source?: 'nansen' | 'chainbase'; volatility_pct?: number | null; period_days?: number } | null = null
 ): number {
   if (!moralisData && !marketData && !statsData) return 0;
   
@@ -241,20 +241,22 @@ export function calculateTokenomicsScore(
     score += distributionScore;
     totalWeight += 25;
     console.log(`[TOKENOMICS-SCORE] Distribution (Gini: ${gini.toFixed(3)}): +${distributionScore} points`);
-  } else if (chainbaseData?.top_10_pct_of_supply != null) {
+  } else if (concentrationData?.top_10_pct_of_supply != null) {
     // No true Gini coefficient available (Moralis Owners has no fallback yet
     // — see project memory). This is a deliberately different, cheaper
-    // metric: what % of TOTAL supply the top 10 holders control, from
-    // Chainbase's top-100-holders endpoint. Total, not circulating — top
-    // holders routinely include locked/vesting/treasury wallets that a
-    // circulating-only denominator would exclude, which can push the ratio
-    // past 100% for tokens with a large non-circulating portion (found live
-    // on AERO: ~half its supply isn't circulating). Not a Gini substitute
-    // either way — a top-100 sample can't represent a population that may
-    // run into the hundreds of thousands — so it gets its own,
-    // separately-labeled tiers.
+    // metric: what % of TOTAL supply the top 10 holders control. Total, not
+    // circulating — top holders routinely include locked/vesting/treasury
+    // wallets that a circulating-only denominator would exclude, which can
+    // push the ratio past 100% for tokens with a large non-circulating
+    // portion (found live on AERO: ~half its supply isn't circulating).
+    // Preferred source is Nansen (excludes labeled protocol/pool/lock
+    // addresses from the top 10 — a much better signal), falling back to
+    // Chainbase's unlabeled top-100 sample when Nansen isn't available. Not
+    // a Gini substitute either way — a limited sample can't represent a
+    // population that may run into the hundreds of thousands — so it gets
+    // its own, separately-labeled tiers.
     let concentrationScore = 0;
-    const top10Pct = chainbaseData.top_10_pct_of_supply;
+    const top10Pct = concentrationData.top_10_pct_of_supply;
 
     if (top10Pct < 20) concentrationScore = 25; // Well distributed
     else if (top10Pct < 40) concentrationScore = 20; // Reasonably distributed
@@ -264,7 +266,8 @@ export function calculateTokenomicsScore(
 
     score += concentrationScore;
     totalWeight += 25;
-    console.log(`[TOKENOMICS-SCORE] Distribution (top-10 concentration proxy, not Gini: ${top10Pct.toFixed(1)}%): +${concentrationScore} points`);
+    const src = concentrationData.source || 'unknown';
+    console.log(`[TOKENOMICS-SCORE] Distribution (top-10 concentration proxy via ${src}, not Gini: ${top10Pct.toFixed(1)}%): +${concentrationScore} points`);
   }
   
   // 3. Liquidity Strength (20% weight)
@@ -296,11 +299,11 @@ export function calculateTokenomicsScore(
   // a single 24h price_change figure is noisy (one lucky/unlucky day can
   // misrepresent a token's real stability). Falls back to the 24h figure
   // when Chainbase's history call didn't return enough points.
-  const hasVolatilityHistory = chainbaseData?.volatility_pct != null;
+  const hasVolatilityHistory = concentrationData?.volatility_pct != null;
   if (hasVolatilityHistory || marketData?.price_change_24h !== undefined) {
     let stabilityScore = 0;
     const change = hasVolatilityHistory
-      ? chainbaseData!.volatility_pct!
+      ? concentrationData!.volatility_pct!
       : Math.abs(marketData.price_change_24h);
 
     if (change < 5) stabilityScore = 10; // Very stable
@@ -310,7 +313,7 @@ export function calculateTokenomicsScore(
 
     score += stabilityScore;
     totalWeight += 10;
-    const label = hasVolatilityHistory ? `${chainbaseData!.period_days}d range volatility` : '24h change';
+    const label = hasVolatilityHistory ? `${concentrationData!.period_days}d range volatility` : '24h change';
     console.log(`[TOKENOMICS-SCORE] Price stability (${label}: ${change.toFixed(1)}%): +${stabilityScore} points`);
   }
   

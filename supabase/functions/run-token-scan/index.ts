@@ -21,6 +21,7 @@ import { fetchCoinGeckoTokenData } from '../_shared/coingeckoAPI.ts'
 import { fetchGeckoTerminalPairs } from '../_shared/geckoterminalAPI.ts'
 import { fetchEtherscanTokenStats } from '../_shared/etherscanAPI.ts'
 import { fetchTopHolderConcentration, fetchPriceVolatility } from '../_shared/chainbaseAPI.ts'
+import { fetchNansenTopHolders } from '../_shared/nansenAPI.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -287,24 +288,29 @@ Deno.serve(async (req) => {
     // Added 2026-09-14 (Moralis plan lapsed 2026-09-01, all 5 endpoints 401).
     // Each fallback only runs for the specific piece Moralis didn't provide —
     // if Moralis is restored later, none of these calls fire and behavior is
-    // unchanged. See docs/... in the marketing workspace for the full writeup.
-    let cgFallback: Awaited<ReturnType<typeof fetchCoinGeckoTokenData>> = null
-    if (!metadata || !priceData) {
-      cgFallback = await fetchCoinGeckoTokenData(token_address, chainId)
-      console.log(`[${requestId}] CoinGecko fallback: ${cgFallback ? 'got data' : 'no data'}`)
-    }
+    // unchanged. All five calls below are independent of each other (none
+    // needs another's result, including Nansen — it returns its own
+    // ownership_percentage, not dependent on our CoinGecko-sourced supply),
+    // so they run in one Promise.all instead of sequential awaits. Sequential
+    // awaits here is what took a plain scan from ~4s to ~15s+ once Chainbase
+    // was added on top of the original three fallbacks.
+    const needsCoinGecko = !metadata || !priceData
+    const needsGeckoTerminal = !tokenPairs
+    const needsEtherscan = !tokenStats
 
-    let gtFallback: Awaited<ReturnType<typeof fetchGeckoTerminalPairs>> = null
-    if (!tokenPairs) {
-      gtFallback = await fetchGeckoTerminalPairs(token_address, chainId)
-      console.log(`[${requestId}] GeckoTerminal fallback: ${gtFallback ? `${gtFallback.total_pairs} pools` : 'no data'}`)
-    }
+    const [cgFallback, gtFallback, esFallback, nansenResult, priceVolatility] = await Promise.all([
+      needsCoinGecko ? fetchCoinGeckoTokenData(token_address, chainId) : Promise.resolve(null),
+      needsGeckoTerminal ? fetchGeckoTerminalPairs(token_address, chainId) : Promise.resolve(null),
+      needsEtherscan ? fetchEtherscanTokenStats(token_address, chainId) : Promise.resolve(null),
+      fetchNansenTopHolders(token_address, chainId),
+      fetchPriceVolatility(token_address, chainId, 7),
+    ])
 
-    let esFallback: Awaited<ReturnType<typeof fetchEtherscanTokenStats>> = null
-    if (!tokenStats) {
-      esFallback = await fetchEtherscanTokenStats(token_address, chainId)
-      console.log(`[${requestId}] Etherscan fallback: ${esFallback ? `supply=${esFallback.total_supply}` : 'no data'}`)
-    }
+    console.log(`[${requestId}] CoinGecko fallback: ${cgFallback ? 'got data' : needsCoinGecko ? 'no data' : 'not needed'}`)
+    console.log(`[${requestId}] GeckoTerminal fallback: ${gtFallback ? `${gtFallback.total_pairs} pools` : needsGeckoTerminal ? 'no data' : 'not needed'}`)
+    console.log(`[${requestId}] Etherscan fallback: ${esFallback ? `supply=${esFallback.total_supply}` : needsEtherscan ? 'no data' : 'not needed'}`)
+    console.log(`[${requestId}] Nansen holder concentration: ${nansenResult ? `top10=${nansenResult.top_10_pct_of_supply?.toFixed(1)}% (excluded ${nansenResult.excluded_infra_pct.toFixed(1)}% as protocol infra)` : 'no data'}`)
+    console.log(`[${requestId}] Chainbase price volatility: ${priceVolatility ? `${priceVolatility.volatility_pct.toFixed(1)}% over ${priceVolatility.data_points} points` : 'no data'}`)
 
     // Merge fallback data into the same variable names scoringUtils already
     // consumes below, so nothing downstream needs to know which source won.
@@ -355,22 +361,28 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Chainbase: holder concentration (Moralis Owners has no other fallback
-    // — see project memory) and price volatility (always tried; a real 7d
-    // range is a steadier Price Stability signal than a single 24h delta
-    // even when Moralis's own price data came through fine).
+    // Holder concentration: Nansen first — it excludes labeled protocol/
+    // pool/lock addresses from the top 10 (see nansenAPI.ts; verified live
+    // on AERO, whose #1 "holder" at 49.9% of supply is its own vote-escrow
+    // contract, not a whale). Chainbase is a tier-3 fallback, used only when
+    // both Moralis Owners AND Nansen are unavailable — it can't tell a
+    // whale from protocol infrastructure, so it's a strictly lower-quality
+    // source and only worth calling when nothing better is available. This
+    // one genuinely can't join the Promise.all above: it needs metadata's
+    // total_supply, which only exists after the CoinGecko merge just above.
     let holderConcentration: Awaited<ReturnType<typeof fetchTopHolderConcentration>> = null
-    if (!tokenOwners) {
+    let concentrationSource: 'nansen' | 'chainbase' | null = nansenResult ? 'nansen' : null
+    if (!tokenOwners && !nansenResult) {
       // Must be TOTAL supply, not circulating — see chainbaseAPI.ts for why
       // (circulating-only denominator produced an impossible >100% result
       // live on AERO, whose circulating supply is ~half its total supply).
       const totalSupply = metadata?.total_supply ? parseFloat(metadata.total_supply) : null
       holderConcentration = await fetchTopHolderConcentration(token_address, chainId, totalSupply)
-      console.log(`[${requestId}] Chainbase holder concentration: ${holderConcentration ? `top10=${holderConcentration.top_10_pct_of_supply?.toFixed(1)}%` : 'no data'}`)
+      concentrationSource = holderConcentration ? 'chainbase' : null
+      console.log(`[${requestId}] Chainbase holder concentration (tier-3 fallback): ${holderConcentration ? `top10=${holderConcentration.top_10_pct_of_supply?.toFixed(1)}%` : 'no data'}`)
     }
 
-    const priceVolatility = await fetchPriceVolatility(token_address, chainId, 7)
-    console.log(`[${requestId}] Chainbase price volatility: ${priceVolatility ? `${priceVolatility.volatility_pct.toFixed(1)}% over ${priceVolatility.data_points} points` : 'no data'}`)
+    const concentrationPct = nansenResult?.top_10_pct_of_supply ?? holderConcentration?.top_10_pct_of_supply ?? null
 
     // Extract social links for Phase 2 (now works from either Moralis or the
     // CoinGecko fallback metadata above, since both populate `metadata.links`
@@ -418,7 +430,8 @@ Deno.serve(async (req) => {
       tokenOwners,
       tokenPairs,
       {
-        top_10_pct_of_supply: holderConcentration?.top_10_pct_of_supply ?? null,
+        top_10_pct_of_supply: concentrationPct,
+        source: concentrationSource ?? undefined,
         volatility_pct: priceVolatility?.volatility_pct ?? null,
         period_days: priceVolatility?.period_days,
       }
@@ -492,17 +505,20 @@ Deno.serve(async (req) => {
         circulating_supply: metadata?.circulating_supply ? parseFloat(metadata.circulating_supply) : null,
         dex_liquidity_usd: tokenPairs?.total_liquidity_usd || null,
         major_dex_pairs: tokenPairs?.major_pairs || null,
-        // Stays null when only the Chainbase proxy is available — that
-        // metric is deliberately NOT a Gini coefficient (see chainbaseAPI.ts)
-        // and must never be stored under this column as if it were one.
+        // Stays null when only Nansen/Chainbase are available — that metric
+        // is deliberately NOT a Gini coefficient (see nansenAPI.ts /
+        // chainbaseAPI.ts) and must never be stored under this column as if
+        // it were one.
         distribution_gini_coefficient: tokenOwners?.gini_coefficient || null,
         holder_concentration_risk: tokenOwners?.concentration_risk
-          || (holderConcentration?.top_10_pct_of_supply != null
+          || (nansenResult?.top_10_pct_of_supply != null
+            ? `Top 10 of ${nansenResult.holders_analyzed} sampled hold ${nansenResult.top_10_pct_of_supply.toFixed(1)}% of total supply, excluding ${nansenResult.excluded_infra_pct.toFixed(1)}% held by protocol/pool/lock addresses (Nansen estimate, not Gini)`
+            : holderConcentration?.top_10_pct_of_supply != null
             ? `Top 10 of ${holderConcentration.holders_analyzed} sampled hold ${holderConcentration.top_10_pct_of_supply.toFixed(1)}% of total supply (Chainbase estimate, not Gini)`
             : null),
         top_holders_count: tokenOwners?.total_holders || null,
-        data_confidence_score: (tokenStats && (tokenOwners || holderConcentration) && tokenPairs) ? 80 : (tokenStats || tokenOwners || holderConcentration) ? 50 : 20,
-        last_holder_analysis: (tokenOwners || holderConcentration) ? new Date().toISOString() : null,
+        data_confidence_score: (tokenStats && (tokenOwners || nansenResult || holderConcentration) && tokenPairs) ? 80 : (tokenStats || tokenOwners || nansenResult || holderConcentration) ? 50 : 20,
+        last_holder_analysis: (tokenOwners || nansenResult || holderConcentration) ? new Date().toISOString() : null,
         score: tokenomicsScore
       }, { onConflict: 'token_address,chain_id' }),
       
