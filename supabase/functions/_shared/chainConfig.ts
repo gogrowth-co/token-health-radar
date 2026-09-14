@@ -1,11 +1,23 @@
 
 // Unified chain configuration for all API services
+// NOTE on `etherscan`: this used to be a per-chain domain (api.basescan.org,
+// api.bscscan.com, ...). Those V1 endpoints were deprecated 2025-08-15.
+// Etherscan's V2 API unifies all chains behind https://api.etherscan.io/v2/api
+// with a `chainid` query param — that's why `goplus` (the numeric EVM chain
+// ID) is reused for `chainid` in etherscanAPI.ts instead of a per-chain URL.
+//
+// `coingeckoPlatform` is CoinGecko's own "asset platform" id for the
+// /coins/{platform}/contract/{address} endpoint. It is NOT the same slug
+// system as `gecko` (GeckoTerminal's network id) — the two products use
+// different slugs for the same chains (e.g. bsc vs binance-smart-chain,
+// arbitrum vs arbitrum-one). Both were verified live 2026-09-14.
 export const CHAIN_MAP = {
   ethereum: {
     name: 'Ethereum',
     moralis: '0x1',
     goplus: '1',
     gecko: 'eth',
+    coingeckoPlatform: 'ethereum',
     etherscan: 'https://api.etherscan.io',
     symbol: 'ETH',
     isEVM: true
@@ -15,6 +27,7 @@ export const CHAIN_MAP = {
     moralis: '0x38',
     goplus: '56',
     gecko: 'bsc',
+    coingeckoPlatform: 'binance-smart-chain',
     etherscan: 'https://api.bscscan.com',
     symbol: 'BNB',
     isEVM: true
@@ -24,6 +37,7 @@ export const CHAIN_MAP = {
     moralis: '0xa4b1',
     goplus: '42161',
     gecko: 'arbitrum',
+    coingeckoPlatform: 'arbitrum-one',
     etherscan: 'https://api.arbiscan.io',
     symbol: 'ETH',
     isEVM: true
@@ -33,6 +47,7 @@ export const CHAIN_MAP = {
     moralis: '0xa',
     goplus: '10',
     gecko: 'optimism',
+    coingeckoPlatform: 'optimistic-ethereum',
     etherscan: 'https://api-optimistic.etherscan.io',
     symbol: 'ETH',
     isEVM: true
@@ -42,6 +57,7 @@ export const CHAIN_MAP = {
     moralis: '0x2105',
     goplus: '8453',
     gecko: 'base',
+    coingeckoPlatform: 'base',
     etherscan: 'https://api.basescan.org',
     symbol: 'ETH',
     isEVM: true
@@ -51,6 +67,7 @@ export const CHAIN_MAP = {
     moralis: '0x89',
     goplus: '137',
     gecko: 'polygon_pos',
+    coingeckoPlatform: 'polygon-pos',
     etherscan: 'https://api.polygonscan.com',
     symbol: 'MATIC',
     isEVM: true
@@ -60,6 +77,7 @@ export const CHAIN_MAP = {
     moralis: null,
     goplus: null,
     gecko: 'solana',
+    coingeckoPlatform: 'solana',
     etherscan: null,
     symbol: 'SOL',
     isEVM: false,

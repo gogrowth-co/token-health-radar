@@ -17,6 +17,9 @@ import {
 } from '../_shared/solanaAPI.ts'
 import { requireAuthOrInternal, getClientIp } from '../_shared/authGuard.ts'
 import { checkRateLimit, createRateLimitError } from '../_shared/rateLimit.ts'
+import { fetchCoinGeckoTokenData } from '../_shared/coingeckoAPI.ts'
+import { fetchGeckoTerminalPairs } from '../_shared/geckoterminalAPI.ts'
+import { fetchEtherscanTokenStats } from '../_shared/etherscanAPI.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -265,7 +268,10 @@ Deno.serve(async (req) => {
     // ========== PHASE 1: Core API Calls (parallel) ==========
     console.log(`[${requestId}] Phase 1: Core API calls...`)
     
-    const [goplus, metadata, priceData, tokenStats, tokenPairs, tokenOwners] = await Promise.all([
+    // `let` (not `const`) for the four Moralis-sourced values that Phase 1.5
+    // below may overwrite with fallback data when Moralis itself fails.
+    // eslint-disable-next-line prefer-const
+    let [goplus, metadata, priceData, tokenStats, tokenPairs, tokenOwners] = await Promise.all([
       fetchGoPlus(token_address, chainId),
       fetchMoralisMetadata(token_address, chainId),
       fetchMoralisPriceData(token_address, chainId),
@@ -276,46 +282,83 @@ Deno.serve(async (req) => {
     
     console.log(`[${requestId}] Phase 1 results: goplus=${!!goplus}, metadata=${!!metadata}, price=${!!priceData}, stats=${!!tokenStats}, pairs=${!!tokenPairs}, owners=${!!tokenOwners}`)
 
-    // Extract social links for Phase 2
-    const socialLinks = extractSocialLinks(metadata)
-    const coingeckoId = metadata?.coingecko_id || metadata?.id || null
-    
-    // ========== PHASE 1.5: CoinGecko fallback for missing social links ==========
-    if (coingeckoId && (!socialLinks.discord || !socialLinks.telegram)) {
-      try {
-        console.log(`[${requestId}] Fetching CoinGecko community links for ${coingeckoId}...`)
-        const COINGECKO_API_KEY = Deno.env.get('COINGECKO_API_KEY')
-        const cgHeaders: Record<string, string> = { 'Accept': 'application/json' }
-        if (COINGECKO_API_KEY) {
-          cgHeaders['x-cg-pro-api-key'] = COINGECKO_API_KEY
-        }
-        const baseUrl = COINGECKO_API_KEY ? 'https://pro-api.coingecko.com' : 'https://api.coingecko.com'
-        const cgRes = await fetch(`${baseUrl}/api/v3/coins/${coingeckoId}?localization=false&tickers=false&market_data=false&community_data=true&developer_data=false`, { headers: cgHeaders })
-        if (cgRes.ok) {
-          const cgData = await cgRes.json()
-          const cgLinks = cgData.links || {}
-          
-          if (!socialLinks.telegram && cgLinks.telegram_channel_identifier) {
-            socialLinks.telegram = `https://t.me/${cgLinks.telegram_channel_identifier}`
-            console.log(`[${requestId}] CoinGecko fallback: telegram=${socialLinks.telegram}`)
-          }
-          if (!socialLinks.discord && cgLinks.chat_url && Array.isArray(cgLinks.chat_url)) {
-            const discordLink = cgLinks.chat_url.find((url: string) => url.includes('discord'))
-            if (discordLink) {
-              socialLinks.discord = discordLink
-              console.log(`[${requestId}] CoinGecko fallback: discord=${socialLinks.discord}`)
-            }
-          }
-          if (!socialLinks.github && cgLinks.repos_url?.github?.length > 0) {
-            socialLinks.github = cgLinks.repos_url.github[0]
-            console.log(`[${requestId}] CoinGecko fallback: github=${socialLinks.github}`)
-          }
-        }
-      } catch (cgError) {
-        console.error(`[${requestId}] CoinGecko fallback error:`, cgError)
+    // ========== PHASE 1.5: fallbacks for any Moralis call that failed ==========
+    // Added 2026-09-14 (Moralis plan lapsed 2026-09-01, all 5 endpoints 401).
+    // Each fallback only runs for the specific piece Moralis didn't provide —
+    // if Moralis is restored later, none of these calls fire and behavior is
+    // unchanged. See docs/... in the marketing workspace for the full writeup.
+    let cgFallback: Awaited<ReturnType<typeof fetchCoinGeckoTokenData>> = null
+    if (!metadata || !priceData) {
+      cgFallback = await fetchCoinGeckoTokenData(token_address, chainId)
+      console.log(`[${requestId}] CoinGecko fallback: ${cgFallback ? 'got data' : 'no data'}`)
+    }
+
+    let gtFallback: Awaited<ReturnType<typeof fetchGeckoTerminalPairs>> = null
+    if (!tokenPairs) {
+      gtFallback = await fetchGeckoTerminalPairs(token_address, chainId)
+      console.log(`[${requestId}] GeckoTerminal fallback: ${gtFallback ? `${gtFallback.total_pairs} pools` : 'no data'}`)
+    }
+
+    let esFallback: Awaited<ReturnType<typeof fetchEtherscanTokenStats>> = null
+    if (!tokenStats) {
+      esFallback = await fetchEtherscanTokenStats(token_address, chainId)
+      console.log(`[${requestId}] Etherscan fallback: ${esFallback ? `supply=${esFallback.total_supply}` : 'no data'}`)
+    }
+
+    // Merge fallback data into the same variable names scoringUtils already
+    // consumes below, so nothing downstream needs to know which source won.
+    if (!metadata && cgFallback) {
+      metadata = {
+        name: cgFallback.name,
+        symbol: cgFallback.symbol,
+        decimals: 18,
+        logo: cgFallback.logo,
+        thumbnail: cgFallback.logo,
+        total_supply: cgFallback.total_supply || '0',
+        verified_contract: false,
+        possible_spam: false,
+        description: cgFallback.description,
+        links: cgFallback.links,
+        security_score: null,
+        market_cap: cgFallback.market_cap,
+        circulating_supply: cgFallback.circulating_supply,
+        fully_diluted_valuation: null,
       }
     }
-    
+    if (!priceData && cgFallback) {
+      priceData = {
+        current_price_usd: cgFallback.current_price_usd,
+        price_change_24h: cgFallback.price_change_24h,
+        market_cap_usd: cgFallback.market_cap || 0,
+        trading_volume_24h_usd: cgFallback.trading_volume_24h_usd,
+        name: cgFallback.name,
+        symbol: cgFallback.symbol,
+      }
+    }
+    if (!tokenPairs && gtFallback) {
+      tokenPairs = {
+        total_pairs: gtFallback.total_pairs,
+        total_liquidity_usd: gtFallback.total_liquidity_usd,
+        major_pairs: gtFallback.major_pairs,
+      }
+    }
+    if (!tokenStats && esFallback) {
+      tokenStats = {
+        total_supply: esFallback.total_supply || '0',
+        holders: 0,
+        transfers: 0,
+        total_supply_formatted: esFallback.total_supply || '0',
+        decimals: null,
+        name: null,
+        symbol: null,
+      }
+    }
+
+    // Extract social links for Phase 2 (now works from either Moralis or the
+    // CoinGecko fallback metadata above, since both populate `metadata.links`
+    // in the same shape).
+    const socialLinks = extractSocialLinks(metadata)
+
     // ========== PHASE 2: Social & GitHub API Calls (parallel) ==========
     console.log(`[${requestId}] Phase 2: Social & GitHub API calls...`)
     console.log(`[${requestId}] Social links for Phase 2:`, socialLinks)
