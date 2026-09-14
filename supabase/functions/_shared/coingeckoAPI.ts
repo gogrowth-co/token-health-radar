@@ -7,8 +7,20 @@
 // replaces). Verified live against all 5 EVM chains this project supports.
 //
 // Free, keyless for the public API tier. COINGECKO_API_KEY (already
-// configured) is sent as a Pro header when present, which raises rate limits
-// but is not required for this endpoint to work.
+// configured) raises rate limits when present but is not required for this
+// endpoint to work.
+//
+// Fix 2026-09-14 (found via live smoke test after this file's first deploy):
+// the configured COINGECKO_API_KEY is a Demo-tier key, not Pro. Demo keys
+// only work against api.coingecko.com with the `x-cg-demo-api-key` header —
+// sending one to pro-api.coingecko.com with `x-cg-pro-api-key` (the previous
+// behavior here, "send a Pro header whenever a key exists") gets HTTP 400
+// ("If you are using Demo API key, please change your root URL... to
+// api.coingecko.com") on every call, silently nulling this whole fallback.
+// Confirmed live: api.coingecko.com + x-cg-demo-api-key → 200 with this key;
+// pro-api.coingecko.com + x-cg-pro-api-key → 400 with the same key. If this
+// key is ever upgraded to a paid Pro plan, switch baseUrl back to
+// pro-api.coingecko.com and the header back to x-cg-pro-api-key.
 import { getChainConfigByMoralisId } from './chainConfig.ts';
 
 export interface CoinGeckoTokenData {
@@ -47,8 +59,8 @@ export async function fetchCoinGeckoTokenData(
 
     const apiKey = Deno.env.get('COINGECKO_API_KEY');
     const headers: Record<string, string> = { Accept: 'application/json' };
-    if (apiKey) headers['x-cg-pro-api-key'] = apiKey;
-    const baseUrl = apiKey ? 'https://pro-api.coingecko.com' : 'https://api.coingecko.com';
+    if (apiKey) headers['x-cg-demo-api-key'] = apiKey;
+    const baseUrl = 'https://api.coingecko.com';
 
     const url = `${baseUrl}/api/v3/coins/${chainConfig.coingeckoPlatform}/contract/${tokenAddress.toLowerCase()}?localization=false&tickers=false&market_data=true&community_data=true&developer_data=false`;
     console.log(`[COINGECKO] Request URL: ${url}`);
