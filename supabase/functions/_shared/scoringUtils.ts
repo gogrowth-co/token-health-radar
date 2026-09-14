@@ -193,11 +193,12 @@ export function calculateLiquidityScore(marketData: any, liquidityData?: any): n
 }
 
 export function calculateTokenomicsScore(
-  moralisData: any, 
-  marketData: any, 
-  statsData: any = null, 
-  ownersData: any = null, 
-  pairsData: any = null
+  moralisData: any,
+  marketData: any,
+  statsData: any = null,
+  ownersData: any = null,
+  pairsData: any = null,
+  chainbaseData: { top_10_pct_of_circulating?: number | null; volatility_pct?: number | null; period_days?: number } | null = null
 ): number {
   if (!moralisData && !marketData && !statsData) return 0;
   
@@ -229,17 +230,36 @@ export function calculateTokenomicsScore(
   if (ownersData?.gini_coefficient !== undefined) {
     let distributionScore = 0;
     const gini = ownersData.gini_coefficient;
-    
+
     // Gini coefficient: 0 = perfect equality, 1 = perfect inequality
     if (gini < 0.4) distributionScore = 25; // Excellent distribution
     else if (gini < 0.6) distributionScore = 20; // Good distribution
     else if (gini < 0.75) distributionScore = 15; // Fair distribution
     else if (gini < 0.9) distributionScore = 10; // Poor distribution
     else distributionScore = 0; // Terrible distribution
-    
+
     score += distributionScore;
     totalWeight += 25;
     console.log(`[TOKENOMICS-SCORE] Distribution (Gini: ${gini.toFixed(3)}): +${distributionScore} points`);
+  } else if (chainbaseData?.top_10_pct_of_circulating != null) {
+    // No true Gini coefficient available (Moralis Owners has no fallback yet
+    // — see project memory). This is a deliberately different, cheaper
+    // metric: what % of circulating supply the top 10 holders control, from
+    // Chainbase's top-100-holders endpoint. Not a Gini substitute — a
+    // top-100 sample can't represent a population that may run into the
+    // hundreds of thousands — so it gets its own, separately-labeled tiers.
+    let concentrationScore = 0;
+    const top10Pct = chainbaseData.top_10_pct_of_circulating;
+
+    if (top10Pct < 20) concentrationScore = 25; // Well distributed
+    else if (top10Pct < 40) concentrationScore = 20; // Reasonably distributed
+    else if (top10Pct < 60) concentrationScore = 15; // Moderately concentrated
+    else if (top10Pct < 80) concentrationScore = 10; // Concentrated
+    else concentrationScore = 0; // Highly concentrated
+
+    score += concentrationScore;
+    totalWeight += 25;
+    console.log(`[TOKENOMICS-SCORE] Distribution (top-10 concentration proxy, not Gini: ${top10Pct.toFixed(1)}%): +${concentrationScore} points`);
   }
   
   // 3. Liquidity Strength (20% weight)
@@ -267,18 +287,26 @@ export function calculateTokenomicsScore(
   }
   
   // 5. Price Stability (10% weight)
-  if (marketData?.price_change_24h !== undefined) {
+  // Prefer Chainbase's multi-day price-range volatility when available —
+  // a single 24h price_change figure is noisy (one lucky/unlucky day can
+  // misrepresent a token's real stability). Falls back to the 24h figure
+  // when Chainbase's history call didn't return enough points.
+  const hasVolatilityHistory = chainbaseData?.volatility_pct != null;
+  if (hasVolatilityHistory || marketData?.price_change_24h !== undefined) {
     let stabilityScore = 0;
-    const change = Math.abs(marketData.price_change_24h);
-    
+    const change = hasVolatilityHistory
+      ? chainbaseData!.volatility_pct!
+      : Math.abs(marketData.price_change_24h);
+
     if (change < 5) stabilityScore = 10; // Very stable
     else if (change < 15) stabilityScore = 7; // Stable
     else if (change < 30) stabilityScore = 4; // Moderate volatility
     else stabilityScore = 0; // High volatility
-    
+
     score += stabilityScore;
     totalWeight += 10;
-    console.log(`[TOKENOMICS-SCORE] Price stability (${change.toFixed(1)}% change): +${stabilityScore} points`);
+    const label = hasVolatilityHistory ? `${chainbaseData!.period_days}d range volatility` : '24h change';
+    console.log(`[TOKENOMICS-SCORE] Price stability (${label}: ${change.toFixed(1)}%): +${stabilityScore} points`);
   }
   
   // 6. Spam/Security Penalties (5% weight)
