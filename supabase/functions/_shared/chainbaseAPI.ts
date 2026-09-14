@@ -10,9 +10,11 @@
 //    Gini coefficient on a popular token (Dune-verified: Aerodrome alone has
 //    ~800k holders). Rather than mislabel a top-100-only approximation as
 //    "Gini" (decided against explicitly), this computes the standard
-//    industry concentration metric instead: what % of circulating supply the
-//    top 10 holders control. `distribution_gini_coefficient` in the DB stays
-//    null — this never claims to be a Gini coefficient anywhere.
+//    industry concentration metric instead: what % of TOTAL supply the top
+//    10 holders control (total, not circulating — see the comment on
+//    fetchTopHolderConcentration's totalSupply param for why that matters).
+//    `distribution_gini_coefficient` in the DB stays null — this never
+//    claims to be a Gini coefficient anywhere.
 //
 // 2. Price stability in calculateTokenomicsScore previously used a single
 //    24h price_change_24h figure — noisy, easy for one lucky/unlucky day to
@@ -26,7 +28,7 @@ import { getChainConfigByMoralisId } from './chainConfig.ts';
 
 export interface HolderConcentrationData {
   holders_analyzed: number;
-  top_10_pct_of_circulating: number | null;
+  top_10_pct_of_supply: number | null;
   top_holders: Array<{ wallet_address: string; amount: string; usd_value: string }>;
 }
 
@@ -41,7 +43,15 @@ const CHAINBASE_BASE = 'https://api.chainbase.online/v1';
 export async function fetchTopHolderConcentration(
   tokenAddress: string,
   chainId: string,
-  circulatingSupply: number | null,
+  // Must be TOTAL supply, not circulating. Chainbase's top-holders list
+  // necessarily includes every wallet regardless of lock status (treasury,
+  // vesting contracts, LP escrow) — dividing by circulating-only supply,
+  // which by definition excludes locked tokens, produces a >100% result
+  // whenever a large holder sits in the non-circulating portion. Confirmed
+  // live 2026-09-14: AERO's circulating supply is ~half its total supply,
+  // and its top-10 holders came back as 133.6% of circulating — impossible
+  // — but a sane ~67% of total supply.
+  totalSupply: number | null,
 ): Promise<HolderConcentrationData | null> {
   console.log(`[CHAINBASE-HOLDERS] === STARTING TOP HOLDERS LOOKUP ===`);
   console.log(`[CHAINBASE-HOLDERS] Token: ${tokenAddress}, Chain: ${chainId}`);
@@ -77,23 +87,23 @@ export async function fetchTopHolderConcentration(
     console.log(`[CHAINBASE-HOLDERS] Got ${holders.length} holders`);
 
     if (holders.length === 0) {
-      return { holders_analyzed: 0, top_10_pct_of_circulating: null, top_holders: [] };
+      return { holders_analyzed: 0, top_10_pct_of_supply: null, top_holders: [] };
     }
 
-    let top10PctOfCirculating: number | null = null;
-    if (circulatingSupply && circulatingSupply > 0) {
+    let top10PctOfSupply: number | null = null;
+    if (totalSupply && totalSupply > 0) {
       const top10Sum = holders
         .slice(0, 10)
         .reduce((sum, h) => sum + (parseFloat(h.amount) || 0), 0);
-      top10PctOfCirculating = (top10Sum / circulatingSupply) * 100;
-      console.log(`[CHAINBASE-HOLDERS] Top 10 hold ${top10PctOfCirculating.toFixed(2)}% of circulating supply`);
+      top10PctOfSupply = (top10Sum / totalSupply) * 100;
+      console.log(`[CHAINBASE-HOLDERS] Top 10 hold ${top10PctOfSupply.toFixed(2)}% of total supply`);
     } else {
-      console.log(`[CHAINBASE-HOLDERS] No circulating supply available — can't compute % of supply`);
+      console.log(`[CHAINBASE-HOLDERS] No total supply available — can't compute % of supply`);
     }
 
     return {
       holders_analyzed: holders.length,
-      top_10_pct_of_circulating: top10PctOfCirculating,
+      top_10_pct_of_supply: top10PctOfSupply,
       top_holders: holders.slice(0, 10).map((h) => ({
         wallet_address: h.wallet_address,
         amount: h.amount,
