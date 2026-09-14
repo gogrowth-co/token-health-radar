@@ -17,6 +17,17 @@ import {
 } from '../_shared/solanaAPI.ts'
 import { requireAuthOrInternal, getClientIp } from '../_shared/authGuard.ts'
 import { checkRateLimit, createRateLimitError } from '../_shared/rateLimit.ts'
+import { buildCanonicalResult, coverageFromPresence, findingsFromGoPlus, type CanonicalResultInput, type EvidenceRecord } from '../_shared/canonicalResult.ts'
+
+// Explorer base URL per chain, used only for building evidence source_url — no
+// behavior change to scoring or caching.
+const EXPLORER_BASE: Record<string, string> = {
+  '0x1': 'https://etherscan.io/address/',
+  '0x89': 'https://polygonscan.com/address/',
+  '0x38': 'https://bscscan.com/address/',
+  '0xa4b1': 'https://arbiscan.io/address/',
+  '0x2105': 'https://basescan.org/address/',
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -378,6 +389,75 @@ Deno.serve(async (req) => {
     const overallScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
     console.log(`[${requestId}] Overall score: ${overallScore}`)
 
+    // ========== PHASE 3.5: Canonical result (Bridge layer, Phase 0 2026-09-14) ==========
+    // Additive only — does not change any score above. Builds the PRD's
+    // evidence-first shape on top of the same raw provider outputs this
+    // function already fetched, so run-token-scan, token-health-mcp, and the
+    // future x402 endpoint all consume one object instead of drifting apart.
+    const retrievedAtIso = new Date().toISOString()
+    const explorerUrl = (EXPLORER_BASE[chainId] || '') + token_address
+    const canonicalEvidence: EvidenceRecord[] = []
+    if (goplus) canonicalEvidence.push({ id: 'ev_goplus', source: 'goplus', source_url: explorerUrl, retrieved_at: retrievedAtIso, block_number: null, freshness: 'fresh' })
+    if (metadata) canonicalEvidence.push({ id: 'ev_moralis_metadata', source: 'moralis', source_url: null, retrieved_at: retrievedAtIso, block_number: null, freshness: 'fresh' })
+    if (priceData) canonicalEvidence.push({ id: 'ev_moralis_price', source: 'moralis', source_url: null, retrieved_at: retrievedAtIso, block_number: null, freshness: 'fresh' })
+    if (tokenPairs) canonicalEvidence.push({ id: 'ev_moralis_pairs', source: 'moralis', source_url: null, retrieved_at: retrievedAtIso, block_number: null, freshness: 'fresh' })
+    if (tokenOwners) canonicalEvidence.push({ id: 'ev_moralis_owners', source: 'moralis', source_url: null, retrieved_at: retrievedAtIso, block_number: null, freshness: 'fresh' })
+    if (lunarCrushData) canonicalEvidence.push({ id: 'ev_lunarcrush', source: 'lunarcrush', source_url: null, retrieved_at: retrievedAtIso, block_number: null, freshness: 'fresh' })
+    if (discordMembers) canonicalEvidence.push({ id: 'ev_discord', source: 'discord', source_url: socialLinks.discord || null, retrieved_at: retrievedAtIso, block_number: null, freshness: 'fresh' })
+    if (telegramData?.members) canonicalEvidence.push({ id: 'ev_telegram', source: 'telegram', source_url: socialLinks.telegram || null, retrieved_at: retrievedAtIso, block_number: null, freshness: 'fresh' })
+    if (githubData) canonicalEvidence.push({ id: 'ev_github', source: 'github', source_url: socialLinks.github || null, retrieved_at: retrievedAtIso, block_number: null, freshness: 'fresh' })
+
+    const canonicalLimitations: string[] = []
+    if (!goplus) canonicalLimitations.push('GoPlus returned no data for this contract on this chain — Security evidence is limited, not zero.')
+    if (!githubData) canonicalLimitations.push('No verified source code repository was found — Development evidence is unknown, not zero.')
+    if (!lunarCrushData && !discordMembers && !telegramData?.members) canonicalLimitations.push('No Discord, Telegram, or LunarCrush social signal was found — Community evidence is unknown, not zero.')
+    if (!tokenOwners) canonicalLimitations.push('Holder distribution data was unavailable — Tokenomics evidence is limited.')
+    if (!tokenPairs) canonicalLimitations.push('DEX pair data was unavailable — Liquidity evidence is limited.')
+
+    const canonicalInput: CanonicalResultInput = {
+      requestId,
+      chain: chain.name,
+      tokenAddress: token_address,
+      tier: 'quick',
+      retrievedAt: retrievedAtIso,
+      categories: {
+        security: {
+          score: securityScore,
+          coverage: coverageFromPresence([goplus?.ownership_renounced, goplus?.can_mint, goplus?.honeypot_detected, goplus?.freeze_authority, goplus?.is_blacklisted].filter((v) => v !== undefined && v !== null).length, 5),
+          findings: findingsFromGoPlus(goplus, 'ev_goplus'),
+          evidenceRefs: goplus ? ['ev_goplus'] : [],
+        },
+        liquidity: {
+          score: liquidityScore,
+          coverage: coverageFromPresence([priceData, metadata?.market_cap, tokenPairs, goplus?.liquidity_locked_days].filter((v) => v !== undefined && v !== null).length, 4),
+          findings: [],
+          evidenceRefs: [priceData ? 'ev_moralis_price' : null, tokenPairs ? 'ev_moralis_pairs' : null].filter(Boolean) as string[],
+        },
+        tokenomics: {
+          score: tokenomicsScore,
+          coverage: coverageFromPresence([metadata?.total_supply, tokenStats, tokenOwners, tokenPairs].filter((v) => v !== undefined && v !== null).length, 4),
+          findings: [],
+          evidenceRefs: [tokenOwners ? 'ev_moralis_owners' : null, metadata ? 'ev_moralis_metadata' : null].filter(Boolean) as string[],
+        },
+        community: {
+          score: communityScore,
+          coverage: coverageFromPresence([lunarCrushData, discordMembers ? true : null, telegramData?.members].filter((v) => v !== undefined && v !== null).length, 3),
+          findings: [],
+          evidenceRefs: [lunarCrushData ? 'ev_lunarcrush' : null, discordMembers ? 'ev_discord' : null, telegramData?.members ? 'ev_telegram' : null].filter(Boolean) as string[],
+        },
+        development: {
+          score: developmentScore,
+          coverage: coverageFromPresence(githubData ? 1 : 0, 1),
+          findings: [],
+          evidenceRefs: githubData ? ['ev_github'] : [],
+        },
+      },
+      evidence: canonicalEvidence,
+      limitations: canonicalLimitations,
+    }
+    const canonicalResult = buildCanonicalResult(canonicalInput)
+    console.log(`[${requestId}] Canonical result: health_band=${canonicalResult.scan.health_band}, completeness=${canonicalResult.scan.completeness}`)
+
     // ========== PHASE 4: Save to Database ==========
     console.log(`[${requestId}] Phase 4: Saving to database...`)
     
@@ -488,18 +568,42 @@ Deno.serve(async (req) => {
         is_archived: githubData?.is_archived || false,
         repo_created_at: githubData?.created_at || null,
         score: developmentScore
-      }, { onConflict: 'token_address,chain_id' }),
-      
-      // Token scan record
-      supabase.from('token_scans').insert({
-        token_address,
-        chain_id: chainId,
-        user_id: user_id || null,
-        score_total: overallScore,
-        is_anonymous: !user_id,
-        pro_scan: false
-      })
+      }, { onConflict: 'token_address,chain_id' })
     ])
+
+    // Token scan record — kept out of the Promise.all above so we can capture
+    // its id and attach evidence_records to this specific scan (Bridge layer).
+    const { data: scanInsertData, error: scanInsertError } = await supabase.from('token_scans').insert({
+      token_address,
+      chain_id: chainId,
+      user_id: user_id || null,
+      score_total: overallScore,
+      is_anonymous: !user_id,
+      pro_scan: false
+    }).select('id').single()
+
+    if (scanInsertError) {
+      console.error(`[${requestId}] token_scans insert failed:`, scanInsertError)
+    } else if (scanInsertData?.id) {
+      // Best-effort: evidence persistence must never fail the scan response.
+      try {
+        const evidenceRows = canonicalResult.evidence.map((e) => ({
+          scan_id: scanInsertData.id,
+          category: null,
+          source: e.source,
+          source_url: e.source_url,
+          retrieved_at: e.retrieved_at,
+          block_number: e.block_number,
+          freshness: e.freshness,
+        }))
+        if (evidenceRows.length > 0) {
+          const { error: evidenceError } = await supabase.from('evidence_records').insert(evidenceRows)
+          if (evidenceError) console.error(`[${requestId}] evidence_records insert failed:`, evidenceError)
+        }
+      } catch (evidenceEx) {
+        console.error(`[${requestId}] evidence_records insert threw:`, evidenceEx)
+      }
+    }
 
     const processingTime = Date.now() - startTime
     console.log(`[${requestId}] ========== SCAN COMPLETE in ${processingTime}ms ==========`)
@@ -531,7 +635,19 @@ Deno.serve(async (req) => {
         community: communityScore,
         development: developmentScore
       },
-      processing_time_ms: processingTime
+      processing_time_ms: processingTime,
+      // Canonical result fields (additive, Phase 0 2026-09-14). `scores` above
+      // is unchanged for existing callers; `dimensions` is the PRD-named alias
+      // for the same values, kept only during the versioned migration.
+      schema_version: canonicalResult.schema_version,
+      rubric_version: canonicalResult.scan.rubric_version,
+      health_band: canonicalResult.scan.health_band,
+      completeness: canonicalResult.scan.completeness,
+      confidence: canonicalResult.scan.confidence,
+      dimensions: canonicalResult.dimensions,
+      categories: canonicalResult.categories,
+      evidence: canonicalResult.evidence,
+      limitations: canonicalResult.limitations
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -645,6 +761,68 @@ async function scanSolanaToken(
 
     console.log(`[${requestId}] Scores: Security=${securityScore}, Tokenomics=${tokenomicsScore}, Liquidity=${liquidityScore}, Community=${communityScore}, Development=${developmentScore}, Overall=${overallScore}`)
 
+    // ========== Canonical result (Bridge layer, Phase 0 2026-09-14) — Solana path ==========
+    // Mirrors the EVM path's canonical construction above. Additive only.
+    const retrievedAtIsoSol = new Date().toISOString()
+    const canonicalEvidenceSol: EvidenceRecord[] = []
+    if (mintInfo?.isInitialized) canonicalEvidenceSol.push({ id: 'ev_solana_mint', source: 'solana_rpc', source_url: null, retrieved_at: retrievedAtIsoSol, block_number: null, freshness: 'fresh' })
+    if (marketData) canonicalEvidenceSol.push({ id: 'ev_coingecko_market', source: 'coingecko', source_url: null, retrieved_at: retrievedAtIsoSol, block_number: null, freshness: 'fresh' })
+    if (liquidityData?.totalLiquidity > 0) canonicalEvidenceSol.push({ id: 'ev_geckoterminal_liquidity', source: 'geckoterminal', source_url: null, retrieved_at: retrievedAtIsoSol, block_number: null, freshness: 'fresh' })
+    if (lunarCrushData) canonicalEvidenceSol.push({ id: 'ev_lunarcrush', source: 'lunarcrush', source_url: null, retrieved_at: retrievedAtIsoSol, block_number: null, freshness: 'fresh' })
+    if (discordMembers) canonicalEvidenceSol.push({ id: 'ev_discord', source: 'discord', source_url: marketData?.discord_url || null, retrieved_at: retrievedAtIsoSol, block_number: null, freshness: 'fresh' })
+    if (telegramData?.members) canonicalEvidenceSol.push({ id: 'ev_telegram', source: 'telegram', source_url: marketData?.telegram_url || null, retrieved_at: retrievedAtIsoSol, block_number: null, freshness: 'fresh' })
+    if (githubData) canonicalEvidenceSol.push({ id: 'ev_github', source: 'github', source_url: marketData?.github_url || null, retrieved_at: retrievedAtIsoSol, block_number: null, freshness: 'fresh' })
+
+    const canonicalLimitationsSol: string[] = []
+    if (!mintInfo?.isInitialized) canonicalLimitationsSol.push('Solana mint account could not be read via RPC — Security evidence is unknown, not zero.')
+    if (!githubData) canonicalLimitationsSol.push('No verified source code repository was found — Development evidence is unknown, not zero.')
+    if (!lunarCrushData && !discordMembers && !telegramData?.members) canonicalLimitationsSol.push('No Discord, Telegram, or LunarCrush social signal was found — Community evidence is unknown, not zero.')
+    if (!liquidityData?.totalLiquidity) canonicalLimitationsSol.push('No DEX pool liquidity was found for this mint — Liquidity evidence is limited.')
+
+    const canonicalInputSol: CanonicalResultInput = {
+      requestId,
+      chain: 'Solana',
+      tokenAddress: normalizedMint,
+      tier: 'quick',
+      retrievedAt: retrievedAtIsoSol,
+      categories: {
+        security: {
+          score: securityScore,
+          coverage: coverageFromPresence(mintInfo?.isInitialized ? 1 : 0, 1),
+          findings: [],
+          evidenceRefs: mintInfo?.isInitialized ? ['ev_solana_mint'] : [],
+        },
+        liquidity: {
+          score: liquidityScore,
+          coverage: coverageFromPresence(liquidityData?.totalLiquidity > 0 ? 1 : 0, 1),
+          findings: [],
+          evidenceRefs: liquidityData?.totalLiquidity > 0 ? ['ev_geckoterminal_liquidity'] : [],
+        },
+        tokenomics: {
+          score: tokenomicsScore,
+          coverage: coverageFromPresence([mintInfo?.supply, marketData].filter((v) => v !== undefined && v !== null).length, 2),
+          findings: [],
+          evidenceRefs: marketData ? ['ev_coingecko_market'] : [],
+        },
+        community: {
+          score: communityScore,
+          coverage: coverageFromPresence([lunarCrushData, discordMembers ? true : null, telegramData?.members].filter((v) => v !== undefined && v !== null).length, 3),
+          findings: [],
+          evidenceRefs: [lunarCrushData ? 'ev_lunarcrush' : null, discordMembers ? 'ev_discord' : null, telegramData?.members ? 'ev_telegram' : null].filter(Boolean) as string[],
+        },
+        development: {
+          score: developmentScore,
+          coverage: coverageFromPresence(githubData ? 1 : 0, 1),
+          findings: [],
+          evidenceRefs: githubData ? ['ev_github'] : [],
+        },
+      },
+      evidence: canonicalEvidenceSol,
+      limitations: canonicalLimitationsSol,
+    }
+    const canonicalResultSol = buildCanonicalResult(canonicalInputSol)
+    console.log(`[${requestId}] Canonical result (Solana): health_band=${canonicalResultSol.scan.health_band}, completeness=${canonicalResultSol.scan.completeness}`)
+
     // Phase 4: Prepare data for database
     const name = marketData?.name || `SPL Token ${normalizedMint.slice(0, 8)}`
     const description = marketData?.description || `${name} is an SPL token on Solana.`
@@ -745,18 +923,41 @@ async function scanSolanaToken(
         language: githubData?.language || null,
         is_archived: githubData?.is_archived || null,
         score: developmentScore
-      }, { onConflict: 'token_address,chain_id' }),
-
-      // Token scan record
-      supabase.from('token_scans').insert({
-        token_address: normalizedMint,
-        chain_id: 'solana',
-        user_id: userId || null,
-        score_total: overallScore,
-        is_anonymous: !userId,
-        pro_scan: false
-      })
+      }, { onConflict: 'token_address,chain_id' })
     ])
+
+    // Token scan record — kept out of the Promise.all above so we can capture
+    // its id and attach evidence_records to this specific scan (Bridge layer).
+    const { data: scanInsertDataSol, error: scanInsertErrorSol } = await supabase.from('token_scans').insert({
+      token_address: normalizedMint,
+      chain_id: 'solana',
+      user_id: userId || null,
+      score_total: overallScore,
+      is_anonymous: !userId,
+      pro_scan: false
+    }).select('id').single()
+
+    if (scanInsertErrorSol) {
+      console.error(`[${requestId}] token_scans insert failed (Solana):`, scanInsertErrorSol)
+    } else if (scanInsertDataSol?.id) {
+      try {
+        const evidenceRowsSol = canonicalResultSol.evidence.map((e) => ({
+          scan_id: scanInsertDataSol.id,
+          category: null,
+          source: e.source,
+          source_url: e.source_url,
+          retrieved_at: e.retrieved_at,
+          block_number: e.block_number,
+          freshness: e.freshness,
+        }))
+        if (evidenceRowsSol.length > 0) {
+          const { error: evidenceErrorSol } = await supabase.from('evidence_records').insert(evidenceRowsSol)
+          if (evidenceErrorSol) console.error(`[${requestId}] evidence_records insert failed (Solana):`, evidenceErrorSol)
+        }
+      } catch (evidenceExSol) {
+        console.error(`[${requestId}] evidence_records insert threw (Solana):`, evidenceExSol)
+      }
+    }
 
     const processingTime = Date.now() - startTime
     console.log(`[${requestId}] ========== SOLANA SCAN COMPLETE in ${processingTime}ms ==========`)
@@ -800,7 +1001,17 @@ async function scanSolanaToken(
         decimals: mintInfo.decimals,
         total_supply: mintInfo.supply
       },
-      processing_time_ms: processingTime
+      processing_time_ms: processingTime,
+      // Canonical result fields (additive, Phase 0 2026-09-14) — see EVM path comment above.
+      schema_version: canonicalResultSol.schema_version,
+      rubric_version: canonicalResultSol.scan.rubric_version,
+      health_band: canonicalResultSol.scan.health_band,
+      completeness: canonicalResultSol.scan.completeness,
+      confidence: canonicalResultSol.scan.confidence,
+      dimensions: canonicalResultSol.dimensions,
+      categories: canonicalResultSol.categories,
+      evidence: canonicalResultSol.evidence,
+      limitations: canonicalResultSol.limitations
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

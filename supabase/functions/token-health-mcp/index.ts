@@ -110,6 +110,17 @@ async function handleScanToken(args: { address: string; chain: string }) {
     scores: data.scores,
     verdict: generateVerdict(data.scores ?? {}, data.overall_score ?? 0),
     scan_duration_ms: Date.now() - start,
+    // Canonical result passthrough (additive, Phase 0 2026-09-14). Same Bridge
+    // object run-token-scan now returns — kept optional here so this MCP tool's
+    // existing consumers see no change if run-token-scan predates this field.
+    ...(data.health_band ? {
+      health_band: data.health_band,
+      completeness: data.completeness,
+      confidence: data.confidence,
+      rubric_version: data.rubric_version,
+      categories: data.categories,
+      limitations: data.limitations,
+    } : {}),
   };
 }
 

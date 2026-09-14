@@ -1,0 +1,55 @@
+{
+  "requestId": "fixture_elevated_risk_001",
+  "chain": "base",
+  "tokenAddress": "0x2222222222222222222222222222222222bbbb",
+  "tier": "deep",
+  "retrievedAt": "2026-09-14T12:05:00Z",
+  "categories": {
+    "security": {
+      "score": 22,
+      "coverage": 1.0,
+      "findings": [
+        { "severity": "critical", "claim": "Honeypot behavior was detected — sells may be blocked.", "evidence_refs": ["ev_goplus_2"] },
+        { "severity": "high", "claim": "The contract owner can mint new tokens.", "evidence_refs": ["ev_goplus_2"] }
+      ],
+      "evidenceRefs": ["ev_goplus_2"]
+    },
+    "liquidity": {
+      "score": 18,
+      "coverage": 0.7,
+      "findings": [
+        { "severity": "high", "claim": "Liquidity is heavily concentrated in a single pool younger than 24 hours.", "evidence_refs": ["ev_moralis_pairs_2"] }
+      ],
+      "evidenceRefs": ["ev_moralis_pairs_2"]
+    },
+    "tokenomics": {
+      "score": 30,
+      "coverage": 0.8,
+      "findings": [
+        { "severity": "medium", "claim": "Top 10 holders control over 80% of circulating supply.", "evidence_refs": ["ev_moralis_owners_2"] }
+      ],
+      "evidenceRefs": ["ev_moralis_owners_2"]
+    },
+    "community": {
+      "score": 40,
+      "coverage": 0.6,
+      "findings": [],
+      "evidenceRefs": ["ev_lunarcrush_2"]
+    },
+    "development": {
+      "score": 25,
+      "coverage": 0.5,
+      "findings": [],
+      "evidenceRefs": []
+    }
+  },
+  "evidence": [
+    { "id": "ev_goplus_2", "source": "goplus", "source_url": "https://basescan.org/address/0x2222222222222222222222222222222222bbbb", "retrieved_at": "2026-09-14T12:05:00Z", "block_number": 12345700, "freshness": "fresh" },
+    { "id": "ev_moralis_pairs_2", "source": "moralis", "source_url": null, "retrieved_at": "2026-09-14T12:05:00Z", "block_number": null, "freshness": "fresh" },
+    { "id": "ev_moralis_owners_2", "source": "moralis", "source_url": null, "retrieved_at": "2026-09-14T12:05:00Z", "block_number": null, "freshness": "fresh" },
+    { "id": "ev_lunarcrush_2", "source": "lunarcrush", "source_url": null, "retrieved_at": "2026-09-14T12:05:00Z", "block_number": null, "freshness": "fresh" }
+  ],
+  "limitations": [
+    "No verified source code repository was found; Development evidence is limited."
+  ]
+}
