@@ -361,9 +361,12 @@ Deno.serve(async (req) => {
     // even when Moralis's own price data came through fine).
     let holderConcentration: Awaited<ReturnType<typeof fetchTopHolderConcentration>> = null
     if (!tokenOwners) {
-      const circulatingSupply = metadata?.circulating_supply ? parseFloat(metadata.circulating_supply) : null
-      holderConcentration = await fetchTopHolderConcentration(token_address, chainId, circulatingSupply)
-      console.log(`[${requestId}] Chainbase holder concentration: ${holderConcentration ? `top10=${holderConcentration.top_10_pct_of_circulating?.toFixed(1)}%` : 'no data'}`)
+      // Must be TOTAL supply, not circulating — see chainbaseAPI.ts for why
+      // (circulating-only denominator produced an impossible >100% result
+      // live on AERO, whose circulating supply is ~half its total supply).
+      const totalSupply = metadata?.total_supply ? parseFloat(metadata.total_supply) : null
+      holderConcentration = await fetchTopHolderConcentration(token_address, chainId, totalSupply)
+      console.log(`[${requestId}] Chainbase holder concentration: ${holderConcentration ? `top10=${holderConcentration.top_10_pct_of_supply?.toFixed(1)}%` : 'no data'}`)
     }
 
     const priceVolatility = await fetchPriceVolatility(token_address, chainId, 7)
@@ -415,7 +418,7 @@ Deno.serve(async (req) => {
       tokenOwners,
       tokenPairs,
       {
-        top_10_pct_of_circulating: holderConcentration?.top_10_pct_of_circulating ?? null,
+        top_10_pct_of_supply: holderConcentration?.top_10_pct_of_supply ?? null,
         volatility_pct: priceVolatility?.volatility_pct ?? null,
         period_days: priceVolatility?.period_days,
       }
@@ -494,8 +497,8 @@ Deno.serve(async (req) => {
         // and must never be stored under this column as if it were one.
         distribution_gini_coefficient: tokenOwners?.gini_coefficient || null,
         holder_concentration_risk: tokenOwners?.concentration_risk
-          || (holderConcentration?.top_10_pct_of_circulating != null
-            ? `Top 10 of ${holderConcentration.holders_analyzed} sampled hold ${holderConcentration.top_10_pct_of_circulating.toFixed(1)}% of circulating supply (Chainbase estimate, not Gini)`
+          || (holderConcentration?.top_10_pct_of_supply != null
+            ? `Top 10 of ${holderConcentration.holders_analyzed} sampled hold ${holderConcentration.top_10_pct_of_supply.toFixed(1)}% of total supply (Chainbase estimate, not Gini)`
             : null),
         top_holders_count: tokenOwners?.total_holders || null,
         data_confidence_score: (tokenStats && (tokenOwners || holderConcentration) && tokenPairs) ? 80 : (tokenStats || tokenOwners || holderConcentration) ? 50 : 20,
