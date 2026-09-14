@@ -20,6 +20,7 @@ import { checkRateLimit, createRateLimitError } from '../_shared/rateLimit.ts'
 import { fetchCoinGeckoTokenData } from '../_shared/coingeckoAPI.ts'
 import { fetchGeckoTerminalPairs } from '../_shared/geckoterminalAPI.ts'
 import { fetchEtherscanTokenStats } from '../_shared/etherscanAPI.ts'
+import { fetchTopHolderConcentration, fetchPriceVolatility } from '../_shared/chainbaseAPI.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -354,6 +355,20 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Chainbase: holder concentration (Moralis Owners has no other fallback
+    // — see project memory) and price volatility (always tried; a real 7d
+    // range is a steadier Price Stability signal than a single 24h delta
+    // even when Moralis's own price data came through fine).
+    let holderConcentration: Awaited<ReturnType<typeof fetchTopHolderConcentration>> = null
+    if (!tokenOwners) {
+      const circulatingSupply = metadata?.circulating_supply ? parseFloat(metadata.circulating_supply) : null
+      holderConcentration = await fetchTopHolderConcentration(token_address, chainId, circulatingSupply)
+      console.log(`[${requestId}] Chainbase holder concentration: ${holderConcentration ? `top10=${holderConcentration.top_10_pct_of_circulating?.toFixed(1)}%` : 'no data'}`)
+    }
+
+    const priceVolatility = await fetchPriceVolatility(token_address, chainId, 7)
+    console.log(`[${requestId}] Chainbase price volatility: ${priceVolatility ? `${priceVolatility.volatility_pct.toFixed(1)}% over ${priceVolatility.data_points} points` : 'no data'}`)
+
     // Extract social links for Phase 2 (now works from either Moralis or the
     // CoinGecko fallback metadata above, since both populate `metadata.links`
     // in the same shape).
@@ -398,7 +413,12 @@ Deno.serve(async (req) => {
       priceData,
       tokenStats,
       tokenOwners,
-      tokenPairs
+      tokenPairs,
+      {
+        top_10_pct_of_circulating: holderConcentration?.top_10_pct_of_circulating ?? null,
+        volatility_pct: priceVolatility?.volatility_pct ?? null,
+        period_days: priceVolatility?.period_days,
+      }
     )
     console.log(`[${requestId}] Tokenomics score: ${tokenomicsScore}`)
     
@@ -469,10 +489,17 @@ Deno.serve(async (req) => {
         circulating_supply: metadata?.circulating_supply ? parseFloat(metadata.circulating_supply) : null,
         dex_liquidity_usd: tokenPairs?.total_liquidity_usd || null,
         major_dex_pairs: tokenPairs?.major_pairs || null,
+        // Stays null when only the Chainbase proxy is available — that
+        // metric is deliberately NOT a Gini coefficient (see chainbaseAPI.ts)
+        // and must never be stored under this column as if it were one.
         distribution_gini_coefficient: tokenOwners?.gini_coefficient || null,
-        holder_concentration_risk: tokenOwners?.concentration_risk || null,
+        holder_concentration_risk: tokenOwners?.concentration_risk
+          || (holderConcentration?.top_10_pct_of_circulating != null
+            ? `Top 10 of ${holderConcentration.holders_analyzed} sampled hold ${holderConcentration.top_10_pct_of_circulating.toFixed(1)}% of circulating supply (Chainbase estimate, not Gini)`
+            : null),
         top_holders_count: tokenOwners?.total_holders || null,
-        data_confidence_score: (tokenStats && tokenOwners && tokenPairs) ? 80 : (tokenStats || tokenOwners) ? 50 : 20,
+        data_confidence_score: (tokenStats && (tokenOwners || holderConcentration) && tokenPairs) ? 80 : (tokenStats || tokenOwners || holderConcentration) ? 50 : 20,
+        last_holder_analysis: (tokenOwners || holderConcentration) ? new Date().toISOString() : null,
         score: tokenomicsScore
       }, { onConflict: 'token_address,chain_id' }),
       
