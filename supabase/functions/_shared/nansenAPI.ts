@@ -6,17 +6,26 @@
 // terms restrict data redistribution and competing-product use; this is a
 // known, accepted decision, not an oversight).
 //
-// Why this over the Chainbase fallback (chainbaseAPI.ts, kept as tier-2):
-// Nansen's `tgm/holders` returns `ownership_percentage` directly (computed
-// from Nansen's own supply figure — no dependency on our CoinGecko-sourced
-// total_supply, unlike Chainbase's version of this) AND a human-readable
-// `address_label` per holder. That label is the important part: verified
-// live on AERO, the #1 "holder" at 49.9% of supply is labeled `veNFT` —
-// Aerodrome's own vote-escrow governance-lock contract, not a whale — and
-// several more are DEX pool addresses (e.g. `vAMM-USDC/AERO`). Chainbase's
-// raw address list can't distinguish these from genuine concentration risk;
-// this module excludes them by label pattern so the result reflects actual
-// external-party concentration, not protocol infrastructure.
+// Why this over the Chainbase fallback (chainbaseAPI.ts, kept as tier-3):
+// Nansen's `tgm/holders` gives a human-readable `address_label` per holder.
+// That label is the important part: verified live on AERO, the #1 "holder"
+// at 49.9% of supply is labeled `veNFT` — Aerodrome's own vote-escrow
+// governance-lock contract, not a whale — and several more are DEX pool
+// addresses (e.g. `vAMM-USDC/AERO`). Chainbase's raw address list can't
+// distinguish these from genuine concentration risk; this module excludes
+// them by label pattern so the result reflects actual external-party
+// concentration, not protocol infrastructure.
+//
+// Fix 2026-09-14 (found via live smoke test right after first deploy):
+// this does NOT use Nansen's own `ownership_percentage` field — verified
+// live that it comes back as a flat `0.0` for every single USDT holder,
+// including one holding $16.9B (a Nansen-side data bug for that token, not
+// something we can fix upstream). Instead this computes the percentage
+// itself from `token_amount` against the caller-supplied total supply —
+// the same approach chainbaseAPI.ts already uses, and the reason it never
+// hit this bug. Same rule as chainbaseAPI.ts: must be TOTAL supply, not
+// circulating (see that file for why a circulating-only denominator can
+// exceed 100%).
 export interface NansenHolderData {
   holders_analyzed: number;
   top_10_pct_of_supply: number | null;
@@ -52,6 +61,7 @@ function isInfraLabel(label: string | null | undefined): boolean {
 export async function fetchNansenTopHolders(
   tokenAddress: string,
   chainId: string,
+  totalSupply: number | null,
 ): Promise<NansenHolderData | null> {
   console.log(`[NANSEN-HOLDERS] === STARTING TOP HOLDERS LOOKUP ===`);
   console.log(`[NANSEN-HOLDERS] Token: ${tokenAddress}, Chain: ${chainId}`);
@@ -90,6 +100,7 @@ export async function fetchNansenTopHolders(
     const holders = body?.data as Array<{
       address: string;
       address_label: string | null;
+      token_amount: number;
       ownership_percentage: number;
     }> | undefined;
 
@@ -100,18 +111,26 @@ export async function fetchNansenTopHolders(
 
     console.log(`[NANSEN-HOLDERS] Got ${holders.length} holders`);
 
+    // Prefer computing the % ourselves from token_amount / totalSupply —
+    // Nansen's own ownership_percentage is not trustworthy (see the fix note
+    // at the top of this file). Only fall back to it when we don't have a
+    // total supply figure of our own to divide by.
+    const pctOf = (h: { token_amount: number; ownership_percentage: number }) =>
+      totalSupply && totalSupply > 0 ? (h.token_amount / totalSupply) * 100 : h.ownership_percentage * 100;
+
     let excludedPct = 0;
     const realHolders = holders.filter((h) => {
       if (isInfraLabel(h.address_label)) {
-        excludedPct += h.ownership_percentage * 100;
-        console.log(`[NANSEN-HOLDERS] Excluding infra address ${h.address} (${h.address_label}): ${(h.ownership_percentage * 100).toFixed(2)}%`);
+        const pct = pctOf(h);
+        excludedPct += pct;
+        console.log(`[NANSEN-HOLDERS] Excluding infra address ${h.address} (${h.address_label}): ${pct.toFixed(2)}%`);
         return false;
       }
       return true;
     });
 
     const top10 = realHolders.slice(0, 10);
-    const top10Pct = top10.reduce((sum, h) => sum + h.ownership_percentage * 100, 0);
+    const top10Pct = top10.reduce((sum, h) => sum + pctOf(h), 0);
 
     console.log(`[NANSEN-HOLDERS] Top 10 real holders: ${top10Pct.toFixed(2)}% of supply (excluded ${excludedPct.toFixed(2)}% as infra)`);
 
@@ -122,7 +141,7 @@ export async function fetchNansenTopHolders(
       top_holders: top10.map((h) => ({
         address: h.address,
         label: h.address_label,
-        ownership_pct: h.ownership_percentage * 100,
+        ownership_pct: pctOf(h),
       })),
     };
   } catch (error) {

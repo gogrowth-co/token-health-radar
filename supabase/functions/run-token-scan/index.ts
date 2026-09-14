@@ -288,28 +288,25 @@ Deno.serve(async (req) => {
     // Added 2026-09-14 (Moralis plan lapsed 2026-09-01, all 5 endpoints 401).
     // Each fallback only runs for the specific piece Moralis didn't provide —
     // if Moralis is restored later, none of these calls fire and behavior is
-    // unchanged. All five calls below are independent of each other (none
-    // needs another's result, including Nansen — it returns its own
-    // ownership_percentage, not dependent on our CoinGecko-sourced supply),
-    // so they run in one Promise.all instead of sequential awaits. Sequential
-    // awaits here is what took a plain scan from ~4s to ~15s+ once Chainbase
-    // was added on top of the original three fallbacks.
+    // unchanged. These four are independent of each other and of the merge
+    // below, so they run in one Promise.all instead of sequential awaits —
+    // sequential awaits here is what took a plain scan from ~4s to ~15s+
+    // once Chainbase was added on top of the original three fallbacks.
+    // (Nansen's holder lookup is NOT in this batch — see below.)
     const needsCoinGecko = !metadata || !priceData
     const needsGeckoTerminal = !tokenPairs
     const needsEtherscan = !tokenStats
 
-    const [cgFallback, gtFallback, esFallback, nansenResult, priceVolatility] = await Promise.all([
+    const [cgFallback, gtFallback, esFallback, priceVolatility] = await Promise.all([
       needsCoinGecko ? fetchCoinGeckoTokenData(token_address, chainId) : Promise.resolve(null),
       needsGeckoTerminal ? fetchGeckoTerminalPairs(token_address, chainId) : Promise.resolve(null),
       needsEtherscan ? fetchEtherscanTokenStats(token_address, chainId) : Promise.resolve(null),
-      fetchNansenTopHolders(token_address, chainId),
       fetchPriceVolatility(token_address, chainId, 7),
     ])
 
     console.log(`[${requestId}] CoinGecko fallback: ${cgFallback ? 'got data' : needsCoinGecko ? 'no data' : 'not needed'}`)
     console.log(`[${requestId}] GeckoTerminal fallback: ${gtFallback ? `${gtFallback.total_pairs} pools` : needsGeckoTerminal ? 'no data' : 'not needed'}`)
     console.log(`[${requestId}] Etherscan fallback: ${esFallback ? `supply=${esFallback.total_supply}` : needsEtherscan ? 'no data' : 'not needed'}`)
-    console.log(`[${requestId}] Nansen holder concentration: ${nansenResult ? `top10=${nansenResult.top_10_pct_of_supply?.toFixed(1)}% (excluded ${nansenResult.excluded_infra_pct.toFixed(1)}% as protocol infra)` : 'no data'}`)
     console.log(`[${requestId}] Chainbase price volatility: ${priceVolatility ? `${priceVolatility.volatility_pct.toFixed(1)}% over ${priceVolatility.data_points} points` : 'no data'}`)
 
     // Merge fallback data into the same variable names scoringUtils already
@@ -367,16 +364,29 @@ Deno.serve(async (req) => {
     // contract, not a whale). Chainbase is a tier-3 fallback, used only when
     // both Moralis Owners AND Nansen are unavailable — it can't tell a
     // whale from protocol infrastructure, so it's a strictly lower-quality
-    // source and only worth calling when nothing better is available. This
-    // one genuinely can't join the Promise.all above: it needs metadata's
-    // total_supply, which only exists after the CoinGecko merge just above.
+    // source and only worth calling when nothing better is available.
+    //
+    // Neither call can join the Promise.all above: both need metadata's
+    // total_supply (Nansen too, as of the fix below — its own
+    // ownership_percentage field is unreliable), which only exists after
+    // the CoinGecko merge just above. This does mean Nansen's call is back
+    // to being sequential rather than parallelized with the batch above —
+    // a deliberate trade: correctness (a real bug, not hypothetical — see
+    // fix note) over shaving off this one call's latency.
+    // Must be TOTAL supply, not circulating — see chainbaseAPI.ts for why
+    // (circulating-only denominator produced an impossible >100% result
+    // live on AERO, whose circulating supply is ~half its total supply).
+    const totalSupply = metadata?.total_supply ? parseFloat(metadata.total_supply) : null
+
+    let nansenResult: Awaited<ReturnType<typeof fetchNansenTopHolders>> = null
+    if (!tokenOwners) {
+      nansenResult = await fetchNansenTopHolders(token_address, chainId, totalSupply)
+      console.log(`[${requestId}] Nansen holder concentration: ${nansenResult ? `top10=${nansenResult.top_10_pct_of_supply?.toFixed(1)}% (excluded ${nansenResult.excluded_infra_pct.toFixed(1)}% as protocol infra)` : 'no data'}`)
+    }
+
     let holderConcentration: Awaited<ReturnType<typeof fetchTopHolderConcentration>> = null
     let concentrationSource: 'nansen' | 'chainbase' | null = nansenResult ? 'nansen' : null
     if (!tokenOwners && !nansenResult) {
-      // Must be TOTAL supply, not circulating — see chainbaseAPI.ts for why
-      // (circulating-only denominator produced an impossible >100% result
-      // live on AERO, whose circulating supply is ~half its total supply).
-      const totalSupply = metadata?.total_supply ? parseFloat(metadata.total_supply) : null
       holderConcentration = await fetchTopHolderConcentration(token_address, chainId, totalSupply)
       concentrationSource = holderConcentration ? 'chainbase' : null
       console.log(`[${requestId}] Chainbase holder concentration (tier-3 fallback): ${holderConcentration ? `top10=${holderConcentration.top_10_pct_of_supply?.toFixed(1)}%` : 'no data'}`)
