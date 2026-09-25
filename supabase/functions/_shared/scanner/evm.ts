@@ -82,7 +82,8 @@ export function withSourcify(sel: Field<boolean>, gp: Field<boolean>, sf: Field<
   const others = (v: boolean) => votes.filter((x) => x.value === v);
   if (sf.value === true) {
     const corroboratedBy = others(true).length > 0;
-    return { value: true, status: 'ok', confidence: corroboratedBy ? 'high' : 'medium', corroborated: corroboratedBy, unit: 'bool', detail: sf.detail, sources };
+    const silent = [sel, gp].filter((v) => usable(v) && v.value === false).map((v) => v.sources[0]?.source);
+    return { value: true, status: 'ok', confidence: corroboratedBy ? 'high' : 'medium', corroborated: corroboratedBy, unit: 'bool', detail: `${sf.detail}. A matching function name is not proof the authority is active${silent.length ? `; ${silent.join(' and ')} did not report it` : ''}`, sources };
   }
   // Sourcify says absent.
   if (usable(sel) && sel.value === true) {
@@ -226,7 +227,7 @@ export const evmAdapter: ChainAdapter = {
     const gpPct = (v: unknown, label: string): Field<number> => (typeof v === 'string' && v !== '' && Number.isFinite(Number(v)) ? ok(round(Number(v) * 100, 3), gpRef, { unit: 'pct' }) : gpMiss(label, 'pct'));
 
     // ---- Sourcify: verified source -> what the contract (and each implementation) can actually do
-    const sfCaps = await sourcifyCapabilities(ctx, chain.goplus, a, impls.map((i) => i.addr));
+    const sfCaps = await sourcifyCapabilities(ctx, chain.goplus, a, impls.map((i) => i.addr), problems);
 
     // ---- honeypot.is (buy/sell simulation)
     let hpBuy: Field<number>, hpSell: Field<number>, hpTransfer: Field<number>, hpFlag: Field<boolean>;

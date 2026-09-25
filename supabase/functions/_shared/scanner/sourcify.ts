@@ -13,6 +13,8 @@ import type { ScanContext } from './http.ts';
 type AbiItem = { type?: string; name?: string; stateMutability?: string };
 
 // Name patterns for state-changing functions. Kept narrow on purpose: a false "present" lowers a score.
+// Functions that switch a capability OFF (disableMinting, renounce..., unpause) are not the capability itself.
+const REDUCES = /^(disable|renounce|remove|revoke|stop|lock|finish)/i;
 const MINT = /mint|^issue(tokens?)?$/i;
 const PAUSE = /pause/i;
 const BLACKLIST = /blacklist|blocklist|denylist|(block|ban|deny|freeze)(address|account|user|wallet)|^freeze(account|address)?$|sanction|(set|add|remove|update)bots?$|^isbot$/i;
@@ -24,7 +26,7 @@ export interface SourcifyCapabilities {
 }
 
 export function matchingFunctions(abi: AbiItem[], re: RegExp): string[] {
-  return [...new Set(abi.filter((x) => x?.type === 'function' && typeof x.name === 'string' && x.stateMutability !== 'view' && x.stateMutability !== 'pure' && re.test(x.name)).map((x) => x.name as string))];
+  return [...new Set(abi.filter((x) => x?.type === 'function' && typeof x.name === 'string' && x.stateMutability !== 'view' && x.stateMutability !== 'pure' && re.test(x.name) && !REDUCES.test(x.name) && !/^unpause$/i.test(x.name)).map((x) => x.name as string))];
 }
 
 interface Verified {
@@ -49,8 +51,10 @@ async function fetchVerified(ctx: ScanContext, chainId: string, address: string)
   });
   if (!r.ok) return { ok: false, reason: r.reason === 'not_found' ? 'not_found' : (r.reason as NotVerified['reason']), detail: r.reason === 'not_found' ? 'contract is not verified on Sourcify' : r.detail ?? r.reason, ref: r.ref };
   const d = r.data;
-  const match = d?.runtimeMatch ?? d?.creationMatch;
-  if (!Array.isArray(d?.abi) || d.abi.length === 0 || !match) return { ok: false, reason: 'no_data', detail: 'Sourcify answered without a verified ABI', ref: r.ref };
+  // The verification must be of the RUNTIME code (creation-only matches say nothing about what is deployed now) and be for this exact chain/address.
+  const match = d?.runtimeMatch === 'match' || d?.runtimeMatch === 'exact_match' ? d.runtimeMatch : null;
+  if (String(d?.address ?? '').toLowerCase() !== address.toLowerCase() || String(d?.chainId ?? '') !== chainId) return { ok: false, reason: 'no_data', detail: 'Sourcify answered for a different chain or address', ref: r.ref };
+  if (!Array.isArray(d?.abi) || d.abi.length === 0 || !match) return { ok: false, reason: 'no_data', detail: `Sourcify has no runtime-verified ABI (runtimeMatch=${d?.runtimeMatch ?? 'null'})`, ref: r.ref };
   const impls: string[] = Array.isArray(d?.proxyResolution?.implementations) ? d.proxyResolution.implementations.map((i: any) => String(i?.address ?? '').toLowerCase()).filter(Boolean) : [];
   return { ok: true, abi: d.abi, isProxy: d?.proxyResolution?.isProxy === true, implementations: impls, match: String(match), ref: r.ref };
 }
@@ -59,11 +63,14 @@ async function fetchVerified(ctx: ScanContext, chainId: string, address: string)
  * @param ourImplementations implementation addresses our own chain reads found (slots, beacon, clone). They must be covered by
  *        Sourcify's proxy resolution, otherwise a delegation exists that the ABI check would not see.
  */
-export async function sourcifyCapabilities(ctx: ScanContext, chainId: string, address: string, ourImplementations: string[]): Promise<SourcifyCapabilities> {
+export async function sourcifyCapabilities(ctx: ScanContext, chainId: string, address: string, ourImplementations: string[], localInspectionProblems: string[] = []): Promise<SourcifyCapabilities> {
   const none = (reason: any, detail: string, refs: SourceRef[] = []): SourcifyCapabilities => {
     const f = unknown<boolean>(reason, detail, refs, { unit: 'bool' });
     return { mint: f, pause: f, blacklist: f };
   };
+  // If our own read of the code could not follow every delegation (failed slot read, unrecognised proxy...), an ABI
+  // list cannot establish what is reachable: unknown, never absent (Codex round 4, finding 3).
+  if (localInspectionProblems.length) return none('no_data', `Sourcify not used for absence: local code inspection incomplete (${localInspectionProblems.join('; ')})`);
   const main = await fetchVerified(ctx, chainId, address.toLowerCase());
   if (!main.ok) return none(main.reason, `Sourcify: ${main.detail}`, [main.ref]);
 
@@ -86,6 +93,7 @@ export async function sourcifyCapabilities(ctx: ScanContext, chainId: string, ad
       if (g.abi.some((x) => x?.type === 'fallback')) return none('no_data', `Sourcify: implementation ${impls[i]} has a fallback() that may delegate`, refs);
       abis.push({ label: `implementation ${impls[i]}`, abi: g.abi });
     }
+    abis.push({ label: 'proxy', abi: main.abi }); // the proxy's OWN functions count too (a pause on the proxy itself)
   } else {
     // A plain token whose ABI has a fallback() could still delegate somewhere Sourcify did not resolve.
     if (main.abi.some((x) => x?.type === 'fallback')) return none('no_data', 'Sourcify: contract has a fallback() that may delegate and no proxy was resolved', refs);
@@ -95,9 +103,10 @@ export async function sourcifyCapabilities(ctx: ScanContext, chainId: string, ad
   const build = (re: RegExp, what: string): Field<boolean> => {
     const hits = abis.flatMap((a) => matchingFunctions(a.abi, re).map((n) => `${n} (${a.label})`));
     const ref: SourceRef = { ...main.ref, raw_excerpt: { ...main.ref.raw_excerpt, matched: hits, inspected: abis.map((a) => a.label), match: main.match } };
+    const allRefs = [ref, ...refs.slice(1)];
     return hits.length
-      ? ok(true, ref, { unit: 'bool', confidence: 'high', detail: `verified source (Sourcify) lists ${what} function(s): ${hits.join(', ')}` })
-      : ok(false, ref, { unit: 'bool', confidence: 'high', detail: `verified source (Sourcify, ${main.match}) of ${abis.map((a) => a.label).join(' + ')} has no ${what} function` });
+      ? ok(true, allRefs, { unit: 'bool', confidence: 'high', detail: `verified source (Sourcify) lists ${what} function(s): ${hits.join(', ')}` })
+      : ok(false, allRefs, { unit: 'bool', confidence: 'high', detail: `verified source (Sourcify, ${main.match}) of ${abis.map((a) => a.label).join(' + ')} has no ${what} function` });
   };
   return { mint: build(MINT, 'mint'), pause: build(PAUSE, 'pause'), blacklist: build(BLACKLIST, 'blacklist') };
 }

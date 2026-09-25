@@ -1129,7 +1129,7 @@ import { sourcifyCapabilities, matchingFunctions } from './sourcify.ts';
 import { withSourcify } from './evm.ts';
 
 const fn = (name: string, stateMutability = 'nonpayable') => ({ type: 'function', name, stateMutability });
-const sfReply = (abi: unknown[], proxy?: { impls: string[] }) => ({ json: { runtimeMatch: 'match', creationMatch: 'match', abi, proxyResolution: { isProxy: !!proxy, proxyType: proxy ? 'EIP1967Proxy' : null, implementations: (proxy?.impls ?? []).map((address) => ({ address })) } } });
+const sfReply = (url: string, abi: unknown[], proxy?: { impls: string[] }) => ({ json: { chainId: '1', address: url.split('/contract/1/')[1].split('?')[0], runtimeMatch: 'match', creationMatch: 'match', abi, proxyResolution: { isProxy: !!proxy, proxyType: proxy ? 'EIP1967Proxy' : null, implementations: (proxy?.impls ?? []).map((address) => ({ address })) } } });
 
 Deno.test('sourcify: function-name matching counts only state-changing functions', () => {
   assertEquals(matchingFunctions([fn('mint'), fn('paused', 'view'), fn('pause'), fn('blacklist'), fn('transfer')], /mint/i), ['mint']);
@@ -1137,7 +1137,7 @@ Deno.test('sourcify: function-name matching counts only state-changing functions
 });
 
 Deno.test('sourcify: verified plain token with no mint/pause/blacklist function = absent (affirmative)', async () => {
-  stubFetch(() => sfReply([fn('transfer'), fn('approve'), fn('balanceOf', 'view')]));
+  stubFetch((url) => sfReply(url, [fn('transfer'), fn('approve'), fn('balanceOf', 'view')]));
   try {
     const c = await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, []);
     for (const k of ['mint', 'pause', 'blacklist'] as const) {
@@ -1150,15 +1150,15 @@ Deno.test('sourcify: verified plain token with no mint/pause/blacklist function 
 });
 
 Deno.test('sourcify: a proxy is judged by its IMPLEMENTATION abi; an unverified implementation leaves it unknown', async () => {
-  const proxyReply = sfReply([fn('upgradeTo'), fn('admin')], { impls: [EVM_IMPL] });
-  stubFetch((url) => (url.includes(`/${EVM_IMPL}`) ? { status: 404, text: '{}' } : proxyReply));
+  const proxyReply = (url: string) => sfReply(url, [fn('upgradeTo'), fn('admin')], { impls: [EVM_IMPL] });
+  stubFetch((url) => (url.includes(`/${EVM_IMPL}`) ? { status: 404, text: '{}' } : proxyReply(url)));
   try {
     const c = await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, [EVM_IMPL]);
     assertEquals(c.mint.status, 'unknown');
   } finally {
     restore();
   }
-  stubFetch((url) => (url.includes(`/${EVM_IMPL}`) ? sfReply([fn('mint'), fn('pause'), fn('transfer')]) : proxyReply));
+  stubFetch((url) => (url.includes(`/${EVM_IMPL}`) ? sfReply(url, [fn('mint'), fn('pause'), fn('transfer')]) : proxyReply(url)));
   try {
     const c = await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, [EVM_IMPL]);
     assertEquals(c.mint.value, true);
@@ -1170,14 +1170,14 @@ Deno.test('sourcify: a proxy is judged by its IMPLEMENTATION abi; an unverified 
 });
 
 Deno.test('sourcify: a delegation our chain reads found that Sourcify did not resolve, or a fallback(), leaves the answer unknown', async () => {
-  stubFetch(() => sfReply([fn('transfer')])); // Sourcify says: not a proxy
+  stubFetch((url) => sfReply(url, [fn('transfer')])); // Sourcify says: not a proxy
   try {
     const c = await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, [EVM_IMPL]); // but the chain has an implementation slot
     assertEquals(c.mint.status, 'unknown');
   } finally {
     restore();
   }
-  stubFetch(() => sfReply([fn('transfer'), { type: 'fallback', stateMutability: 'payable' }]));
+  stubFetch((url) => sfReply(url, [fn('transfer'), { type: 'fallback', stateMutability: 'payable' }]));
   try {
     assertEquals((await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, [])).mint.status, 'unknown');
   } finally {
@@ -1222,4 +1222,46 @@ Deno.test('withSourcify: verified absence + one agreeing reading is corroborated
   assertEquals([presentAgreed.value, presentAgreed.corroborated], [true, true]);
   const noSf = withSourcify(sel(false), gp(false), unknown<boolean>('not_found'), 'mint'); // no verified code: weak negative stays uncorroborated
   assertEquals([noSf.value, noSf.corroborated], [false, false]);
+});
+
+// ---- Codex round 4 fixes on the Sourcify path
+Deno.test('sourcify: the PROXY\'s own functions are inspected too (a pause on the proxy itself)', async () => {
+  stubFetch((url) => (url.includes(`/${EVM_IMPL}`) ? sfReply(url, [fn('transfer')]) : sfReply(url, [fn('pauseTransfers'), fn('upgradeTo')], { impls: [EVM_IMPL] })));
+  try {
+    const c = await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, [EVM_IMPL]);
+    assertEquals(c.pause.value, true);
+    assertEquals(c.mint.value, false);
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('sourcify: incomplete LOCAL inspection (unresolved delegation) means Sourcify cannot establish absence', async () => {
+  stubFetch((url) => sfReply(url, [fn('transfer')]));
+  try {
+    const c = await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, [], ['proxy slot reads failed (eip1967_impl)']);
+    assertEquals(c.mint.status, 'unknown');
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('sourcify: only a RUNTIME match for this exact chain/address counts (creation-only or another address is not verification)', async () => {
+  stubFetch((url) => ({ json: { chainId: '1', address: EVM_TOKEN, runtimeMatch: null, creationMatch: 'match', abi: [fn('transfer')], proxyResolution: { isProxy: false, implementations: [] } } }));
+  try {
+    assertEquals((await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, [])).mint.status, 'unknown');
+  } finally {
+    restore();
+  }
+  stubFetch(() => ({ json: { chainId: '1', address: '0x9999999999999999999999999999999999999999', runtimeMatch: 'match', abi: [fn('transfer')], proxyResolution: { isProxy: false, implementations: [] } } }));
+  try {
+    assertEquals((await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, [])).mint.status, 'unknown');
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('sourcify: functions that switch a capability OFF are not the capability (disableMinting, unpause)', () => {
+  assertEquals(matchingFunctions([fn('disableMinting'), fn('unpause'), fn('renounceOwnership')], /mint|pause/i), []);
+  assertEquals(matchingFunctions([fn('mint'), fn('pause')], /mint|pause/i), ['mint', 'pause']);
 });
