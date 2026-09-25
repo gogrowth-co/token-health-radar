@@ -3,12 +3,12 @@
 // bug where a failed Solana lookup became "authorities revoked, security 100".
 // Run: deno test -A supabase/functions/_shared/scanner/scanner.test.ts
 import { assert, assertEquals } from 'jsr:@std/assert@1';
-import { crossCheckBool, crossCheckNumber, ok, unknown } from './field.ts';
+import { crossCheckBool, crossCheckNumber, ok, unknown, usable as usable_ } from './field.ts';
 import { resetBreakers, ScanContext } from './http.ts';
 import { solanaAdapter } from './solana.ts';
 import { evmAdapter } from './evm.ts';
 import { computeUnlocks, datasetMatches, unlockSlugCandidates } from './market.ts';
-import { classifyLabel } from './holders.ts';
+import { applyLabel, buildConcentration, classifyLabel, type Holder } from './holders.ts';
 import { runPlausibility } from './plausibility.ts';
 import { AddressResolutionError, collectToken, inferNoUnlocks, reuseIfFresh } from './collect.ts';
 import { scoreRecord } from './scoring.ts';
@@ -480,4 +480,52 @@ Deno.test('solana: authorities and supply are read from a different RPC operator
   } finally {
     restore();
   }
+});
+
+// ---- Findings 3 and 4: holder denominators and unverified labels
+const holderList = (n: number, pct: number): Holder[] => Array.from({ length: n }, (_, i) => ({ address: `h${i}`, amount: pct, pct, category: 'unknown' as const }));
+const conc = (holders: Holder[]) => buildConcentration({ holders, holdersRef: [ref], secondTop10: unknown('no_data'), holderCount: unknown('no_data'), maxListed: 20 });
+
+Deno.test('holders: a self-registered .sol label does not remove a whale from the external top-10', () => {
+  const hs = holderList(20, 2); // 20 holders at 2%
+  hs[0].pct = 30;
+  applyLabel(hs[0], 'team_cold.sol', 'nansen'); // medium confidence (self-named)
+  const c = conc(hs);
+  assert(usable_(c.top10_excl_noncirculating_pct));
+  assert((c.top10_excl_noncirculating_pct.value as number) >= 30 + 9 * 2 - 0.01, 'whale must still count');
+});
+
+Deno.test('holders: a curated (Nansen, non-.sol) treasury label is excluded, when ten external holders remain', () => {
+  const hs = holderList(20, 2);
+  hs[0].pct = 30;
+  applyLabel(hs[0], 'Foundation Treasury', 'nansen'); // high confidence
+  const c = conc(hs);
+  assert(usable_(c.top10_excl_noncirculating_pct));
+  assertEquals(c.top10_excl_noncirculating_pct.value, 20); // 10 x 2%
+});
+
+Deno.test('holders: if fewer than ten holders remain after exclusions the external share is unknown, not 0%', () => {
+  const hs = holderList(20, 5);
+  for (const h of hs.slice(0, 12)) applyLabel(h, 'Binance 14', 'nansen');
+  const c = conc(hs);
+  assertEquals(c.top10_excl_noncirculating_pct.status, 'unknown');
+  const all = holderList(20, 5);
+  for (const h of all) applyLabel(h, 'Binance 14', 'nansen');
+  assertEquals(conc(all).top10_excl_noncirculating_pct.value, null);
+});
+
+Deno.test('plausibility: a disputed on-chain total invalidates every holder share derived from it', () => {
+  const twoSrc = { corroborated: true, confidence: 'high' as const };
+  const rec = fakeRecord({
+    'chain.total_supply_onchain': ok(2e9, ref), // twice the real supply
+    'market.total_supply_market': ok(1e9, ref),
+    'market.platform_count': ok(1, ref),
+    'chain.top1_pct': ok(10, ref), 'chain.top5_pct': ok(20, ref), 'chain.top10_pct': ok(30, ref, twoSrc), 'chain.top20_pct': ok(40, ref),
+    'chain.top10_excl_noncirculating_pct': ok(25, ref),
+  });
+  const flags = runPlausibility(rec);
+  assertEquals(rec.chain.total_supply_onchain.status, 'disputed');
+  for (const k of ['top1_pct', 'top5_pct', 'top10_pct', 'top20_pct', 'top10_excl_noncirculating_pct'] as const) assertEquals(rec.chain[k].status, 'unknown', k);
+  assert(flags.some((f) => f.rule === 'holder_shares_need_valid_supply'));
+  assertEquals(scoreRecord(rec).dimensions.tokenomics.score, null);
 });

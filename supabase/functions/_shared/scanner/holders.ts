@@ -82,10 +82,14 @@ export function buildConcentration(opts: {
   const sorted = [...holders].sort((a, b) => b.pct - a.pct);
   const sum = (n: number) => sorted.slice(0, n).reduce((a, h) => a + h.pct, 0);
   const topN = (n: number) => (sorted.length >= n ? ok(round(sum(n)), refs, { unit: 'pct', confidence: 'medium' }) : pctU('no_data', `source returned only ${sorted.length} holders`));
-  const external = sorted.filter((h) => !NON_CIRCULATING.includes(h.category) || h.category_confidence === 'low');
-  const labeledNonCirc = sorted.filter((h) => NON_CIRCULATING.includes(h.category) && h.category_confidence !== 'low');
+  // Only VERIFIED classifications may take a holder out of the external share: a curated Nansen label, an
+  // on-chain fact (burn address, known program owner). Self-registered names (`team_cold.sol`), GoPlus tags and
+  // pattern guesses stay in, so a whale cannot vanish from the risk figure by naming its wallet (Codex finding 4).
+  const verified = (h: Holder) => NON_CIRCULATING.includes(h.category) && h.category_confidence === 'high';
+  const external = sorted.filter((h) => !verified(h));
+  const labeledNonCirc = sorted.filter(verified);
   const anyLabels = sorted.some((h) => h.label_source);
-  const burnedPct = sorted.filter((h) => h.category === 'burn').reduce((a, h) => a + h.pct, 0);
+  const burnedPct = sorted.filter((h) => h.category === 'burn' && h.category_confidence === 'high').reduce((a, h) => a + h.pct, 0);
   return {
     holder_count: opts.holderCount,
     top1_pct: topN(1),
@@ -95,10 +99,12 @@ export function buildConcentration(opts: {
     // Among the listed holders only: external (not labeled non-circulating) top 10.
     // Denominator excludes supply parked at burn addresses (CAKE: ~94% of on-chain
     // totalSupply sits at 0x...dead), otherwise external concentration is understated.
-    top10_excl_noncirculating_pct: anyLabels && sorted.length >= Math.min(20, opts.maxListed) && burnedPct < 99.9
-      ? ok(round(external.slice(0, 10).reduce((a, h) => a + h.pct, 0) / (1 - burnedPct / 100)), refs, { unit: 'pct', confidence: 'medium', detail: `excludes ${labeledNonCirc.length} labeled non-circulating holders within the top ${sorted.length}${burnedPct > 0 ? `; share of supply excluding ${burnedPct.toFixed(2)}% held at burn addresses` : ''}` })
-      : pctU('no_data', anyLabels ? 'holder list too short' : 'no holder labels available'),
-    noncirculating_labeled_pct: anyLabels ? ok(round(labeledNonCirc.reduce((a, h) => a + h.pct, 0)), refs, { unit: 'pct', confidence: 'medium', detail: 'labeled project/pool/exchange/lock/burn holders within the listed top holders' }) : pctU('no_data', 'no holder labels available'),
+    // Needs ten holders LEFT after the exclusions: a top 10 built from fewer would understate concentration
+    // (all top-20 labeled -> "0%" while ranks 21+ were never fetched).
+    top10_excl_noncirculating_pct: anyLabels && sorted.length >= Math.min(20, opts.maxListed) && burnedPct < 99.9 && external.length >= 10
+      ? ok(round(external.slice(0, 10).reduce((a, h) => a + h.pct, 0) / (1 - burnedPct / 100)), refs, { unit: 'pct', confidence: 'medium', detail: `excludes ${labeledNonCirc.length} verified non-circulating holders within the top ${sorted.length}${burnedPct > 0 ? `; share of supply excluding ${burnedPct.toFixed(2)}% held at burn addresses` : ''}` })
+      : pctU('no_data', !anyLabels ? 'no holder labels available' : external.length < 10 ? `only ${external.length} holders remain after excluding verified non-circulating ones; ten are needed and the source lists at most ${opts.maxListed}` : 'holder list too short'),
+    noncirculating_labeled_pct: anyLabels ? ok(round(labeledNonCirc.reduce((a, h) => a + h.pct, 0)), refs, { unit: 'pct', confidence: 'medium', detail: 'verified (curated-label or on-chain) project/pool/exchange/lock/burn holders within the listed top holders' }) : pctU('no_data', 'no holder labels available'),
     gini_coefficient: gini,
     top_holders: ok(sorted.slice(0, 20), refs, { confidence: 'medium' }),
   };

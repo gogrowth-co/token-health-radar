@@ -60,6 +60,16 @@ export function runPlausibility(rec: ScanRecord, previous?: { total_supply_oncha
       flags.push({ rule: 'onchain_vs_market_total', severity: 'info', field: 'chain.total_supply_onchain', detail: `multichain or differently-defined total: on-chain (this chain) ${c.total_supply_onchain.value} vs market (global) ${m.total_supply_market.value}` });
     }
   }
+  // 4b. Holder shares are balance / on-chain total supply. When that denominator is disputed or unknown, every
+  //     share derived from it is invalid too (Codex finding 3): they must not stay usable while the total is not.
+  if (!usable(c.total_supply_onchain)) {
+    const dependents = ['top1_pct', 'top5_pct', 'top10_pct', 'top20_pct', 'top10_excl_noncirculating_pct', 'noncirculating_labeled_pct', 'top_holders'] as const;
+    const live = dependents.filter((k) => usable(c[k] as Field<unknown>));
+    if (live.length) {
+      flags.push({ rule: 'holder_shares_need_valid_supply', severity: 'error', field: 'chain.total_supply_onchain', detail: `on-chain total supply is ${c.total_supply_onchain.status}; holder shares derived from it invalidated: ${live.join(', ')}` });
+      for (const k of live) (c as any)[k] = { ...c[k], value: null, status: 'unknown', reason: 'missing_input', confidence: undefined, corroborated: false, detail: `holder share invalid: its denominator (on-chain total supply) is ${c.total_supply_onchain.status}` };
+    }
+  }
   // 5. Market cap ~ price x circulating (catches circulating/decimals errors in the provider).
   if (usable(m.market_cap_usd) && usable(m.price_usd) && usable(m.circulating_supply)) {
     const implied = m.price_usd.value * m.circulating_supply.value;
