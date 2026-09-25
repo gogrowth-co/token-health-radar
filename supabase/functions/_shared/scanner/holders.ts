@@ -37,6 +37,11 @@ const PATTERNS: Array<[RegExp, HolderCategory]> = [
   [new RegExp(w('team|treasury|dao|community|reserve|foundation|ecosystem|multisig|buyback|cold|hot wallet|deployer'), 'i'), 'project_controlled'],
 ];
 
+// 'high' only for a label that IS an exchange wallet or a burn address, not one that merely contains a brand word
+// ("Coinbase Ventures" is an investor; "Burn Capital" is a fund).
+const CEX_EXACT = /^(binance|coinbase|okx|bybit|kraken|kucoin|gate\.io|bitget|htx|huobi|crypto\.com|upbit|mexc)(?:[\s_-]+(?:\d{1,3}|hot(?:[\s_-]*wallet)?|cold(?:[\s_-]*wallet)?|prime|custody|deposit|wallet))*$/i;
+const BURN_EXACT = /^(?:burn|burned|dead|null)(?:[\s_-]+address)?$/i;
+
 export function classifyLabel(label: string | null | undefined, source: string): { category: HolderCategory; confidence: 'high' | 'medium' | 'low' } {
   if (!label) return { category: 'unknown', confidence: 'low' };
   for (const [re, cat] of PATTERNS) {
@@ -44,7 +49,7 @@ export function classifyLabel(label: string | null | undefined, source: string):
       // A free-text NAME never verifies what a wallet does (a .sol name is self-registered; "BlockTower Capital" is not
       // a lock). Only named exchanges and burn addresses from a curated Nansen label are 'high'; every other category
       // is a hint ('medium') that does not remove a holder from the scored concentration (Codex round 2, finding 3).
-      const conf = source === 'nansen' && !/\.sol$/i.test(label) && (cat === 'cex' || cat === 'burn') ? 'high' : 'medium';
+      const conf = source === 'nansen' && !/\.sol$/i.test(label) && ((cat === 'cex' && CEX_EXACT.test(label.trim())) || (cat === 'burn' && BURN_EXACT.test(label.trim()))) ? 'high' : 'medium';
       return { category: cat, confidence: conf };
     }
   }

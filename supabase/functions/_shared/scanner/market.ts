@@ -139,7 +139,6 @@ export interface UnlockData {
  */
 // DeFiLlama's chain names in `metadata.token` ("ethereum:0x...", "base:0x...").
 const LLAMA_CHAIN: Record<string, string> = { solana: 'solana', '0x1': 'ethereum', '0x38': 'bsc', '0x2105': 'base', '0xa4b1': 'arbitrum', '0x89': 'polygon', '0xa': 'optimism' };
-const UNSCHEDULED_TOLERANCE = 0.005; // "complete" = at most 0.5% of the dataset's max supply is unscheduled
 
 /** A dataset belongs to this token if its CoinGecko id or its `metadata.token` identifies it. */
 export function datasetMatches(data: any, coingeckoId: string | null, chainId: string, address: string): string | null {
@@ -219,19 +218,18 @@ export function computeUnlocks(data: any, slug: string, ref: SourceRef, now: Dat
   const src = ok(slug, ref, { confidence: 'medium' });
   const eventsRaw = data?.metadata?.events;
   const seriesRaw = data?.documentedData?.data;
-  // Every component must be a non-empty, ascending, finite series; anything else is not a schedule we can read.
-  const seriesValid = Array.isArray(seriesRaw) && seriesRaw.length > 0 && seriesRaw.every((s: any) => s && Array.isArray(s.data) && s.data.length > 0 && s.data.every((p: any, i: number, a: any[]) => Number.isFinite(p?.timestamp) && Number.isFinite(p?.unlocked) && (i === 0 || p.timestamp >= a[i - 1].timestamp)));
-  if (!Array.isArray(eventsRaw) || !seriesValid) {
-    const f = unknown<any>('no_data', `dataset ${slug} has no ${!Array.isArray(eventsRaw) ? 'event list' : 'valid, non-empty cumulative series'}: schedule not measurable`, [ref]);
-    return { emissions_source: src, next_unlock_date: f, next_unlock_amount: f, unlock_30d_amount: f, unlock_90d_amount: f, last_scheduled_event: f, unscheduled_supply: f };
-  }
-  const events: Array<{ timestamp: number; noOfTokens?: number[]; unlockType?: string }> = eventsRaw;
+  // Every component must be a non-empty, ascending, finite, non-negative and non-decreasing cumulative series.
+  const seriesValid = Array.isArray(seriesRaw) && seriesRaw.length > 0 && seriesRaw.every((s: any) => s && Array.isArray(s.data) && s.data.length > 0 && s.data.every((p: any, i: number, a: any[]) => Number.isFinite(p?.timestamp) && Number.isFinite(p?.unlocked) && p.unlocked >= 0 && (i === 0 || (p.timestamp >= a[i - 1].timestamp && p.unlocked >= a[i - 1].unlocked))));
+  const eventsValid = Array.isArray(eventsRaw) && eventsRaw.every((e: any) => e && Number.isFinite(e.timestamp));
+  // Events, the unscheduled ("tbd") supply and the cumulative series are validated INDEPENDENTLY: a broken series must not
+  // hide a valid dated event or the reported unscheduled supply (Codex round 3), it only stops window amounts and completeness.
+  const events: Array<{ timestamp: number; noOfTokens?: number[]; unlockType?: string }> = eventsValid ? eventsRaw : [];
   const cliffs = events.filter((e) => e.unlockType !== 'linear');
   const future = cliffs.filter((e) => e.timestamp > nowS).sort((a, b) => a.timestamp - b.timestamp);
   const lastAny = [...events].sort((a, b) => b.timestamp - a.timestamp)[0];
 
   // Window amounts from the daily cumulative series (covers linear vesting too).
-  const series: Array<{ label: string; data: Array<{ timestamp: number; unlocked: number }> }> = seriesRaw;
+  const series: Array<{ label: string; data: Array<{ timestamp: number; unlocked: number }> }> = seriesValid ? seriesRaw : [];
   const cumAt = (t: number): number => {
     let total = 0;
     for (const s of series) {
@@ -247,7 +245,7 @@ export function computeUnlocks(data: any, slug: string, ref: SourceRef, now: Dat
   const iso = (s: number) => new Date(s * 1000).toISOString().slice(0, 10);
   // Where the dataset's schedule stops, and whether tokens were still unlocking right up to that point
   // (AERO: weekly emissions set by governance; AAVE, UNI: daily drips).
-  const seriesEnd = Math.max(...series.map((s) => s.data[s.data.length - 1]?.timestamp ?? 0));
+  const seriesEnd = series.length ? Math.max(...series.map((s) => s.data[s.data.length - 1]?.timestamp ?? 0)) : 0;
   const tail = Math.min(seriesEnd, nowS);
   const days = [...new Set(series.flatMap((s) => s.data.map((p) => p.timestamp)))].filter((t) => t > tail - 30 * 86400 && t <= tail).sort((a, b) => a - b);
   let increaseDays = 0;
@@ -266,12 +264,16 @@ export function computeUnlocks(data: any, slug: string, ref: SourceRef, now: Dat
   // series that accounts for the whole max supply (a truncated schedule leaves it short).
   const cumEnd = cumAt(Number.MAX_SAFE_INTEGER);
   const coverage = maxSupply && maxSupply > 0 ? cumEnd / maxSupply : null;
-  const incompleteWhy = tbd === null || tbdShare === null
+  const incompleteWhy = !eventsValid
+    ? 'the dataset has no valid event list'
+    : !seriesValid
+    ? 'the dataset has no valid cumulative series (empty, unordered, negative or decreasing)'
+    : tbd === null || tbdShare === null
     ? 'the dataset does not report how much supply is unscheduled, so a finished schedule cannot be confirmed'
     : tbd >= 1
     ? `${(tbdShare * 100).toFixed(2)}% of supply (${Math.round(tbd).toLocaleString('en-US')} tokens) is unscheduled ("tbd") in the dataset`
-    : coverage === null || coverage < 1 - UNSCHEDULED_TOLERANCE
-    ? `the schedule accounts for only ${coverage === null ? 'an unknown share' : (coverage * 100).toFixed(1) + '%'} of the dataset's max supply, so it looks truncated`
+    : maxSupply === null || cumEnd < maxSupply - Math.max(1, maxSupply * 1e-9)
+    ? `the schedule accounts for only ${coverage === null ? 'an unknown share' : (coverage * 100).toFixed(2) + '%'} of the dataset's max supply, so it looks truncated`
     : stillEmitting
     ? `dataset schedule ends ${iso(seriesEnd)} while tokens were still unlocking (${increaseDays} increase days in its final 30 days); later emissions are not scheduled and are not measured`
     : null;

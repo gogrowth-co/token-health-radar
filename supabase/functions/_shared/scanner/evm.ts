@@ -48,6 +48,27 @@ const SEL = {
 };
 const DEAD = new Set(['0x0000000000000000000000000000000000000000', '0x000000000000000000000000000000000000dead']);
 
+// Decode instruction boundaries so PUSH operands (constants, addresses, metadata) are not mistaken for opcodes.
+export function hasDelegatecall(hex: string): boolean {
+  const h = hex.startsWith('0x') ? hex.slice(2) : hex;
+  for (let i = 0; i + 1 < h.length;) {
+    const op = parseInt(h.slice(i, i + 2), 16);
+    if (op === 0xf4) return true;
+    if (op === 0xfe) return false; // INVALID: end of executable code, metadata follows
+    i += 2 + (op >= 0x60 && op <= 0x7f ? (op - 0x5f) * 2 : 0);
+  }
+  return false;
+}
+
+// Whether "a function is NOT there" can corroborate. A missing selector plus a GoPlus "0" is two weak negatives:
+// custom-named functions, role-gated mints and unresolved delegation all read as "absent" (GoPlus was wrong 4 of 11 times
+// against verified source). Until a source that shows verified contract code is added, a negative is an observation only.
+export const ABSENCE_CORROBORATES = false;
+const capability = (f: Field<boolean>): Field<boolean> =>
+  f.status === 'ok' && f.value === false && !ABSENCE_CORROBORATES
+    ? { ...f, confidence: 'medium', corroborated: false, detail: `${f.detail ?? ''} No known function found is not proof of absence (custom names, role-gated mints, unresolved delegation), so this earns no score points and supports no supply-growth conclusion.`.trim() }
+    : f;
+
 const zeroAddr = (hex: string | null | undefined) => !hex || /^0x0*$/.test(hex);
 const addrFromWord = (hex: string) => '0x' + hex.slice(-40).toLowerCase();
 
@@ -147,7 +168,7 @@ export const evmAdapter: ChainAdapter = {
       else problems.push(`${i.kind} implementation bytecode unavailable (${i.addr})`);
     });
     // A small contract that delegates (DELEGATECALL 0xf4) but matched no standard proxy pattern is an unrecognised proxy.
-    if (code.ok && !impls.length && bytecode.length < 3000 && /f4/.test(bytecode.slice(2))) problems.push('small contract with DELEGATECALL but no recognised proxy slot: possible unrecognised proxy');
+    if (code.ok && !impls.length && bytecode.length < 3000 && hasDelegatecall(bytecode)) problems.push('small contract with DELEGATECALL but no recognised proxy slot: possible unrecognised proxy');
     const inspectionComplete = problems.length === 0;
     const has = (sels: string[]) => sels.some((s) => bytecode.includes('63' + s));
     const selField = (sels: string[], label: string): Field<boolean> => {
@@ -303,7 +324,7 @@ export const evmAdapter: ChainAdapter = {
       decimals: decF,
       total_supply_onchain: total,
       token_standard: ok('erc20', code.ref),
-      mint_authority_active: crossCheckBool(selField(SEL.mint, 'mint'), gpBool(g?.is_mintable, 'is_mintable'), 'mintable'),
+      mint_authority_active: capability(crossCheckBool(selField(SEL.mint, 'mint'), gpBool(g?.is_mintable, 'is_mintable'), 'mintable')),
       freeze_authority_active: unknown('not_applicable', 'EVM tokens have no freeze authority; see blacklist and pausable', [], { unit: 'bool' }),
       permanent_delegate: unknown('not_applicable', 'Solana-only concept', [], { unit: 'bool' }),
       transfer_hook: unknown('not_applicable', 'Solana-only concept', [], { unit: 'bool' }),
@@ -313,8 +334,8 @@ export const evmAdapter: ChainAdapter = {
       honeypot: crossCheckBool(gpBool(g?.is_honeypot, 'is_honeypot'), hpFlag, 'honeypot'),
       upgradeable_proxy: crossCheckBool(proxyOnchain, gpBool(g?.is_proxy, 'is_proxy'), 'upgradeable proxy'),
       owner_address: crossCheckOwner(ownerOnchain, g?.owner_address, gpRef),
-      pausable: crossCheckBool(selField(SEL.pause, 'pause'), gpBool(g?.transfer_pausable, 'transfer_pausable'), 'pausable'),
-      blacklist: crossCheckBool(selField(SEL.blacklist, 'blacklist'), gpBool(g?.is_blacklisted, 'is_blacklisted'), 'blacklist'),
+      pausable: capability(crossCheckBool(selField(SEL.pause, 'pause'), gpBool(g?.transfer_pausable, 'transfer_pausable'), 'pausable')),
+      blacklist: capability(crossCheckBool(selField(SEL.blacklist, 'blacklist'), gpBool(g?.is_blacklisted, 'is_blacklisted'), 'blacklist')),
       ...conc,
       liquidity_locked_pct: lpLocked,
       creator_holding_pct: gpPct(g?.creator_percent, 'creator holding'),

@@ -192,7 +192,7 @@ export async function fetchLunarCrushWithCache(
       const fetchedAt = new Date(cached.lunarcrush_fetched_at);
       const ageHours = (Date.now() - fetchedAt.getTime()) / (1000 * 60 * 60);
       
-      if (ageHours < 6) {
+      if (ageHours >= 0 && ageHours < 6) { // a cache timestamp in the future is never 'fresh'
         console.log(`[LUNARCRUSH] Using cached data (${ageHours.toFixed(1)}h old) for ${tokenSymbol}`);
         return {
           galaxy_score: cached.galaxy_score,

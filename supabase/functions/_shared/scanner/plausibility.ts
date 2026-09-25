@@ -52,7 +52,8 @@ export function runPlausibility(rec: ScanRecord, previous?: { total_supply_oncha
     // A 10^k gap (k >= 3) is a decimals bug on any token; a non-power-of-ten gap only proves an error for a single-chain
     // token (a chain holding 1% of a multichain supply is legitimate: Codex round 2, finding 12).
     const lg = Math.log10(ratio);
-    const isPowerOfTen = Math.abs(lg) >= 3 && Math.abs(lg - Math.round(lg)) < 0.01;
+    // on a multichain token an exact 10^3..10^5 share (0.1%..0.001% of the global supply) is plausible; only 10^6+ is treated as a decimals bug
+    const isPowerOfTen = Math.abs(lg) >= (single ? 3 : 6) && Math.abs(lg - Math.round(lg)) < 0.01;
     if ((single && (ratio > 50 || ratio < 0.02)) || isPowerOfTen) {
       flags.push({ rule: 'decimals_order_of_magnitude', severity: 'error', field: 'chain.total_supply_onchain', detail: `on-chain ${c.total_supply_onchain.value} vs market ${m.total_supply_market.value} (x${ratio.toExponential(2)}): decimals likely misapplied` });
       c.total_supply_onchain = fail(c.total_supply_onchain, 'order-of-magnitude mismatch with market total supply');
@@ -62,16 +63,6 @@ export function runPlausibility(rec: ScanRecord, previous?: { total_supply_oncha
       c.total_supply_onchain = { ...c.total_supply_onchain, status: 'disputed', reason: 'sources_disagree', confidence: 'low', corroborated: false, detail: 'on-chain vs market total supply differ >2% on a single-chain token' };
     } else if (!single && relDiff(c.total_supply_onchain.value, m.total_supply_market.value) > 0.02) {
       flags.push({ rule: 'onchain_vs_market_total', severity: 'info', field: 'chain.total_supply_onchain', detail: `multichain or differently-defined total: on-chain (this chain) ${c.total_supply_onchain.value} vs market (global) ${m.total_supply_market.value}` });
-    }
-  }
-  // 4b. Holder shares are balance / on-chain total supply. When that denominator is disputed or unknown, every
-  //     share derived from it is invalid too (Codex finding 3): they must not stay usable while the total is not.
-  if (!usable(c.total_supply_onchain)) {
-    const dependents = ['top1_pct', 'top5_pct', 'top10_pct', 'top20_pct', 'top10_excl_noncirculating_pct', 'noncirculating_labeled_pct', 'top_holders'] as const;
-    const live = dependents.filter((k) => usable(c[k] as Field<unknown>));
-    if (live.length) {
-      flags.push({ rule: 'holder_shares_need_valid_supply', severity: 'error', field: 'chain.total_supply_onchain', detail: `on-chain total supply is ${c.total_supply_onchain.status}; holder shares derived from it invalidated: ${live.join(', ')}` });
-      for (const k of live) (c as any)[k] = { ...c[k], value: null, status: 'unknown', reason: 'missing_input', confidence: undefined, corroborated: false, detail: `holder share invalid: its denominator (on-chain total supply) is ${c.total_supply_onchain.status}` };
     }
   }
   // 5. Market cap ~ price x circulating (catches circulating/decimals errors in the provider).
@@ -107,6 +98,16 @@ export function runPlausibility(rec: ScanRecord, previous?: { total_supply_oncha
   }
   if (usable(rec.unlocks.last_scheduled_event) && rec.unlocks.next_unlock_date.value && rec.unlocks.next_unlock_date.value !== 'none_scheduled') {
     if (Date.parse(rec.unlocks.next_unlock_date.value as string) < now - 86400_000) flags.push({ rule: 'next_unlock_in_future', severity: 'error', field: 'unlocks.next_unlock_date', detail: 'next unlock date is in the past' });
+  }
+  // 4b. Holder shares are balance / on-chain total supply. When that denominator is disputed or unknown, every
+  //     share derived from it is invalid too (Codex finding 3): they must not stay usable while the total is not.
+  if (!usable(c.total_supply_onchain)) {
+    const dependents = ['top1_pct', 'top5_pct', 'top10_pct', 'top20_pct', 'top10_excl_noncirculating_pct', 'noncirculating_labeled_pct', 'top_holders'] as const;
+    const live = dependents.filter((k) => usable(c[k] as Field<unknown>));
+    if (live.length) {
+      flags.push({ rule: 'holder_shares_need_valid_supply', severity: 'error', field: 'chain.total_supply_onchain', detail: `on-chain total supply is ${c.total_supply_onchain.status}; holder shares derived from it invalidated: ${live.join(', ')}` });
+      for (const k of live) (c as any)[k] = { ...c[k], value: null, status: 'unknown', reason: 'missing_input', confidence: undefined, corroborated: false, detail: `holder share invalid: its denominator (on-chain total supply) is ${c.total_supply_onchain.status}` };
+    }
   }
   // 7. Supply within a sane band of the previous scan (unexplained jumps).
   if (previous?.total_supply_onchain && usable(c.total_supply_onchain)) {

@@ -66,8 +66,9 @@ export class ScanContext {
     for (let attempt = 0; attempt <= retries; attempt++) {
       // The budget is re-checked before EVERY attempt, so retries cannot spend past it (Codex round 2, finding 14).
       // The previous real failure is kept as the result; running out of budget is not a provider failure.
-      if (attempt > 0 && (this.calls >= this.budget.maxCalls || (credits > 0 && this.credits + credits > this.budget.maxPaidCredits))) break;
       if (attempt > 0) await sleep(attempt === 1 ? 600 : 1800);
+      // Check and reserve with no await in between: concurrent retries all see the spend of the ones before them.
+      if (attempt > 0 && (this.calls >= this.budget.maxCalls || (credits > 0 && this.credits + credits > this.budget.maxPaidCredits))) break;
       this.calls++;
       st.calls++;
       if (credits) {
@@ -179,6 +180,7 @@ export class ScanContext {
 export function redact(s: string): string {
   return String(s ?? '')
     .replace(/((?:api[-_]?key|apikey|access[-_]?token|auth[-_]?token|token|secret|password|key|sign|signature)=)[^&\s"'\\]+/gi, '$1[redacted]')
+    .replace(/(["']?[\w-]*(?:key|token|secret|password|authorization|signature)[\w-]*["']?\s*[:=]\s*["']?)[^\s"'&,}\]]+/gi, '$1[redacted]')
     .replace(/(bearer|basic)\s+[A-Za-z0-9._~+/=-]+/gi, '$1 [redacted]')
     .replace(/("(?:api[-_]?key|apikey|token|access_token|secret|authorization)"\s*:\s*")[^"]+/gi, '$1[redacted]');
 }

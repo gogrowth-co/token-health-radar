@@ -79,9 +79,11 @@ export async function collectToken(
   const chain = await adapter.collect(ctx, address, marketFinal, chainId);
   // Positive identity check (Codex round 2, finding 6): a Solana address is only accepted when a mint account exists
   // at exactly that case. A wrong stored hint is dropped and recovery retried; otherwise the scan stops before any write.
-  if (isSol && chain.token_standard.status === 'unknown' && chain.token_standard.reason === 'not_found') {
+  // Positive validation only: the account must be read AND be a supported mint (SPL Token or Token-2022). A failed read, a
+  // non-mint account or an unknown program never confirms identity, so nothing is written for it (Codex round 3, finding 6).
+  if (isSol && !(usable(chain.token_standard) && (chain.token_standard.value === 'spl-token' || chain.token_standard.value === 'spl-token-2022'))) {
     if (usedHint) return collectToken(addressInput, chainIdInput, { ...opts, canonicalHint: null });
-    throw new AddressResolutionError(`no mint account exists at ${address} (exact case); nothing was written`);
+    throw new AddressResolutionError(`could not confirm a token mint at ${address} (exact case): ${chain.token_standard.reason ?? 'unknown'}${chain.token_standard.detail ? ' - ' + chain.token_standard.detail : ''}. Nothing was written.`);
   }
   const liquidity = await collectLiquidity(ctx, chainId, address, adapter, chain.decimals, marketFinal.price_usd);
   // The raw DeFiLlama dataset is cached in market.ts (24h from its original fetch); time-dependent values are recomputed every scan.
@@ -139,7 +141,7 @@ export async function collectLiquidity(ctx: ScanContext, chainId: string, addres
       liquidity_usd: finite(p.attributes?.reserve_in_usd) as number,
       volume_24h_usd: finite(p.attributes?.volume_usd?.h24), // null stays null, never 0
     }));
-    volumeComplete = pools.every((p) => p.volume_24h_usd !== null);
+    volumeComplete = gtRows.every((p: any) => finite(p.attributes?.volume_usd?.h24) !== null); // over ALL pools in the answer, not just the retained ones
     ref = { ...gt.ref, raw_excerpt: { pools_on_page: totalOnPage, pools_without_reserve_data: missingReserve } };
   } else {
     failRefs.push(gt.ref);
@@ -152,7 +154,7 @@ export async function collectLiquidity(ctx: ScanContext, chainId: string, addres
       const dsValid = sorted.filter((p: any) => finite(p.liquidity?.usd) !== null);
       missingReserve = sorted.length - dsValid.length;
       pools = dsValid.slice(0, 10).map((p: any) => ({ dex: p.dexId ?? 'unknown', name: `${p.baseToken?.symbol ?? '?'} / ${p.quoteToken?.symbol ?? '?'}`, address: p.pairAddress ?? '', liquidity_usd: finite(p.liquidity?.usd) as number, volume_24h_usd: finite(p.volume?.h24) }));
-      volumeComplete = pools.every((p) => p.volume_24h_usd !== null);
+      volumeComplete = sorted.every((p: any) => finite(p.volume?.h24) !== null);
       if (sorted.length > 0 && pools.length === 0) pools = null; // pairs without liquidity data are not a measurement
       ref = { ...ds.ref, raw_excerpt: { pairs: sorted.length, fallback_after: `geckoterminal ${gt.ok ? 'no_data' : gt.reason}` } };
     } else {

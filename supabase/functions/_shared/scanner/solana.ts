@@ -115,8 +115,11 @@ export const solanaAdapter: ChainAdapter = {
       return !!e && !valid(e.state);
     };
     const isObj = (st: any) => typeof st === 'object' && st !== null;
-    const hasKey = (st: any, k: string) => isObj(st) && k in st && (st[k] === null || typeof st[k] === 'string');
-    const feeOk = (st: any) => isObj(st) && [st.newerTransferFee, st.olderTransferFee].some((f: any) => isObj(f) && Number.isFinite(Number(f.transferFeeBasisPoints)));
+    // An address field is either an explicit null (unset) or a valid base58 address; "" or a number is malformed.
+    const hasKey = (st: any, k: string) => isObj(st) && k in st && (st[k] === null || (typeof st[k] === 'string' && isValidSolanaAddress(st[k])));
+    // Fee basis points must be a real integer in 0..10000: no coercion (Number(null) is 0).
+    const bpsOk = (f: any) => isObj(f) && typeof f.transferFeeBasisPoints === 'number' && Number.isInteger(f.transferFeeBasisPoints) && f.transferFeeBasisPoints >= 0 && f.transferFeeBasisPoints <= 10000;
+    const feeOk = (st: any) => isObj(st) && [st.newerTransferFee, st.olderTransferFee].filter((f: any) => f !== undefined).length > 0 && [st.newerTransferFee, st.olderTransferFee].filter((f: any) => f !== undefined).every(bpsOk);
     const malformed: Record<string, boolean> = {
       permanentDelegate: badState('permanentDelegate', (st) => hasKey(st, 'delegate')),
       transferHook: badState('transferHook', (st) => hasKey(st, 'programId')),

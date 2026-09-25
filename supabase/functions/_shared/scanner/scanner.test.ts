@@ -152,7 +152,7 @@ Deno.test('scoring: missing required inputs -> dimension not scored, overall nul
   assertEquals(s.dimensions.community.score, null);
   assertEquals(s.dimensions.development.score, null);
   assertEquals(s.overall, null);
-  assertEquals(s.scoring_version, '2.1.0');
+  assertEquals(s.scoring_version, '2.2.0');
 });
 
 Deno.test('scoring: disputed input is excluded and blocks a required slot', () => {
@@ -714,8 +714,11 @@ Deno.test('community: missing providers are unknown, a single input is not enoug
   assertEquals(rec.social.community.social_dominance.status, 'unknown');
   assertEquals(scoreRecord(rec).dimensions.community.score, null);
   // A cached answer keeps its original fetch time.
-  const cached = communityFields(mk({ lunar: { sentiment: 60, social_dominance: 1, trend: 'up', fetched_at: '2026-09-24T18:00:00Z' } }), NOW.toISOString());
-  assertEquals(cached.sentiment.sources[0].fetched_at, '2026-09-24T18:00:00Z');
+  const cached = communityFields(mk({ lunar: { sentiment: 60, social_dominance: 1, trend: 'up', fetched_at: '2026-09-23T18:00:00Z' } }), NOW.toISOString());
+  assertEquals(cached.sentiment.sources[0].fetched_at, '2026-09-23T18:00:00Z');
+  // A future provider timestamp is invalid provenance: the reading is dropped, not reused as fresh.
+  const future = communityFields(mk({ lunar: { sentiment: 60, social_dominance: 1, trend: 'up', fetched_at: '2030-01-01T00:00:00Z' } }), NOW.toISOString());
+  assertEquals(future.sentiment.status, 'unknown');
 });
 
 Deno.test('rpc: a JSON-RPC error under HTTP 200 is counted as a provider failure and opens the breaker', async () => {
@@ -984,4 +987,139 @@ Deno.test('redaction: keys echoed in provider text or URLs are stripped before t
   } finally {
     restore();
   }
+});
+
+// ---- Codex round 3
+import { ABSENCE_CORROBORATES, hasDelegatecall } from './evm.ts';
+
+Deno.test('evm: DELEGATECALL is found by decoding instructions, not by an "f4" substring inside PUSH data', () => {
+  assertEquals(hasDelegatecall('0x60f45000'), false); // PUSH1 0xf4; POP; STOP
+  assertEquals(hasDelegatecall('0x6080f4'), true); // PUSH1 0x80; DELEGATECALL
+  assertEquals(hasDelegatecall('0x7f' + 'f4'.repeat(32) + '00'), false); // PUSH32 of f4 bytes
+  assertEquals(hasDelegatecall('0x00fe' + 'f4f4'), false); // after INVALID = metadata
+});
+
+Deno.test('evm: "no known function found" + GoPlus "0" is NOT corroborated, earns no security points, and supports no supply inference', async () => {
+  assertEquals(ABSENCE_CORROBORATES, false);
+  const two = (v: boolean) => ok(v, ref, { corroborated: true, confidence: 'high' as const });
+  stubEvm({ proxy: false, implCodeOk: true, tokenCode: '0x60806040' });
+  const realGp = globalThis.fetch;
+  const wrapped = ((input: any, init?: any) => (String(input).includes('gopluslabs') ? Promise.resolve(new Response(JSON.stringify({ code: 1, result: { [EVM_TOKEN]: { is_mintable: '0', transfer_pausable: '0', is_blacklisted: '0' } } }), { status: 200 })) : realGp(input, init))) as typeof fetch;
+  globalThis.fetch = wrapped;
+  try {
+    const f = await evmAdapter.collect(new ScanContext(), EVM_TOKEN, {} as any, '0x1');
+    for (const k of ['mint_authority_active', 'pausable', 'blacklist'] as const) {
+      assertEquals(f[k].value, false, k);
+      assertEquals(f[k].corroborated, false, k);
+    }
+    const rec = fakeRecord({ 'chain.mint_authority_active': f.mint_authority_active, 'chain.honeypot': two(false), 'chain.pausable': f.pausable, 'chain.blacklist': f.blacklist });
+    rec.chain_id = '0x1';
+    const sec = scoreRecord(rec).dimensions.security;
+    assertEquals(sec.score, null); // mint is required and cannot be established
+    assert(!('pausable' in sec.inputs_used) && !('blacklist' in sec.inputs_used));
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('evm: a positive finding still counts even from one source (a warning is not flattering)', () => {
+  const rec = fakeRecord({ 'chain.mint_authority_active': ok(true, ref, { corroborated: true }), 'chain.honeypot': ok(false, ref, { corroborated: false }), 'chain.pausable': ok(true, ref, { corroborated: false }) });
+  rec.chain_id = '0x1';
+  const sec = scoreRecord(rec).dimensions.security;
+  assert('pausable' in sec.inputs_used);
+  assertEquals(sec.inputs_used.pausable.points, 3);
+});
+
+Deno.test('solana: empty-string addresses and null/non-integer fee bps in Token-2022 extensions are malformed, not "none"', async () => {
+  stubSolanaMint({ decimals: 6, supply: '1000000000', mintAuthority: null, freezeAuthority: null, extensions: [{ extension: 'permanentDelegate', state: { delegate: '' } }, { extension: 'transferHook', state: { programId: '' } }, { extension: 'transferFeeConfig', state: { newerTransferFee: { transferFeeBasisPoints: null } } }] }, TOKEN_2022_PROGRAM);
+  try {
+    const f = await solanaAdapter.collect(new ScanContext(), EXACT_L_MINT, {} as any, 'solana');
+    for (const k of ['permanent_delegate', 'transfer_hook', 'transfer_tax_pct'] as const) assertEquals(f[k].status, 'unknown', k);
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('address: an RPC failure or a non-mint account never confirms Solana identity', async () => {
+  stubFetch((_u, body) => (body?.method ? { status: 503, text: 'down' } : { status: 404, text: '{}' }));
+  try {
+    let err: unknown = null;
+    try {
+      await collectToken(EXACT_L_MINT, 'solana');
+    } catch (e) {
+      err = e;
+    }
+    assert(err instanceof AddressResolutionError);
+  } finally {
+    restore();
+  }
+  stubFetch((_u, body) => (body?.method === 'getAccountInfo' ? { json: { jsonrpc: '2.0', id: 1, result: { context: { slot: 1 }, value: { owner: '11111111111111111111111111111111', data: ['', 'base64'] } } } } : { status: 404, text: '{}' }));
+  try {
+    let err: unknown = null;
+    try {
+      await collectToken(EXACT_L_MINT, 'solana');
+    } catch (e) {
+      err = e;
+    }
+    assert(err instanceof AddressResolutionError, 'a non-mint account must not be accepted');
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('unlocks: coverage must be full (996 of 1000 is not complete); a bad series does not hide a valid dated event or the unscheduled supply', () => {
+  const nearly = computeUnlocks({ metadata: { events: [{ timestamp: NOW_S - 30 * DAY, noOfTokens: [996], unlockType: 'cliff' }] }, supplyMetrics: { maxSupply: 1000, tbdAmount: 0 }, ...series([[-60, 0], [-30, 996], [-29, 996]]) }, 'x', ref, NOW);
+  assertEquals(nearly.next_unlock_date.status, 'unknown');
+  const decreasing = computeUnlocks({ metadata: { events: [] }, supplyMetrics: { maxSupply: 1000, tbdAmount: 0 }, ...series([[-60, 500], [-30, 100], [-29, 1000]]) }, 'x', ref, NOW);
+  assertEquals(decreasing.unlock_90d_amount.status, 'unknown');
+  const badSeries = computeUnlocks({ metadata: { events: [{ timestamp: NOW_S + 10 * DAY, noOfTokens: [100], unlockType: 'cliff' }] }, supplyMetrics: { maxSupply: 1000, tbdAmount: 300 }, documentedData: { data: [{ label: 'a', data: [] }] } }, 'x', ref, NOW);
+  assertEquals(badSeries.next_unlock_amount.value, 100);
+  assertEquals(badSeries.unscheduled_supply.value, 300);
+  assertEquals(badSeries.unlock_30d_amount.status, 'unknown');
+});
+
+Deno.test('labels: "Coinbase Ventures" and "Burn Capital" are not exchange/burn wallets', () => {
+  assertEquals(classifyLabel('Coinbase Ventures', 'nansen').confidence, 'medium');
+  assertEquals(classifyLabel('Burn Capital', 'nansen').confidence, 'medium');
+  assertEquals(classifyLabel('Coinbase 12', 'nansen').confidence, 'high');
+  assertEquals(classifyLabel('Binance Hot Wallet', 'nansen').confidence, 'high');
+  assertEquals(classifyLabel('Burn Address', 'nansen').confidence, 'high');
+});
+
+Deno.test('budget: concurrent retries share one budget (no spending past it while another attempt is in backoff)', async () => {
+  stubFetch(() => ({ status: 503, text: 'down' }));
+  try {
+    const ctx = new ScanContext({ maxCalls: 3, maxPaidCredits: 15 });
+    await Promise.all([1, 2, 3, 4].map(() => ctx.fetchJson('paid', 'https://x.test', { credits: 5, retries: 2 })));
+    assert(ctx.calls <= 3, `calls ${ctx.calls}`);
+    assert(ctx.credits <= 15, `credits ${ctx.credits}`);
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('redaction: header-style and JSON key/token fields are stripped too', async () => {
+  stubFetch(() => ({ status: 500, text: 'x-api-key: HDRSECRET99 and {"auth_token":"JSONSECRET77"}' }));
+  try {
+    const r = await new ScanContext().fetchJson('p', 'https://x.test', { retries: 0 });
+    const d = r.ok ? '' : r.detail ?? '';
+    assert(!/HDRSECRET99|JSONSECRET77/.test(d), d);
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('plausibility: future-dated supply invalidates dependents in the same pass; a 1% multichain share is not a decimals error', () => {
+  const two = { corroborated: true, confidence: 'high' as const };
+  const rec = fakeRecord({
+    'chain.total_supply_onchain': ok(1e9, { source: 't', fetched_at: '2030-01-01T00:00:00Z' }, two),
+    'chain.top10_pct': ok(30, ref, two),
+    'market.platform_count': ok(5, ref),
+  });
+  runPlausibility(rec);
+  assertEquals(rec.chain.total_supply_onchain.status, 'unknown');
+  assertEquals(rec.chain.top10_pct.status, 'unknown');
+  const legit = fakeRecord({ 'chain.total_supply_onchain': ok(1e6, ref), 'market.total_supply_market': ok(1e9, ref), 'market.platform_count': ok(6, ref) });
+  runPlausibility(legit);
+  assertEquals(legit.chain.total_supply_onchain.status, 'ok'); // exactly 10^-3 of the global supply
 });

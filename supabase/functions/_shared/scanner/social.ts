@@ -107,7 +107,7 @@ export async function collectGithub(ctx: ScanContext, githubUrl: string | undefi
 }
 
 /** Community fields from the legacy providers' results. A zero or a missing answer is unknown, never a low score. */
-export function communityFields(input: {
+export function communityFields(raw: {
   symbol: string | null;
   lunar: { sentiment: number | null; social_dominance: number | null; trend: string | null; fetched_at?: string } | null;
   discordLinked: boolean;
@@ -115,6 +115,9 @@ export function communityFields(input: {
   telegramLinked: boolean;
   telegramMembers: number | null;
 }, nowIso: string): CommunityFacts {
+  // A provider timestamp in the future is invalid provenance: the reading is dropped instead of being reused as fresh.
+  const futureLunar = !!raw.lunar?.fetched_at && Date.parse(raw.lunar.fetched_at) > Date.parse(nowIso) + FUTURE_SKEW_MS;
+  const input = { ...raw, lunar: futureLunar ? null : raw.lunar };
   // A cached LunarCrush answer keeps the time it was really obtained; a scan never renews it (Codex round 2, finding 8).
   const lc: SourceRef = { source: 'lunarcrush', fetched_at: input.lunar?.fetched_at ?? nowIso };
   const noLunar = (why: string) => unknown<any>(input.symbol ? 'no_data' : 'missing_input', why, [lc]);

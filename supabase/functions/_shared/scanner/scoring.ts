@@ -15,7 +15,7 @@ import { type Field, usable } from './field.ts';
 import { isRenounced } from './evm.ts';
 import type { ScanRecord } from './types.ts';
 
-export const SCORING_VERSION = '2.1.0';
+export const SCORING_VERSION = '2.2.0'; // 2.1.0 -> 2.2.0: concentration scored on raw top-10 with corroborated supply; measured zeros count; EVM absence claims earn nothing
 
 export interface DimensionScore {
   score: number | null;
@@ -36,7 +36,9 @@ export interface ScoreResult {
 // `corroborated`: the handoff requires two independent sources for the fields that drive a score (supply,
 // circulating supply, holder concentration, mint and freeze authority). A single-source value is kept as an
 // observation but earns no points and blocks a required slot.
-type Input = { name: string; field: Field<any> | undefined; max: number; points: (v: any) => number; required?: boolean; corroborated?: boolean };
+// `gateOnlyIf`: corroboration is demanded only for values where it matters (e.g. only a FAVOURABLE reading like "not pausable"
+// needs two sources; a single-source warning still counts against the token, because ignoring it would flatter).
+type Input = { name: string; field: Field<any> | undefined; max: number; points: (v: any) => number; required?: boolean; corroborated?: boolean; gateOnlyIf?: (v: any) => boolean };
 
 function dimension(inputs: Input[], opts: { minInputs?: number } = {}): DimensionScore {
   const used: DimensionScore['inputs_used'] = {};
@@ -44,7 +46,7 @@ function dimension(inputs: Input[], opts: { minInputs?: number } = {}): Dimensio
   const missingRequired: string[] = [];
   for (const i of inputs) {
     const f = i.field as Field<any> | undefined;
-    const single = !!f && (usable(f) as boolean) && !!i.corroborated && f.corroborated !== true;
+    const single = !!f && (usable(f) as boolean) && !!i.corroborated && f.corroborated !== true && (!i.gateOnlyIf || i.gateOnlyIf(f.value));
     if (f && (usable(f) as boolean) && !single) used[i.name] = { value: f.value, points: i.points(f.value), max: i.max };
     else {
       const why = !f ? 'missing' : single ? 'not_corroborated (one source only; two independent sources required)' : f.status === 'disputed' ? `disputed (${f.reason ?? 'sources_disagree'})` : (f.reason ?? 'unknown');
@@ -88,8 +90,8 @@ export function scoreRecord(rec: ScanRecord): ScoreResult {
       { name: 'honeypot', field: c.honeypot, max: 30, points: (v) => (v ? 0 : 30), required: true },
       { name: 'mint_authority_active', field: c.mint_authority_active, max: 20, points: (v) => privileged(v, 20, 15, 0), required: true, corroborated: true },
       { name: 'upgradeable_proxy', field: c.upgradeable_proxy, max: 15, points: (v) => (v ? 5 : 15) },
-      { name: 'pausable', field: c.pausable, max: 10, points: (v) => privileged(v, 10, 8, 3) },
-      { name: 'blacklist', field: c.blacklist, max: 10, points: (v) => privileged(v, 10, 8, 3) },
+      { name: 'pausable', field: c.pausable, max: 10, points: (v) => privileged(v, 10, 8, 3), corroborated: true, gateOnlyIf: (v) => v === false },
+      { name: 'blacklist', field: c.blacklist, max: 10, points: (v) => privileged(v, 10, 8, 3), corroborated: true, gateOnlyIf: (v) => v === false },
       { name: 'max_tax_pct', field: maxTax(c.buy_tax_pct, c.sell_tax_pct), max: 15, points: (v) => (v === 0 ? 15 : v <= 1 ? 12 : v <= 5 ? 6 : v <= 10 ? 2 : 0) },
     ]);
   // A confirmed honeypot is a hard fail regardless of other inputs.
