@@ -29,7 +29,7 @@ export interface ChainFacts extends ConcentrationFields {
 export interface LiquidityFacts {
   dex_liquidity_usd: Field<number>;
   pool_count: Field<number>;
-  top_pools: Field<Array<{ dex: string; name: string; address: string; liquidity_usd: number; volume_24h_usd: number }>>;
+  top_pools: Field<Array<{ dex: string; name: string; address: string; liquidity_usd: number; volume_24h_usd: number | null }>>;
   dex_volume_24h_usd: Field<number>;
   slippage_10k_pct: Field<number>;
   slippage_100k_pct: Field<number>;

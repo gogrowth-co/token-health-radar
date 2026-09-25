@@ -113,11 +113,12 @@ const DEXSCREENER_CHAIN: Record<string, string> = { solana: 'solana', '0x1': 'et
 export async function collectLiquidity(ctx: ScanContext, chainId: string, address: string, adapter: ChainAdapter, decimals: Field<number>, price: Field<number>): Promise<LiquidityFacts> {
   // Fallback chain: GeckoTerminal (intermittently serves a bot challenge) -> DexScreener.
   const net = chainId === 'solana' ? 'solana' : EVM_CHAINS[chainId].gecko;
-  type Pool = { dex: string; name: string; address: string; liquidity_usd: number; volume_24h_usd: number };
+  type Pool = { dex: string; name: string; address: string; liquidity_usd: number; volume_24h_usd: number | null };
   let pools: Pool[] | null = null;
   let ref: SourceRef | null = null;
   let totalOnPage = 0;
   let volumeComplete = true;
+  let missingReserve = 0; // pools in the answer that carry no reserve figure: the total is then a LOWER BOUND
   const failRefs: SourceRef[] = [];
   let failReason: any = 'no_data';
   let failDetail: string | undefined;
@@ -128,17 +129,18 @@ export async function collectLiquidity(ctx: ScanContext, chainId: string, addres
   const gtUsable = gt.ok && Array.isArray(gt.data?.data) && (gtRows.length === 0 || gtRows.some((p: any) => finite(p.attributes?.reserve_in_usd) !== null));
   if (gt.ok && gtUsable) {
     totalOnPage = gtRows.length;
-    const all = gtRows.slice(0, 10);
-    pools = all.filter((p: any) => finite(p.attributes?.reserve_in_usd) !== null).map((p: any) => ({
+    // Validate BEFORE taking the top 10, so a pool 11 with data is not lost and a pool without data is never a $0 pool.
+    const valid = gtRows.filter((p: any) => finite(p.attributes?.reserve_in_usd) !== null);
+    missingReserve = gtRows.length - valid.length;
+    pools = valid.slice(0, 10).map((p: any) => ({
       dex: p.relationships?.dex?.data?.id ?? 'unknown',
       name: p.attributes?.name ?? '',
       address: p.attributes?.address ?? '',
       liquidity_usd: finite(p.attributes?.reserve_in_usd) as number,
-      volume_24h_usd: finite(p.attributes?.volume_usd?.h24) as number,
+      volume_24h_usd: finite(p.attributes?.volume_usd?.h24), // null stays null, never 0
     }));
-    volumeComplete = pools.every((p) => Number.isFinite(p.volume_24h_usd));
-    pools = pools.map((p) => ({ ...p, volume_24h_usd: Number.isFinite(p.volume_24h_usd) ? p.volume_24h_usd : 0 }));
-    ref = { ...gt.ref, raw_excerpt: { pools_on_page: totalOnPage, pools_without_reserve_data: all.length - pools.length } };
+    volumeComplete = pools.every((p) => p.volume_24h_usd !== null);
+    ref = { ...gt.ref, raw_excerpt: { pools_on_page: totalOnPage, pools_without_reserve_data: missingReserve } };
   } else {
     failRefs.push(gt.ref);
     failReason = gt.ok ? 'no_data' : gt.reason;
@@ -147,9 +149,10 @@ export async function collectLiquidity(ctx: ScanContext, chainId: string, addres
     if (ds.ok && Array.isArray(ds.data)) {
       const sorted = [...ds.data].sort((a: any, b: any) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0));
       totalOnPage = sorted.length;
-      const dsRows = sorted.slice(0, 10).filter((p: any) => finite(p.liquidity?.usd) !== null);
-      pools = dsRows.map((p: any) => ({ dex: p.dexId ?? 'unknown', name: `${p.baseToken?.symbol ?? '?'} / ${p.quoteToken?.symbol ?? '?'}`, address: p.pairAddress ?? '', liquidity_usd: finite(p.liquidity?.usd) as number, volume_24h_usd: finite(p.volume?.h24) ?? 0 }));
-      volumeComplete = dsRows.every((p: any) => finite(p.volume?.h24) !== null);
+      const dsValid = sorted.filter((p: any) => finite(p.liquidity?.usd) !== null);
+      missingReserve = sorted.length - dsValid.length;
+      pools = dsValid.slice(0, 10).map((p: any) => ({ dex: p.dexId ?? 'unknown', name: `${p.baseToken?.symbol ?? '?'} / ${p.quoteToken?.symbol ?? '?'}`, address: p.pairAddress ?? '', liquidity_usd: finite(p.liquidity?.usd) as number, volume_24h_usd: finite(p.volume?.h24) }));
+      volumeComplete = pools.every((p) => p.volume_24h_usd !== null);
       if (sorted.length > 0 && pools.length === 0) pools = null; // pairs without liquidity data are not a measurement
       ref = { ...ds.ref, raw_excerpt: { pairs: sorted.length, fallback_after: `geckoterminal ${gt.ok ? 'no_data' : gt.reason}` } };
     } else {
@@ -162,10 +165,10 @@ export async function collectLiquidity(ctx: ScanContext, chainId: string, addres
     const opt = { confidence: 'medium' as const, detail: `top 10 pools containing the token (${ref.source}); reserves count both sides of each pool` };
     base = pools.length
       ? {
-        dex_liquidity_usd: ok(Math.round(pools.reduce((s, p) => s + p.liquidity_usd, 0)), ref, { unit: 'usd', ...opt }),
+        dex_liquidity_usd: ok(Math.round(pools.reduce((s, p) => s + p.liquidity_usd, 0)), ref, { unit: 'usd', ...opt, ...(missingReserve > 0 ? { bound: 'lower' as const, detail: `${opt.detail}; ${missingReserve} pool(s) carry no reserve figure and are not counted, so this is a lower bound` } : {}) }),
         pool_count: ok(totalOnPage, ref, { unit: 'pools', detail: 'pools on the first result page' }),
         top_pools: ok(pools, ref, opt),
-        dex_volume_24h_usd: volumeComplete ? ok(Math.round(pools.reduce((s, p) => s + p.volume_24h_usd, 0)), ref, { unit: 'usd', ...opt }) : unknown('no_data', 'some pools carry no 24h volume; the total would be understated', [ref], { unit: 'usd' }),
+        dex_volume_24h_usd: ok(Math.round(pools.reduce((s, p) => s + (p.volume_24h_usd ?? 0), 0)), ref, { unit: 'usd', ...opt, ...(!volumeComplete ? { bound: 'lower' as const, detail: `${opt.detail}; some pools carry no 24h volume and are not counted, so this is a lower bound` } : {}) }),
       }
       : { dex_liquidity_usd: ok(0, ref, { unit: 'usd', detail: 'no DEX pools found' }), pool_count: ok(0, ref, { unit: 'pools' }), top_pools: ok([], ref), dex_volume_24h_usd: ok(0, ref, { unit: 'usd' }) };
   } else {

@@ -41,8 +41,9 @@ export interface Field<T = unknown> {
   decimals?: number; // on-chain decimals applied to reach `value`, when relevant
   scope?: 'chain' | 'global'; // chain = this contract on this chain; global = aggregator, all chains
   confidence?: Confidence;
-  // 'upper': the value is a ceiling (worst case), not a measurement. Only used for derived "at most" statements.
-  bound?: 'upper';
+  // 'upper' = a ceiling (worst case), 'lower' = a floor (something was left out). Not a measurement; scoring may still use it
+  // only where the bound is the conservative direction.
+  bound?: 'upper' | 'lower';
   // true only when two INDEPENDENT sources were compared and agreed. A value can be `ok` from one source
   // (kept as an observation) but it may not drive a score that requires corroboration.
   corroborated?: boolean;

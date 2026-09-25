@@ -49,7 +49,11 @@ export function runPlausibility(rec: ScanRecord, previous?: { total_supply_oncha
   if (usable(c.total_supply_onchain) && usable(m.total_supply_market)) {
     const ratio = c.total_supply_onchain.value / m.total_supply_market.value;
     const single = usable(m.platform_count) && m.platform_count.value <= 1;
-    if (ratio > 50 || ratio < 0.02) {
+    // A 10^k gap (k >= 3) is a decimals bug on any token; a non-power-of-ten gap only proves an error for a single-chain
+    // token (a chain holding 1% of a multichain supply is legitimate: Codex round 2, finding 12).
+    const lg = Math.log10(ratio);
+    const isPowerOfTen = Math.abs(lg) >= 3 && Math.abs(lg - Math.round(lg)) < 0.01;
+    if ((single && (ratio > 50 || ratio < 0.02)) || isPowerOfTen) {
       flags.push({ rule: 'decimals_order_of_magnitude', severity: 'error', field: 'chain.total_supply_onchain', detail: `on-chain ${c.total_supply_onchain.value} vs market ${m.total_supply_market.value} (x${ratio.toExponential(2)}): decimals likely misapplied` });
       c.total_supply_onchain = fail(c.total_supply_onchain, 'order-of-magnitude mismatch with market total supply');
     } else if (single && relDiff(c.total_supply_onchain.value, m.total_supply_market.value) > 0.02) {
@@ -80,13 +84,26 @@ export function runPlausibility(rec: ScanRecord, previous?: { total_supply_oncha
   for (const [grp, obj] of Object.entries({ market: rec.market, chain: rec.chain, liquidity: rec.liquidity, unlocks: rec.unlocks, derived: rec.derived })) {
     for (const [k, f] of Object.entries(obj as Record<string, Field<unknown>>)) allFields.push([`${grp}.${k}`, f]);
   }
+  const quarantine = new Set<string>();
   for (const [name, f] of allFields) {
     for (const s of f.sources ?? []) {
       const t = Date.parse(s.fetched_at);
-      if (Number.isFinite(t) && t > now + FUTURE_SKEW_MS) flags.push({ rule: 'no_future_timestamps', severity: 'error', field: name, detail: `fetched_at ${s.fetched_at} is in the future` });
+      if (Number.isFinite(t) && t > now + FUTURE_SKEW_MS) {
+        flags.push({ rule: 'no_future_timestamps', severity: 'error', field: name, detail: `fetched_at ${s.fetched_at} is in the future` });
+        quarantine.add(name);
+      }
       const lu = (s.raw_excerpt as any)?.last_updated;
-      if (typeof lu === 'string' && Date.parse(lu) > now + FUTURE_SKEW_MS) flags.push({ rule: 'no_future_timestamps', severity: 'error', field: name, detail: `provider last_updated ${lu} is in the future` });
+      if (typeof lu === 'string' && Date.parse(lu) > now + FUTURE_SKEW_MS) {
+        flags.push({ rule: 'no_future_timestamps', severity: 'error', field: name, detail: `provider last_updated ${lu} is in the future` });
+        quarantine.add(name);
+      }
     }
+  }
+  // An error-severity flag takes the field out of scoring (and clears its corroboration), it does not just annotate it.
+  for (const name of quarantine) {
+    const [grp, key] = name.split('.');
+    const group = (rec as any)[grp];
+    if (group?.[key] && usable(group[key])) group[key] = fail(group[key], 'source timestamp is in the future', 'unknown');
   }
   if (usable(rec.unlocks.last_scheduled_event) && rec.unlocks.next_unlock_date.value && rec.unlocks.next_unlock_date.value !== 'none_scheduled') {
     if (Date.parse(rec.unlocks.next_unlock_date.value as string) < now - 86400_000) flags.push({ rule: 'next_unlock_in_future', severity: 'error', field: 'unlocks.next_unlock_date', detail: 'next unlock date is in the past' });

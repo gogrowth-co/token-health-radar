@@ -904,3 +904,54 @@ Deno.test('unlocks: any unscheduled supply (even 0.4%) means "not complete", a t
   const unordered = computeUnlocks({ ...ev, supplyMetrics: { maxSupply: 1000, tbdAmount: 0 }, ...series([[-30, 1000], [-60, 0]]) }, 'x', ref, NOW);
   assertEquals(unordered.next_unlock_date.status, 'unknown');
 });
+
+// ---- Codex round 2: finding 9 (partial pool data)
+Deno.test('liquidity: a pool without reserves makes the total a LOWER BOUND; pool 11 with data is not lost; missing volume stays null', async () => {
+  const pool = (i: number, reserve?: string, vol?: string) => ({ attributes: { name: `P${i}`, address: `a${i}`, ...(reserve ? { reserve_in_usd: reserve } : {}), ...(vol ? { volume_usd: { h24: vol } } : {}) } });
+  stubFetch(() => ({ json: { data: [pool(1, '1000', '10'), pool(2)] } }));
+  try {
+    const noDec = unknown<number>('missing_input');
+    const l = await collectLiquidity(new ScanContext(), '0x1', '0xabc', {} as any, noDec, noDec);
+    assertEquals(l.dex_liquidity_usd.value, 1000);
+    assertEquals(l.dex_liquidity_usd.bound, 'lower');
+    assertEquals(l.top_pools.value!.length, 1);
+  } finally {
+    restore();
+  }
+  const rows = [...Array.from({ length: 10 }, (_, i) => pool(i)), pool(11, '5000', '7')];
+  stubFetch(() => ({ json: { data: rows } }));
+  try {
+    const noDec = unknown<number>('missing_input');
+    const l = await collectLiquidity(new ScanContext(), '0x1', '0xabc', {} as any, noDec, noDec);
+    assertEquals(l.dex_liquidity_usd.value, 5000); // not $0 with 0 pools
+    assertEquals(l.top_pools.value![0].volume_24h_usd, 7);
+  } finally {
+    restore();
+  }
+  stubFetch(() => ({ json: { data: [pool(1, '1000')] } }));
+  try {
+    const noDec = unknown<number>('missing_input');
+    const l = await collectLiquidity(new ScanContext(), '0x1', '0xabc', {} as any, noDec, noDec);
+    assertEquals(l.top_pools.value![0].volume_24h_usd, null);
+    assertEquals(l.dex_volume_24h_usd.bound, 'lower');
+  } finally {
+    restore();
+  }
+});
+
+// ---- Codex round 2: finding 12
+Deno.test('plausibility: a future source timestamp quarantines the field (unknown, not corroborated), not just a flag', () => {
+  const rec = fakeRecord({ 'market.circulating_supply': ok(100, { source: 't', fetched_at: '2030-01-01T00:00:00Z' }, { corroborated: true, confidence: 'high' }) });
+  runPlausibility(rec);
+  assertEquals(rec.market.circulating_supply.status, 'unknown');
+  assertEquals(rec.market.circulating_supply.corroborated, false);
+});
+
+Deno.test('plausibility: a chain holding ~1% of a multichain supply is legitimate; a clean 10^k gap is still a decimals error', () => {
+  const legit = fakeRecord({ 'chain.total_supply_onchain': ok(1e7, ref), 'market.total_supply_market': ok(1e9, ref), 'market.platform_count': ok(6, ref) });
+  runPlausibility(legit);
+  assertEquals(legit.chain.total_supply_onchain.status, 'ok');
+  const decimals = fakeRecord({ 'chain.total_supply_onchain': ok(1e15, ref), 'market.total_supply_market': ok(1e9, ref), 'market.platform_count': ok(6, ref) });
+  runPlausibility(decimals);
+  assertEquals(decimals.chain.total_supply_onchain.status, 'disputed');
+});
