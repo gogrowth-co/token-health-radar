@@ -5,7 +5,7 @@
 --   field_data      every field as {value, status, reason, unit, decimals, scope, confidence, sources[{source, fetched_at, raw_ref, raw_excerpt}]}
 --   data_quality    completeness, required fields missing, provider failures/calls, paid credits, plausibility flags
 --   dimension_scores scoring result incl. inputs used/excluded per dimension
---   scoring_version  e.g. '2.0.0'
+--   scoring_version  e.g. '2.1.0'
 --   canonical_address exact-case address used for provider calls (token_address stays lowercased as a lookup key)
 ALTER TABLE public.token_scans
   ADD COLUMN IF NOT EXISTS scoring_version text,
