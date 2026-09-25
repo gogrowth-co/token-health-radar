@@ -25,9 +25,14 @@ AS $function$
 DECLARE
     request_id BIGINT;
     supabase_url TEXT := 'https://qaqebpcqespvzbfwawlp.supabase.co';
-    bearer TEXT := public.hubspot_sync_bearer();
+    bearer TEXT;
     target_user UUID;
 BEGIN
+    BEGIN
+        bearer := public.hubspot_sync_bearer();
+    EXCEPTION WHEN OTHERS THEN
+        bearer := NULL;
+    END;
     -- subscribers.id is the auth user id; token_scans has a separate user_id (null for anonymous scans).
     IF TG_TABLE_NAME = 'token_scans' THEN
         target_user := (to_jsonb(COALESCE(NEW, OLD)) ->> 'user_id')::uuid;
@@ -43,13 +48,17 @@ BEGIN
         RETURN COALESCE(NEW, OLD);
     END IF;
 
-    SELECT net.http_post(
-        url := supabase_url || '/functions/v1/hubspot-sync',
-        headers := jsonb_build_object('Authorization', 'Bearer ' || bearer, 'Content-Type', 'application/json'),
-        body := jsonb_build_object('user_id', target_user)
-    ) INTO request_id;
-
-    RAISE LOG 'HubSpot sync request initiated with ID: %', request_id;
+    -- A CRM failure must never roll back the subscriber update or scan insert that fired this trigger.
+    BEGIN
+        SELECT net.http_post(
+            url := supabase_url || '/functions/v1/hubspot-sync',
+            headers := jsonb_build_object('Authorization', 'Bearer ' || bearer, 'Content-Type', 'application/json'),
+            body := jsonb_build_object('user_id', target_user)
+        ) INTO request_id;
+        RAISE LOG 'HubSpot sync request initiated with ID: %', request_id;
+    EXCEPTION WHEN OTHERS THEN
+        RAISE LOG 'HubSpot sync enqueue failed (write kept): %', SQLERRM;
+    END;
     RETURN COALESCE(NEW, OLD);
 END;
 $function$;

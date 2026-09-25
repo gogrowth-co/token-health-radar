@@ -123,20 +123,36 @@ Deno.serve(async (req) => {
       ? await supabase.from('token_reports').select('token_address, chain_id, token_symbol, updated_at').in('token_address', testTokens)
       : await supabase.from('token_reports').select('token_address, chain_id, token_symbol, updated_at');
     let tokenReports = (reportRows || []) as TokenRow[];
+    // Scan freshness and report freshness are tracked separately: a recent scan must not stop a stale
+    // report from being regenerated (when reports are enabled), and a failed report is retried next run.
+    const scanDue = new Set<string>();
+    const reportDue = new Set<string>();
+    const keyOf = (t: { token_address: string; chain_id: string }) => `${t.token_address.toLowerCase()}|${t.chain_id}`;
     if (!testTokens && tokenReports.length) {
-      // Only scans newer than the cutoff matter (they make a token fresh), so this stays far
-      // below PostgREST's 1000-row cap however long the scan history grows.
-      const { data: recent, error: recentErr } = await supabase
-        .from('token_scans')
-        .select('token_address, chain_id')
-        .gte('scanned_at', staleCutoff)
-        .in('token_address', tokenReports.map((t) => t.token_address.toLowerCase()))
-        .limit(1000);
-      if (recentErr) throw new Error(`recent scans lookup failed: ${recentErr.message}`);
-      const fresh = new Set((recent || []).map((r) => `${r.token_address}|${r.chain_id}`));
+      // Paged: PostgREST caps a response at 1000 rows, and popular tokens can collect many user scans.
+      const fresh = new Set<string>();
+      const addrs = tokenReports.map((t) => t.token_address.toLowerCase());
+      for (let from = 0; ; from += 1000) {
+        const { data: page, error: recentErr } = await supabase
+          .from('token_scans')
+          .select('token_address, chain_id')
+          .gte('scanned_at', staleCutoff)
+          .in('token_address', addrs)
+          .order('id', { ascending: true })
+          .range(from, from + 999);
+        if (recentErr) throw new Error(`recent scans lookup failed: ${recentErr.message}`);
+        for (const r of page || []) fresh.add(`${r.token_address}|${r.chain_id}`);
+        if (!page || page.length < 1000) break;
+      }
+      for (const t of tokenReports) {
+        if (!fresh.has(keyOf(t))) scanDue.add(keyOf(t));
+        if (reportsEnabled && t.updated_at < staleCutoff) reportDue.add(keyOf(t));
+      }
       tokenReports = tokenReports
-        .filter((t) => !fresh.has(`${t.token_address.toLowerCase()}|${t.chain_id}`))
+        .filter((t) => scanDue.has(keyOf(t)) || reportDue.has(keyOf(t)))
         .sort((a, b) => a.updated_at.localeCompare(b.updated_at));
+    } else {
+      for (const t of tokenReports) scanDue.add(keyOf(t));
     }
 
     if (fetchError) {
@@ -179,6 +195,7 @@ Deno.serve(async (req) => {
       batch,
       async (token) => {
         if (Date.now() > deadline) return;
+        if (!scanDue.has(keyOf(token))) return; // report-only token: its scan is recent
         summary.attempted++;
         const r = await callFn(supabaseUrl, supabaseServiceKey, 'run-token-scan', {
           token_address: token.token_address.toLowerCase(),
@@ -198,7 +215,7 @@ Deno.serve(async (req) => {
     );
 
     // Phase 2: report generation, concurrency 1 with backoff (shared OpenAI quota)
-    for (const token of skipReports ? [] : batch) {
+    for (const token of skipReports ? [] : batch.filter((t) => reportDue.has(keyOf(t)))) {
       if (Date.now() > deadline) {
         summary.truncatedByBudget = true;
         break;
