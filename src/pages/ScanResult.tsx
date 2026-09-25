@@ -195,6 +195,8 @@ export default function ScanResult() {
             { name: 'development', query: supabase.from('token_development_cache').select('*').eq('token_address', dbAddress).eq('chain_id', chainId).maybeSingle() },
             { name: 'community', query: supabase.from('token_community_cache').select('*').eq('token_address', dbAddress).eq('chain_id', chainId).maybeSingle() },
             { name: 'descOverride', query: supabase.from('token_description_overrides').select('description').eq('token_address', dbAddress).maybeSingle() },
+            // Latest versioned scan (scoring v2+): the source of truth for scores. Caches still supply detail fields.
+            { name: 'versionedScan', query: supabase.from('token_scans').select('score_total, scoring_version, dimension_scores, scanned_at, completeness_pct').eq('token_address', dbAddress).eq('chain_id', chainId).not('scoring_version', 'is', null).order('scanned_at', { ascending: false }).limit(1).maybeSingle() },
             { name: 'agentToken', query: supabase.from('agent_tokens').select('category, agent_framework, coingecko_id').eq('token_address', tokenAddress).order('is_featured', { ascending: false }).limit(1).maybeSingle() }
           ];
 
@@ -224,7 +226,19 @@ export default function ScanResult() {
             }
           });
 
-          // Overall score, same rule as scanner scoring v2 (_shared/scanner/scoring.ts):
+          // Scores come from the latest versioned scan when there is one, so the page shows exactly what the
+          // scanner stored in one atomic write (overall, per-dimension, "not scored"), not a recomputation.
+          const scan = cacheData.versionedScan?.dimension_scores ? cacheData.versionedScan : null;
+          const DIMS = ['security', 'tokenomics', 'liquidity', 'development', 'community'] as const;
+          if (scan) {
+            for (const d of DIMS) {
+              const dim = scan.dimension_scores?.dimensions?.[d];
+              const stored = typeof dim?.score === 'number' ? dim.score : null;
+              cacheData[d] = { ...(cacheData[d] ?? { token_address: tokenAddress, chain_id: chainId }), score: stored };
+            }
+          }
+
+          // Fallback for tokens without a versioned scan: same rule as scanner scoring v2 (_shared/scanner/scoring.ts):
           // a null dimension is "not scored" and is left out; a real 0 counts.
           // No overall unless security is scored and at least 3 of 5 dimensions are.
           const scoreOf = (row: { score?: unknown } | null | undefined): number | null => (typeof row?.score === 'number' ? row.score : null);
@@ -236,7 +250,9 @@ export default function ScanResult() {
             scoreOf(cacheData.community)
           ].filter((score): score is number => score !== null);
 
-          const overallScore = scoreOf(cacheData.security) !== null && scores.length >= 3
+          const overallScore = scan
+            ? (typeof scan.dimension_scores?.overall === 'number' ? scan.dimension_scores.overall : null)
+            : scoreOf(cacheData.security) !== null && scores.length >= 3
             ? Math.round(scores.reduce((acc, curr) => acc + curr, 0) / scores.length)
             : null;
 
@@ -248,7 +264,8 @@ export default function ScanResult() {
             chain_id: chainId,
             overall_score: overallScore,
             token_info: tokenData,
-            lastUpdated: tokenData.created_at, // Use token data timestamp as last updated
+            lastUpdated: scan?.scanned_at ?? tokenData.created_at,
+            scoringVersion: scan?.scoring_version ?? null,
             security: cacheData.security,
             tokenomics: cacheData.tokenomics,
             liquidity: cacheData.liquidity,
@@ -535,7 +552,7 @@ export default function ScanResult() {
                 })} | Updated Weekly | Last Updated: {new Date(scanData.lastUpdated).toLocaleDateString('en-US', { 
                   month: 'long', 
                   year: 'numeric' 
-                })}
+                })}{scanData.scoringVersion ? ` | Scoring v${scanData.scoringVersion}` : ''}
               </p>
             </div>
           )}
