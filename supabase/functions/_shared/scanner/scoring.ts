@@ -80,6 +80,7 @@ export function scoreRecord(
       { name: 'freeze_authority_active', field: c.freeze_authority_active, max: 30, points: (v) => (v ? 0 : 30), required: true },
       { name: 'permanent_delegate', field: c.permanent_delegate, max: 15, points: (v) => (v ? 0 : 15) },
       { name: 'transfer_hook', field: c.transfer_hook, max: 10, points: (v) => (v ? 0 : 10) },
+      { name: 'pausable', field: c.pausable, max: 10, points: (v) => (v ? 0 : 10) },
       { name: 'transfer_tax_pct', field: c.transfer_tax_pct, max: 10, points: (v) => (v === 0 ? 10 : v <= 1 ? 5 : 0) },
     ])
     : dimension([

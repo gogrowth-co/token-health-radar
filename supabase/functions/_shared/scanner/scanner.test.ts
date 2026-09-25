@@ -316,3 +316,58 @@ Deno.test('address: a stored exact-case address is used without any lookup guess
     restore();
   }
 });
+
+// ---- Finding 5: Solana authorities read from a missing field, and pausable ignored in security
+const TOKEN_2022_PROGRAM = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb';
+function stubSolanaMint(info: Record<string, unknown>, program = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA') {
+  stubFetch((url, body) => {
+    if (body?.method === 'getAccountInfo') return { json: { jsonrpc: '2.0', id: 1, result: { context: { slot: 1 }, value: { owner: program, data: { parsed: { type: 'mint', info } } } } } };
+    if (body?.method === 'getTokenSupply') return { json: { jsonrpc: '2.0', id: 1, result: { context: { slot: 1 }, value: { amount: '1000000000', decimals: 6 } } } };
+    if (body?.method) return { json: { jsonrpc: '2.0', id: 1, result: { context: { slot: 1 }, value: null } } };
+    return { status: 404, text: '{}' };
+  });
+}
+
+Deno.test('solana: authority property ABSENT from the parsed mint is unknown, explicit null is revoked, a string is active', async () => {
+  stubSolanaMint({ decimals: 6, supply: '1000000000', freezeAuthority: null }); // mintAuthority missing entirely
+  try {
+    const f = await solanaAdapter.collect(new ScanContext(), EXACT_L_MINT, {} as any, 'solana');
+    assertEquals(f.mint_authority_active.value, null);
+    assertEquals(f.mint_authority_active.status, 'unknown');
+    assertEquals(f.freeze_authority_active.value, false); // explicit null = revoked
+  } finally {
+    restore();
+  }
+  stubSolanaMint({ decimals: 6, supply: '1000000000', mintAuthority: 'Auth1111111111111111111111111111111111111', freezeAuthority: null });
+  try {
+    const f = await solanaAdapter.collect(new ScanContext(), EXACT_L_MINT, {} as any, 'solana');
+    assertEquals(f.mint_authority_active.value, true);
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('solana: an undecodable Token-2022 extension makes extension-derived fields unknown, not "none"', async () => {
+  stubSolanaMint({ decimals: 6, supply: '1000000000', mintAuthority: null, freezeAuthority: null, extensions: [{ extension: 'unparseableExtension' }] }, TOKEN_2022_PROGRAM);
+  try {
+    const f = await solanaAdapter.collect(new ScanContext(), EXACT_L_MINT, {} as any, 'solana');
+    for (const k of ['permanent_delegate', 'transfer_hook', 'pausable', 'transfer_tax_pct'] as const) assertEquals(f[k].status, 'unknown', k);
+    assertEquals(f.mint_authority_active.value, false);
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('scoring: a pausable Token-2022 mint with revoked authorities no longer scores 100', async () => {
+  stubSolanaMint({ decimals: 6, supply: '1000000000', mintAuthority: null, freezeAuthority: null, extensions: [{ extension: 'pausableConfig', state: { authority: 'PauseAuth', paused: false } }] }, TOKEN_2022_PROGRAM);
+  try {
+    const f = await solanaAdapter.collect(new ScanContext(), EXACT_L_MINT, {} as any, 'solana');
+    assertEquals(f.pausable.value, true);
+    const rec = fakeRecord(Object.fromEntries(Object.entries(f).map(([k, v]) => [`chain.${k}`, v])));
+    const s = scoreRecord(rec);
+    assert((s.dimensions.security.score ?? 100) < 100, `security ${s.dimensions.security.score}`);
+    assertEquals(s.dimensions.security.inputs_used.pausable.points, 0);
+  } finally {
+    restore();
+  }
+});

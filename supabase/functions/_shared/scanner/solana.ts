@@ -69,22 +69,36 @@ export const solanaAdapter: ChainAdapter = {
     const gtBool = (v: unknown, label: string): Field<boolean> =>
       !gt.ok ? unknown(gt.reason, gt.detail, [gt.ref], { unit: 'bool' }) : v === 'yes' ? ok(true, gt.ref, { unit: 'bool' }) : v === 'no' ? ok(false, gt.ref, { unit: 'bool' }) : unknown('no_data', `GeckoTerminal has no ${label}`, [gt.ref], { unit: 'bool' });
 
-    const decimals = info ? Number(info.decimals) : null;
-    const mintActive: Field<boolean> = info ? ok(info.mintAuthority !== null && info.mintAuthority !== undefined, acctRef, { unit: 'bool' }) : acctMissing('mint authority');
-    const freezeActive: Field<boolean> = info ? ok(info.freezeAuthority !== null && info.freezeAuthority !== undefined, acctRef, { unit: 'bool' }) : acctMissing('freeze authority');
+    const decimals = info && Number.isInteger(Number(info.decimals)) && Number(info.decimals) >= 0 && Number(info.decimals) <= 36 ? Number(info.decimals) : null;
+    // An authority is REVOKED only when the parsed account says so explicitly (`null`). A property that is
+    // missing from the response is unknown, never "revoked" (Codex review 2026-09-25, finding 5).
+    const authority = (key: 'mintAuthority' | 'freezeAuthority', label: string): Field<boolean> => {
+      if (!info) return acctMissing(label);
+      const raw = info[key];
+      if (raw === null) return ok(false, acctRef, { unit: 'bool' });
+      if (typeof raw === 'string' && raw.length > 0) return ok(true, acctRef, { unit: 'bool' });
+      return unknown('no_data', `${label}: "${key}" is ${raw === undefined ? 'absent from' : 'malformed in'} the parsed mint account; absent is not the same as revoked`, [acctRef], { unit: 'bool' });
+    };
+    const mintActive = authority('mintAuthority', 'mint authority');
+    const freezeActive = authority('freezeAuthority', 'freeze authority');
 
-    // Token-2022 extensions that change holder risk.
-    const exts: Array<{ extension: string; state: any }> = info?.extensions ?? [];
-    const ext = (name: string) => exts.find((e) => e.extension === name)?.state;
-    const fee = ext('transferFeeConfig');
+    // Token-2022 extensions that change holder risk. The decoder omits `extensions` when a mint has none;
+    // a present-but-malformed list, or an extension the RPC could not decode, means we cannot rule an extension out.
     const is2022 = program === TOKEN_2022;
-    const transferTax: Field<number> = !info
-      ? acctMissing('transfer fee')
-      : ok(fee ? Number(fee.newerTransferFee?.transferFeeBasisPoints ?? fee.olderTransferFee?.transferFeeBasisPoints ?? 0) / 100 : 0, acctRef, {
+    const rawExts = info?.extensions;
+    const extsMalformed = rawExts !== undefined && !Array.isArray(rawExts);
+    const exts: Array<{ extension: string; state: any }> = Array.isArray(rawExts) ? rawExts : [];
+    const extUndecoded = is2022 && (extsMalformed || exts.some((e) => e.extension === 'unparseableExtension'));
+    const ext = (name: string) => exts.find((e) => e.extension === name)?.state;
+    const extField = <T>(label: string, read: () => Field<T>): Field<T> =>
+      !info ? acctMissing(label) : extUndecoded ? unknown('no_data', `${label}: Token-2022 extensions could not be fully decoded, so the absence of this extension cannot be confirmed`, [acctRef]) : read();
+    const fee = ext('transferFeeConfig');
+    const transferTax: Field<number> = extField('transfer fee', () =>
+      ok(fee ? Number(fee.newerTransferFee?.transferFeeBasisPoints ?? fee.olderTransferFee?.transferFeeBasisPoints ?? 0) / 100 : 0, acctRef, {
         unit: 'pct',
         confidence: 'high',
         detail: is2022 ? (fee ? 'Token-2022 transferFeeConfig' : 'Token-2022 mint without transfer fee') : 'SPL Token program has no transfer-fee mechanism',
-      });
+      }));
 
     // ---- supply (on-chain, chain scope)
     const supplyRes = await rpc('getTokenSupply', [mint]);
@@ -95,7 +109,7 @@ export const solanaAdapter: ChainAdapter = {
       totalOnchain = ok(Number(BigInt(v.amount)) / 10 ** v.decimals, supplyRes.ref, { unit: 'tokens', decimals: v.decimals, scope: 'chain', confidence: 'medium' });
     } else totalOnchain = supplyRes.ok ? unknown('not_found', 'getTokenSupply returned no value', [supplyRes.ref]) : unknown(supplyRes.reason, supplyRes.detail, [supplyRes.ref]);
     // Second read of supply from the mint account (may be a different endpoint).
-    const mintSupply: Field<number> = info && decimals !== null ? ok(Number(BigInt(info.supply)) / 10 ** decimals, acctRef, { unit: 'tokens', decimals, scope: 'chain' }) : acctMissing('supply');
+    const mintSupply: Field<number> = info && decimals !== null && typeof info.supply === 'string' && /^\d+$/.test(info.supply) ? ok(Number(BigInt(info.supply)) / 10 ** decimals, acctRef, { unit: 'tokens', decimals, scope: 'chain' }) : acctMissing('supply');
 
     // ---- holders: top 20 token accounts (free RPC limit), owners, owner programs
     const largest = await rpc('getTokenLargestAccounts', [mint], 'largest');
@@ -152,15 +166,15 @@ export const solanaAdapter: ChainAdapter = {
       token_standard: info ? ok(is2022 ? 'spl-token-2022' : program === TOKEN_PROGRAM ? 'spl-token' : String(program), acctRef) : acctMissing('token program'),
       mint_authority_active: crossCheckBool(mintActive, gtBool(gta?.mint_authority, 'mint authority'), 'mint authority'),
       freeze_authority_active: crossCheckBool(freezeActive, gtBool(gta?.freeze_authority, 'freeze authority'), 'freeze authority'),
-      permanent_delegate: info ? ok(!!ext('permanentDelegate')?.delegate, acctRef, { unit: 'bool', confidence: 'high', detail: is2022 ? undefined : 'not possible on SPL Token program' }) : acctMissing('permanent delegate'),
-      transfer_hook: info ? ok(!!ext('transferHook')?.programId, acctRef, { unit: 'bool', confidence: 'high' }) : acctMissing('transfer hook'),
+      permanent_delegate: extField('permanent delegate', () => ok(!!ext('permanentDelegate')?.delegate, acctRef, { unit: 'bool', confidence: 'high', detail: is2022 ? undefined : 'not possible on SPL Token program' })),
+      transfer_hook: extField('transfer hook', () => ok(!!ext('transferHook')?.programId, acctRef, { unit: 'bool', confidence: 'high' })),
       transfer_tax_pct: transferTax,
       buy_tax_pct: unknown('not_applicable', 'Solana has no per-direction buy tax; see transfer_tax_pct', [], { unit: 'pct' }),
       sell_tax_pct: unknown('not_applicable', 'Solana has no per-direction sell tax; see transfer_tax_pct', [], { unit: 'pct' }),
       honeypot: unknown('not_applicable', 'EVM honeypot simulation does not apply; freeze authority, permanent delegate and transfer hook cover the Solana equivalents', [], { unit: 'bool' }),
       upgradeable_proxy: unknown('not_applicable', 'SPL mints have no per-token contract code to upgrade', [], { unit: 'bool' }),
       owner_address: unknown('not_applicable', 'SPL mints have no owner; see mint/freeze authority', []),
-      pausable: info ? ok(!!ext('pausableConfig'), acctRef, { unit: 'bool', detail: 'Token-2022 pausable extension' }) : acctMissing('pausable'),
+      pausable: extField('pausable', () => ok(!!ext('pausableConfig'), acctRef, { unit: 'bool', confidence: 'high', detail: 'Token-2022 pausable extension (the pause authority can halt all transfers)' })),
       blacklist: unknown('not_applicable', 'SPL has no blacklist; a freeze authority is the equivalent control', [], { unit: 'bool' }),
       ...concentration,
       liquidity_locked_pct: unknown('not_supported_on_chain', 'no free Solana source for LP lock status', [], { unit: 'pct' }),
