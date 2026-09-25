@@ -20,7 +20,7 @@ import { fetchLunarCrushWithCache } from '../_shared/lunarcrushAPI.ts';
 import { fetchDiscordMemberCount } from '../_shared/discordAPI.ts';
 import { requireAuthOrInternal, getClientIp } from '../_shared/authGuard.ts';
 import { checkRateLimit, createRateLimitError } from '../_shared/rateLimit.ts';
-import { collectToken, normalizeChain } from '../_shared/scanner/collect.ts';
+import { AddressResolutionError, collectToken, normalizeChain } from '../_shared/scanner/collect.ts';
 import { scoreRecord } from '../_shared/scanner/scoring.ts';
 import { buildRows } from '../_shared/scanner/persist.ts';
 import { usable } from '../_shared/scanner/field.ts';
@@ -56,11 +56,19 @@ Deno.serve(async (req) => {
     const prev = await supabase.from('token_scans').select('field_data, scanned_at').eq('token_address', rawAddress.trim().toLowerCase()).eq('chain_id', chainId).not('field_data', 'is', null).order('scanned_at', { ascending: false }).limit(1).maybeSingle();
     const previous = prev.data?.field_data ? { total_supply_onchain: prev.data.field_data?.chain?.total_supply_onchain?.value ?? null, scanned_at: prev.data.scanned_at, record: prev.data.field_data } : null;
 
+    // Exact-case Solana mint stored by an earlier scan (the DB lowercases addresses). Ignored if the column doesn't exist yet.
+    const canon = chainId === 'solana'
+      ? await supabase.from('token_scans').select('canonical_address').eq('token_address', rawAddress.trim().toLowerCase()).eq('chain_id', chainId).not('canonical_address', 'is', null).order('scanned_at', { ascending: false }).limit(1).maybeSingle()
+      : null;
+    const canonicalHint: string | null = canon?.data?.canonical_address ?? null;
+
     let rec;
     try {
-      rec = await collectToken(rawAddress, chainId, { previous });
+      rec = await collectToken(rawAddress, chainId, { previous, canonicalHint });
     } catch (e) {
-      return json({ success: false, error: (e as Error).message, request_id: requestId }, 400);
+      // Nothing is written when the address cannot be resolved: a failed scan must not replace cached data.
+      const unresolved = e instanceof AddressResolutionError;
+      return json({ success: false, error: (e as Error).message, error_code: unresolved ? 'address_not_resolved' : 'invalid_request', request_id: requestId }, unresolved ? 422 : 400);
     }
 
     // Social + GitHub inputs for the community/development dimensions (unchanged providers).

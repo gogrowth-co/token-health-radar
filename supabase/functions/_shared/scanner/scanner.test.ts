@@ -9,7 +9,7 @@ import { solanaAdapter } from './solana.ts';
 import { computeUnlocks, datasetMatches, unlockSlugCandidates } from './market.ts';
 import { classifyLabel } from './holders.ts';
 import { runPlausibility } from './plausibility.ts';
-import { inferNoUnlocks, reuseIfFresh } from './collect.ts';
+import { AddressResolutionError, collectToken, inferNoUnlocks, reuseIfFresh } from './collect.ts';
 import { scoreRecord } from './scoring.ts';
 import type { ScanRecord } from './types.ts';
 
@@ -257,4 +257,62 @@ Deno.test('cache: unlock schedule reused within 24h only, never failures or deri
   derived.scanned_at = '2026-09-24T00:00:00Z';
   derived.unlocks = { ...derived.unlocks, emissions_source: ok('derived_fully_circulating', ref) };
   assertEquals(reuseIfFresh(derived, 'unlocks', '2026-09-24T01:00:00Z'), null);
+});
+
+// ---- Finding 10 (Codex review 2026-09-25): exact-case Solana recovery
+const EXACT_L_MINT = 'LmWq' + 'L'.repeat(20) + 'abc' + '9'.repeat(12); // contains capital L: lowercases to an invalid base58 char
+
+Deno.test('address: a lowercased mint containing L is recovered from CoinGecko and every provider gets the exact case', async () => {
+  const rpcAddresses: string[] = [];
+  stubFetch((url, body) => {
+    if (url.includes('api.coingecko.com')) return { json: { id: 'l-token', name: 'L Token', symbol: 'ltk', detail_platforms: { solana: { contract_address: EXACT_L_MINT } }, platforms: { solana: EXACT_L_MINT }, market_data: {} } };
+    if (body?.method) {
+      if (['getAccountInfo', 'getTokenSupply', 'getTokenLargestAccounts'].includes(body.method)) rpcAddresses.push(String(body.params?.[0]));
+      return { json: { jsonrpc: '2.0', id: 1, result: { context: { slot: 1 }, value: null } } };
+    }
+    return { status: 404, text: '{}' };
+  });
+  try {
+    const rec = await collectToken(EXACT_L_MINT.toLowerCase(), 'solana');
+    assertEquals(rec.address_canonical.value, EXACT_L_MINT);
+    assert(rpcAddresses.length >= 2, 'expected mint-level RPC calls');
+    assert(rpcAddresses.every((a) => a === EXACT_L_MINT), `RPC must only see the exact-case mint, saw ${rpcAddresses.join(', ')}`);
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('address: an unresolvable lowercase mint stops the scan before any chain provider is called', async () => {
+  const urls: string[] = [];
+  stubFetch((url, body) => {
+    urls.push(body?.method ? `rpc:${body.method}` : url);
+    return { status: 404, text: '{}' };
+  });
+  try {
+    let err: unknown = null;
+    try {
+      await collectToken(EXACT_L_MINT.toLowerCase(), 'solana');
+    } catch (e) {
+      err = e;
+    }
+    assert(err instanceof AddressResolutionError);
+    assert(urls.every((u) => u.includes('coingecko')), `only CoinGecko may be queried, saw: ${urls.join(', ')}`);
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('address: a stored exact-case address is used without any lookup guess', async () => {
+  const seen: string[] = [];
+  stubFetch((url, body) => {
+    seen.push(body?.method ? `rpc:${body.params?.[0]}` : url);
+    return { status: 404, text: '{}' };
+  });
+  try {
+    const rec = await collectToken(EXACT_L_MINT.toLowerCase(), 'solana', { canonicalHint: EXACT_L_MINT });
+    assertEquals(rec.address_canonical.value, EXACT_L_MINT);
+    assertEquals(rec.address_canonical.sources[0].source, 'stored_canonical_address');
+  } finally {
+    restore();
+  }
 });

@@ -21,6 +21,16 @@ export function normalizeChain(chainId: string | undefined | null): string | nul
   return hex && EVM_CHAINS[hex] ? hex : null;
 }
 
+/** Thrown when a Solana mint cannot be resolved to its exact-case form: no provider call is made with a guessed address. */
+export class AddressResolutionError extends Error {
+  code = 'address_not_resolved' as const;
+}
+
+// Solana addresses are case-sensitive base58, but the DB lowercases them. A lowercased mint can
+// contain `l` (from `L`), which is not a base58 character, so lowercase input is accepted as a
+// recovery candidate and must be resolved to its exact-case form before any provider call.
+const SOL_LOWERCASE_CANDIDATE = /^[1-9a-z]{32,44}$/;
+
 export function adapterFor(chainId: string): ChainAdapter {
   return chainId === 'solana' ? solanaAdapter : evmAdapter;
 }
@@ -28,7 +38,7 @@ export function adapterFor(chainId: string): ChainAdapter {
 export async function collectToken(
   addressInput: string,
   chainIdInput: string,
-  opts: { ctx?: ScanContext; previous?: { total_supply_onchain?: number | null; scanned_at?: string; record?: ScanRecord | null } | null; now?: Date } = {},
+  opts: { ctx?: ScanContext; previous?: { total_supply_onchain?: number | null; scanned_at?: string; record?: ScanRecord | null } | null; canonicalHint?: string | null; now?: Date } = {},
 ): Promise<ScanRecord> {
   const ctx = opts.ctx ?? new ScanContext();
   const scannedAt = (opts.now ?? new Date()).toISOString();
@@ -36,21 +46,32 @@ export async function collectToken(
   if (!chainId) throw new Error(`unsupported chain: ${chainIdInput}`);
   const adapter = adapterFor(chainId);
   const input = addressInput.trim();
-  if (chainId === 'solana' ? !isValidSolanaAddress(input) : !/^0x[0-9a-fA-F]{40}$/.test(input)) throw new Error(`invalid ${chainId} address: ${input}`);
+  const isSol = chainId === 'solana';
+  const lowercaseSolana = isSol && !/[A-Z]/.test(input) && SOL_LOWERCASE_CANDIDATE.test(input);
+  if (isSol ? !(isValidSolanaAddress(input) || lowercaseSolana) : !/^0x[0-9a-fA-F]{40}$/.test(input)) throw new Error(`invalid ${chainId} address: ${input}`);
   const platform = adapter.cgPlatform(chainId)!;
 
-  // 1. Market data first: CoinGecko's contract lookup is case-insensitive and
-  //    returns the exact-case address, which rescues a lowercased Solana mint.
-  const market = await fetchMarketData(ctx, platform, chainId === 'solana' ? input : input.toLowerCase(), chainId === 'solana' ? input : input.toLowerCase());
+  // 1. Resolve the exact-case address BEFORE any address-dependent provider call.
   let canonical: Field<string>;
-  if (chainId !== 'solana') canonical = ok(input.toLowerCase(), { source: 'input', fetched_at: scannedAt }, { confidence: 'high', detail: 'EVM addresses are case-insensitive' });
-  else if (/[A-Z]/.test(input)) canonical = ok(input, { source: 'input', fetched_at: scannedAt }, { confidence: 'high', detail: 'mixed-case input used as-is' });
-  else if (usable(market.canonical_address) && market.canonical_address.value.toLowerCase() === input.toLowerCase()) canonical = { ...market.canonical_address, detail: 'exact-case mint recovered from CoinGecko (input was lowercased)' };
-  else canonical = unknown('not_found', 'input is all-lowercase and no source listed the exact-case mint; Solana addresses are case-sensitive', market.canonical_address.sources);
-
-  const address = canonical.value ?? input;
-  // CoinMarketCap needs the exact-case Solana mint: refetch market data if we only now know it.
-  const marketFinal = chainId === 'solana' && address !== input ? await fetchMarketData(ctx, platform, address, address) : market;
+  if (!isSol) canonical = ok(input.toLowerCase(), { source: 'input', fetched_at: scannedAt }, { confidence: 'high', detail: 'EVM addresses are case-insensitive' });
+  else if (!lowercaseSolana) canonical = ok(input, { source: 'input', fetched_at: scannedAt }, { confidence: 'high', detail: 'mixed-case input used as-is' });
+  else {
+    const hint = opts.canonicalHint?.trim();
+    if (hint && isValidSolanaAddress(hint) && hint.toLowerCase() === input) {
+      canonical = ok(hint, { source: 'stored_canonical_address', fetched_at: scannedAt }, { confidence: 'high', detail: 'exact-case mint from a previous scan (recovered from CoinGecko then)' });
+    } else {
+      // CoinGecko's contract lookup is case-insensitive and returns the exact-case address. CoinMarketCap is skipped here: it needs the exact case.
+      const probe = await fetchMarketData(ctx, platform, input, null);
+      const cg = probe.canonical_address;
+      if (usable(cg) && isValidSolanaAddress(cg.value) && cg.value.toLowerCase() === input) {
+        canonical = { ...cg, detail: 'exact-case mint recovered from CoinGecko (input was lowercased)' };
+      } else {
+        throw new AddressResolutionError(`cannot resolve the exact-case Solana mint for ${input}: it is all-lowercase and CoinGecko does not list it (${cg.reason ?? 'no_data'}). No provider was called with a guessed address.`);
+      }
+    }
+  }
+  const address = canonical.value as string;
+  const marketFinal = await fetchMarketData(ctx, platform, address, address);
 
   // 2. Chain facts, liquidity, unlocks.
   const chain = await adapter.collect(ctx, address, marketFinal, chainId);

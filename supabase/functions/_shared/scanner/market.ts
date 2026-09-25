@@ -26,13 +26,13 @@ export interface MarketData {
 
 const CG_BASE = 'https://api.coingecko.com/api/v3';
 
-export async function fetchMarketData(ctx: ScanContext, cgPlatform: string, address: string, cmcAddress: string): Promise<MarketData> {
+export async function fetchMarketData(ctx: ScanContext, cgPlatform: string, address: string, cmcAddress: string | null): Promise<MarketData> {
   const key = Deno.env.get('COINGECKO_API_KEY');
   const cg = await ctx.fetchJson(`coingecko`, `${CG_BASE}/coins/${cgPlatform}/contract/${address}?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false`, {
     headers: key ? { 'x-cg-demo-api-key': key, Accept: 'application/json' } : { Accept: 'application/json' },
     excerpt: (d) => ({ id: d.id, circulating_supply: d.market_data?.circulating_supply, total_supply: d.market_data?.total_supply, max_supply: d.market_data?.max_supply, last_updated: d.market_data?.last_updated }),
   });
-  const cmc = await fetchCmc(ctx, cmcAddress);
+  const cmc = cmcAddress ? await fetchCmc(ctx, cmcAddress) : cmcSkipped();
 
   const miss = <T>(r: { reason: any; detail?: string; ref: SourceRef }): Field<T> =>
     unknown<T>(r.reason === 'not_found' ? 'not_listed' : r.reason, r.detail, [r.ref]);
@@ -84,6 +84,11 @@ export async function fetchMarketData(ctx: ScanContext, cgPlatform: string, addr
     // CoinMarketCap 6.86B post-burn), so it is single-source and never score-driving.
     max_supply: cgF.max_supply.status === 'ok' ? { ...cgF.max_supply, sources: [...cgF.max_supply.sources, ...cmc.max_supply.sources.map((s) => ({ ...s, value: cmc.max_supply.value }))] } : cgF.max_supply,
   };
+}
+
+function cmcSkipped() {
+  const f = unknown<number>('missing_input', 'CoinMarketCap not queried yet: exact-case address not resolved', [], { unit: 'tokens', scope: 'global' });
+  return { circulating_supply: f, total_supply: f, max_supply: f };
 }
 
 async function fetchCmc(ctx: ScanContext, address: string): Promise<{ circulating_supply: Field<number>; total_supply: Field<number>; max_supply: Field<number> }> {
