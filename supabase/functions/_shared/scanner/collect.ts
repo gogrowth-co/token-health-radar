@@ -76,8 +76,8 @@ export async function collectToken(
   // 2. Chain facts, liquidity, unlocks.
   const chain = await adapter.collect(ctx, address, marketFinal, chainId);
   const liquidity = await collectLiquidity(ctx, chainId, address, adapter, chain.decimals, marketFinal.price_usd);
-  const cachedUnlocks = reuseIfFresh(opts.previous?.record ?? null, 'unlocks', scannedAt);
-  const unlocks = cachedUnlocks ?? await fetchUnlocks(ctx, usable(marketFinal.coingecko_id) ? marketFinal.coingecko_id.value : null, usable(marketFinal.name) ? marketFinal.name.value : null, chainId, address, new Date(scannedAt));
+  // The raw DeFiLlama dataset is cached in market.ts (24h from its original fetch); time-dependent values are recomputed every scan.
+  const unlocks = await fetchUnlocks(ctx, usable(marketFinal.coingecko_id) ? marketFinal.coingecko_id.value : null, usable(marketFinal.name) ? marketFinal.name.value : null, chainId, address, new Date(scannedAt));
 
   const rec: ScanRecord = {
     schema_version: 1,
@@ -162,28 +162,12 @@ async function collectLiquidity(ctx: ScanContext, chainId: string, address: stri
   return { ...base, ...slip };
 }
 
-// Cache by field type (handoff requirement 10). Only slow-moving, schedule-type
-// data is reused from the previous stored scan; prices, supply, holders,
-// authorities and liquidity are always fetched fresh. A reused field keeps its
-// original sources and fetched_at, and says it was reused.
-export const FIELD_TTL_HOURS: Record<'unlocks', number> = { unlocks: 24 };
-
-export function reuseIfFresh(prev: ScanRecord | null, group: 'unlocks', nowIso: string): ScanRecord['unlocks'] | null {
-  if (!prev?.[group] || !prev.scanned_at) return null;
-  const ageH = (Date.parse(nowIso) - Date.parse(prev.scanned_at)) / 3_600_000;
-  if (!(ageH >= 0 && ageH < FIELD_TTL_HOURS[group])) return null;
-  const src = prev[group].emissions_source;
-  // Only reuse a real dataset read; never reuse failures or the derived inference (recomputed from fresh data).
-  if (src?.status !== 'ok' || src.value === 'derived_fully_circulating') return null;
-  const note = `reused from scan at ${prev.scanned_at} (unlock schedules cached ${FIELD_TTL_HOURS[group]}h)`;
-  return Object.fromEntries(Object.entries(prev[group]).map(([k, f]) => [k, { ...f, detail: f.detail ? `${f.detail}; ${note}` : note }])) as ScanRecord['unlocks'];
-}
-
 /**
- * No unlock dataset, but nothing left to unlock: when both market sources report
- * (practically) all supply circulating AND supply cannot increase, upcoming
- * unlocks are 0 by construction. Runs after plausibility, so a disputed or
- * failed circulating figure never qualifies. Labeled as derived, with inputs.
+ * No unlock dataset. When both market sources report (practically) all supply circulating AND supply cannot
+ * increase, the most that could still unlock is the non-circulating remainder. That is stated as an UPPER BOUND
+ * (worst case, marked `bound: 'upper'`), never as a scheduled amount and never as zero: 0.4% locked supply is
+ * not "no unlocks" (Codex review 2026-09-25, finding 7). Runs after plausibility, so a disputed or
+ * single-source circulating figure never qualifies.
  */
 export function inferNoUnlocks(rec: ScanRecord): ScanRecord['unlocks'] {
   const u = rec.unlocks;
@@ -195,15 +179,18 @@ export function inferNoUnlocks(rec: ScanRecord): ScanRecord['unlocks'] {
   if (ratio < 0.995) return u;
   if (!corroborated(c.mint_authority_active) || c.mint_authority_active.value !== false) return u;
   const sources = [...m.circulating_supply.sources, ...m.total_supply_market.sources, ...c.mint_authority_active.sources];
-  const detail = `derived: ${(ratio * 100).toFixed(2)}% of supply already circulating per CoinGecko and CoinMarketCap, and supply cannot increase (${rec.chain_id === 'solana' ? 'mint authority revoked' : 'not mintable'}); no DeFiLlama schedule exists`;
-  const zero = ok(0, sources, { unit: 'tokens', confidence: 'medium', detail });
+  const residual = Math.max(0, m.total_supply_market.value - m.circulating_supply.value);
+  const pct = ((residual / m.total_supply_market.value) * 100).toFixed(3);
+  const detail = `derived, not scheduled data: no DeFiLlama schedule exists; ${(ratio * 100).toFixed(2)}% of supply already circulates per CoinGecko and CoinMarketCap and supply cannot increase (${rec.chain_id === 'solana' ? 'mint authority revoked' : 'not mintable'}), so at most ${pct}% of supply (${Math.round(residual).toLocaleString('en-US')} tokens) could still enter circulation`;
+  const bound = ok(residual, sources, { unit: 'tokens', confidence: 'medium', bound: 'upper', detail: `upper bound: ${detail}` });
   return {
     emissions_source: ok('derived_fully_circulating', sources, { confidence: 'medium', detail }),
-    next_unlock_date: ok('none_scheduled', sources, { unit: 'date', confidence: 'medium', detail }),
-    next_unlock_amount: zero,
-    unlock_30d_amount: zero,
-    unlock_90d_amount: zero,
+    next_unlock_date: unknown('no_data', `no dated schedule exists; ${detail}`, sources, { unit: 'date' }),
+    next_unlock_amount: unknown('no_data', `no dated schedule exists; ${detail}`, sources, { unit: 'tokens' }),
+    unlock_30d_amount: bound,
+    unlock_90d_amount: bound,
     last_scheduled_event: unknown('no_data', 'no schedule dataset', u.last_scheduled_event.sources),
+    unscheduled_supply: bound,
   };
 }
 
@@ -212,7 +199,7 @@ function derive(rec: ScanRecord): ScanRecord['derived'] {
   const ratio = (a: Field<number>, b: Field<number>, label: string, unit: string, mult = 1): Field<number> => {
     if (!usable(a) || !usable(b) || b.value === 0) return unknown(a.status === 'disputed' || b.status === 'disputed' ? 'sources_disagree' : 'missing_input', `${label}: input missing or disputed`, [], { unit });
     const both = a.corroborated === true && b.corroborated === true;
-    return ok(Math.round((a.value / b.value) * mult * 1e4) / 1e4, [...a.sources, ...b.sources], { unit, confidence: both ? 'high' : 'medium', corroborated: both, detail: label });
+    return ok(Math.round((a.value / b.value) * mult * 1e4) / 1e4, [...a.sources, ...b.sources], { unit, confidence: both ? 'high' : 'medium', corroborated: both, ...(a.bound === 'upper' ? { bound: 'upper' as const, detail: `upper bound: ${label}` } : { detail: label }) });
   };
   const diff = (a: Field<number>, b: Field<number>, label: string): Field<number> => {
     if (!usable(a) || !usable(b)) return unknown('missing_input', `${label}: input missing or disputed`, [], { unit: 'tokens' });

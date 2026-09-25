@@ -10,7 +10,9 @@ import { evmAdapter } from './evm.ts';
 import { computeUnlocks, datasetMatches, unlockSlugCandidates } from './market.ts';
 import { applyLabel, buildConcentration, classifyLabel, type Holder } from './holders.ts';
 import { runPlausibility } from './plausibility.ts';
-import { AddressResolutionError, collectToken, inferNoUnlocks, reuseIfFresh } from './collect.ts';
+import { AddressResolutionError, collectToken, inferNoUnlocks } from './collect.ts';
+import { fetchUnlocks, resetUnlockCache } from './market.ts';
+import { vestingText } from './persist.ts';
 import { scoreRecord } from './scoring.ts';
 import type { ScanRecord } from './types.ts';
 
@@ -108,20 +110,6 @@ Deno.test('budget: paid credits capped per scan', async () => {
   }
 });
 
-Deno.test('unlocks: dataset with no future events = none_scheduled; cumulative series drives windows', () => {
-  const now = new Date('2026-09-24T00:00:00Z');
-  const t = now.getTime() / 1000;
-  const data = {
-    metadata: { events: [{ timestamp: t + 10 * 86400, noOfTokens: [100], unlockType: 'cliff' }] },
-    documentedData: { data: [{ label: 'a', data: [{ timestamp: t - 86400, unlocked: 0 }, { timestamp: t + 10 * 86400, unlocked: 100 }, { timestamp: t + 200 * 86400, unlocked: 100 }] }] },
-  };
-  const u = computeUnlocks(data, 'x', ref, now);
-  assertEquals(u.next_unlock_amount.value, 100);
-  assertEquals(u.unlock_30d_amount.value, 100);
-  const none = computeUnlocks({ metadata: { events: [] }, documentedData: { data: [] } }, 'x', ref, now);
-  assertEquals(none.next_unlock_date.value, 'none_scheduled');
-});
-
 Deno.test('labels: conservative classification', () => {
   assertEquals(classifyLabel('jupiter_dao_wallet.sol', 'nansen').category, 'project_controlled');
   assertEquals(classifyLabel('jup_team_cold.sol', 'nansen').confidence, 'medium');
@@ -144,7 +132,7 @@ function fakeRecord(over: Partial<Record<string, any>> = {}): ScanRecord {
     market: Object.fromEntries(marketKeys.map((k) => [k, u])),
     chain: Object.fromEntries(chainKeys.map((k) => [k, u])),
     liquidity: { dex_liquidity_usd: u, pool_count: u, top_pools: u, dex_volume_24h_usd: u, slippage_10k_pct: u, slippage_100k_pct: u },
-    unlocks: { emissions_source: u, next_unlock_date: u, next_unlock_amount: u, unlock_30d_amount: u, unlock_90d_amount: u, last_scheduled_event: u },
+    unlocks: { emissions_source: u, next_unlock_date: u, next_unlock_amount: u, unlock_30d_amount: u, unlock_90d_amount: u, last_scheduled_event: u, unscheduled_supply: u },
     derived: { circulating_ratio: u, noncirculating_supply: u, burned_since_max: u, fdv_to_mcap: u, unlock_30d_pct_of_circ: u, unlock_90d_pct_of_circ: u },
     quality: { flags: [] },
   };
@@ -209,55 +197,6 @@ Deno.test('unlocks: dataset matched by contract address when it has no gecko_id 
   assertEquals(datasetMatches({ gecko_id: 'other', metadata: { token: 'ethereum:0xabc' } }, 'arbitrum', '0xa4b1', '0x912ce59144191c1204e64559fe8253a0e49e6548'), null);
   assertEquals(datasetMatches({ gecko_id: null, metadata: { token: 'coingecko:pyth-network' } }, 'pyth-network', 'solana', 'x'), 'token_coingecko_id');
   assert(unlockSlugCandidates('aerodrome-finance', 'Aerodrome Finance').includes('aerodrome'));
-});
-
-Deno.test('unlocks: a series that stops while still emitting is unknown, not 0 (AERO case); a finished schedule is 0 (JUP case)', () => {
-  const now = new Date('2026-09-24T00:00:00Z');
-  const t = now.getTime() / 1000;
-  const day = 86400;
-  const drip = Array.from({ length: 40 }, (_, i) => ({ timestamp: t - (39 - i) * day, unlocked: i * 1000 }));
-  const ongoing = computeUnlocks({ metadata: { events: [] }, documentedData: { data: [{ label: 'gauge', data: drip }] } }, 'aero', ref, now);
-  assertEquals(ongoing.unlock_90d_amount.status, 'unknown');
-  assertEquals(ongoing.next_unlock_date.status, 'unknown');
-  const finished = [{ timestamp: t - 300 * day, unlocked: 0 }, { timestamp: t - 211 * day, unlocked: 500 }, { timestamp: t - 210 * day, unlocked: 500 }];
-  const done = computeUnlocks({ metadata: { events: [{ timestamp: t - 211 * day, noOfTokens: [500], unlockType: 'cliff' }] }, documentedData: { data: [{ label: 'team', data: finished }] } }, 'jup', ref, now);
-  assertEquals(done.unlock_90d_amount.value, 0);
-  assertEquals(done.next_unlock_date.value, 'none_scheduled');
-});
-
-Deno.test('unlocks: "none" is derived only when fully circulating per two sources AND supply cannot grow', () => {
-  const nf = unknown<any>('not_found');
-  const unl = { emissions_source: nf, next_unlock_date: nf, next_unlock_amount: nf, unlock_30d_amount: nf, unlock_90d_amount: nf, last_scheduled_event: nf };
-  const base = { 'market.circulating_supply': ok(100, ref, { confidence: 'high', corroborated: true }), 'market.total_supply_market': ok(100, ref), 'chain.mint_authority_active': ok(false, ref, { corroborated: true }) };
-  const rec = fakeRecord(base);
-  rec.unlocks = unl;
-  assertEquals(inferNoUnlocks(rec).unlock_90d_amount.value, 0);
-  const mintable = fakeRecord({ ...base, 'chain.mint_authority_active': ok(true, ref) });
-  mintable.unlocks = unl;
-  assertEquals(inferNoUnlocks(mintable).unlock_90d_amount.status, 'unknown');
-  const oneSource = fakeRecord({ ...base, 'market.circulating_supply': ok(100, ref, { confidence: 'medium' }) });
-  oneSource.unlocks = unl;
-  assertEquals(inferNoUnlocks(oneSource).unlock_90d_amount.status, 'unknown');
-  const locked = fakeRecord({ ...base, 'market.circulating_supply': ok(80, ref, { confidence: 'high', corroborated: true }) });
-  locked.unlocks = unl;
-  assertEquals(inferNoUnlocks(locked).unlock_90d_amount.status, 'unknown');
-});
-
-Deno.test('cache: unlock schedule reused within 24h only, never failures or derived values', () => {
-  const prev = fakeRecord();
-  prev.scanned_at = '2026-09-24T00:00:00Z';
-  prev.unlocks = { ...prev.unlocks, emissions_source: ok('jupiter', ref), next_unlock_date: ok('none_scheduled', ref) };
-  const hit = reuseIfFresh(prev, 'unlocks', '2026-09-24T10:00:00Z');
-  assertEquals(hit?.next_unlock_date.value, 'none_scheduled');
-  assert(hit!.next_unlock_date.detail!.includes('reused from scan'));
-  assertEquals(reuseIfFresh(prev, 'unlocks', '2026-09-25T01:00:00Z'), null);
-  const failed = fakeRecord();
-  failed.scanned_at = '2026-09-24T00:00:00Z';
-  assertEquals(reuseIfFresh(failed, 'unlocks', '2026-09-24T01:00:00Z'), null);
-  const derived = fakeRecord();
-  derived.scanned_at = '2026-09-24T00:00:00Z';
-  derived.unlocks = { ...derived.unlocks, emissions_source: ok('derived_fully_circulating', ref) };
-  assertEquals(reuseIfFresh(derived, 'unlocks', '2026-09-24T01:00:00Z'), null);
 });
 
 // ---- Finding 10 (Codex review 2026-09-25): exact-case Solana recovery
@@ -528,4 +467,128 @@ Deno.test('plausibility: a disputed on-chain total invalidates every holder shar
   for (const k of ['top1_pct', 'top5_pct', 'top10_pct', 'top20_pct', 'top10_excl_noncirculating_pct'] as const) assertEquals(rec.chain[k].status, 'unknown', k);
   assert(flags.some((f) => f.rule === 'holder_shares_need_valid_supply'));
   assertEquals(scoreRecord(rec).dimensions.tokenomics.score, null);
+});
+
+// ---- Findings 6 and 7: unlock schedules
+const NOW = new Date('2026-09-24T00:00:00Z');
+const NOW_S = NOW.getTime() / 1000;
+const DAY = 86400;
+const series = (pts: Array<[number, number]>) => ({ documentedData: { data: [{ label: 'a', data: pts.map(([t, u]) => ({ timestamp: NOW_S + t * DAY, unlocked: u })) }] } });
+
+Deno.test('unlocks: a finished schedule reported complete (nothing unscheduled) is 0 / none_scheduled', () => {
+  const data = { metadata: { events: [{ timestamp: NOW_S - 211 * DAY, noOfTokens: [500], unlockType: 'cliff' }] }, supplyMetrics: { maxSupply: 1000, tbdAmount: 0 }, ...series([[-300, 0], [-211, 500], [-210, 500]]) };
+  const u = computeUnlocks(data, 'x', ref, NOW);
+  assertEquals(u.unlock_90d_amount.value, 0);
+  assertEquals(u.next_unlock_date.value, 'none_scheduled');
+  assertEquals(u.unscheduled_supply.value, 0);
+});
+
+Deno.test('unlocks: JUP case - no future events but ~50% of supply is unscheduled ("tbd") is UNKNOWN, not "none"', () => {
+  const data = { metadata: { events: [{ timestamp: NOW_S - 211 * DAY, noOfTokens: [500], unlockType: 'cliff' }] }, supplyMetrics: { maxSupply: 7e9, tbdAmount: 3.54e9 }, ...series([[-300, 0], [-211, 500], [-210, 500]]) };
+  const u = computeUnlocks(data, 'jup', ref, NOW);
+  for (const k of ['next_unlock_date', 'next_unlock_amount', 'unlock_30d_amount', 'unlock_90d_amount'] as const) assertEquals(u[k].status, 'unknown', k);
+  assertEquals(u.unscheduled_supply.value, 3.54e9);
+});
+
+Deno.test('unlocks: a dataset that does not report unscheduled supply, or lacks events/series, is never "none"', () => {
+  const noTbd = computeUnlocks({ metadata: { events: [] }, ...series([[-10, 0], [-9, 0]]) }, 'x', ref, NOW);
+  assertEquals(noTbd.next_unlock_date.status, 'unknown');
+  const noEvents = computeUnlocks({ metadata: {}, supplyMetrics: { maxSupply: 1, tbdAmount: 0 }, ...series([[-10, 0]]) }, 'x', ref, NOW);
+  assertEquals(noEvents.next_unlock_date.status, 'unknown');
+  const emptySeries = computeUnlocks({ metadata: { events: [] }, supplyMetrics: { maxSupply: 1, tbdAmount: 0 }, documentedData: { data: [] } }, 'x', ref, NOW);
+  assertEquals(emptySeries.unlock_90d_amount.status, 'unknown');
+});
+
+Deno.test('unlocks: future dated event is a fact; windows only when the schedule is complete', () => {
+  const complete = computeUnlocks({ metadata: { events: [{ timestamp: NOW_S + 10 * DAY, noOfTokens: [100], unlockType: 'cliff' }] }, supplyMetrics: { maxSupply: 1000, tbdAmount: 0 }, ...series([[-1, 0], [10, 100], [200, 100]]) }, 'x', ref, NOW);
+  assertEquals(complete.next_unlock_amount.value, 100);
+  assertEquals(complete.unlock_30d_amount.value, 100);
+  const partial = computeUnlocks({ metadata: { events: [{ timestamp: NOW_S + 10 * DAY, noOfTokens: [100], unlockType: 'cliff' }] }, supplyMetrics: { maxSupply: 1000, tbdAmount: 300 }, ...series([[-1, 0], [10, 100], [200, 100]]) }, 'x', ref, NOW);
+  assertEquals(partial.next_unlock_amount.value, 100);
+  assertEquals(partial.unlock_30d_amount.status, 'unknown');
+});
+
+Deno.test('unlocks: a series that stops while still emitting is unknown even when tbd is 0 (AERO case)', () => {
+  const drip = Array.from({ length: 40 }, (_, i) => [-(39 - i), i * 1000] as [number, number]);
+  const u = computeUnlocks({ metadata: { events: [] }, supplyMetrics: { maxSupply: 1e6, tbdAmount: 0 }, ...series(drip) }, 'aero', ref, NOW);
+  assertEquals(u.unlock_90d_amount.status, 'unknown');
+  assertEquals(u.next_unlock_date.status, 'unknown');
+});
+
+Deno.test('unlocks: linear vesting still running has no "none_scheduled" date but its windows are measured', () => {
+  const u = computeUnlocks({ metadata: { events: [] }, supplyMetrics: { maxSupply: 1000, tbdAmount: 0 }, ...series(Array.from({ length: 411 }, (_, i) => [i - 10, Math.max(0, Math.min(365, i - 10))] as [number, number])) }, 'x', ref, NOW);
+  assertEquals(u.next_unlock_date.status, 'unknown');
+  assert((u.unlock_90d_amount.value as number) > 0);
+});
+
+Deno.test('unlocks: "no unlocks" inferred from full circulation is an UPPER BOUND, never zero, never a scheduled amount', () => {
+  const nf = unknown<any>('not_found');
+  const unl = { emissions_source: nf, next_unlock_date: nf, next_unlock_amount: nf, unlock_30d_amount: nf, unlock_90d_amount: nf, last_scheduled_event: nf, unscheduled_supply: nf };
+  const two = { corroborated: true, confidence: 'high' as const };
+  const base = { 'market.circulating_supply': ok(996, ref, two), 'market.total_supply_market': ok(1000, ref), 'chain.mint_authority_active': ok(false, ref, two) };
+  const rec = fakeRecord(base);
+  rec.unlocks = unl;
+  const inferred = inferNoUnlocks(rec);
+  assertEquals(inferred.unlock_90d_amount.value, 4); // 0.4% locked stays visible
+  assertEquals(inferred.unlock_90d_amount.bound, 'upper');
+  assertEquals(inferred.next_unlock_date.status, 'unknown');
+  const mintable = fakeRecord({ ...base, 'chain.mint_authority_active': ok(true, ref, two) });
+  mintable.unlocks = unl;
+  assertEquals(inferNoUnlocks(mintable).unlock_90d_amount.status, 'unknown');
+  const oneSource = fakeRecord({ ...base, 'market.circulating_supply': ok(996, ref, { confidence: 'medium', corroborated: false }) });
+  oneSource.unlocks = unl;
+  assertEquals(inferNoUnlocks(oneSource).unlock_90d_amount.status, 'unknown');
+  const singleMint = fakeRecord({ ...base, 'chain.mint_authority_active': ok(false, ref, { corroborated: false }) });
+  singleMint.unlocks = unl;
+  assertEquals(inferNoUnlocks(singleMint).unlock_90d_amount.status, 'unknown');
+  const locked = fakeRecord({ ...base, 'market.circulating_supply': ok(800, ref, two) });
+  locked.unlocks = unl;
+  assertEquals(inferNoUnlocks(locked).unlock_90d_amount.status, 'unknown');
+});
+
+Deno.test('cache: the RAW dataset is cached 24h from its ORIGINAL fetch and time-dependent values are recomputed each scan', async () => {
+  resetUnlockCache();
+  let fetches = 0;
+  const dataset = { gecko_id: 'tok', metadata: { events: [{ timestamp: NOW_S + 10 * DAY, noOfTokens: [100], unlockType: 'cliff' }], token: 'coingecko:tok' }, supplyMetrics: { maxSupply: 1000, tbdAmount: 0 }, ...series([[-1, 0], [10, 100], [200, 100]]) };
+  stubFetch(() => {
+    fetches++;
+    return { json: dataset };
+  });
+  try {
+    const first = await fetchUnlocks(new ScanContext(), 'tok', 'Tok', '0x1', '0xabc', NOW);
+    assertEquals(first.next_unlock_date.value, new Date((NOW_S + 10 * DAY) * 1000).toISOString().slice(0, 10));
+    assertEquals(fetches, 1);
+    // 12h later: served from cache (no fetch), values recomputed for the new "now", original fetched_at kept
+    const later = new Date(NOW.getTime() + 12 * 3600_000);
+    const second = await fetchUnlocks(new ScanContext(), 'tok', 'Tok', '0x1', '0xabc', later);
+    assertEquals(fetches, 1);
+    assertEquals(second.emissions_source.sources[0].fetched_at, first.emissions_source.sources[0].fetched_at);
+    // after the cliff has passed the "next" date must not linger: 20 days later, but still inside...
+    // ...the 24h TTL is measured from the ORIGINAL fetch, so a scan 25h later refetches instead of renewing forever
+    const stale = new Date(NOW.getTime() + 25 * 3600_000);
+    await fetchUnlocks(new ScanContext(), 'tok', 'Tok', '0x1', '0xabc', stale);
+    assertEquals(fetches, 2);
+    // recomputation: a scan after the cliff (cache entry from the refetch at +25h, so within TTL) shows no future event
+    const afterCliff = new Date(NOW.getTime() + 25 * 3600_000 + 11 * DAY * 1000);
+    const third = await fetchUnlocks(new ScanContext(), 'tok', 'Tok', '0x1', '0xabc', afterCliff);
+    assertEquals(fetches, 3); // >24h since the +25h fetch, so refetched; values are for the new date
+    assertEquals(third.next_unlock_date.value, 'none_scheduled');
+  } finally {
+    restore();
+    resetUnlockCache();
+  }
+});
+
+Deno.test('vesting text: each date/amount renders only when usable; unknown never prints as "null" or "0"', () => {
+  const two = { corroborated: true, confidence: 'high' as const };
+  void two;
+  const rec = fakeRecord();
+  rec.unlocks = { ...rec.unlocks, emissions_source: ok('jupiter', ref), next_unlock_date: unknown('no_data'), next_unlock_amount: unknown('no_data'), unscheduled_supply: ok(3.54e9, ref) };
+  const t = vestingText(rec)!;
+  assert(!/null|: 0 tokens|Next unlock/.test(t), t);
+  assert(t.includes('3,540,000,000'));
+  rec.unlocks = { ...rec.unlocks, next_unlock_date: ok('2026-10-01', ref), next_unlock_amount: unknown('no_data') };
+  assert(!/null|: 0 tokens/.test(vestingText(rec)!));
+  rec.unlocks = { ...rec.unlocks, emissions_source: unknown('not_found') };
+  assertEquals(vestingText(rec), null);
 });

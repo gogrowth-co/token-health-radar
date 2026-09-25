@@ -21,6 +21,25 @@ export interface ScanRows {
   token_scans_v2: Record<string, unknown>; // columns added by migration 20260924120000
 }
 
+// Each date and amount is only rendered when that field is usable: an unknown never prints as "null" or "0".
+export function vestingText(rec: ScanRecord): string | null {
+  const u = rec.unlocks;
+  if (!usable(u.emissions_source)) return null;
+  const n = (x: number) => Math.round(x).toLocaleString('en-US');
+  const source = u.emissions_source.value;
+  const date = v(u.next_unlock_date);
+  const amount = v(u.next_unlock_amount);
+  const unsched = v(u.unscheduled_supply);
+  const parts: string[] = [];
+  if (source === 'derived_fully_circulating') {
+    return unsched === null ? null : `No unlock schedule found; at most ${n(unsched)} tokens are not yet circulating (derived from CoinGecko and CoinMarketCap with supply unable to grow)`;
+  }
+  if (date === 'none_scheduled') parts.push(`No dated unlocks remain (DeFiLlama ${source}, schedule complete, last event ${v(u.last_scheduled_event) ?? 'n/a'})`);
+  else if (date !== null) parts.push(`Next unlock ${date}${amount !== null ? `: ${n(amount)} tokens` : ''} (DeFiLlama ${source})`);
+  if (unsched !== null && unsched > 0 && date !== 'none_scheduled') parts.push(`${n(unsched)} tokens have no schedule in the dataset`);
+  return parts.length ? parts.join('; ') : null;
+}
+
 export function buildRows(rec: ScanRecord, score: ScoreResult, userId: string | null): ScanRows {
   const key = { token_address: rec.address_key, chain_id: rec.chain_id };
   const m = rec.market;
@@ -38,12 +57,7 @@ export function buildRows(rec: ScanRecord, score: ScoreResult, userId: string | 
     ? null
     : `Top 10 hold ${top10.toFixed(1)}% of on-chain supply${ext !== null ? `; ${ext.toFixed(1)}% excluding labeled project, pool, exchange, lock and burn wallets` : ''} (${c.top10_pct.confidence} confidence, ${rec.scanned_at.slice(0, 10)})`;
 
-  const nextUnlock = v(rec.unlocks.next_unlock_date);
-  const vesting = rec.unlocks.emissions_source.status !== 'ok'
-    ? null
-    : nextUnlock === 'none_scheduled'
-    ? `No dated unlocks scheduled (DeFiLlama ${v(rec.unlocks.emissions_source)}, last event ${v(rec.unlocks.last_scheduled_event) ?? 'n/a'})`
-    : `Next unlock ${nextUnlock}: ${Math.round(v(rec.unlocks.next_unlock_amount) ?? 0).toLocaleString('en-US')} tokens (DeFiLlama ${v(rec.unlocks.emissions_source)})`;
+  const vesting = vestingText(rec);
 
   const liq = v(rec.liquidity.dex_liquidity_usd);
   const lpLocked = v(c.liquidity_locked_pct);

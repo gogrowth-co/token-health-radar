@@ -120,21 +120,26 @@ async function fetchCmc(ctx: ScanContext, address: string): Promise<{ circulatin
 }
 
 export interface UnlockData {
-  emissions_source: Field<string>; // DeFiLlama dataset slug used
+  emissions_source: Field<string>; // DeFiLlama dataset slug used, or 'derived_fully_circulating'
   next_unlock_date: Field<string>;
   next_unlock_amount: Field<number>;
   unlock_30d_amount: Field<number>;
   unlock_90d_amount: Field<number>;
   last_scheduled_event: Field<string>;
+  // Supply the dataset does not schedule at all ("tbd"): the residual uncertainty behind every "no unlocks" claim.
+  unscheduled_supply: Field<number>;
 }
 
 /**
  * Unlock schedule from DeFiLlama's free emissions datasets.
  * A token with no dataset gets `not_found` — which means "not measured",
- * NEVER "no unlocks". Only a dataset with no future events means no dated unlocks.
+ * NEVER "no unlocks". "No more unlocks" is only stated when the dataset itself
+ * says its schedule is complete: the unscheduled ("tbd") supply is reported and
+ * negligible, and the schedule is not still emitting when it ends.
  */
 // DeFiLlama's chain names in `metadata.token` ("ethereum:0x...", "base:0x...").
 const LLAMA_CHAIN: Record<string, string> = { solana: 'solana', '0x1': 'ethereum', '0x38': 'bsc', '0x2105': 'base', '0xa4b1': 'arbitrum', '0x89': 'polygon', '0xa': 'optimism' };
+const UNSCHEDULED_TOLERANCE = 0.005; // "complete" = at most 0.5% of the dataset's max supply is unscheduled
 
 /** A dataset belongs to this token if its CoinGecko id or its `metadata.token` identifies it. */
 export function datasetMatches(data: any, coingeckoId: string | null, chainId: string, address: string): string | null {
@@ -154,46 +159,78 @@ export function unlockSlugCandidates(coingeckoId: string | null, name: string | 
   return [...new Set(out.filter(Boolean))].slice(0, 4);
 }
 
+// Raw dataset cache (handoff requirement 10). Only the RAW dataset is cached, keyed by slug and expiring
+// 24h after it was ORIGINALLY fetched; every time-dependent value (next unlock, 30/90-day windows) is
+// recomputed from it on each scan. (Caching computed fields from a previous scan let a schedule renew
+// itself indefinitely and kept stale windows: Codex review 2026-09-25, finding 6.)
+export const UNLOCK_DATASET_TTL_MS = 24 * 3600_000;
+const datasetCache = new Map<string, { data: any; ref: SourceRef; fetchedAtMs: number }>();
+export function resetUnlockCache() {
+  datasetCache.clear();
+}
+
 export async function fetchUnlocks(ctx: ScanContext, coingeckoId: string | null, name: string | null, chainId: string, address: string, now = new Date()): Promise<UnlockData> {
   const all = (reason: any, detail?: string, refs: SourceRef[] = []): UnlockData => {
     const f = unknown<any>(reason, detail, refs);
-    return { emissions_source: f, next_unlock_date: f, next_unlock_amount: f, unlock_30d_amount: f, unlock_90d_amount: f, last_scheduled_event: f };
+    return { emissions_source: f, next_unlock_date: f, next_unlock_amount: f, unlock_30d_amount: f, unlock_90d_amount: f, last_scheduled_event: f, unscheduled_supply: f };
   };
   const slugs = unlockSlugCandidates(coingeckoId, name);
   if (!slugs.length) return all('missing_input', 'no CoinGecko id or name to map to a DeFiLlama emissions dataset');
   const refs: SourceRef[] = [];
   for (const slug of slugs) {
-    const r = await ctx.fetchJson('defillama_emissions', `https://defillama-datasets.llama.fi/emissions/${slug}`, { timeoutMs: 20_000, retries: 1 });
-    if (!r.ok) {
-      refs.push(r.ref);
-      if (r.reason === 'not_found') continue;
-      return all(r.reason, r.detail, refs);
+    let data: any;
+    let ref: SourceRef;
+    const hit = datasetCache.get(slug);
+    const age = hit ? now.getTime() - hit.fetchedAtMs : -1;
+    if (hit && age >= 0 && age < UNLOCK_DATASET_TTL_MS) {
+      data = hit.data;
+      ref = { ...hit.ref }; // keeps the ORIGINAL fetched_at
+    } else {
+      const r = await ctx.fetchJson('defillama_emissions', `https://defillama-datasets.llama.fi/emissions/${slug}`, { timeoutMs: 20_000, retries: 1 });
+      if (!r.ok) {
+        refs.push(r.ref);
+        if (r.reason === 'not_found') continue;
+        return all(r.reason, r.detail, refs);
+      }
+      data = r.data;
+      ref = r.ref;
     }
     // Guard against slug collisions: the dataset must identify this exact token
     // (CoinGecko id, or chain:contract address — ARB's dataset has no gecko_id).
-    const matchedBy = datasetMatches(r.data, coingeckoId, chainId, address);
+    const matchedBy = datasetMatches(data, coingeckoId, chainId, address);
     if (!matchedBy) {
-      refs.push({ ...r.ref, raw_excerpt: { slug, gecko_id: r.data?.gecko_id, token: r.data?.metadata?.token } });
+      refs.push({ ...ref, raw_excerpt: { slug, gecko_id: data?.gecko_id, token: data?.metadata?.token } });
       continue;
     }
-    r.ref.raw_excerpt = { slug, matched_by: matchedBy, gecko_id: r.data.gecko_id, token: r.data.metadata?.token, supplyMetrics: r.data.supplyMetrics };
-    return computeUnlocks(r.data, slug, r.ref, now);
+    if (!hit || age < 0 || age >= UNLOCK_DATASET_TTL_MS) {
+      if (datasetCache.size >= 32) datasetCache.delete(datasetCache.keys().next().value as string);
+      datasetCache.set(slug, { data, ref: { ...ref }, fetchedAtMs: now.getTime() });
+    }
+    ref.raw_excerpt = { slug, matched_by: matchedBy, gecko_id: data.gecko_id, token: data.metadata?.token, supplyMetrics: data.supplyMetrics, ...(hit && age >= 0 && age < UNLOCK_DATASET_TTL_MS ? { dataset_cached_since: hit.ref.fetched_at } : {}) };
+    return computeUnlocks(data, slug, ref, now);
   }
   return all('not_found', `no DeFiLlama emissions dataset matched this token (tried ${slugs.join(', ')}; not measured, which is not the same as no unlocks)`, refs);
 }
 
+const finiteNum = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+
 export function computeUnlocks(data: any, slug: string, ref: SourceRef, now: Date): UnlockData {
   const nowS = now.getTime() / 1000;
   const src = ok(slug, ref, { confidence: 'medium' });
-  const events: Array<{ timestamp: number; noOfTokens?: number[]; unlockType?: string }> = data?.metadata?.events ?? [];
+  const eventsRaw = data?.metadata?.events;
+  const seriesRaw = data?.documentedData?.data;
+  if (!Array.isArray(eventsRaw) || !Array.isArray(seriesRaw) || seriesRaw.length === 0) {
+    const f = unknown<any>('no_data', `dataset ${slug} has no ${!Array.isArray(eventsRaw) ? 'event list' : 'cumulative series'}: schedule not measurable`, [ref]);
+    return { emissions_source: src, next_unlock_date: f, next_unlock_amount: f, unlock_30d_amount: f, unlock_90d_amount: f, last_scheduled_event: f, unscheduled_supply: f };
+  }
+  const events: Array<{ timestamp: number; noOfTokens?: number[]; unlockType?: string }> = eventsRaw;
   const cliffs = events.filter((e) => e.unlockType !== 'linear');
   const future = cliffs.filter((e) => e.timestamp > nowS).sort((a, b) => a.timestamp - b.timestamp);
   const lastAny = [...events].sort((a, b) => b.timestamp - a.timestamp)[0];
 
   // Window amounts from the daily cumulative series (covers linear vesting too).
-  const series: Array<{ label: string; data: Array<{ timestamp: number; unlocked: number }> }> = data?.documentedData?.data ?? [];
-  const cumAt = (t: number): number | null => {
-    if (!series.length) return null;
+  const series: Array<{ label: string; data: Array<{ timestamp: number; unlocked: number }> }> = seriesRaw;
+  const cumAt = (t: number): number => {
     let total = 0;
     for (const s of series) {
       let v = 0;
@@ -206,43 +243,55 @@ export function computeUnlocks(data: any, slug: string, ref: SourceRef, now: Dat
     return total;
   };
   const iso = (s: number) => new Date(s * 1000).toISOString().slice(0, 10);
-  const c0 = cumAt(nowS);
-  // Where the dataset's schedule stops, and whether tokens were still unlocking
-  // right up to that point. A series that stops while emitting (AERO: weekly
-  // gauge/rebase emissions set by governance; AAVE, UNI: daily drips) does NOT
-  // mean "no more unlocks" — it means the rest is not scheduled in the dataset.
-  // A schedule that finished (JUP: one final cliff, then nothing) is measured as 0.
-  const seriesEnd = series.length ? Math.max(...series.map((s) => s.data[s.data.length - 1]?.timestamp ?? 0)) : 0;
+  // Where the dataset's schedule stops, and whether tokens were still unlocking right up to that point
+  // (AERO: weekly emissions set by governance; AAVE, UNI: daily drips).
+  const seriesEnd = Math.max(...series.map((s) => s.data[s.data.length - 1]?.timestamp ?? 0));
   const tail = Math.min(seriesEnd, nowS);
   const days = [...new Set(series.flatMap((s) => s.data.map((p) => p.timestamp)))].filter((t) => t > tail - 30 * 86400 && t <= tail).sort((a, b) => a - b);
   let increaseDays = 0;
-  for (let i = 1; i < days.length; i++) if ((cumAt(days[i]) ?? 0) > (cumAt(days[i - 1]) ?? 0) + 1e-6) increaseDays++;
-  const stillEmitting = increaseDays >= 3;
-  const notProjected = (horizonDays: number) => series.length > 0 && seriesEnd < nowS + horizonDays * 86400 && stillEmitting;
-  const unprojectedDetail = `dataset schedule ends ${iso(seriesEnd)} while tokens were still unlocking (${increaseDays} increase days in its final 30 days); later emissions are not scheduled in the dataset (e.g. set by governance) and are not measured`;
+  for (let i = 1; i < days.length; i++) if (cumAt(days[i]) > cumAt(days[i - 1]) + 1e-6) increaseDays++;
+  const stillEmitting = increaseDays >= 3 && seriesEnd < nowS + 90 * 86400;
 
-  const window = (days: number): Field<number> => {
-    const c1 = cumAt(nowS + days * 86400);
-    if (c0 === null || c1 === null) return unknown('no_data', 'dataset has no cumulative series', [ref], { unit: 'tokens' });
-    if (notProjected(days)) return unknown('no_data', unprojectedDetail, [ref], { unit: 'tokens' });
-    const coveredNote = seriesEnd < nowS + days * 86400 ? `dataset schedule ends ${iso(seriesEnd)} with no further scheduled unlocks` : undefined;
-    return ok(Math.max(0, c1 - c0), ref, { unit: 'tokens', confidence: 'medium', detail: coveredNote });
+  // Completeness: the dataset must say how much supply is unscheduled ("tbd"), and it must be negligible.
+  // Without that, "no future events" only means "none listed", not "none left".
+  const maxSupply = finiteNum(data?.supplyMetrics?.maxSupply) ?? finiteNum(data?.metadata?.total);
+  const tbd = finiteNum(data?.supplyMetrics?.tbdAmount);
+  const tbdShare = tbd !== null && maxSupply && maxSupply > 0 ? tbd / maxSupply : null;
+  const unscheduled: Field<number> = tbd !== null
+    ? ok(tbd, ref, { unit: 'tokens', confidence: 'medium', detail: tbdShare !== null ? `${(tbdShare * 100).toFixed(2)}% of the dataset's max supply (${Math.round(maxSupply as number).toLocaleString('en-US')}) has no schedule ("tbd")` : 'supply without a schedule ("tbd") in the dataset' })
+    : unknown('no_data', 'dataset does not report how much supply is unscheduled', [ref], { unit: 'tokens' });
+  const incompleteWhy = tbd === null || tbdShare === null
+    ? 'the dataset does not report how much supply is unscheduled, so a finished schedule cannot be confirmed'
+    : tbdShare > UNSCHEDULED_TOLERANCE
+    ? `${(tbdShare * 100).toFixed(1)}% of supply (${Math.round(tbd).toLocaleString('en-US')} tokens) is unscheduled ("tbd") in the dataset`
+    : stillEmitting
+    ? `dataset schedule ends ${iso(seriesEnd)} while tokens were still unlocking (${increaseDays} increase days in its final 30 days); later emissions are not scheduled and are not measured`
+    : null;
+  const complete = incompleteWhy === null;
+
+  const window = (d: number): Field<number> => {
+    if (!complete) return unknown('no_data', `not measured: schedule incomplete (${incompleteWhy}); scheduled amounts alone would understate what can unlock`, [ref], { unit: 'tokens' });
+    const coveredNote = seriesEnd < nowS + d * 86400 ? `dataset schedule ends ${iso(seriesEnd)} with no further scheduled unlocks` : undefined;
+    return ok(Math.max(0, cumAt(nowS + d * 86400) - cumAt(nowS)), ref, { unit: 'tokens', confidence: 'medium', detail: coveredNote });
   };
 
   let nextDate: Field<string>;
   let nextAmt: Field<number>;
   if (future.length) {
+    // A dated event in the dataset is a fact, even when the schedule as a whole is incomplete.
     const t = future[0].timestamp;
     const amt = future.filter((e) => e.timestamp === t).reduce((a, e) => a + (e.noOfTokens ?? []).reduce((x, y) => x + (y || 0), 0), 0);
     nextDate = ok(iso(t), ref, { unit: 'date', confidence: 'medium' });
-    nextAmt = ok(amt, ref, { unit: 'tokens', confidence: 'medium' });
-  } else if (notProjected(30)) {
-    nextDate = unknown('no_data', unprojectedDetail, [ref], { unit: 'date' });
-    nextAmt = unknown('no_data', unprojectedDetail, [ref], { unit: 'tokens' });
-  } else {
-    // Dataset exists, lists no future cliff, and its schedule finished: "no dated unlocks" is measured.
-    nextDate = ok('none_scheduled', ref, { unit: 'date', confidence: 'medium', detail: 'no future dated unlock events in dataset' });
+    nextAmt = Number.isFinite(amt) && amt > 0 ? ok(amt, ref, { unit: 'tokens', confidence: 'medium' }) : unknown('no_data', 'dated event without a token amount', [ref], { unit: 'tokens' });
+  } else if (complete && cumAt(Number.MAX_SAFE_INTEGER) - cumAt(nowS) <= 1e-6) {
+    nextDate = ok('none_scheduled', ref, { unit: 'date', confidence: 'medium', detail: 'no future dated unlock events, nothing further in the cumulative series, and the dataset reports a complete schedule' });
     nextAmt = ok(0, ref, { unit: 'tokens', confidence: 'medium' });
+  } else if (complete) {
+    nextDate = unknown('no_data', `unlocks continue gradually until ${iso(seriesEnd)}; there is no single next unlock date`, [ref], { unit: 'date' });
+    nextAmt = unknown('no_data', nextDate.detail, [ref], { unit: 'tokens' });
+  } else {
+    nextDate = unknown('no_data', `no dated unlock in the dataset, but the schedule is incomplete: ${incompleteWhy}`, [ref], { unit: 'date' });
+    nextAmt = unknown('no_data', nextDate.detail, [ref], { unit: 'tokens' });
   }
   return {
     emissions_source: src,
@@ -251,5 +300,6 @@ export function computeUnlocks(data: any, slug: string, ref: SourceRef, now: Dat
     unlock_30d_amount: window(30),
     unlock_90d_amount: window(90),
     last_scheduled_event: lastAny ? ok(iso(lastAny.timestamp), ref, { unit: 'date' }) : unknown('no_data', undefined, [ref]),
+    unscheduled_supply: unscheduled,
   };
 }
