@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
           contributors_active: lunar?.contributors_active ?? null,
           social_dominance: lunar?.social_dominance ?? null,
           trend: lunar?.trend ?? null,
-          lunarcrush_fetched_at: lunar ? rec.scanned_at : null,
+          lunarcrush_fetched_at: lunar ? (lunar.fetched_at ?? rec.scanned_at) : null, // a cache hit must not look freshly fetched
           active_channels: [lunar ? 'lunarcrush' : null, usable(rec.social.community.telegram_members) ? 'telegram' : null, usable(rec.social.community.discord_members) ? 'discord' : null].filter(Boolean),
           score: score.dimensions.community.score,
           updated_at: rec.scanned_at,

@@ -73,8 +73,9 @@ export async function collectGithub(ctx: ScanContext, githubUrl: string | undefi
   ]);
   const fail = (r: { ok: boolean; reason?: any; detail?: string; ref: SourceRef }, what: string) => unknown<any>(r.ok ? 'no_data' : r.reason, r.ok ? `GitHub returned an unexpected ${what} response` : r.detail, [r.ref]);
 
+  // The repository only counts as "read" when its metadata call succeeded (a 404/503 must not leave a usable repo behind).
+  if (!meta.ok || typeof meta.data?.stargazers_count !== 'number') return allGithub(meta.ok ? 'no_data' : meta.reason, `repository ${owner}/${repo} metadata unavailable: ${meta.ok ? 'unexpected response' : meta.detail}`, [meta.ref]);
   const repoF = ok(`${owner}/${repo}`, meta.ref, { confidence: 'high' });
-  if (!meta.ok || typeof meta.data?.stargazers_count !== 'number') return { ...allGithub(meta.ok ? 'no_data' : meta.reason, `repository ${owner}/${repo} metadata unavailable: ${meta.ok ? 'unexpected response' : meta.detail}`, [meta.ref]), repo: repoF };
 
   const d = meta.data;
   const pushed = typeof d.pushed_at === 'string' && Number.isFinite(Date.parse(d.pushed_at)) ? d.pushed_at : null;
@@ -93,8 +94,9 @@ export async function collectGithub(ctx: ScanContext, githubUrl: string | undefi
     commits_30d: c.ok ? ok(c.items.length, commits.ref, { unit: 'commits', detail: c.items.length >= 100 ? 'at least 100 (first page)' : undefined }) : c.f,
     contributors_count: k.ok ? ok(k.items.length, contributors.ref, { unit: 'contributors', detail: k.items.length >= 100 ? 'at least 100 (first page)' : undefined }) : k.f,
     // No issues at all is no evidence about issue handling (it used to be worth 15 points), so it is unknown, not scored.
-    issue_close_ratio: i.ok ? (closed + open > 0 ? ok(closed / (closed + open), issues.ref, { unit: 'ratio', detail: `${closed} closed / ${open} open issues in the latest 100 items` }) : unknown('no_data', 'repository has no issues to judge', [issues.ref])) : i.f,
-    open_issues: i.ok ? ok(open, issues.ref, { unit: 'issues' }) : i.f,
+    issue_close_ratio: i.ok ? (closed + open > 0 ? ok(closed / (closed + open), issues.ref, { unit: 'ratio', detail: `sample metric: ${closed} closed / ${open} open among the latest ${i.items.length} issue items` }) : unknown('no_data', 'repository has no issues to judge', [issues.ref])) : i.f,
+    // Only the latest 100 items are read: a count is complete only when the list is shorter than a page.
+    open_issues: i.ok ? (i.items.length < 100 ? ok(open, issues.ref, { unit: 'issues' }) : unknown('no_data', 'more than 100 issue items: only a sample was read, so no complete open-issue count', [issues.ref], { unit: 'issues' })) : i.f,
     last_push: pushed && !futurePush ? ok(pushed, meta.ref, { unit: 'date' }) : unknown(futurePush ? 'failed_plausibility' : 'no_data', futurePush ? `pushed_at ${pushed} is in the future` : 'no pushed_at', [meta.ref]),
     last_push_age_days: pushed && !futurePush ? ok(Math.round(((now.getTime() - Date.parse(pushed)) / 86400_000) * 10) / 10, meta.ref, { unit: 'days' }) : unknown(futurePush ? 'failed_plausibility' : 'no_data', futurePush ? `pushed_at ${pushed} is in the future` : 'no pushed_at', [meta.ref]),
     is_archived: typeof d.archived === 'boolean' ? ok(d.archived, meta.ref, { unit: 'bool' }) : unknown('no_data', 'archived flag missing', [meta.ref], { unit: 'bool' }),
@@ -107,16 +109,18 @@ export async function collectGithub(ctx: ScanContext, githubUrl: string | undefi
 /** Community fields from the legacy providers' results. A zero or a missing answer is unknown, never a low score. */
 export function communityFields(input: {
   symbol: string | null;
-  lunar: { sentiment: number | null; social_dominance: number | null; trend: string | null } | null;
+  lunar: { sentiment: number | null; social_dominance: number | null; trend: string | null; fetched_at?: string } | null;
   discordLinked: boolean;
   discordMembers: number | null;
   telegramLinked: boolean;
   telegramMembers: number | null;
 }, nowIso: string): CommunityFacts {
-  const lc: SourceRef = { source: 'lunarcrush', fetched_at: nowIso };
+  // A cached LunarCrush answer keeps the time it was really obtained; a scan never renews it (Codex round 2, finding 8).
+  const lc: SourceRef = { source: 'lunarcrush', fetched_at: input.lunar?.fetched_at ?? nowIso };
   const noLunar = (why: string) => unknown<any>(input.symbol ? 'no_data' : 'missing_input', why, [lc]);
-  const num = (v: number | null | undefined, what: string, minExclusive = 0): Field<number> =>
-    typeof v === 'number' && Number.isFinite(v) && v > minExclusive
+  // A measured 0 is a reading (sentiment 0, dominance 0); only null/non-numeric/out-of-range is missing.
+  const num = (v: number | null | undefined, what: string, max = 100): Field<number> =>
+    typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= max
       ? ok(v, lc, { confidence: 'medium' })
       : input.lunar ? unknown('no_data', `LunarCrush returned no ${what}`, [lc]) : noLunar(input.symbol ? 'LunarCrush returned nothing for this symbol' : 'no symbol to look up');
   const social = (linked: boolean, members: number | null, source: string): Field<number> => {

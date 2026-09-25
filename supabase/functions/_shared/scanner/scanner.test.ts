@@ -694,7 +694,7 @@ Deno.test('github: no link and no key are unknown with a reason', async () => {
   assertEquals((await collectGithub(new ScanContext(), 'https://github.com/a/b', NOW)).commits_30d.reason, 'provider_failed');
 });
 
-Deno.test('community: missing providers are unknown, a single input is not enough, zero is not a reading', () => {
+Deno.test('community: missing providers are unknown, a single input is not enough, a measured zero is a reading', () => {
   const rec = fakeRecord();
   const mk = (over: Record<string, unknown>) => ({ symbol: 'TOK', lunar: null, discordLinked: false, discordMembers: null, telegramLinked: false, telegramMembers: null, ...over }) as any;
   rec.social = { github: undefined as any, community: communityFields(mk({ telegramLinked: true, telegramMembers: 50_000 }), NOW.toISOString()) };
@@ -704,9 +704,18 @@ Deno.test('community: missing providers are unknown, a single input is not enoug
   rec.social.community = communityFields(mk({ lunar: { sentiment: 80, social_dominance: 1, trend: 'up' } }), NOW.toISOString());
   const three = scoreRecord(rec).dimensions.community;
   assertEquals(three.score, Math.round(((35 + 15 + 10) / 70) * 100));
-  rec.social.community = communityFields(mk({ lunar: { sentiment: 0, social_dominance: 0, trend: null } }), NOW.toISOString());
+  // A measured zero is a reading and scores 0 points; it must not be dropped (that used to leave only full-point inputs).
+  rec.social.community = communityFields(mk({ lunar: { sentiment: 0, social_dominance: 0, trend: 'up' }, discordLinked: true, discordMembers: 100_000 }), NOW.toISOString());
+  assertEquals(rec.social.community.sentiment.value, 0);
+  assertEquals(scoreRecord(rec).dimensions.community.score, Math.round(((0 + 0 + 10 + 18) / (35 + 25 + 10 + 18)) * 100));
+  // Missing / null / out-of-range is unknown.
+  rec.social.community = communityFields(mk({ lunar: { sentiment: null, social_dominance: -1, trend: null } }), NOW.toISOString());
   assertEquals(rec.social.community.sentiment.status, 'unknown');
+  assertEquals(rec.social.community.social_dominance.status, 'unknown');
   assertEquals(scoreRecord(rec).dimensions.community.score, null);
+  // A cached answer keeps its original fetch time.
+  const cached = communityFields(mk({ lunar: { sentiment: 60, social_dominance: 1, trend: 'up', fetched_at: '2026-09-24T18:00:00Z' } }), NOW.toISOString());
+  assertEquals(cached.sentiment.sources[0].fetched_at, '2026-09-24T18:00:00Z');
 });
 
 Deno.test('rpc: a JSON-RPC error under HTTP 200 is counted as a provider failure and opens the breaker', async () => {

@@ -118,8 +118,8 @@ export function scoreRecord(rec: ScanRecord): ScoreResult {
   // unknown and earns nothing; only usable inputs are scored, and at least two are needed.
   const so = rec.social?.community;
   const community = dimension([
-    { name: 'sentiment', field: so?.sentiment, max: 35, points: (v) => (v >= 75 ? 35 : v >= 60 ? 22 : v >= 45 ? 12 : 5) },
-    { name: 'social_dominance', field: so?.social_dominance, max: 25, points: (v) => (v >= 2 ? 25 : v >= 0.5 ? 15 : v >= 0.1 ? 8 : 3) },
+    { name: 'sentiment', field: so?.sentiment, max: 35, points: (v) => (v >= 75 ? 35 : v >= 60 ? 22 : v >= 45 ? 12 : v > 0 ? 5 : 0) },
+    { name: 'social_dominance', field: so?.social_dominance, max: 25, points: (v) => (v >= 2 ? 25 : v >= 0.5 ? 15 : v >= 0.1 ? 8 : v > 0 ? 3 : 0) },
     { name: 'trend', field: so?.trend, max: 10, points: (v) => (v === 'up' ? 10 : v === 'flat' ? 5 : 0) },
     { name: 'discord_members', field: so?.discord_members, max: 18, points: (v) => (v > 50000 ? 18 : v > 10000 ? 14 : v > 5000 ? 10 : v > 1000 ? 6 : 3) },
     { name: 'telegram_members', field: so?.telegram_members, max: 12, points: (v) => (v > 50000 ? 12 : v > 10000 ? 9 : v > 5000 ? 6 : v > 1000 ? 4 : 2) },

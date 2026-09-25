@@ -10,6 +10,7 @@ export interface LunarCrushData {
   contributors_active: number | null;
   social_dominance: number | null;
   trend: string | null;
+  fetched_at?: string; // when the numbers were ACTUALLY obtained (a cache hit keeps its original time)
 }
 
 /**
@@ -201,16 +202,19 @@ export async function fetchLunarCrushWithCache(
           posts_active: cached.posts_active,
           contributors_active: cached.contributors_active,
           social_dominance: cached.social_dominance,
-          trend: cached.trend
+          trend: cached.trend,
+          fetched_at: cached.lunarcrush_fetched_at
         };
       }
     }
 
     console.log(`[LUNARCRUSH] Cache miss for ${tokenSymbol} — fetching fresh data`);
-    return await fetchLunarCrush(tokenSymbol);
+    const fresh = await fetchLunarCrush(tokenSymbol);
+    return fresh ? { ...fresh, fetched_at: new Date().toISOString() } : null;
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error(`[LUNARCRUSH] Cache check error: ${msg} — fetching fresh`);
-    return await fetchLunarCrush(tokenSymbol);
+    const fresh = await fetchLunarCrush(tokenSymbol);
+    return fresh ? { ...fresh, fetched_at: new Date().toISOString() } : null;
   }
 }
