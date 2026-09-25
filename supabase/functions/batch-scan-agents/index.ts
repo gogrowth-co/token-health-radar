@@ -84,30 +84,35 @@ serve(async (req: Request) => {
   const errors: string[] = [];
   const scanUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/run-token-scan`;
 
-  for (let i = 0; i < total; i++) {
-    const t = tokens![i];
-    console.log(`[BATCH-SCAN-AGENTS] (${i + 1}/${total}) Scanning ${t.name} [${t.coingecko_id}]`);
-
+  const scanOne = async (t: NonNullable<typeof tokens>[number], n: number) => {
+    console.log(`[BATCH-SCAN-AGENTS] (${n}/${total}) Scanning ${t.name} [${t.coingecko_id}]`);
     try {
+      // run-token-scan reads snake_case fields. The address is sent exactly as stored:
+      // Solana mints are case-sensitive, so it must not be lowercased here.
       const res = await fetch(scanUrl, {
         method: 'POST',
+        // run-token-scan only accepts a user JWT or x-internal-secret; the service key
+        // is no longer a JWT, so the bearer alone is rejected with 401.
         headers: {
           'Authorization': `Bearer ${serviceRoleKey}`,
           'Content-Type': 'application/json',
+          ...(internalSecret ? { 'x-internal-secret': internalSecret } : {}),
         },
         body: JSON.stringify({
-          tokenAddress: t.token_address,
-          chainId: t.chain_id,
-          coingeckoId: t.coingecko_id,
+          token_address: t.token_address,
+          chain_id: t.chain_id,
+          force_refresh: true,
+          user_id: null,
         }),
       });
 
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(`HTTP ${res.status}: ${errText.substring(0, 200)}`);
+      const bodyText = await res.text();
+      let body: any = null;
+      try { body = JSON.parse(bodyText); } catch { /* non-JSON error body */ }
+      if (!res.ok || body?.success === false) {
+        throw new Error(`HTTP ${res.status}: ${(body?.error ?? bodyText).toString().substring(0, 200)}`);
       }
 
-      // Update last_scanned_at
       await supabase
         .from('agent_tokens')
         .update({ last_scanned_at: new Date().toISOString() })
@@ -121,12 +126,17 @@ serve(async (req: Request) => {
       errors.push(msg);
       console.error(`[BATCH-SCAN-AGENTS] ✗ ${t.name} failed:`, err.message);
     }
+  };
 
-    // 5s delay between scans (skip after last)
-    if (i < total - 1) {
-      await new Promise((r) => setTimeout(r, 5000));
+  // A few scans at a time: one-by-one with 5s gaps ran past the 150s gateway limit.
+  const CONCURRENCY = 3;
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, total) }, async () => {
+    while (next < total) {
+      const i = next++;
+      await scanOne(tokens![i], i + 1);
     }
-  }
+  }));
 
   console.log(`[BATCH-SCAN-AGENTS] Done. scanned=${scanned}, failed=${failed}, total=${total}`);
 
