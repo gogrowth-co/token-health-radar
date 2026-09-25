@@ -955,3 +955,33 @@ Deno.test('plausibility: a chain holding ~1% of a multichain supply is legitimat
   runPlausibility(decimals);
   assertEquals(decimals.chain.total_supply_onchain.status, 'disputed');
 });
+
+// ---- Codex round 2: findings 14 and 18 (budget across retries, redaction)
+Deno.test('budget: a paid call that fails does not retry past the credit budget', async () => {
+  let calls = 0;
+  stubFetch(() => {
+    calls++;
+    return { status: 503, text: 'unavailable' };
+  });
+  try {
+    const ctx = new ScanContext({ maxCalls: 100, maxPaidCredits: 6 });
+    const r = await ctx.fetchJson('nansen', 'https://x.test', { credits: 5, retries: 2 });
+    assertEquals(calls, 1);
+    assert(ctx.credits <= 6, `spent ${ctx.credits}`);
+    assertEquals(r.ok ? null : r.reason, 'provider_failed'); // the real failure, not budget_exhausted
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('redaction: keys echoed in provider text or URLs are stripped before they are stored', async () => {
+  stubFetch(() => ({ status: 500, text: 'error calling https://rpc.test/?api-key=SECRETVALUE123&x=1 with Bearer abc.def-ghi and {"apikey":"ZZZ999"}' }));
+  try {
+    const r = await new ScanContext().fetchJson('p', 'https://x.test', { retries: 0 });
+    const d = r.ok ? '' : r.detail ?? '';
+    assert(!/SECRETVALUE123|abc\.def-ghi|ZZZ999/.test(d), d);
+    assert(d.includes('[redacted]'));
+  } finally {
+    restore();
+  }
+});

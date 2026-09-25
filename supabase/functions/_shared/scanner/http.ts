@@ -64,6 +64,9 @@ export class ScanContext {
     const retries = init.retries ?? 2;
     let last: FetchResult<T> = { ok: false, reason: 'provider_failed', ref };
     for (let attempt = 0; attempt <= retries; attempt++) {
+      // The budget is re-checked before EVERY attempt, so retries cannot spend past it (Codex round 2, finding 14).
+      // The previous real failure is kept as the result; running out of budget is not a provider failure.
+      if (attempt > 0 && (this.calls >= this.budget.maxCalls || (credits > 0 && this.credits + credits > this.budget.maxPaidCredits))) break;
       if (attempt > 0) await sleep(attempt === 1 ? 600 : 1800);
       this.calls++;
       st.calls++;
@@ -80,7 +83,7 @@ export class ScanContext {
         st.ms += Date.now() - t0;
         st.last_status = res.status;
         if (res.status === 404) {
-          last = { ok: false, reason: 'not_found', status: 404, ref, detail: text.slice(0, 160) };
+          last = { ok: false, reason: 'not_found', status: 404, ref, detail: redact(text.slice(0, 160)) };
           break; // a 404 is an answer, not a failure: don't retry, don't trip the breaker
         }
         if (res.status === 429) {
@@ -90,7 +93,7 @@ export class ScanContext {
         // GeckoTerminal intermittently serves a Cloudflare challenge page with 403.
         const isHtml = /^\s*</.test(text);
         if (!res.ok || isHtml) {
-          last = { ok: false, reason: 'provider_failed', status: res.status, ref, detail: isHtml ? 'HTML/bot-challenge body instead of JSON' : text.slice(0, 160) };
+          last = { ok: false, reason: 'provider_failed', status: res.status, ref, detail: isHtml ? 'HTML/bot-challenge body instead of JSON' : redact(text.slice(0, 160)) };
           if (res.status >= 400 && res.status < 500 && res.status !== 403 && res.status !== 408) break; // client error: retrying won't help
           continue;
         }
@@ -112,7 +115,7 @@ export class ScanContext {
       } catch (e) {
         st.ms += Date.now() - t0;
         const aborted = (e as Error)?.name === 'AbortError';
-        last = { ok: false, reason: aborted ? 'timeout' : 'provider_failed', ref, detail: (e as Error)?.message?.slice(0, 160) };
+        last = { ok: false, reason: aborted ? 'timeout' : 'provider_failed', ref, detail: redact((e as Error)?.message ?? '').slice(0, 160) };
       } finally {
         clearTimeout(timer);
       }
@@ -144,10 +147,10 @@ export class ScanContext {
         if (r.data?.error) {
           // An execution revert is an answer about the contract, not an endpoint failure.
           if (/revert|execution reverted/i.test(r.data.error.message ?? '')) {
-            return { ok: false, reason: 'no_data', ref: r.ref, detail: `reverted: ${r.data.error.message}`.slice(0, 160) };
+            return { ok: false, reason: 'no_data', ref: r.ref, detail: redact(`reverted: ${r.data.error.message}`).slice(0, 160) };
           }
           const reason: ReasonCode = r.data.error.code === 429 ? 'rate_limited' : 'provider_failed';
-          last = { ok: false, reason, ref: r.ref, detail: JSON.stringify(r.data.error).slice(0, 160) };
+          last = { ok: false, reason, ref: r.ref, detail: redact(JSON.stringify(r.data.error)).slice(0, 160) };
           // A JSON-RPC error under HTTP 200 is still a provider failure: count it and feed the breaker
           // (Codex review finding 15: these were invisible in provider_failures).
           const name = `${family}:${ep.name}`;
@@ -170,6 +173,14 @@ export class ScanContext {
   failures(): Record<string, ReasonCode> {
     return Object.fromEntries(Object.entries(this.stats).filter(([, s]) => s.failures > 0).map(([k, s]) => [k, s.last_reason ?? 'provider_failed']));
   }
+}
+
+/** Strip credentials a provider or the fetch layer may echo back (query keys, bearer tokens) before text is stored. */
+export function redact(s: string): string {
+  return String(s ?? '')
+    .replace(/((?:api[-_]?key|apikey|access[-_]?token|auth[-_]?token|token|secret|password|key|sign|signature)=)[^&\s"'\\]+/gi, '$1[redacted]')
+    .replace(/(bearer|basic)\s+[A-Za-z0-9._~+/=-]+/gi, '$1 [redacted]')
+    .replace(/("(?:api[-_]?key|apikey|token|access_token|secret|authorization)"\s*:\s*")[^"]+/gi, '$1[redacted]');
 }
 
 function sleep(ms: number) {

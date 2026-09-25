@@ -93,13 +93,17 @@ Deno.serve(async (req) => {
 
     const writeErrors: Array<{ table: string; error: string }> = [];
     if (!dry_run) {
-      const up = async (table: string, row: Record<string, unknown>) => {
+      const up = async (table: string, row: Record<string, unknown>): Promise<boolean> => {
         const { error } = await supabase.from(table).upsert(row, { onConflict: 'token_address,chain_id' });
         if (error) writeErrors.push({ table, error: error.message });
+        return !error;
       };
       const key = { token_address: rec.address_key, chain_id: chainId };
-      await Promise.all([
-        up('token_data_cache', rows.token_data_cache),
+      // The parent row goes first (the other caches reference it); if it fails nothing else is written, and the scan
+      // history is only recorded when every cache write succeeded, so no half-written scan is ever presented as one.
+      const parentOk = await up('token_data_cache', rows.token_data_cache);
+      if (!parentOk) writeErrors.push({ table: 'token_*_cache', error: 'parent token_data_cache write failed; dependent cache writes skipped' });
+      if (parentOk) await Promise.all([
         up('token_security_cache', rows.token_security_cache),
         up('token_tokenomics_cache', rows.token_tokenomics_cache),
         up('token_liquidity_cache', rows.token_liquidity_cache),
@@ -137,13 +141,19 @@ Deno.serve(async (req) => {
           updated_at: rec.scanned_at,
         }),
       ]);
-      // Scan history: full field-level record when the v2 columns exist; base row otherwise.
-      let ins = await supabase.from('token_scans').insert({ ...rows.token_scans, ...rows.token_scans_v2 });
-      if (ins.error && /column|schema cache/i.test(ins.error.message)) {
-        writeErrors.push({ table: 'token_scans', error: `v2 columns missing (migration 20260924120000 not applied): ${ins.error.message}` });
-        ins = await supabase.from('token_scans').insert(rows.token_scans);
+      // Scan history: full field-level record when the v2 columns exist; base row otherwise. Only if all caches were written.
+      if (writeErrors.length === 0) {
+        let ins = await supabase.from('token_scans').insert({ ...rows.token_scans, ...rows.token_scans_v2 });
+        // Fall back ONLY for a missing v2 column (not for any error that merely mentions "column").
+        const missingV2 = ins.error && /(column|schema cache)/i.test(ins.error.message) && /(scoring_version|dimension_scores|field_data|data_quality|completeness_pct|canonical_address)/i.test(ins.error.message);
+        if (missingV2) {
+          writeErrors.push({ table: 'token_scans', error: `v2 columns missing (migration 20260924120000 not applied): ${ins.error!.message}` });
+          ins = await supabase.from('token_scans').insert(rows.token_scans);
+        }
+        if (ins.error) writeErrors.push({ table: 'token_scans', error: ins.error.message });
+      } else {
+        writeErrors.push({ table: 'token_scans', error: 'scan history not recorded because a cache write failed' });
       }
-      if (ins.error) writeErrors.push({ table: 'token_scans', error: ins.error.message });
 
       if (regenerate_snapshot === true && symbol) {
         fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/regenerate-seo-snapshot`, {
@@ -156,8 +166,9 @@ Deno.serve(async (req) => {
     if (writeErrors.length) console.error(`[${requestId}] write errors`, JSON.stringify(writeErrors));
 
     const d = score.dimensions;
+    const writeFailed = writeErrors.some((w) => !w.error.startsWith('v2 columns missing'));
     return json({
-      success: writeErrors.filter((w) => !w.error.startsWith('v2 columns missing')).length === 0,
+      success: !writeFailed,
       token_address: rec.address_key,
       canonical_address: rec.address_canonical.value,
       chain_id: chainId,
@@ -173,7 +184,7 @@ Deno.serve(async (req) => {
       dry_run: !!dry_run,
       ...(dry_run ? { record: rec, rows } : {}),
       processing_time_ms: Date.now() - startTime,
-    });
+    }, writeFailed ? 500 : 200); // callers (weekly refresh) key off the HTTP status
   } catch (error) {
     console.error(`[${requestId}] Error:`, error);
     return json({ success: false, error: (error as Error).message || 'Scan failed', request_id: requestId, processing_time_ms: Date.now() - startTime }, 500);
