@@ -6,7 +6,7 @@ import { assert, assertEquals } from 'jsr:@std/assert@1';
 import { crossCheckBool, crossCheckNumber, ok, unknown } from './field.ts';
 import { resetBreakers, ScanContext } from './http.ts';
 import { solanaAdapter } from './solana.ts';
-import { computeUnlocks } from './market.ts';
+import { computeUnlocks, datasetMatches, unlockSlugCandidates } from './market.ts';
 import { classifyLabel } from './holders.ts';
 import { runPlausibility } from './plausibility.ts';
 import { scoreRecord } from './scoring.ts';
@@ -198,4 +198,27 @@ Deno.test('plausibility: decimals misapplied (10^6 gap) is an error', () => {
 Deno.test('plausibility: timestamps in the future are flagged', () => {
   const rec = fakeRecord({ 'market.price_usd': ok(1, { source: 't', fetched_at: '2030-01-01T00:00:00Z' }) });
   assert(runPlausibility(rec).some((f) => f.rule === 'no_future_timestamps'));
+});
+
+Deno.test('unlocks: dataset matched by contract address when it has no gecko_id (ARB), never by slug alone', () => {
+  const arb = { gecko_id: null, metadata: { token: 'arbitrum:0x912ce59144191c1204e64559fe8253a0e49e6548' } };
+  assertEquals(datasetMatches(arb, 'arbitrum', '0xa4b1', '0x912CE59144191C1204E64559FE8253a0e49E6548'), 'token_contract_address');
+  assertEquals(datasetMatches(arb, 'arbitrum', '0x1', '0x912ce59144191c1204e64559fe8253a0e49e6548'), null);
+  assertEquals(datasetMatches({ gecko_id: 'other', metadata: { token: 'ethereum:0xabc' } }, 'arbitrum', '0xa4b1', '0x912ce59144191c1204e64559fe8253a0e49e6548'), null);
+  assertEquals(datasetMatches({ gecko_id: null, metadata: { token: 'coingecko:pyth-network' } }, 'pyth-network', 'solana', 'x'), 'token_coingecko_id');
+  assert(unlockSlugCandidates('aerodrome-finance', 'Aerodrome Finance').includes('aerodrome'));
+});
+
+Deno.test('unlocks: a series that stops while still emitting is unknown, not 0 (AERO case); a finished schedule is 0 (JUP case)', () => {
+  const now = new Date('2026-09-24T00:00:00Z');
+  const t = now.getTime() / 1000;
+  const day = 86400;
+  const drip = Array.from({ length: 40 }, (_, i) => ({ timestamp: t - (39 - i) * day, unlocked: i * 1000 }));
+  const ongoing = computeUnlocks({ metadata: { events: [] }, documentedData: { data: [{ label: 'gauge', data: drip }] } }, 'aero', ref, now);
+  assertEquals(ongoing.unlock_90d_amount.status, 'unknown');
+  assertEquals(ongoing.next_unlock_date.status, 'unknown');
+  const finished = [{ timestamp: t - 300 * day, unlocked: 0 }, { timestamp: t - 211 * day, unlocked: 500 }, { timestamp: t - 210 * day, unlocked: 500 }];
+  const done = computeUnlocks({ metadata: { events: [{ timestamp: t - 211 * day, noOfTokens: [500], unlockType: 'cliff' }] }, documentedData: { data: [{ label: 'team', data: finished }] } }, 'jup', ref, now);
+  assertEquals(done.unlock_90d_amount.value, 0);
+  assertEquals(done.next_unlock_date.value, 'none_scheduled');
 });

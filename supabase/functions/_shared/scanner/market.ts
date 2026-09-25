@@ -128,13 +128,34 @@ export interface UnlockData {
  * A token with no dataset gets `not_found` — which means "not measured",
  * NEVER "no unlocks". Only a dataset with no future events means no dated unlocks.
  */
-export async function fetchUnlocks(ctx: ScanContext, coingeckoId: string | null, name: string | null, now = new Date()): Promise<UnlockData> {
+// DeFiLlama's chain names in `metadata.token` ("ethereum:0x...", "base:0x...").
+const LLAMA_CHAIN: Record<string, string> = { solana: 'solana', '0x1': 'ethereum', '0x38': 'bsc', '0x2105': 'base', '0xa4b1': 'arbitrum', '0x89': 'polygon', '0xa': 'optimism' };
+
+/** A dataset belongs to this token if its CoinGecko id or its `metadata.token` identifies it. */
+export function datasetMatches(data: any, coingeckoId: string | null, chainId: string, address: string): string | null {
+  const token = String(data?.metadata?.token ?? '').toLowerCase();
+  if (coingeckoId && data?.gecko_id === coingeckoId) return 'gecko_id';
+  if (coingeckoId && token === `coingecko:${coingeckoId}`) return 'token_coingecko_id';
+  if (LLAMA_CHAIN[chainId] && token === `${LLAMA_CHAIN[chainId]}:${address.toLowerCase()}`) return 'token_contract_address';
+  return null;
+}
+
+/** Candidate dataset slugs. Safe to be generous: every candidate must pass datasetMatches(). */
+export function unlockSlugCandidates(coingeckoId: string | null, name: string | null): string[] {
+  const slug = (x: string) => x.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const out: string[] = [];
+  if (coingeckoId) out.push(coingeckoId, coingeckoId.replace(/-(finance|network|protocol|token|exchange-solana|exchange|dao|labs)$/, ''));
+  if (name) out.push(slug(name), slug(name.split(/\s+/)[0]));
+  return [...new Set(out.filter(Boolean))].slice(0, 4);
+}
+
+export async function fetchUnlocks(ctx: ScanContext, coingeckoId: string | null, name: string | null, chainId: string, address: string, now = new Date()): Promise<UnlockData> {
   const all = (reason: any, detail?: string, refs: SourceRef[] = []): UnlockData => {
     const f = unknown<any>(reason, detail, refs);
     return { emissions_source: f, next_unlock_date: f, next_unlock_amount: f, unlock_30d_amount: f, unlock_90d_amount: f, last_scheduled_event: f };
   };
-  if (!coingeckoId) return all('missing_input', 'no CoinGecko id to map to a DeFiLlama emissions dataset');
-  const slugs = [...new Set([coingeckoId, name ? name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-') : ''].filter(Boolean))];
+  const slugs = unlockSlugCandidates(coingeckoId, name);
+  if (!slugs.length) return all('missing_input', 'no CoinGecko id or name to map to a DeFiLlama emissions dataset');
   const refs: SourceRef[] = [];
   for (const slug of slugs) {
     const r = await ctx.fetchJson('defillama_emissions', `https://defillama-datasets.llama.fi/emissions/${slug}`, { timeoutMs: 20_000, retries: 1 });
@@ -143,15 +164,17 @@ export async function fetchUnlocks(ctx: ScanContext, coingeckoId: string | null,
       if (r.reason === 'not_found') continue;
       return all(r.reason, r.detail, refs);
     }
-    // Guard against a slug collision: the dataset must be for this exact CoinGecko asset.
-    if (r.data?.gecko_id !== coingeckoId) {
-      refs.push({ ...r.ref, raw_excerpt: { gecko_id: r.data?.gecko_id } });
+    // Guard against slug collisions: the dataset must identify this exact token
+    // (CoinGecko id, or chain:contract address — ARB's dataset has no gecko_id).
+    const matchedBy = datasetMatches(r.data, coingeckoId, chainId, address);
+    if (!matchedBy) {
+      refs.push({ ...r.ref, raw_excerpt: { slug, gecko_id: r.data?.gecko_id, token: r.data?.metadata?.token } });
       continue;
     }
-    r.ref.raw_excerpt = { slug, gecko_id: r.data.gecko_id, supplyMetrics: r.data.supplyMetrics };
+    r.ref.raw_excerpt = { slug, matched_by: matchedBy, gecko_id: r.data.gecko_id, token: r.data.metadata?.token, supplyMetrics: r.data.supplyMetrics };
     return computeUnlocks(r.data, slug, r.ref, now);
   }
-  return all('not_found', `no DeFiLlama emissions dataset matched CoinGecko id "${coingeckoId}" (not measured, which is not the same as no unlocks)`, refs);
+  return all('not_found', `no DeFiLlama emissions dataset matched this token (tried ${slugs.join(', ')}; not measured, which is not the same as no unlocks)`, refs);
 }
 
 export function computeUnlocks(data: any, slug: string, ref: SourceRef, now: Date): UnlockData {
@@ -160,7 +183,6 @@ export function computeUnlocks(data: any, slug: string, ref: SourceRef, now: Dat
   const events: Array<{ timestamp: number; noOfTokens?: number[]; unlockType?: string }> = data?.metadata?.events ?? [];
   const cliffs = events.filter((e) => e.unlockType !== 'linear');
   const future = cliffs.filter((e) => e.timestamp > nowS).sort((a, b) => a.timestamp - b.timestamp);
-  const past = events.filter((e) => e.timestamp <= nowS).sort((a, b) => b.timestamp - a.timestamp);
   const lastAny = [...events].sort((a, b) => b.timestamp - a.timestamp)[0];
 
   // Window amounts from the daily cumulative series (covers linear vesting too).
@@ -178,16 +200,30 @@ export function computeUnlocks(data: any, slug: string, ref: SourceRef, now: Dat
     }
     return total;
   };
+  const iso = (s: number) => new Date(s * 1000).toISOString().slice(0, 10);
   const c0 = cumAt(nowS);
+  // Where the dataset's schedule stops, and whether tokens were still unlocking
+  // right up to that point. A series that stops while emitting (AERO: weekly
+  // gauge/rebase emissions set by governance; AAVE, UNI: daily drips) does NOT
+  // mean "no more unlocks" — it means the rest is not scheduled in the dataset.
+  // A schedule that finished (JUP: one final cliff, then nothing) is measured as 0.
+  const seriesEnd = series.length ? Math.max(...series.map((s) => s.data[s.data.length - 1]?.timestamp ?? 0)) : 0;
+  const tail = Math.min(seriesEnd, nowS);
+  const days = [...new Set(series.flatMap((s) => s.data.map((p) => p.timestamp)))].filter((t) => t > tail - 30 * 86400 && t <= tail).sort((a, b) => a - b);
+  let increaseDays = 0;
+  for (let i = 1; i < days.length; i++) if ((cumAt(days[i]) ?? 0) > (cumAt(days[i - 1]) ?? 0) + 1e-6) increaseDays++;
+  const stillEmitting = increaseDays >= 3;
+  const notProjected = (horizonDays: number) => series.length > 0 && seriesEnd < nowS + horizonDays * 86400 && stillEmitting;
+  const unprojectedDetail = `dataset schedule ends ${iso(seriesEnd)} while tokens were still unlocking (${increaseDays} increase days in its final 30 days); later emissions are not scheduled in the dataset (e.g. set by governance) and are not measured`;
+
   const window = (days: number): Field<number> => {
     const c1 = cumAt(nowS + days * 86400);
-    const lastPoint = series.length ? Math.max(...series.map((s) => s.data[s.data.length - 1]?.timestamp ?? 0)) : 0;
     if (c0 === null || c1 === null) return unknown('no_data', 'dataset has no cumulative series', [ref], { unit: 'tokens' });
-    if (lastPoint < nowS + days * 86400 && future.length) return unknown('no_data', 'series ends before window with events still scheduled', [ref], { unit: 'tokens' });
-    return ok(Math.max(0, c1 - c0), ref, { unit: 'tokens', confidence: 'medium' });
+    if (notProjected(days)) return unknown('no_data', unprojectedDetail, [ref], { unit: 'tokens' });
+    const coveredNote = seriesEnd < nowS + days * 86400 ? `dataset schedule ends ${iso(seriesEnd)} with no further scheduled unlocks` : undefined;
+    return ok(Math.max(0, c1 - c0), ref, { unit: 'tokens', confidence: 'medium', detail: coveredNote });
   };
 
-  const iso = (s: number) => new Date(s * 1000).toISOString().slice(0, 10);
   let nextDate: Field<string>;
   let nextAmt: Field<number>;
   if (future.length) {
@@ -195,8 +231,11 @@ export function computeUnlocks(data: any, slug: string, ref: SourceRef, now: Dat
     const amt = future.filter((e) => e.timestamp === t).reduce((a, e) => a + (e.noOfTokens ?? []).reduce((x, y) => x + (y || 0), 0), 0);
     nextDate = ok(iso(t), ref, { unit: 'date', confidence: 'medium' });
     nextAmt = ok(amt, ref, { unit: 'tokens', confidence: 'medium' });
+  } else if (notProjected(30)) {
+    nextDate = unknown('no_data', unprojectedDetail, [ref], { unit: 'date' });
+    nextAmt = unknown('no_data', unprojectedDetail, [ref], { unit: 'tokens' });
   } else {
-    // Dataset exists and lists no future cliff: "no dated unlocks" is a measured fact here.
+    // Dataset exists, lists no future cliff, and its schedule finished: "no dated unlocks" is measured.
     nextDate = ok('none_scheduled', ref, { unit: 'date', confidence: 'medium', detail: 'no future dated unlock events in dataset' });
     nextAmt = ok(0, ref, { unit: 'tokens', confidence: 'medium' });
   }

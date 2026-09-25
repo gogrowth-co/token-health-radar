@@ -55,7 +55,7 @@ export async function collectToken(
   // 2. Chain facts, liquidity, unlocks.
   const chain = await adapter.collect(ctx, address, marketFinal, chainId);
   const liquidity = await collectLiquidity(ctx, chainId, address, adapter, chain.decimals, marketFinal.price_usd);
-  const unlocks = await fetchUnlocks(ctx, usable(marketFinal.coingecko_id) ? marketFinal.coingecko_id.value : null, usable(marketFinal.name) ? marketFinal.name.value : null, new Date(scannedAt));
+  const unlocks = await fetchUnlocks(ctx, usable(marketFinal.coingecko_id) ? marketFinal.coingecko_id.value : null, usable(marketFinal.name) ? marketFinal.name.value : null, chainId, address, new Date(scannedAt));
 
   const rec: ScanRecord = {
     schema_version: 1,
