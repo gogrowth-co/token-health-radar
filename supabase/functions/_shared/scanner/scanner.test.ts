@@ -12,7 +12,7 @@ import { applyLabel, buildConcentration, classifyLabel, type Holder } from './ho
 import { runPlausibility } from './plausibility.ts';
 import { AddressResolutionError, collectToken, inferNoUnlocks } from './collect.ts';
 import { fetchUnlocks, resetUnlockCache } from './market.ts';
-import { vestingText } from './persist.ts';
+import { buildRows, vestingText } from './persist.ts';
 import { scoreRecord } from './scoring.ts';
 import type { ScanRecord } from './types.ts';
 
@@ -591,4 +591,35 @@ Deno.test('vesting text: each date/amount renders only when usable; unknown neve
   assert(!/null|: 0 tokens/.test(vestingText(rec)!));
   rec.unlocks = { ...rec.unlocks, emissions_source: unknown('not_found') };
   assertEquals(vestingText(rec), null);
+});
+
+// ---- Finding 9: legacy storage must not resurrect rejected supply or mix scopes
+Deno.test('persist: multichain token stores the GLOBAL total next to global circulating (USDC would otherwise read ~150%)', () => {
+  const rec = fakeRecord({
+    'market.platform_count': ok(5, ref),
+    'market.circulating_supply': ok(75.2e9, ref, { corroborated: true }),
+    'market.total_supply_market': ok(75.2e9, ref),
+    'chain.total_supply_onchain': ok(50.2e9, ref, { scope: 'chain' }),
+  });
+  rec.chain_id = '0x1';
+  const t = buildRows(rec, scoreRecord(rec), null).token_tokenomics_cache as any;
+  assertEquals(t.total_supply, 75.2e9);
+  assertEquals(t.circulating_supply / t.total_supply, 1);
+});
+
+Deno.test('persist: single-chain token keeps the on-chain total; a rejected circulating value is written as null everywhere, including the legacy fallback column', () => {
+  const rec = fakeRecord({
+    'market.platform_count': ok(1, ref),
+    'market.circulating_supply': { ...ok(5, ref), status: 'disputed' as const, reason: 'sources_disagree' as const },
+    'chain.total_supply_onchain': ok(1e9, ref),
+  });
+  const t = buildRows(rec, scoreRecord(rec), null).token_tokenomics_cache as any;
+  assertEquals(t.total_supply, 1e9);
+  assertEquals(t.circulating_supply, null);
+  assert('actual_circulating_supply' in t && t.actual_circulating_supply === null, 'stale fallback column must be explicitly nulled');
+});
+
+Deno.test('persist: multichain token with no usable global total stores null, never the chain-local total', () => {
+  const rec = fakeRecord({ 'market.platform_count': ok(4, ref), 'chain.total_supply_onchain': ok(50.2e9, ref) });
+  assertEquals((buildRows(rec, scoreRecord(rec), null).token_tokenomics_cache as any).total_supply, null);
 });

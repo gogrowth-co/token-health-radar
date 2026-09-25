@@ -49,6 +49,7 @@ export function buildRows(rec: ScanRecord, score: ScoreResult, userId: string | 
   const symbol = v(m.symbol);
   const links = v(m.links) ?? {};
   const twitterHandle = links.twitter?.match(/(?:twitter\.com|x\.com)\/([A-Za-z0-9_]+)/)?.[1] ?? null;
+  const singleChain = usable(m.platform_count) && m.platform_count.value <= 1;
   const top10 = v(c.top10_pct);
   const ext = v(c.top10_excl_noncirculating_pct);
   const d = score.dimensions;
@@ -91,8 +92,14 @@ export function buildRows(rec: ScanRecord, score: ScoreResult, userId: string | 
     },
     token_tokenomics_cache: {
       ...key,
-      total_supply: v(c.total_supply_onchain),
+      // total and circulating must have the SAME scope, because the site divides one by the other: circulating is
+      // global (all chains), so a multichain token stores the global market total, not this chain's totalSupply
+      // (USDC: 75.2B global circulating / 50.2B on Ethereum would read ~150% circulating).
+      total_supply: singleChain ? v(c.total_supply_onchain) : v(m.total_supply_market),
       circulating_supply: v(m.circulating_supply),
+      // The site falls back to this legacy column when circulating_supply is empty. Always written (null when the
+      // scanner rejected or could not read circulating supply) so an old value can never resurface.
+      actual_circulating_supply: v(m.circulating_supply),
       supply_cap: v(m.max_supply),
       dex_liquidity_usd: liq,
       major_dex_pairs: v(rec.liquidity.top_pools),
