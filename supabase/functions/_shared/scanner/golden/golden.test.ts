@@ -36,6 +36,7 @@ export function checkExpectations(rec: ScanRecord, expect: Record<string, any>):
     const where = `${path} = ${JSON.stringify(f.value)} [${f.status}${f.reason ? ':' + f.reason : ''}]`;
     if (e.status && f.status !== e.status) errors.push(`${where}: expected status ${e.status}${f.detail ? ' (' + f.detail + ')' : ''}`);
     if (e.reason && f.reason !== e.reason) errors.push(`${where}: expected reason ${e.reason}`);
+    if ('corroborated' in e && (f.corroborated === true) !== e.corroborated) errors.push(`${where}: expected corroborated=${e.corroborated}, got ${f.corroborated}`);
     // A value only counts when the field is usable: a disputed field keeps its primary value for display.
     if ('eq' in e && !e.status && f.status !== 'ok') errors.push(`${where}: expected ${JSON.stringify(e.eq)} with status ok`);
     if ('eq' in e && f.value !== e.eq) errors.push(`${where}: expected ${JSON.stringify(e.eq)}${f.detail ? ' (' + f.detail + ')' : ''}`);

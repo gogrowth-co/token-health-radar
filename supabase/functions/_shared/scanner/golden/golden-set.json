@@ -252,8 +252,10 @@
           "evidence": "EIP-1967/OZ-legacy slots all zero; GoPlus is_proxy 0"
         },
         "chain.mint_authority_active": {
-          "status": "disputed",
-          "evidence": "hand-verified truth: mintable by governance (Sourcify source: function mint(address dst, uint rawAmount); minter() returns 0x1a9c8182c09f50c8318d769245bea52c32be35bc). GoPlus is_mintable 0."
+          "status": "ok",
+          "eq": true,
+          "corroborated": true,
+          "evidence": "hand-verified truth: mintable by governance (Sourcify source: function mint(address dst, uint rawAmount); minter() returns the governance timelock). Sourcify + bytecode selector now settle what GoPlus (is_mintable 0) got wrong."
         },
         "chain.honeypot": {
           "eq": false,
@@ -347,8 +349,10 @@
           "evidence": "proxy slots zero; GoPlus is_proxy 0"
         },
         "chain.mint_authority_active": {
+          "status": "ok",
           "eq": false,
-          "evidence": "no mint selector in bytecode; GoPlus is_mintable 0"
+          "corroborated": true,
+          "evidence": "LINK (ERC677) verified source has no mint function (Sourcify ABI: transfer, transferAndCall, approve, ...); bytecode and GoPlus agree"
         },
         "chain.honeypot": {
           "eq": false,
@@ -407,8 +411,10 @@
           "evidence": "DeFiLlama emissions/ondo-finance: no dated events in the window, but 23.8% of supply (2,376,156,513) is unscheduled ('tbd'), so a 0 would be a lower bound presented as a measurement (checked 2026-09-25)"
         },
         "chain.mint_authority_active": {
-          "status": "disputed",
-          "evidence": "hand-verified truth: mintable (Sourcify exact_match source: function mint(address account, uint256 rawAmount), role-gated). GoPlus is_mintable 0."
+          "status": "ok",
+          "eq": true,
+          "corroborated": true,
+          "evidence": "hand-verified truth: mintable (Sourcify exact_match source: function mint(address account, uint256 rawAmount), role-gated). GoPlus is_mintable 0 was wrong."
         },
         "chain.upgradeable_proxy": {
           "eq": false,
@@ -448,8 +454,10 @@
           "evidence": "bytecode has pause() and paused(); paused() = 0 now"
         },
         "chain.mint_authority_active": {
+          "status": "ok",
           "eq": true,
-          "evidence": "bytecode has mint(address,uint256) (Circle minters)"
+          "corroborated": true,
+          "evidence": "USDC proxy: Sourcify resolves implementation FiatTokenV2_2 (0x43506849...) whose verified ABI has mint(address,uint256)"
         },
         "chain.top10_pct": {
           "approx": 27.17,
@@ -491,8 +499,10 @@
           "evidence": "Sourcify source: function blacklist(address _address, bool _isBlacklisting) external onlyOwner"
         },
         "chain.pausable": {
-          "status": "disputed",
-          "evidence": "hand-verified truth: not pausable (no pause function in source); GoPlus transfer_pausable 1"
+          "status": "ok",
+          "eq": false,
+          "corroborated": true,
+          "evidence": "hand-verified truth: not pausable (no pause function in the verified source); verified ABI + bytecode agree, GoPlus transfer_pausable 1 was wrong"
         },
         "chain.top10_pct": {
           "approx": 36.75,

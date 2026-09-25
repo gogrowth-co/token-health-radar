@@ -1123,3 +1123,103 @@ Deno.test('plausibility: future-dated supply invalidates dependents in the same 
   runPlausibility(legit);
   assertEquals(legit.chain.total_supply_onchain.status, 'ok'); // exactly 10^-3 of the global supply
 });
+
+// ---- Sourcify: verified source as the affirmative second source for EVM capabilities
+import { sourcifyCapabilities, matchingFunctions } from './sourcify.ts';
+import { withSourcify } from './evm.ts';
+
+const fn = (name: string, stateMutability = 'nonpayable') => ({ type: 'function', name, stateMutability });
+const sfReply = (abi: unknown[], proxy?: { impls: string[] }) => ({ json: { runtimeMatch: 'match', creationMatch: 'match', abi, proxyResolution: { isProxy: !!proxy, proxyType: proxy ? 'EIP1967Proxy' : null, implementations: (proxy?.impls ?? []).map((address) => ({ address })) } } });
+
+Deno.test('sourcify: function-name matching counts only state-changing functions', () => {
+  assertEquals(matchingFunctions([fn('mint'), fn('paused', 'view'), fn('pause'), fn('blacklist'), fn('transfer')], /mint/i), ['mint']);
+  assertEquals(matchingFunctions([fn('paused', 'view'), fn('isBlacklisted', 'view')], /pause|blacklist/i), []);
+});
+
+Deno.test('sourcify: verified plain token with no mint/pause/blacklist function = absent (affirmative)', async () => {
+  stubFetch(() => sfReply([fn('transfer'), fn('approve'), fn('balanceOf', 'view')]));
+  try {
+    const c = await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, []);
+    for (const k of ['mint', 'pause', 'blacklist'] as const) {
+      assertEquals(c[k].value, false, k);
+      assertEquals(c[k].status, 'ok', k);
+    }
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('sourcify: a proxy is judged by its IMPLEMENTATION abi; an unverified implementation leaves it unknown', async () => {
+  const proxyReply = sfReply([fn('upgradeTo'), fn('admin')], { impls: [EVM_IMPL] });
+  stubFetch((url) => (url.includes(`/${EVM_IMPL}`) ? { status: 404, text: '{}' } : proxyReply));
+  try {
+    const c = await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, [EVM_IMPL]);
+    assertEquals(c.mint.status, 'unknown');
+  } finally {
+    restore();
+  }
+  stubFetch((url) => (url.includes(`/${EVM_IMPL}`) ? sfReply([fn('mint'), fn('pause'), fn('transfer')]) : proxyReply));
+  try {
+    const c = await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, [EVM_IMPL]);
+    assertEquals(c.mint.value, true);
+    assertEquals(c.pause.value, true);
+    assertEquals(c.blacklist.value, false);
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('sourcify: a delegation our chain reads found that Sourcify did not resolve, or a fallback(), leaves the answer unknown', async () => {
+  stubFetch(() => sfReply([fn('transfer')])); // Sourcify says: not a proxy
+  try {
+    const c = await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, [EVM_IMPL]); // but the chain has an implementation slot
+    assertEquals(c.mint.status, 'unknown');
+  } finally {
+    restore();
+  }
+  stubFetch(() => sfReply([fn('transfer'), { type: 'fallback', stateMutability: 'payable' }]));
+  try {
+    assertEquals((await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, [])).mint.status, 'unknown');
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('sourcify: unverified contract or provider failure = unknown, never absent', async () => {
+  stubFetch(() => ({ status: 404, text: '{"customCode":"contract_not_found"}' }));
+  try {
+    assertEquals((await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, [])).mint.reason, 'not_found');
+  } finally {
+    restore();
+  }
+  stubFetch(() => ({ status: 503, text: 'down' }));
+  try {
+    assertEquals((await sourcifyCapabilities(new ScanContext(), '1', EVM_TOKEN, [])).mint.status, 'unknown');
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('withSourcify: verified absence + one agreeing reading is corroborated; GoPlus dissent loses; bytecode selector vs ABI is disputed', () => {
+  const sfFalse = ok(false, { source: 'sourcify', fetched_at: NOW.toISOString() }, { confidence: 'high' });
+  const sfTrue = ok(true, { source: 'sourcify', fetched_at: NOW.toISOString() }, { confidence: 'high' });
+  const sel = (v: boolean) => ok(v, { source: 'evm_rpc_1:x', fetched_at: NOW.toISOString() });
+  const gp = (v: boolean) => ok(v, { source: 'goplus', fetched_at: NOW.toISOString() });
+  const gpBlank = unknown<boolean>('no_data');
+  const a = withSourcify(sel(false), gp(false), sfFalse, 'mint');
+  assertEquals([a.value, a.status, a.corroborated], [false, 'ok', true]);
+  const dissent = withSourcify(sel(false), gp(true), sfFalse, 'pause'); // PEPE case
+  assertEquals([dissent.value, dissent.status, dissent.corroborated], [false, 'ok', true]);
+  const blankGp = withSourcify(sel(false), gpBlank, sfFalse, 'mint'); // AAVE/USDC-style proxy with blank GoPlus
+  assertEquals(blankGp.corroborated, true);
+  const onlySf = withSourcify(unknown<boolean>('no_data'), gpBlank, sfFalse, 'mint');
+  assertEquals([onlySf.status, onlySf.corroborated], ['ok', false]);
+  const conflict = withSourcify(sel(true), gp(false), sfFalse, 'mint');
+  assertEquals(conflict.status, 'disputed');
+  const present = withSourcify(sel(false), gp(false), sfTrue, 'mint'); // UNI case: GoPlus 0 was wrong
+  assertEquals([present.value, present.status, present.corroborated], [true, 'ok', false]);
+  const presentAgreed = withSourcify(sel(true), gp(false), sfTrue, 'mint');
+  assertEquals([presentAgreed.value, presentAgreed.corroborated], [true, true]);
+  const noSf = withSourcify(sel(false), gp(false), unknown<boolean>('not_found'), 'mint'); // no verified code: weak negative stays uncorroborated
+  assertEquals([noSf.value, noSf.corroborated], [false, false]);
+});

@@ -9,6 +9,7 @@ import { crossCheckBool, crossCheckNumber, type Field, ok, type SourceRef, unkno
 import type { ScanContext } from './http.ts';
 import { applyLabel, buildConcentration, fetchNansenLabels, type Holder, round } from './holders.ts';
 import { sellImpact } from './solana.ts';
+import { sourcifyCapabilities } from './sourcify.ts';
 import type { ChainAdapter, ChainFacts } from './types.ts';
 
 interface EvmChain {
@@ -68,6 +69,34 @@ const capability = (f: Field<boolean>): Field<boolean> =>
   f.status === 'ok' && f.value === false && !ABSENCE_CORROBORATES
     ? { ...f, confidence: 'medium', corroborated: false, detail: `${f.detail ?? ''} No known function found is not proof of absence (custom names, role-gated mints, unresolved delegation), so this earns no score points and supports no supply-growth conclusion.`.trim() }
     : f;
+
+/**
+ * Combine the three readings of one capability (mint / pause / blacklist): our bytecode selectors, GoPlus, and Sourcify's
+ * verified ABI. Verified source is the affirmative evidence: with it, "absent" is corroborated when at least one other
+ * reading agrees; without it, the weak-negative rule applies.
+ */
+export function withSourcify(sel: Field<boolean>, gp: Field<boolean>, sf: Field<boolean>, label: string): Field<boolean> {
+  if (!usable(sf)) return capability(crossCheckBool(sel, gp, label));
+  const votes = [sel, gp].filter((v) => usable(v));
+  const sources = [...sel.sources, ...gp.sources, ...sf.sources].map((x) => x);
+  const others = (v: boolean) => votes.filter((x) => x.value === v);
+  if (sf.value === true) {
+    const corroboratedBy = others(true).length > 0;
+    return { value: true, status: 'ok', confidence: corroboratedBy ? 'high' : 'medium', corroborated: corroboratedBy, unit: 'bool', detail: sf.detail, sources };
+  }
+  // Sourcify says absent.
+  if (usable(sel) && sel.value === true) {
+    return { value: false, status: 'disputed', reason: 'sources_disagree', confidence: 'low', corroborated: false, unit: 'bool', detail: `${label}: the bytecode contains a ${label} selector but the verified ABI lists no such function`, sources };
+  }
+  if (others(false).length > 0) {
+    const dissent = others(true).length ? ' (GoPlus reported it present; verified source and bytecode do not)' : '';
+    return { value: false, status: 'ok', confidence: 'high', corroborated: true, unit: 'bool', detail: `${sf.detail}; agrees with ${others(false).map((v) => v.sources[0]?.source).join(' + ')}${dissent}`, sources };
+  }
+  if (usable(gp) && gp.value === true) {
+    return { value: false, status: 'disputed', reason: 'sources_disagree', confidence: 'low', corroborated: false, unit: 'bool', detail: `${label}: verified source lists no such function but GoPlus reports it present`, sources };
+  }
+  return { value: false, status: 'ok', confidence: 'medium', corroborated: false, unit: 'bool', detail: `${sf.detail}; no second reading available`, sources };
+}
 
 const zeroAddr = (hex: string | null | undefined) => !hex || /^0x0*$/.test(hex);
 const addrFromWord = (hex: string) => '0x' + hex.slice(-40).toLowerCase();
@@ -195,6 +224,9 @@ export const evmAdapter: ChainAdapter = {
     const gpMiss = (label: string, unit = 'bool') => unknown<any>(gp.ok ? (g ? 'no_data' : 'not_found') : gp.reason, `GoPlus: no ${label}`, [gpRef], { unit });
     const gpBool = (v: unknown, label: string): Field<boolean> => (v === '1' ? ok(true, gpRef, { unit: 'bool' }) : v === '0' ? ok(false, gpRef, { unit: 'bool' }) : gpMiss(label));
     const gpPct = (v: unknown, label: string): Field<number> => (typeof v === 'string' && v !== '' && Number.isFinite(Number(v)) ? ok(round(Number(v) * 100, 3), gpRef, { unit: 'pct' }) : gpMiss(label, 'pct'));
+
+    // ---- Sourcify: verified source -> what the contract (and each implementation) can actually do
+    const sfCaps = await sourcifyCapabilities(ctx, chain.goplus, a, impls.map((i) => i.addr));
 
     // ---- honeypot.is (buy/sell simulation)
     let hpBuy: Field<number>, hpSell: Field<number>, hpTransfer: Field<number>, hpFlag: Field<boolean>;
@@ -324,7 +356,7 @@ export const evmAdapter: ChainAdapter = {
       decimals: decF,
       total_supply_onchain: total,
       token_standard: ok('erc20', code.ref),
-      mint_authority_active: capability(crossCheckBool(selField(SEL.mint, 'mint'), gpBool(g?.is_mintable, 'is_mintable'), 'mintable')),
+      mint_authority_active: withSourcify(selField(SEL.mint, 'mint'), gpBool(g?.is_mintable, 'is_mintable'), sfCaps.mint, 'mint'),
       freeze_authority_active: unknown('not_applicable', 'EVM tokens have no freeze authority; see blacklist and pausable', [], { unit: 'bool' }),
       permanent_delegate: unknown('not_applicable', 'Solana-only concept', [], { unit: 'bool' }),
       transfer_hook: unknown('not_applicable', 'Solana-only concept', [], { unit: 'bool' }),
@@ -334,8 +366,8 @@ export const evmAdapter: ChainAdapter = {
       honeypot: crossCheckBool(gpBool(g?.is_honeypot, 'is_honeypot'), hpFlag, 'honeypot'),
       upgradeable_proxy: crossCheckBool(proxyOnchain, gpBool(g?.is_proxy, 'is_proxy'), 'upgradeable proxy'),
       owner_address: crossCheckOwner(ownerOnchain, g?.owner_address, gpRef),
-      pausable: capability(crossCheckBool(selField(SEL.pause, 'pause'), gpBool(g?.transfer_pausable, 'transfer_pausable'), 'pausable')),
-      blacklist: capability(crossCheckBool(selField(SEL.blacklist, 'blacklist'), gpBool(g?.is_blacklisted, 'is_blacklisted'), 'blacklist')),
+      pausable: withSourcify(selField(SEL.pause, 'pause'), gpBool(g?.transfer_pausable, 'transfer_pausable'), sfCaps.pause, 'pause'),
+      blacklist: withSourcify(selField(SEL.blacklist, 'blacklist'), gpBool(g?.is_blacklisted, 'is_blacklisted'), sfCaps.blacklist, 'blacklist'),
       ...conc,
       liquidity_locked_pct: lpLocked,
       creator_holding_pct: gpPct(g?.creator_percent, 'creator holding'),
