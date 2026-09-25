@@ -132,6 +132,7 @@ export class ScanContext {
   async rpc<T = any>(family: string, endpoints: Array<{ name: string; url: string }>, method: string, params: unknown[], timeoutMs = 10_000): Promise<FetchResult<T>> {
     let last: FetchResult<T> | null = null;
     for (const ep of endpoints) {
+      const breakerBefore = breaker.get(`${family}:${ep.name}`); // fetchJson clears the breaker on any HTTP 200; restore it for JSON-RPC errors
       const r = await this.fetchJson<any>(`${family}:${ep.name}`, ep.url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -145,7 +146,18 @@ export class ScanContext {
           if (/revert|execution reverted/i.test(r.data.error.message ?? '')) {
             return { ok: false, reason: 'no_data', ref: r.ref, detail: `reverted: ${r.data.error.message}`.slice(0, 160) };
           }
-          last = { ok: false, reason: r.data.error.code === 429 ? 'rate_limited' : 'provider_failed', ref: r.ref, detail: JSON.stringify(r.data.error).slice(0, 160) };
+          const reason: ReasonCode = r.data.error.code === 429 ? 'rate_limited' : 'provider_failed';
+          last = { ok: false, reason, ref: r.ref, detail: JSON.stringify(r.data.error).slice(0, 160) };
+          // A JSON-RPC error under HTTP 200 is still a provider failure: count it and feed the breaker
+          // (Codex review finding 15: these were invisible in provider_failures).
+          const name = `${family}:${ep.name}`;
+          const st = this.stat(name);
+          st.failures++;
+          st.last_reason = reason;
+          const cur = breakerBefore ? { ...breakerBefore } : { fails: 0, openUntil: 0 };
+          cur.fails++;
+          if (cur.fails >= BREAKER_THRESHOLD) cur.openUntil = Date.now() + BREAKER_COOLDOWN_MS;
+          breaker.set(name, cur);
           continue;
         }
         return { ok: true, data: r.data.result as T, ref: { ...r.ref, raw_excerpt: { method } }, status: r.status };

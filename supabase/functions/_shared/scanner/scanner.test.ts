@@ -702,3 +702,17 @@ Deno.test('community: missing providers are unknown, a single input is not enoug
   assertEquals(rec.social.community.sentiment.status, 'unknown');
   assertEquals(scoreRecord(rec).dimensions.community.score, null);
 });
+
+Deno.test('rpc: a JSON-RPC error under HTTP 200 is counted as a provider failure and opens the breaker', async () => {
+  stubFetch(() => ({ json: { jsonrpc: '2.0', id: 1, error: { code: -32602, message: 'Request blocked' } } }));
+  try {
+    const ctx = new ScanContext();
+    const eps = [{ name: 'a', url: 'https://rpc-a.test' }];
+    for (let i = 0; i < 3; i++) await ctx.rpc('fam', eps, 'getX', []);
+    assertEquals(ctx.failures()['fam:a'], 'provider_failed');
+    const r = await ctx.rpc('fam', eps, 'getX', []);
+    assertEquals(r.ok ? null : r.reason, 'circuit_open');
+  } finally {
+    restore();
+  }
+});

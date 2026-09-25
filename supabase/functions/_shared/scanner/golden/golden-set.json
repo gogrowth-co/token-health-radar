@@ -62,8 +62,9 @@
           "evidence": "mint account owner TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         "unlocks.next_unlock_date": {
-          "eq": "none_scheduled",
-          "evidence": "DeFiLlama emissions/jupiter: 35 events, none after 2026-02-25 (Net-Zero Emissions vote)"
+          "status": "unknown",
+          "reason": "no_data",
+          "evidence": "DeFiLlama emissions/jupiter: 35 events, none after 2026-02-25, BUT supplyMetrics.tbdAmount = 3,542,925,885.7 of 7,000,000,000 (50.6%) has no schedule, so 'no dated unlocks' is not 'nothing left to unlock' (checked 2026-09-25)"
         },
         "derived.circulating_ratio": {
           "approx": 0.4838,
@@ -76,6 +77,12 @@
             "decimals_order_of_magnitude",
             "circulating_le_total"
           ]
+        },
+        "unlocks.unscheduled_supply": {
+          "status": "ok",
+          "approx": 3542925886,
+          "rel": 0.02,
+          "evidence": "DeFiLlama emissions/jupiter supplyMetrics.tbdAmount"
         }
       }
     },
@@ -139,8 +146,9 @@
           "evidence": "RPC freezeAuthority null; GeckoTerminal freeze_authority no"
         },
         "unlocks.next_unlock_date": {
-          "eq": "none_scheduled",
-          "evidence": "No DeFiLlama dataset for BONK (404), so this is derived: CoinGecko and CoinMarketCap both report circulating = total (87,994,386,166,828) and RPC shows mintAuthority null, so no supply can unlock or be minted. Checked 2026-09-24/25."
+          "status": "unknown",
+          "reason": "no_data",
+          "evidence": "No DeFiLlama dataset for BONK (404). Derived only as an UPPER BOUND: CoinGecko and CoinMarketCap both report circulating ~= total (87,994,386,166,828) and RPC shows mintAuthority null, so at most the tiny remainder could still enter circulation. A date is not invented. Checked 2026-09-24/25."
         },
         "flags": {
           "flag_absent": [
@@ -151,6 +159,12 @@
         "unlocks.emissions_source": {
           "eq": "derived_fully_circulating",
           "evidence": "see next_unlock_date"
+        },
+        "unlocks.unlock_90d_amount": {
+          "status": "ok",
+          "approx": 0,
+          "abs": 1000000000.0,
+          "evidence": "derived upper bound (remaining non-circulating supply), <0.002% of supply; not a scheduled amount"
         }
       }
     },
@@ -341,8 +355,15 @@
           "evidence": "GoPlus 0; honeypot.is false"
         },
         "unlocks.next_unlock_date": {
-          "eq": "none_scheduled",
-          "evidence": "DeFiLlama emissions/chainlink: 126 events, none in the future"
+          "status": "unknown",
+          "reason": "no_data",
+          "evidence": "DeFiLlama emissions/chainlink: 126 events, none in the future, BUT supplyMetrics.tbdAmount = 251,990,421 (25.2%) has no schedule (checked 2026-09-25)"
+        },
+        "unlocks.unscheduled_supply": {
+          "status": "ok",
+          "approx": 251990421,
+          "rel": 0.05,
+          "evidence": "DeFiLlama emissions/chainlink supplyMetrics.tbdAmount"
         }
       }
     },
@@ -381,8 +402,9 @@
           "evidence": "sum of the three 2027-01-17 cliffs"
         },
         "unlocks.unlock_90d_amount": {
-          "eq": 0,
-          "evidence": "no events between 2026-09-24 and 2026-12-23"
+          "status": "unknown",
+          "reason": "no_data",
+          "evidence": "DeFiLlama emissions/ondo-finance: no dated events in the window, but 23.8% of supply (2,376,156,513) is unscheduled ('tbd'), so a 0 would be a lower bound presented as a measurement (checked 2026-09-25)"
         },
         "chain.mint_authority_active": {
           "status": "disputed",
