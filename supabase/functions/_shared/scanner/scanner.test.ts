@@ -9,7 +9,7 @@ import { solanaAdapter } from './solana.ts';
 import { computeUnlocks, datasetMatches, unlockSlugCandidates } from './market.ts';
 import { classifyLabel } from './holders.ts';
 import { runPlausibility } from './plausibility.ts';
-import { inferNoUnlocks } from './collect.ts';
+import { inferNoUnlocks, reuseIfFresh } from './collect.ts';
 import { scoreRecord } from './scoring.ts';
 import type { ScanRecord } from './types.ts';
 
@@ -240,4 +240,21 @@ Deno.test('unlocks: "none" is derived only when fully circulating per two source
   const locked = fakeRecord({ ...base, 'market.circulating_supply': ok(80, ref, { confidence: 'high' }) });
   locked.unlocks = unl;
   assertEquals(inferNoUnlocks(locked).unlock_90d_amount.status, 'unknown');
+});
+
+Deno.test('cache: unlock schedule reused within 24h only, never failures or derived values', () => {
+  const prev = fakeRecord();
+  prev.scanned_at = '2026-09-24T00:00:00Z';
+  prev.unlocks = { ...prev.unlocks, emissions_source: ok('jupiter', ref), next_unlock_date: ok('none_scheduled', ref) };
+  const hit = reuseIfFresh(prev, 'unlocks', '2026-09-24T10:00:00Z');
+  assertEquals(hit?.next_unlock_date.value, 'none_scheduled');
+  assert(hit!.next_unlock_date.detail!.includes('reused from scan'));
+  assertEquals(reuseIfFresh(prev, 'unlocks', '2026-09-25T01:00:00Z'), null);
+  const failed = fakeRecord();
+  failed.scanned_at = '2026-09-24T00:00:00Z';
+  assertEquals(reuseIfFresh(failed, 'unlocks', '2026-09-24T01:00:00Z'), null);
+  const derived = fakeRecord();
+  derived.scanned_at = '2026-09-24T00:00:00Z';
+  derived.unlocks = { ...derived.unlocks, emissions_source: ok('derived_fully_circulating', ref) };
+  assertEquals(reuseIfFresh(derived, 'unlocks', '2026-09-24T01:00:00Z'), null);
 });

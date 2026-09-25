@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
 
     // Previous scan (for the supply-jump plausibility rule). Tolerates the v2 columns not existing yet.
     const prev = await supabase.from('token_scans').select('field_data, scanned_at').eq('token_address', rawAddress.trim().toLowerCase()).eq('chain_id', chainId).not('field_data', 'is', null).order('scanned_at', { ascending: false }).limit(1).maybeSingle();
-    const previous = prev.data?.field_data ? { total_supply_onchain: prev.data.field_data?.chain?.total_supply_onchain?.value ?? null, scanned_at: prev.data.scanned_at } : null;
+    const previous = prev.data?.field_data ? { total_supply_onchain: prev.data.field_data?.chain?.total_supply_onchain?.value ?? null, scanned_at: prev.data.scanned_at, record: prev.data.field_data } : null;
 
     let rec;
     try {

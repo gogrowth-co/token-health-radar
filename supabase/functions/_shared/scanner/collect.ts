@@ -28,7 +28,7 @@ export function adapterFor(chainId: string): ChainAdapter {
 export async function collectToken(
   addressInput: string,
   chainIdInput: string,
-  opts: { ctx?: ScanContext; previous?: { total_supply_onchain?: number | null; scanned_at?: string } | null; now?: Date } = {},
+  opts: { ctx?: ScanContext; previous?: { total_supply_onchain?: number | null; scanned_at?: string; record?: ScanRecord | null } | null; now?: Date } = {},
 ): Promise<ScanRecord> {
   const ctx = opts.ctx ?? new ScanContext();
   const scannedAt = (opts.now ?? new Date()).toISOString();
@@ -55,7 +55,8 @@ export async function collectToken(
   // 2. Chain facts, liquidity, unlocks.
   const chain = await adapter.collect(ctx, address, marketFinal, chainId);
   const liquidity = await collectLiquidity(ctx, chainId, address, adapter, chain.decimals, marketFinal.price_usd);
-  const unlocks = await fetchUnlocks(ctx, usable(marketFinal.coingecko_id) ? marketFinal.coingecko_id.value : null, usable(marketFinal.name) ? marketFinal.name.value : null, chainId, address, new Date(scannedAt));
+  const cachedUnlocks = reuseIfFresh(opts.previous?.record ?? null, 'unlocks', scannedAt);
+  const unlocks = cachedUnlocks ?? await fetchUnlocks(ctx, usable(marketFinal.coingecko_id) ? marketFinal.coingecko_id.value : null, usable(marketFinal.name) ? marketFinal.name.value : null, chainId, address, new Date(scannedAt));
 
   const rec: ScanRecord = {
     schema_version: 1,
@@ -138,6 +139,23 @@ async function collectLiquidity(ctx: ScanContext, chainId: string, address: stri
     slip = { slippage_10k_pct: f, slippage_100k_pct: f };
   }
   return { ...base, ...slip };
+}
+
+// Cache by field type (handoff requirement 10). Only slow-moving, schedule-type
+// data is reused from the previous stored scan; prices, supply, holders,
+// authorities and liquidity are always fetched fresh. A reused field keeps its
+// original sources and fetched_at, and says it was reused.
+export const FIELD_TTL_HOURS: Record<'unlocks', number> = { unlocks: 24 };
+
+export function reuseIfFresh(prev: ScanRecord | null, group: 'unlocks', nowIso: string): ScanRecord['unlocks'] | null {
+  if (!prev?.[group] || !prev.scanned_at) return null;
+  const ageH = (Date.parse(nowIso) - Date.parse(prev.scanned_at)) / 3_600_000;
+  if (!(ageH >= 0 && ageH < FIELD_TTL_HOURS[group])) return null;
+  const src = prev[group].emissions_source;
+  // Only reuse a real dataset read; never reuse failures or the derived inference (recomputed from fresh data).
+  if (src?.status !== 'ok' || src.value === 'derived_fully_circulating') return null;
+  const note = `reused from scan at ${prev.scanned_at} (unlock schedules cached ${FIELD_TTL_HOURS[group]}h)`;
+  return Object.fromEntries(Object.entries(prev[group]).map(([k, f]) => [k, { ...f, detail: f.detail ? `${f.detail}; ${note}` : note }])) as ScanRecord['unlocks'];
 }
 
 /**
