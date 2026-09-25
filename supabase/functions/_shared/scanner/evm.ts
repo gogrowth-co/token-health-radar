@@ -348,6 +348,22 @@ export const evmAdapter: ChainAdapter = {
       maxListed,
     });
 
+    // Burned: balances held by the two standard burn addresses. Burns that call _burn() shrink totalSupply
+    // instead and are not visible here, so this is a lower bound on everything ever burned.
+    const BURN_ADDRS = ['0x0000000000000000000000000000000000000000', '0x000000000000000000000000000000000000dead'];
+    const burnReads = await Promise.all(BURN_ADDRS.map((b) => call('0x70a08231' + b.slice(2).padStart(64, '0'))));
+    const burnedSupply: Field<number> = decimals === null
+      ? unknown('missing_input', 'needs corroborated decimals to scale balances', [], { unit: 'tokens' })
+      : burnReads.every((r) => r.ok && r.data && r.data !== '0x')
+      ? ok(burnReads.reduce((sum, r) => sum + Number(BigInt(r.data as string)) / 10 ** decimals, 0), burnReads.map((r, i) => refOf(r, { balanceOf: BURN_ADDRS[i], raw: BigInt(r.data as string).toString() })), {
+        unit: 'tokens',
+        scope: 'chain',
+        confidence: 'medium',
+        bound: 'lower',
+        detail: 'tokens held by 0x0 and 0x…dEaD; burns that reduce totalSupply are not counted',
+      })
+      : unknown(burnReads.find((r) => !r.ok)?.reason ?? 'no_data', 'balanceOf() at the burn addresses failed or returned nothing', burnReads.map((r) => r.ref), { unit: 'tokens' });
+
     // LP lock: share of LP tokens GoPlus reports as locked.
     const lpLocked: Field<number> = g?.lp_holders?.length
       ? ok(round(g.lp_holders.filter((h: any) => h.is_locked === 1).reduce((s: number, h: any) => s + Number(h.percent || 0), 0) * 100, 2), gpRef, { unit: 'pct', confidence: 'low', detail: 'GoPlus LP-holder lock data, single source, covers V2-style LP tokens only' })
@@ -372,6 +388,8 @@ export const evmAdapter: ChainAdapter = {
       ...conc,
       liquidity_locked_pct: lpLocked,
       creator_holding_pct: gpPct(g?.creator_percent, 'creator holding'),
+      burned_supply: burnedSupply,
+      metadata_update_authority_active: unknown('not_applicable', 'EVM name and symbol are contract code; see upgradeable_proxy and owner', [], { unit: 'bool' }),
     };
   },
 

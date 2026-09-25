@@ -102,7 +102,11 @@ Deno.serve(async (req) => {
     // Test switch (cron-secret gated like the job itself): scan just these addresses, skip reports.
     const reqBody = await req.json().catch(() => ({}));
     const testTokens: string[] | null = Array.isArray(reqBody?.test_tokens) ? reqBody.test_tokens.map((a: unknown) => String(a).toLowerCase()) : null;
-    const skipReports = testTokens !== null;
+    // Report regeneration stays OFF until the report generator is rebuilt (scanner handoff, Phase 3):
+    // the current generator rewrites the 54 live pages from model-typed numbers. Opt in with
+    // REFRESH_GENERATE_REPORTS=true once Phase 3 ships.
+    const reportsEnabled = Deno.env.get('REFRESH_GENERATE_REPORTS') === 'true';
+    const skipReports = testTokens !== null || !reportsEnabled;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     if (!adminUserId) {
@@ -113,13 +117,27 @@ Deno.serve(async (req) => {
     }
 
     const staleCutoff = new Date(Date.now() - STALE_AFTER_DAYS * 24 * 60 * 60 * 1000).toISOString();
-    const { data: tokenReports, error: fetchError } = testTokens
+    // Staleness is judged by the token's last SCAN, not the report's updated_at: with reports off
+    // (or failing) updated_at never moves, and ordering by it rescanned the same first batch daily.
+    const { data: reportRows, error: fetchError } = testTokens
       ? await supabase.from('token_reports').select('token_address, chain_id, token_symbol, updated_at').in('token_address', testTokens)
-      : await supabase
-        .from('token_reports')
-        .select('token_address, chain_id, token_symbol, updated_at')
-        .lt('updated_at', staleCutoff)
-        .order('updated_at', { ascending: true }); // stalest first — survives truncation
+      : await supabase.from('token_reports').select('token_address, chain_id, token_symbol, updated_at');
+    let tokenReports = (reportRows || []) as TokenRow[];
+    if (!testTokens && tokenReports.length) {
+      // Only scans newer than the cutoff matter (they make a token fresh), so this stays far
+      // below PostgREST's 1000-row cap however long the scan history grows.
+      const { data: recent, error: recentErr } = await supabase
+        .from('token_scans')
+        .select('token_address, chain_id')
+        .gte('scanned_at', staleCutoff)
+        .in('token_address', tokenReports.map((t) => t.token_address.toLowerCase()))
+        .limit(1000);
+      if (recentErr) throw new Error(`recent scans lookup failed: ${recentErr.message}`);
+      const fresh = new Set((recent || []).map((r) => `${r.token_address}|${r.chain_id}`));
+      tokenReports = tokenReports
+        .filter((t) => !fresh.has(`${t.token_address.toLowerCase()}|${t.chain_id}`))
+        .sort((a, b) => a.updated_at.localeCompare(b.updated_at));
+    }
 
     if (fetchError) {
       console.error('[WEEKLY-REFRESH] fetch error:', fetchError);
@@ -129,7 +147,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const all = (tokenReports || []) as TokenRow[];
+    const all = tokenReports;
     const summary: RefreshSummary = {
       totalStale: all.length,
       attempted: 0,
@@ -211,7 +229,7 @@ Deno.serve(async (req) => {
     // meant that on days when no token was stale (the common case, given
     // the staleness filter) the sitemap never rebuilt — so CMS changes
     // made outside a token refresh had no scheduled safety net.
-    if (!skipReports) {
+    if (testTokens === null) {
       try {
         await supabase.functions.invoke('generate-sitemap', {
           body: { trigger_source: 'weekly_refresh', timestamp: new Date().toISOString() },

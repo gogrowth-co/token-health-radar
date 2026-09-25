@@ -24,6 +24,10 @@ export interface ChainFacts extends ConcentrationFields {
   blacklist: Field<boolean>;
   liquidity_locked_pct: Field<number>;
   creator_holding_pct: Field<number>;
+  // Tokens sitting at standard burn addresses (EVM: 0x0 and 0x…dEaD). Solana burns destroy supply: not measurable here.
+  burned_supply: Field<number>;
+  // Solana: can the token's name, symbol, logo and URI still be changed (Metaplex is_mutable / Token-2022 metadata authority).
+  metadata_update_authority_active: Field<boolean>;
 }
 
 export interface LiquidityFacts {
@@ -83,6 +87,8 @@ export interface ScanRecord {
     fdv_to_mcap: Field<number>;
     unlock_30d_pct_of_circ: Field<number>;
     unlock_90d_pct_of_circ: Field<number>;
+    // Scheduled supply inflation: tokens unlocking in the next 12 months as % of circulating (DeFiLlama schedule).
+    unlock_365d_pct_of_circ: Field<number>;
   };
   quality: DataQuality;
 }

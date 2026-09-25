@@ -213,6 +213,7 @@ export function inferNoUnlocks(rec: ScanRecord): ScanRecord['unlocks'] {
     next_unlock_amount: unknown('no_data', `no dated schedule exists; ${detail}`, sources, { unit: 'tokens' }),
     unlock_30d_amount: bound,
     unlock_90d_amount: bound,
+    unlock_365d_amount: bound,
     last_scheduled_event: unknown('no_data', 'no schedule dataset', u.last_scheduled_event.sources),
     unscheduled_supply: bound,
   };
@@ -223,7 +224,7 @@ function derive(rec: ScanRecord): ScanRecord['derived'] {
   const ratio = (a: Field<number>, b: Field<number>, label: string, unit: string, mult = 1): Field<number> => {
     if (!usable(a) || !usable(b) || b.value === 0) return unknown(a.status === 'disputed' || b.status === 'disputed' ? 'sources_disagree' : 'missing_input', `${label}: input missing or disputed`, [], { unit });
     const both = a.corroborated === true && b.corroborated === true;
-    return ok(Math.round((a.value / b.value) * mult * 1e4) / 1e4, [...a.sources, ...b.sources], { unit, confidence: both ? 'high' : 'medium', corroborated: both, ...(a.bound === 'upper' ? { bound: 'upper' as const, detail: `upper bound: ${label}` } : { detail: label }) });
+    return ok(Math.round((a.value / b.value) * mult * 1e4) / 1e4, [...a.sources, ...b.sources], { unit, confidence: both ? 'high' : 'medium', corroborated: both, ...(a.bound === 'upper' ? { bound: 'upper' as const, detail: `upper bound: ${label}` } : a.bound === 'lower' ? { bound: 'lower' as const, confidence: 'low' as const, detail: `lower bound: ${label}; ${a.detail ?? ''}`.trim() } : { detail: label }) });
   };
   const diff = (a: Field<number>, b: Field<number>, label: string): Field<number> => {
     if (!usable(a) || !usable(b)) return unknown('missing_input', `${label}: input missing or disputed`, [], { unit: 'tokens' });
@@ -238,6 +239,7 @@ function derive(rec: ScanRecord): ScanRecord['derived'] {
     fdv_to_mcap: ratio(m.fdv_usd, m.market_cap_usd, 'FDV / market cap (CoinGecko)', 'ratio'),
     unlock_30d_pct_of_circ: ratio(rec.unlocks.unlock_30d_amount, m.circulating_supply, 'tokens unlocking in 30 days as % of circulating', 'pct', 100),
     unlock_90d_pct_of_circ: ratio(rec.unlocks.unlock_90d_amount, m.circulating_supply, 'tokens unlocking in 90 days as % of circulating', 'pct', 100),
+    unlock_365d_pct_of_circ: ratio(rec.unlocks.unlock_365d_amount, m.circulating_supply, 'scheduled supply inflation: tokens unlocking in the next 12 months as % of circulating (does not include emissions the schedule does not list)', 'pct', 100),
   };
 }
 
