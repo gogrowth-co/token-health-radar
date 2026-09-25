@@ -92,6 +92,7 @@ export function crossCheckNumber(
   ];
   const base = { unit: opts.unit ?? primary.unit, decimals: primary.decimals, scope: primary.scope };
   if (usable(primary) && usable(secondary)) {
+    if (!independent(primary, secondary)) return { ...base, ...primary, confidence: 'medium', corroborated: false, detail: `${opts.label}: both readings come from the same source (${sharedSource(primary, secondary)}), so this is one observation, not two`, sources };
     const diff = opts.absTolerance !== undefined ? Math.abs(primary.value - secondary.value) : relDiff(primary.value, secondary.value);
     const tol = opts.absTolerance ?? opts.tolerance ?? 0.02;
     if (diff <= tol) return { ...base, value: primary.value, status: 'ok', confidence: 'high', corroborated: true, sources };
@@ -119,12 +120,22 @@ export function crossCheckBool(primary: Field<boolean>, secondary: Field<boolean
     ...secondary.sources.map((s) => ({ ...s, value: secondary.value })),
   ];
   if (usable(primary) && usable(secondary)) {
+    if (!independent(primary, secondary)) return { ...primary, confidence: 'medium', corroborated: false, detail: `${label}: both readings come from the same source (${sharedSource(primary, secondary)}), so this is one observation, not two`, sources };
     if (primary.value === secondary.value) return { value: primary.value, status: 'ok', confidence: 'high', corroborated: true, unit: 'bool', sources };
     return { value: primary.value, status: 'disputed', reason: 'sources_disagree', confidence: 'low', corroborated: false, unit: 'bool', detail: `${label}: sources disagree (${primary.value} vs ${secondary.value})`, sources };
   }
   if (usable(primary)) return { ...primary, confidence: 'medium', corroborated: false, detail: `single source; second source ${secondary.reason ?? 'unavailable'}`, sources };
   if (usable(secondary)) return { ...secondary, confidence: 'medium', corroborated: false, detail: `single source; first source ${primary.reason ?? 'unavailable'}`, sources };
   return unknown(primary.reason ?? secondary.reason ?? 'no_data', `${label}: no source returned a value`, sources, { unit: 'bool' });
+}
+
+// Two readings only corroborate each other when no source identity appears in both.
+function sharedSource(a: Field<any>, b: Field<any>): string {
+  const bs = new Set(b.sources.map((s) => s.source));
+  return a.sources.map((s) => s.source).find((s) => bs.has(s)) ?? '';
+}
+export function independent(a: Field<any>, b: Field<any>): boolean {
+  return sharedSource(a, b) === '';
 }
 
 function fmt(n: number): string {

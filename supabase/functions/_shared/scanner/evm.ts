@@ -281,12 +281,12 @@ export const evmAdapter: ChainAdapter = {
         delete h._locked;
       }
     }
-    if (nl.ref) primaryRef.push(nl.ref);
     // Holder counts differ by method (dust, contracts); 5% tolerance.
     const holderCount = crossCheckNumber(g?.holder_count ? ok(Number(g.holder_count), gpRef, { unit: 'holders' }) : gpMiss('holder count', 'holders'), cbCount, { tolerance: 0.05, unit: 'holders', label: 'holder count (GoPlus vs Chainbase)' });
     const conc = buildConcentration({
       holders: primary,
       holdersRef: primaryRef,
+      labelRefs: nl.ref ? [nl.ref] : [],
       holdersReason: !usable(total) ? 'missing_input' : gp.ok ? 'no_data' : gp.reason,
       holdersDetail: !usable(total) ? 'on-chain total supply unavailable' : 'no holder list from Chainbase, Ethplorer or GoPlus',
       secondTop10: secondTop10F,

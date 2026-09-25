@@ -95,13 +95,14 @@ export function scoreRecord(rec: ScanRecord): ScoreResult {
   // A confirmed honeypot is a hard fail regardless of other inputs.
   if (!isSol && usable(c.honeypot) && c.honeypot.value === true) security.score = 0;
 
-  // Concentration: prefer the share held by holders NOT labeled as project/pool/exchange/lock/burn.
-  const useExternal = usable(c.top10_excl_noncirculating_pct) && usable(c.top10_pct);
-  const conc: Field<number> = useExternal ? c.top10_excl_noncirculating_pct : c.top10_pct;
+  // Concentration is scored on the RAW top-10 share (two sources), and only when the on-chain supply it is a share of is
+  // corroborated too. The label-adjusted share stays a stored, displayed measurement but does not drive the score: it
+  // depends on labels and on balances below rank 10 that no second source checks (Codex round 2, finding 2).
+  const denominatorOk = usable(c.total_supply_onchain) && c.total_supply_onchain.corroborated === true;
+  const conc: Field<number> = { ...c.top10_pct, corroborated: usable(c.top10_pct) && c.top10_pct.corroborated === true && denominatorOk };
   const tokenomics = dimension([
     { name: 'circulating_ratio', field: rec.derived.circulating_ratio, max: 35, points: (v) => band(v, [[0.3, 6], [0.5, 12], [0.7, 18], [0.9, 24]], 35), required: true, corroborated: true },
-    // The external share is derived from the same holder list as top10_pct, so the base top-10 reading's corroboration gates both.
-    { name: useExternal ? 'top10_excl_noncirculating_pct' : 'top10_pct', field: { ...conc, corroborated: usable(c.top10_pct) && c.top10_pct.corroborated === true }, max: 40, points: (v) => band(v, [[20, 40], [35, 32], [50, 22], [70, 12]], 4), required: true, corroborated: true },
+    { name: 'top10_pct', field: conc, max: 40, points: (v) => band(v, [[20, 40], [35, 32], [50, 22], [70, 12]], 4), required: true, corroborated: true },
     { name: 'unlock_90d_pct_of_circ', field: rec.derived.unlock_90d_pct_of_circ, max: 25, points: (v) => band(v, [[0.001, 25], [2, 20], [5, 12], [10, 6]], 0) },
   ]);
 

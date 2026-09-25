@@ -31,7 +31,7 @@ const w = (s: string) => `(?<![a-z])(?:${s})(?![a-z])`;
 const PATTERNS: Array<[RegExp, HolderCategory]> = [
   [new RegExp(w('dead|burn|burned|null address'), 'i'), 'burn'],
   [new RegExp(w('binance|coinbase|okx|bybit|kraken|kucoin|gate\\.io|bitget|htx|huobi|crypto\\.com|upbit|mexc|cex'), 'i'), 'cex'],
-  [/vest|lock|escrow|timelock|venft|staking contract/i, 'lock_or_vesting'],
+  [new RegExp(w('vest|vesting|vested|lock|locked|locker|escrow|timelock|venft|staking contract'), 'i'), 'lock_or_vesting'],
   [new RegExp(w('bridge|portal|wormhole|gateway'), 'i'), 'bridge'],
   [new RegExp(w('amm|vamm|samm|pool|lp|uniswap|curve|balancer|raydium|orca|meteora|whirlpool|pancakeswap|aerodrome'), 'i'), 'dex_pool'],
   [new RegExp(w('team|treasury|dao|community|reserve|foundation|ecosystem|multisig|buyback|cold|hot wallet|deployer'), 'i'), 'project_controlled'],
@@ -41,8 +41,10 @@ export function classifyLabel(label: string | null | undefined, source: string):
   if (!label) return { category: 'unknown', confidence: 'low' };
   for (const [re, cat] of PATTERNS) {
     if (re.test(label)) {
-      // A Solana .sol name is self-registered by the wallet owner: indicative, not verified.
-      const conf = source === 'sns_name' || /\.sol$/i.test(label) ? 'medium' : source === 'nansen' ? 'high' : 'medium';
+      // A free-text NAME never verifies what a wallet does (a .sol name is self-registered; "BlockTower Capital" is not
+      // a lock). Only named exchanges and burn addresses from a curated Nansen label are 'high'; every other category
+      // is a hint ('medium') that does not remove a holder from the scored concentration (Codex round 2, finding 3).
+      const conf = source === 'nansen' && !/\.sol$/i.test(label) && (cat === 'cex' || cat === 'burn') ? 'high' : 'medium';
       return { category: cat, confidence: conf };
     }
   }
@@ -64,7 +66,8 @@ export interface ConcentrationFields {
 /** Build concentration fields from a primary holder list plus an independent top-10 reading. */
 export function buildConcentration(opts: {
   holders: Holder[] | null;
-  holdersRef: SourceRef | SourceRef[];
+  holdersRef: SourceRef | SourceRef[]; // where the balances/shares were measured
+  labelRefs?: SourceRef[]; // sources used only to LABEL holders (kept out of the measurement's provenance so independence checks are honest)
   holdersReason?: Field<unknown>['reason'];
   holdersDetail?: string;
   secondTop10: Field<number>;
@@ -73,6 +76,7 @@ export function buildConcentration(opts: {
 }): ConcentrationFields {
   const { holders } = opts;
   const refs = Array.isArray(opts.holdersRef) ? opts.holdersRef : [opts.holdersRef];
+  const labeledRefs = [...refs, ...(opts.labelRefs ?? [])];
   const pctU = (reason: any, detail?: string) => unknown<number>(reason, detail, refs, { unit: 'pct' });
   const gini = unknown<number>('no_data', `needs the full holder list from an indexer; the free source returns only the top ${opts.maxListed}`, refs, { unit: 'ratio' });
   if (!holders || holders.length === 0) {
@@ -102,11 +106,11 @@ export function buildConcentration(opts: {
     // Needs ten holders LEFT after the exclusions: a top 10 built from fewer would understate concentration
     // (all top-20 labeled -> "0%" while ranks 21+ were never fetched).
     top10_excl_noncirculating_pct: anyLabels && sorted.length >= Math.min(20, opts.maxListed) && burnedPct < 99.9 && external.length >= 10
-      ? ok(round(external.slice(0, 10).reduce((a, h) => a + h.pct, 0) / (1 - burnedPct / 100)), refs, { unit: 'pct', confidence: 'medium', detail: `excludes ${labeledNonCirc.length} verified non-circulating holders within the top ${sorted.length}${burnedPct > 0 ? `; share of supply excluding ${burnedPct.toFixed(2)}% held at burn addresses` : ''}` })
+      ? ok(round(external.slice(0, 10).reduce((a, h) => a + h.pct, 0) / (1 - burnedPct / 100)), labeledRefs, { unit: 'pct', confidence: 'medium', detail: `excludes ${labeledNonCirc.length} verified non-circulating holders within the top ${sorted.length}${burnedPct > 0 ? `; share of supply excluding ${burnedPct.toFixed(2)}% held at burn addresses` : ''}` })
       : pctU('no_data', !anyLabels ? 'no holder labels available' : external.length < 10 ? `only ${external.length} holders remain after excluding verified non-circulating ones; ten are needed and the source lists at most ${opts.maxListed}` : 'holder list too short'),
-    noncirculating_labeled_pct: anyLabels ? ok(round(labeledNonCirc.reduce((a, h) => a + h.pct, 0)), refs, { unit: 'pct', confidence: 'medium', detail: 'verified (curated-label or on-chain) project/pool/exchange/lock/burn holders within the listed top holders' }) : pctU('no_data', 'no holder labels available'),
+    noncirculating_labeled_pct: anyLabels ? ok(round(labeledNonCirc.reduce((a, h) => a + h.pct, 0)), labeledRefs, { unit: 'pct', confidence: 'medium', detail: 'verified (curated-label or on-chain) project/pool/exchange/lock/burn holders within the listed top holders' }) : pctU('no_data', 'no holder labels available'),
     gini_coefficient: gini,
-    top_holders: ok(sorted.slice(0, 20), refs, { confidence: 'medium' }),
+    top_holders: ok(sorted.slice(0, 20), labeledRefs, { confidence: 'medium' }),
   };
 }
 

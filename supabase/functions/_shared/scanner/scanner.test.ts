@@ -18,6 +18,7 @@ import { scoreRecord } from './scoring.ts';
 import type { ScanRecord } from './types.ts';
 
 const ref = { source: 'test', fetched_at: '2026-09-24T00:00:00Z' };
+const refB = { source: 'test_b', fetched_at: '2026-09-24T00:00:00Z' }; // a second, independent source
 const realFetch = globalThis.fetch;
 function stubFetch(handler: (url: string, body: any) => { status?: number; json?: unknown; text?: string }) {
   globalThis.fetch = ((input: string | URL | Request, init?: RequestInit) => {
@@ -34,19 +35,19 @@ const restore = () => {
 
 Deno.test('crossCheckNumber: agree -> high, disagree -> disputed, one missing -> medium', () => {
   const a = ok(100, ref);
-  assertEquals(crossCheckNumber(a, ok(101, ref), { tolerance: 0.02, label: 'x' }).confidence, 'high');
-  const d = crossCheckNumber(a, ok(110, ref), { tolerance: 0.02, label: 'x' });
+  assertEquals(crossCheckNumber(a, ok(101, refB), { tolerance: 0.02, label: 'x' }).confidence, 'high');
+  const d = crossCheckNumber(a, ok(110, refB), { tolerance: 0.02, label: 'x' });
   assertEquals(d.status, 'disputed');
   assertEquals(d.reason, 'sources_disagree');
   assertEquals(crossCheckNumber(a, unknown('timeout'), { label: 'x' }).confidence, 'medium');
   const none = crossCheckNumber(unknown('provider_failed'), unknown('timeout'), { label: 'x' });
   assertEquals(none.value, null);
   assertEquals(none.reason, 'provider_failed');
-  assertEquals(crossCheckNumber(ok(60, ref), ok(66, ref), { absTolerance: 5, label: 'top10' }).status, 'disputed');
+  assertEquals(crossCheckNumber(ok(60, ref), ok(66, refB), { absTolerance: 5, label: 'top10' }).status, 'disputed');
 });
 
 Deno.test('crossCheckBool: disagreement is disputed, never silently one side', () => {
-  const r = crossCheckBool(ok(true, ref), ok(false, ref), 'mintable');
+  const r = crossCheckBool(ok(true, ref), ok(false, refB), 'mintable');
   assertEquals(r.status, 'disputed');
 });
 
@@ -382,10 +383,12 @@ Deno.test('evm: proxy with a readable implementation finds selectors in the impl
 Deno.test('cross-checks: one source is ok but NOT corroborated; two agreeing sources are; a dispute is not', () => {
   const single = crossCheckNumber(ok(100, ref), unknown('timeout'), { label: 'x' });
   assertEquals([single.status, single.corroborated], ['ok', false]);
-  assertEquals(crossCheckNumber(ok(100, ref), ok(100.5, ref), { label: 'x' }).corroborated, true);
-  assertEquals(crossCheckNumber(ok(100, ref), ok(150, ref), { label: 'x' }).corroborated, false);
+  assertEquals(crossCheckNumber(ok(100, ref), ok(100.5, refB), { label: 'x' }).corroborated, true);
+  assertEquals(crossCheckNumber(ok(100, ref), ok(100, ref), { label: 'x' }).corroborated, false); // same source twice is one observation
+  assertEquals(crossCheckBool(ok(false, ref), ok(false, ref), 'm').corroborated, false);
+  assertEquals(crossCheckNumber(ok(100, ref), ok(150, refB), { label: 'x' }).corroborated, false);
   assertEquals(crossCheckBool(ok(false, ref), unknown('rate_limited'), 'm').corroborated, false);
-  assertEquals(crossCheckBool(ok(false, ref), ok(false, ref), 'm').corroborated, true);
+  assertEquals(crossCheckBool(ok(false, ref), ok(false, refB), 'm').corroborated, true);
 });
 
 Deno.test('scoring: a single-source mint/freeze authority earns no points and blocks the security score', () => {
@@ -397,10 +400,11 @@ Deno.test('scoring: a single-source mint/freeze authority earns no points and bl
 
 Deno.test('scoring: single-source circulating supply or top-10 share cannot score tokenomics', () => {
   const twoSrc = { corroborated: true, confidence: 'high' as const };
-  const good = { 'derived.circulating_ratio': ok(0.5, ref, twoSrc), 'chain.top10_pct': ok(30, ref, twoSrc) };
+  const good = { 'derived.circulating_ratio': ok(0.5, ref, twoSrc), 'chain.top10_pct': ok(30, ref, twoSrc), 'chain.total_supply_onchain': ok(1e9, ref, twoSrc) };
   assert(scoreRecord(fakeRecord(good)).dimensions.tokenomics.score !== null);
   assertEquals(scoreRecord(fakeRecord({ ...good, 'derived.circulating_ratio': ok(0.5, ref, { corroborated: false }) })).dimensions.tokenomics.score, null);
   assertEquals(scoreRecord(fakeRecord({ ...good, 'chain.top10_pct': ok(30, ref, { corroborated: false }) })).dimensions.tokenomics.score, null);
+  assertEquals(scoreRecord(fakeRecord({ ...good, 'chain.total_supply_onchain': ok(1e9, ref, { corroborated: false }) })).dimensions.tokenomics.score, null); // shared denominator must be corroborated too
 });
 
 Deno.test('solana: authorities and supply are read from a different RPC operator when GeckoTerminal is down', async () => {
@@ -437,10 +441,10 @@ Deno.test('holders: a self-registered .sol label does not remove a whale from th
   assert((c.top10_excl_noncirculating_pct.value as number) >= 30 + 9 * 2 - 0.01, 'whale must still count');
 });
 
-Deno.test('holders: a curated (Nansen, non-.sol) treasury label is excluded, when ten external holders remain', () => {
+Deno.test('holders: a curated Nansen exchange label is excluded, when ten external holders remain', () => {
   const hs = holderList(20, 2);
   hs[0].pct = 30;
-  applyLabel(hs[0], 'Foundation Treasury', 'nansen'); // high confidence
+  applyLabel(hs[0], 'Binance 14', 'nansen'); // named exchange from a curated label: high confidence
   const c = conc(hs);
   assert(usable_(c.top10_excl_noncirculating_pct));
   assertEquals(c.top10_excl_noncirculating_pct.value, 20); // 10 x 2%
@@ -719,14 +723,24 @@ Deno.test('rpc: a JSON-RPC error under HTTP 200 is counted as a provider failure
   }
 });
 
-Deno.test('scoring: the external top-10 share inherits corroboration from the top-10 reading it is derived from', () => {
+Deno.test('scoring: concentration is scored on the raw top-10 (adjusted share is displayed only)', () => {
   const two = { corroborated: true, confidence: 'high' as const };
-  const rec = fakeRecord({ 'derived.circulating_ratio': ok(0.5, ref, two), 'chain.top10_pct': ok(40, ref, two), 'chain.top10_excl_noncirculating_pct': ok(30, ref, { confidence: 'medium' }) });
+  const rec = fakeRecord({ 'derived.circulating_ratio': ok(0.5, ref, two), 'chain.total_supply_onchain': ok(1e9, ref, two), 'chain.top10_pct': ok(40, ref, two), 'chain.top10_excl_noncirculating_pct': ok(5, ref, { confidence: 'medium' }) });
   const t = scoreRecord(rec).dimensions.tokenomics;
   assert(t.score !== null);
-  assert('top10_excl_noncirculating_pct' in t.inputs_used);
-  const single = fakeRecord({ 'derived.circulating_ratio': ok(0.5, ref, two), 'chain.top10_pct': ok(40, ref, { corroborated: false }), 'chain.top10_excl_noncirculating_pct': ok(30, ref, { confidence: 'medium' }) });
-  assertEquals(scoreRecord(single).dimensions.tokenomics.score, null);
+  assert('top10_pct' in t.inputs_used && !('top10_excl_noncirculating_pct' in t.inputs_used));
+  assertEquals(t.inputs_used.top10_pct.value, 40);
+});
+
+Deno.test('labels: substring matches do not classify investors as locks (BlockTower / Blockchain Capital); only named exchanges and burns are high confidence', () => {
+  assertEquals(classifyLabel('BlockTower Capital', 'nansen').category, 'unknown');
+  assertEquals(classifyLabel('Blockchain Capital', 'nansen').category, 'unknown');
+  assertEquals(classifyLabel('Token Locker', 'nansen').category, 'lock_or_vesting');
+  assertEquals(classifyLabel('Token Locker', 'nansen').confidence, 'medium'); // a name does not verify a lock
+  assertEquals(classifyLabel('Binance 14', 'nansen').confidence, 'high');
+  const h: Holder = { address: 'x', amount: 1, pct: 50, category: 'unknown' };
+  applyLabel(h, 'Foundation Treasury', 'nansen');
+  assertEquals(h.category_confidence, 'medium');
 });
 
 // ---- Finding 11: missing liquidity fields are not measured zeros
