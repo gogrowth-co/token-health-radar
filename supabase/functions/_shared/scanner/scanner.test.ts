@@ -483,7 +483,7 @@ const DAY = 86400;
 const series = (pts: Array<[number, number]>) => ({ documentedData: { data: [{ label: 'a', data: pts.map(([t, u]) => ({ timestamp: NOW_S + t * DAY, unlocked: u })) }] } });
 
 Deno.test('unlocks: a finished schedule reported complete (nothing unscheduled) is 0 / none_scheduled', () => {
-  const data = { metadata: { events: [{ timestamp: NOW_S - 211 * DAY, noOfTokens: [500], unlockType: 'cliff' }] }, supplyMetrics: { maxSupply: 1000, tbdAmount: 0 }, ...series([[-300, 0], [-211, 500], [-210, 500]]) };
+  const data = { metadata: { events: [{ timestamp: NOW_S - 211 * DAY, noOfTokens: [1000], unlockType: 'cliff' }] }, supplyMetrics: { maxSupply: 1000, tbdAmount: 0 }, ...series([[-300, 0], [-211, 1000], [-210, 1000]]) };
   const u = computeUnlocks(data, 'x', ref, NOW);
   assertEquals(u.unlock_90d_amount.value, 0);
   assertEquals(u.next_unlock_date.value, 'none_scheduled');
@@ -507,7 +507,7 @@ Deno.test('unlocks: a dataset that does not report unscheduled supply, or lacks 
 });
 
 Deno.test('unlocks: future dated event is a fact; windows only when the schedule is complete', () => {
-  const complete = computeUnlocks({ metadata: { events: [{ timestamp: NOW_S + 10 * DAY, noOfTokens: [100], unlockType: 'cliff' }] }, supplyMetrics: { maxSupply: 1000, tbdAmount: 0 }, ...series([[-1, 0], [10, 100], [200, 100]]) }, 'x', ref, NOW);
+  const complete = computeUnlocks({ metadata: { events: [{ timestamp: NOW_S + 10 * DAY, noOfTokens: [100], unlockType: 'cliff' }] }, supplyMetrics: { maxSupply: 100, tbdAmount: 0 }, ...series([[-1, 0], [10, 100], [200, 100]]) }, 'x', ref, NOW);
   assertEquals(complete.next_unlock_amount.value, 100);
   assertEquals(complete.unlock_30d_amount.value, 100);
   const partial = computeUnlocks({ metadata: { events: [{ timestamp: NOW_S + 10 * DAY, noOfTokens: [100], unlockType: 'cliff' }] }, supplyMetrics: { maxSupply: 1000, tbdAmount: 300 }, ...series([[-1, 0], [10, 100], [200, 100]]) }, 'x', ref, NOW);
@@ -523,7 +523,7 @@ Deno.test('unlocks: a series that stops while still emitting is unknown even whe
 });
 
 Deno.test('unlocks: linear vesting still running has no "none_scheduled" date but its windows are measured', () => {
-  const u = computeUnlocks({ metadata: { events: [] }, supplyMetrics: { maxSupply: 1000, tbdAmount: 0 }, ...series(Array.from({ length: 411 }, (_, i) => [i - 10, Math.max(0, Math.min(365, i - 10))] as [number, number])) }, 'x', ref, NOW);
+  const u = computeUnlocks({ metadata: { events: [] }, supplyMetrics: { maxSupply: 365, tbdAmount: 0 }, ...series(Array.from({ length: 411 }, (_, i) => [i - 10, Math.max(0, Math.min(365, i - 10))] as [number, number])) }, 'x', ref, NOW);
   assertEquals(u.next_unlock_date.status, 'unknown');
   assert((u.unlock_90d_amount.value as number) > 0);
 });
@@ -556,7 +556,7 @@ Deno.test('unlocks: "no unlocks" inferred from full circulation is an UPPER BOUN
 Deno.test('cache: the RAW dataset is cached 24h from its ORIGINAL fetch and time-dependent values are recomputed each scan', async () => {
   resetUnlockCache();
   let fetches = 0;
-  const dataset = { gecko_id: 'tok', metadata: { events: [{ timestamp: NOW_S + 10 * DAY, noOfTokens: [100], unlockType: 'cliff' }], token: 'coingecko:tok' }, supplyMetrics: { maxSupply: 1000, tbdAmount: 0 }, ...series([[-1, 0], [10, 100], [200, 100]]) };
+  const dataset = { gecko_id: 'tok', metadata: { events: [{ timestamp: NOW_S + 10 * DAY, noOfTokens: [100], unlockType: 'cliff' }], token: 'coingecko:tok' }, supplyMetrics: { maxSupply: 100, tbdAmount: 0 }, ...series([[-1, 0], [10, 100], [200, 100]]) };
   stubFetch(() => {
     fetches++;
     return { json: dataset };
@@ -879,4 +879,19 @@ Deno.test('evm: two agreeing operators corroborate decimals and supply', async (
   } finally {
     restore();
   }
+});
+
+// ---- Codex round 2: finding 4 (completeness cannot fabricate zero exposure)
+Deno.test('unlocks: any unscheduled supply (even 0.4%) means "not complete", a truncated series is not complete, an empty component is not a schedule', () => {
+  const ev = { metadata: { events: [{ timestamp: NOW_S - 30 * DAY, noOfTokens: [996], unlockType: 'cliff' }] } };
+  const tiny = computeUnlocks({ ...ev, supplyMetrics: { maxSupply: 1000, tbdAmount: 4 }, ...series([[-60, 0], [-30, 996], [-29, 996]]) }, 'x', ref, NOW);
+  assertEquals(tiny.next_unlock_date.status, 'unknown');
+  assertEquals(tiny.unlock_90d_amount.status, 'unknown');
+  assertEquals(tiny.unscheduled_supply.value, 4);
+  const truncated = computeUnlocks({ ...ev, supplyMetrics: { maxSupply: 1000, tbdAmount: 0 }, ...series([[-60, 0], [-45, 100], [-30, 200]]) }, 'x', ref, NOW); // monthly unlocks stop early
+  assertEquals(truncated.next_unlock_date.status, 'unknown');
+  const emptyComponent = computeUnlocks({ ...ev, supplyMetrics: { maxSupply: 1000, tbdAmount: 0 }, documentedData: { data: [{ label: 'a', data: [] }] } }, 'x', ref, NOW);
+  assertEquals(emptyComponent.next_unlock_date.status, 'unknown');
+  const unordered = computeUnlocks({ ...ev, supplyMetrics: { maxSupply: 1000, tbdAmount: 0 }, ...series([[-30, 1000], [-60, 0]]) }, 'x', ref, NOW);
+  assertEquals(unordered.next_unlock_date.status, 'unknown');
 });

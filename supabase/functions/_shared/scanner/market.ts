@@ -219,8 +219,10 @@ export function computeUnlocks(data: any, slug: string, ref: SourceRef, now: Dat
   const src = ok(slug, ref, { confidence: 'medium' });
   const eventsRaw = data?.metadata?.events;
   const seriesRaw = data?.documentedData?.data;
-  if (!Array.isArray(eventsRaw) || !Array.isArray(seriesRaw) || seriesRaw.length === 0) {
-    const f = unknown<any>('no_data', `dataset ${slug} has no ${!Array.isArray(eventsRaw) ? 'event list' : 'cumulative series'}: schedule not measurable`, [ref]);
+  // Every component must be a non-empty, ascending, finite series; anything else is not a schedule we can read.
+  const seriesValid = Array.isArray(seriesRaw) && seriesRaw.length > 0 && seriesRaw.every((s: any) => s && Array.isArray(s.data) && s.data.length > 0 && s.data.every((p: any, i: number, a: any[]) => Number.isFinite(p?.timestamp) && Number.isFinite(p?.unlocked) && (i === 0 || p.timestamp >= a[i - 1].timestamp)));
+  if (!Array.isArray(eventsRaw) || !seriesValid) {
+    const f = unknown<any>('no_data', `dataset ${slug} has no ${!Array.isArray(eventsRaw) ? 'event list' : 'valid, non-empty cumulative series'}: schedule not measurable`, [ref]);
     return { emissions_source: src, next_unlock_date: f, next_unlock_amount: f, unlock_30d_amount: f, unlock_90d_amount: f, last_scheduled_event: f, unscheduled_supply: f };
   }
   const events: Array<{ timestamp: number; noOfTokens?: number[]; unlockType?: string }> = eventsRaw;
@@ -260,10 +262,16 @@ export function computeUnlocks(data: any, slug: string, ref: SourceRef, now: Dat
   const unscheduled: Field<number> = tbd !== null
     ? ok(tbd, ref, { unit: 'tokens', confidence: 'medium', detail: tbdShare !== null ? `${(tbdShare * 100).toFixed(2)}% of the dataset's max supply (${Math.round(maxSupply as number).toLocaleString('en-US')}) has no schedule ("tbd")` : 'supply without a schedule ("tbd") in the dataset' })
     : unknown('no_data', 'dataset does not report how much supply is unscheduled', [ref], { unit: 'tokens' });
+  // "Complete" needs NO unscheduled supply (a tolerance would turn residual uncertainty into an exact zero) and a
+  // series that accounts for the whole max supply (a truncated schedule leaves it short).
+  const cumEnd = cumAt(Number.MAX_SAFE_INTEGER);
+  const coverage = maxSupply && maxSupply > 0 ? cumEnd / maxSupply : null;
   const incompleteWhy = tbd === null || tbdShare === null
     ? 'the dataset does not report how much supply is unscheduled, so a finished schedule cannot be confirmed'
-    : tbdShare > UNSCHEDULED_TOLERANCE
-    ? `${(tbdShare * 100).toFixed(1)}% of supply (${Math.round(tbd).toLocaleString('en-US')} tokens) is unscheduled ("tbd") in the dataset`
+    : tbd >= 1
+    ? `${(tbdShare * 100).toFixed(2)}% of supply (${Math.round(tbd).toLocaleString('en-US')} tokens) is unscheduled ("tbd") in the dataset`
+    : coverage === null || coverage < 1 - UNSCHEDULED_TOLERANCE
+    ? `the schedule accounts for only ${coverage === null ? 'an unknown share' : (coverage * 100).toFixed(1) + '%'} of the dataset's max supply, so it looks truncated`
     : stillEmitting
     ? `dataset schedule ends ${iso(seriesEnd)} while tokens were still unlocking (${increaseDays} increase days in its final 30 days); later emissions are not scheduled and are not measured`
     : null;
