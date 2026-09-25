@@ -716,3 +716,13 @@ Deno.test('rpc: a JSON-RPC error under HTTP 200 is counted as a provider failure
     restore();
   }
 });
+
+Deno.test('scoring: the external top-10 share inherits corroboration from the top-10 reading it is derived from', () => {
+  const two = { corroborated: true, confidence: 'high' as const };
+  const rec = fakeRecord({ 'derived.circulating_ratio': ok(0.5, ref, two), 'chain.top10_pct': ok(40, ref, two), 'chain.top10_excl_noncirculating_pct': ok(30, ref, { confidence: 'medium' }) });
+  const t = scoreRecord(rec).dimensions.tokenomics;
+  assert(t.score !== null);
+  assert('top10_excl_noncirculating_pct' in t.inputs_used);
+  const single = fakeRecord({ 'derived.circulating_ratio': ok(0.5, ref, two), 'chain.top10_pct': ok(40, ref, { corroborated: false }), 'chain.top10_excl_noncirculating_pct': ok(30, ref, { confidence: 'medium' }) });
+  assertEquals(scoreRecord(single).dimensions.tokenomics.score, null);
+});

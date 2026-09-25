@@ -165,7 +165,11 @@ export const solanaAdapter: ChainAdapter = {
       const nl = await fetchNansenLabels(ctx, 'solana', mint);
       if (nl.ref) refs.push(nl.ref);
       for (const h of holders) applyLabel(h, h.owner ? nl.labels.get(h.owner.toLowerCase()) : undefined, 'nansen');
-      concentration = buildConcentration({ holders, holdersRef: refs, secondTop10: gtTop10, holderCount, maxListed: 20 });
+      // Second top-10 reading: GeckoTerminal's own figure, or (when it is down/rate-limited) Nansen's per-wallet balances.
+      const nansenTop10: Field<number> | null = nl.ref && nl.amounts.length >= 10
+        ? ok(round((nl.amounts.slice(0, 10).reduce((x, y) => x + y, 0) / totalOnchain.value) * 100), nl.ref, { unit: 'pct', detail: 'Nansen per-wallet balances (top 10 wallets / on-chain supply)' })
+        : null;
+      concentration = buildConcentration({ holders, holdersRef: refs, secondTop10: usable(gtTop10) || !nansenTop10 ? gtTop10 : nansenTop10, holderCount, maxListed: 20 });
     } else {
       concentration = buildConcentration({
         holders: null,

@@ -101,7 +101,7 @@ export function scoreRecord(rec: ScanRecord): ScoreResult {
   const tokenomics = dimension([
     { name: 'circulating_ratio', field: rec.derived.circulating_ratio, max: 35, points: (v) => band(v, [[0.3, 6], [0.5, 12], [0.7, 18], [0.9, 24]], 35), required: true, corroborated: true },
     // The external share is derived from the same holder list as top10_pct, so the base top-10 reading's corroboration gates both.
-    { name: useExternal ? 'top10_excl_noncirculating_pct' : 'top10_pct', field: usable(c.top10_pct) && c.top10_pct.corroborated === true ? conc : { ...conc, corroborated: false }, max: 40, points: (v) => band(v, [[20, 40], [35, 32], [50, 22], [70, 12]], 4), required: true, corroborated: true },
+    { name: useExternal ? 'top10_excl_noncirculating_pct' : 'top10_pct', field: { ...conc, corroborated: usable(c.top10_pct) && c.top10_pct.corroborated === true }, max: 40, points: (v) => band(v, [[20, 40], [35, 32], [50, 22], [70, 12]], 4), required: true, corroborated: true },
     { name: 'unlock_90d_pct_of_circ', field: rec.derived.unlock_90d_pct_of_circ, max: 25, points: (v) => band(v, [[0.001, 25], [2, 20], [5, 12], [10, 6]], 0) },
   ]);
 
