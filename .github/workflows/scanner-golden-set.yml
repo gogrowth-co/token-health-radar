@@ -28,4 +28,5 @@ jobs:
           COINMARKETCAP_API_KEY: ${{ secrets.COINMARKETCAP_API_KEY }}
           NANSEN_API_KEY: ${{ secrets.NANSEN_API_KEY }}
           HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
+          CHAINBASE_API_KEY: ${{ secrets.CHAINBASE_API_KEY }}
         run: deno test -A supabase/functions/_shared/scanner/golden/

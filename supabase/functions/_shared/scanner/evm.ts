@@ -147,26 +147,69 @@ export const evmAdapter: ChainAdapter = {
       hpFlag = unknown('not_supported_on_chain', `honeypot.is does not cover ${chain.name}`, [], { unit: 'bool' });
     }
 
-    // ---- holders: Ethplorer (Ethereum, 20 holders) or GoPlus (top 10), with the other/Nansen as second top-10
+    // ---- holders. Primary list: Chainbase (top 100, raw balances) > Ethplorer (Ethereum, 20) > GoPlus (10).
+    // The second top-10 reading always comes from a different provider (Ethplorer, GoPlus, or Nansen raw amounts).
     const nl = await fetchNansenLabels(ctx, chain.nansen, a);
     const gpHolders: Holder[] | null = g?.holders?.length && usable(total)
       ? g.holders.map((h: any) => ({ address: String(h.address).toLowerCase(), amount: Number(h.balance), pct: round((Number(h.balance) / total.value) * 100), category: 'unknown' as const, label: h.tag || null, label_source: h.tag ? 'goplus' : undefined, _contract: h.is_contract === 1, _locked: h.is_locked === 1 }))
       : null;
-    let primary: Holder[] | null = gpHolders;
-    let primaryRef: SourceRef[] = [gpRef];
-    let secondTop10: Field<number> = unknown('no_data', 'no second holder source on this chain', [], { unit: 'pct' });
+    const fromRaw = (addr: string, raw: string): Holder => {
+      const amount = Number(BigInt(raw)) / 10 ** (decimals as number);
+      return { address: addr.toLowerCase(), amount, pct: round((amount / (total.value as number)) * 100), category: 'unknown' };
+    };
+    let cbHolders: Holder[] | null = null;
+    let cbRef: SourceRef | null = null;
+    let cbCount: Field<number> = unknown('provider_failed', 'CHAINBASE_API_KEY not configured', [], { unit: 'holders' });
+    const cbKey = Deno.env.get('CHAINBASE_API_KEY');
+    if (cbKey && usable(total) && decimals !== null) {
+      const cb = await ctx.fetchJson('chainbase', `https://api.chainbase.online/v1/token/top-holders?chain_id=${chain.goplus}&contract_address=${a}&page=1&limit=100`, {
+        headers: { 'x-api-key': cbKey, Accept: 'application/json' },
+        retries: 2,
+        excerpt: (d) => ({ code: d.code, count: d.count, holders: Array.isArray(d.data) ? d.data.length : null }),
+      });
+      if (cb.ok && cb.data?.code === 0 && Array.isArray(cb.data.data) && cb.data.data.length) {
+        cbRef = cb.ref;
+        cbHolders = cb.data.data.filter((h: any) => h.wallet_address && h.original_amount).map((h: any) => fromRaw(h.wallet_address, h.original_amount));
+        if (typeof cb.data.count === 'number' && cb.data.count > 0) cbCount = ok(cb.data.count, cb.ref, { unit: 'holders' });
+      } else {
+        cbCount = unknown(cb.ok ? 'no_data' : cb.reason, cb.ok ? `Chainbase code ${cb.data?.code}: ${cb.data?.message ?? ''}` : cb.detail, [cb.ref], { unit: 'holders' });
+      }
+    }
+    let epHolders: Holder[] | null = null;
+    let epRef: SourceRef | null = null;
     if (chain.ethplorer && usable(total) && decimals !== null) {
       const ep = await ctx.fetchJson('ethplorer', `https://api.ethplorer.io/getTopTokenHolders/${a}?apiKey=freekey&limit=20`, { retries: 1 });
       if (ep.ok && Array.isArray(ep.data?.holders) && ep.data.holders.length) {
-        primary = ep.data.holders.map((h: any) => ({ address: String(h.address).toLowerCase(), amount: Number(BigInt(h.rawBalance)) / 10 ** decimals, pct: round((Number(BigInt(h.rawBalance)) / 10 ** decimals / total.value) * 100), category: 'unknown' as const }));
-        primaryRef = [{ ...ep.ref, raw_excerpt: { holders: ep.data.holders.length } }, total.sources[0]];
-        if (gpHolders?.length) secondTop10 = ok(round(gpHolders.slice(0, 10).reduce((s, h) => s + h.pct, 0)), gpRef, { unit: 'pct' });
+        epHolders = ep.data.holders.map((h: any) => fromRaw(h.address, h.rawBalance));
+        epRef = { ...ep.ref, raw_excerpt: { holders: ep.data.holders.length } };
       }
     }
-    if (primary === gpHolders && nl.ref && nl.amounts.length >= 10 && usable(total)) {
-      // Second source off Ethereum: top 10 recomputed from Nansen's raw token amounts.
-      secondTop10 = ok(round((nl.amounts.slice(0, 10).reduce((s, x) => s + x, 0) / total.value) * 100), nl.ref, { unit: 'pct' });
+    const top10Of = (hs: Holder[] | null, ref: SourceRef | null): Field<number> | null =>
+      hs && hs.length >= 10 && ref ? ok(round(hs.slice(0, 10).reduce((x, h) => x + h.pct, 0)), ref, { unit: 'pct' }) : null;
+    const nansenTop10: Field<number> | null = nl.ref && nl.amounts.length >= 10 && usable(total)
+      ? ok(round((nl.amounts.slice(0, 10).reduce((x, y) => x + y, 0) / total.value) * 100), nl.ref, { unit: 'pct' })
+      : null;
+    let primary: Holder[] | null;
+    let primaryRef: SourceRef[];
+    let maxListed: number;
+    let secondTop10: Field<number> | null;
+    if (cbHolders?.length) {
+      primary = cbHolders;
+      primaryRef = [cbRef!, total.sources[0]];
+      maxListed = 100;
+      secondTop10 = top10Of(epHolders, epRef) ?? top10Of(gpHolders, gpRef) ?? nansenTop10;
+    } else if (epHolders?.length) {
+      primary = epHolders;
+      primaryRef = [epRef!, total.sources[0]];
+      maxListed = 20;
+      secondTop10 = top10Of(gpHolders, gpRef) ?? nansenTop10;
+    } else {
+      primary = gpHolders;
+      primaryRef = [gpRef];
+      maxListed = 10;
+      secondTop10 = nansenTop10;
     }
+    const secondTop10F: Field<number> = secondTop10 ?? unknown('no_data', 'no second holder source on this chain', [], { unit: 'pct' });
     if (primary) {
       const gpBy = new Map((gpHolders ?? []).map((h: any) => [h.address, h]));
       for (const h of primary) {
@@ -196,15 +239,16 @@ export const evmAdapter: ChainAdapter = {
       }
     }
     if (nl.ref) primaryRef.push(nl.ref);
-    const holderCount: Field<number> = g?.holder_count ? ok(Number(g.holder_count), gpRef, { unit: 'holders' }) : gpMiss('holder count', 'holders');
+    // Holder counts differ by method (dust, contracts); 5% tolerance.
+    const holderCount = crossCheckNumber(g?.holder_count ? ok(Number(g.holder_count), gpRef, { unit: 'holders' }) : gpMiss('holder count', 'holders'), cbCount, { tolerance: 0.05, unit: 'holders', label: 'holder count (GoPlus vs Chainbase)' });
     const conc = buildConcentration({
       holders: primary,
       holdersRef: primaryRef,
       holdersReason: !usable(total) ? 'missing_input' : gp.ok ? 'no_data' : gp.reason,
-      holdersDetail: !usable(total) ? 'on-chain total supply unavailable' : 'no holder list from Ethplorer or GoPlus',
-      secondTop10,
+      holdersDetail: !usable(total) ? 'on-chain total supply unavailable' : 'no holder list from Chainbase, Ethplorer or GoPlus',
+      secondTop10: secondTop10F,
       holderCount,
-      maxListed: chain.ethplorer ? 20 : 10,
+      maxListed,
     });
 
     // LP lock: share of LP tokens GoPlus reports as locked.
