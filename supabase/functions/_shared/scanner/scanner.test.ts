@@ -819,3 +819,50 @@ Deno.test('solana: recognised Token-2022 extensions with missing/malformed state
     restore();
   }
 });
+
+// ---- Codex round 2: finding 1 (slot reads) and finding 2 (shared decimals)
+Deno.test('evm: failed proxy-slot reads make inspection incomplete, so "no selector" is unknown, not false', async () => {
+  stubFetch((_url, body) => {
+    const rpc = (result: unknown) => ({ json: { jsonrpc: '2.0', id: 1, result } });
+    if (body?.method === 'eth_getStorageAt') return { json: { jsonrpc: '2.0', id: 1, error: { code: -32000, message: 'boom' } } };
+    if (body?.method === 'eth_getCode') return rpc('0x60806040');
+    if (body?.method === 'eth_call') return rpc('0x' + (18).toString(16).padStart(64, '0'));
+    return { status: 404, text: '{}' };
+  });
+  try {
+    const f = await evmAdapter.collect(new ScanContext(), EVM_TOKEN, {} as any, '0x1');
+    for (const k of ['mint_authority_active', 'pausable', 'blacklist'] as const) assertEquals(f[k].status, 'unknown', k);
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('evm: decimals disagreeing between two RPC operators leave decimals and supply unknown', async () => {
+  let n = 0;
+  stubFetch((_url, body) => {
+    const rpc = (result: unknown) => ({ json: { jsonrpc: '2.0', id: 1, result } });
+    if (body?.method === 'eth_call' && body.params[0].data === '0x313ce567') return rpc('0x' + (n++ % 2 === 0 ? 18 : 6).toString(16).padStart(64, '0'));
+    if (body?.method === 'eth_call' && body.params[0].data === '0x18160ddd') return rpc('0x' + (10n ** 24n).toString(16).padStart(64, '0'));
+    if (body?.method === 'eth_getStorageAt') return rpc(ZERO_WORD);
+    if (body?.method === 'eth_getCode') return rpc('0x60806040');
+    return rpc('0x');
+  });
+  try {
+    const f = await evmAdapter.collect(new ScanContext(), EVM_TOKEN, {} as any, '0x1');
+    assertEquals(f.decimals.status, 'disputed');
+    assertEquals(f.total_supply_onchain.value, null);
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('evm: two agreeing operators corroborate decimals and supply', async () => {
+  stubEvm({ proxy: false, implCodeOk: true, tokenCode: '0x60806040' });
+  try {
+    const f = await evmAdapter.collect(new ScanContext(), EVM_TOKEN, {} as any, '0x1');
+    assertEquals(f.decimals.corroborated, true);
+    assertEquals(f.total_supply_onchain.corroborated, true);
+  } finally {
+    restore();
+  }
+});

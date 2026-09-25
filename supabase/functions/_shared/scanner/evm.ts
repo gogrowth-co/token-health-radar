@@ -90,8 +90,15 @@ export const evmAdapter: ChainAdapter = {
     const slotVals: Record<string, any> = Object.fromEntries(Object.keys(SLOTS).map((k, i) => [k, slots[i]]));
     const refOf = (r: any, excerpt: Record<string, unknown>): SourceRef => ({ ...r.ref, raw_excerpt: excerpt });
 
-    const decimals = dec.ok && dec.data && dec.data !== '0x' ? parseInt(dec.data, 16) : null;
-    const decF: Field<number> = decimals !== null && decimals <= 36 ? ok(decimals, refOf(dec, { decimals: dec.data }), { unit: 'decimals', confidence: 'high' }) : unknown(dec.ok ? 'no_data' : dec.reason, dec.ok ? 'decimals() returned nothing' : dec.detail, [dec.ref]);
+    // decimals feed every raw-to-token conversion (supply, holder balances): read from two operators, and a
+    // disagreement leaves decimals unknown (Codex round 2, finding 2: a shared wrong decimals corroborated a wrong supply).
+    const decFrom = (r: typeof dec): Field<number> => {
+      const n = r.ok && r.data && r.data !== '0x' ? parseInt(r.data, 16) : null;
+      return n !== null && Number.isInteger(n) && n <= 36 ? ok(n, refOf(r, { decimals: r.data }), { unit: 'decimals', confidence: 'high' }) : unknown(r.ok ? 'no_data' : r.reason, r.ok ? 'decimals() returned nothing' : r.detail, [r.ref]);
+    };
+    const dec2 = dec.ok ? await ctx.rpc<string>(`evm_rpc_${chain.goplus}`, chain.rpcs.filter((r) => `evm_rpc_${chain.goplus}:${r.name}` !== dec.ref.source), 'eth_call', [{ to: a, data: '0x313ce567' }, 'latest']) : dec;
+    const decF: Field<number> = crossCheckNumber(decFrom(dec), decFrom(dec2), { absTolerance: 0, unit: 'decimals', label: 'decimals (two RPC operators)' });
+    const decimals: number | null = usable(decF) ? decF.value : null;
     const totalFrom = (r: typeof ts): Field<number> =>
       r.ok && r.data && r.data !== '0x' && decimals !== null
         ? ok(Number(BigInt(r.data)) / 10 ** decimals, refOf(r, { totalSupply_raw: BigInt(r.data).toString(), decimals }), { unit: 'tokens', decimals, scope: 'chain', confidence: 'medium' })
@@ -100,7 +107,9 @@ export const evmAdapter: ChainAdapter = {
     const ts2 = ts.ok
       ? await ctx.rpc<string>(`evm_rpc_${chain.goplus}`, chain.rpcs.filter((r) => `evm_rpc_${chain.goplus}:${r.name}` !== ts.ref.source), 'eth_call', [{ to: a, data: '0x18160ddd' }, 'latest'])
       : ts;
-    const total: Field<number> = crossCheckNumber(totalFrom(ts), totalFrom(ts2), { tolerance: 0.001, unit: 'tokens', label: 'totalSupply (two RPC operators)' });
+    const totalRaw: Field<number> = crossCheckNumber(totalFrom(ts), totalFrom(ts2), { tolerance: 0.001, unit: 'tokens', label: 'totalSupply (two RPC operators)' });
+    // Supply is only corroborated when the decimals it was scaled by are too.
+    const total: Field<number> = decF.corroborated === true ? totalRaw : { ...totalRaw, corroborated: false, detail: `${totalRaw.detail ?? ''} decimals not corroborated by a second operator`.trim() };
 
     // Proxy: any standard implementation/beacon slot set.
     const slotSet = Object.entries(slotVals).filter(([, r]) => r.ok && r.data && !zeroAddr(r.data));
@@ -115,6 +124,8 @@ export const evmAdapter: ChainAdapter = {
     // means something when the WHOLE code path was read, so every step that fails is recorded (Codex review
     // 2026-09-25, finding 1): incomplete inspection can prove a capability present, never absent.
     const problems: string[] = [];
+    const failedSlots = Object.keys(SLOTS).filter((k) => !slotVals[k].ok);
+    if (failedSlots.length) problems.push(`proxy slot reads failed (${failedSlots.join(', ')}): a proxy cannot be ruled out`);
     if (!code.ok) problems.push(`token bytecode unavailable (${code.reason})`);
     let bytecode = code.ok ? String(code.data ?? '') : '';
     if (code.ok && bytecode.length <= 2) problems.push('token has no bytecode');
@@ -135,6 +146,8 @@ export const evmAdapter: ChainAdapter = {
       if (r.ok && String(r.data ?? '').length > 2) bytecode += String(r.data);
       else problems.push(`${i.kind} implementation bytecode unavailable (${i.addr})`);
     });
+    // A small contract that delegates (DELEGATECALL 0xf4) but matched no standard proxy pattern is an unrecognised proxy.
+    if (code.ok && !impls.length && bytecode.length < 3000 && /f4/.test(bytecode.slice(2))) problems.push('small contract with DELEGATECALL but no recognised proxy slot: possible unrecognised proxy');
     const inspectionComplete = problems.length === 0;
     const has = (sels: string[]) => sels.some((s) => bytecode.includes('63' + s));
     const selField = (sels: string[], label: string): Field<boolean> => {
