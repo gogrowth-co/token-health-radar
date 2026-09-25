@@ -195,7 +195,7 @@ export default function ScanResult() {
             { name: 'development', query: supabase.from('token_development_cache').select('*').eq('token_address', dbAddress).eq('chain_id', chainId).maybeSingle() },
             { name: 'community', query: supabase.from('token_community_cache').select('*').eq('token_address', dbAddress).eq('chain_id', chainId).maybeSingle() },
             { name: 'descOverride', query: supabase.from('token_description_overrides').select('description').eq('token_address', dbAddress).maybeSingle() },
-            { name: 'agentToken', query: supabase.from('agent_tokens').select('category, agent_framework, coingecko_id').eq('token_address', tokenAddress).maybeSingle() }
+            { name: 'agentToken', query: supabase.from('agent_tokens').select('category, agent_framework, coingecko_id').eq('token_address', tokenAddress).order('is_featured', { ascending: false }).limit(1).maybeSingle() }
           ];
 
           const cacheResults = await Promise.allSettled(cacheQueries.map(q => q.query));
@@ -255,7 +255,9 @@ export default function ScanResult() {
             development: cacheData.development,
             community: cacheData.community,
             descriptionOverride: cacheData.descOverride?.description || null,
-            agentToken: cacheData.agentToken || null,
+            // Only a real agent_tokens row earns the AI badge; the fallback placeholder
+            // above ({ score: null, ... }) has no category and must not render as "AI".
+            agentToken: cacheData.agentToken?.category ? cacheData.agentToken : null,
           };
 
           setScanData(freshScanData);

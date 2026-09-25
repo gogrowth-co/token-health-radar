@@ -22,7 +22,7 @@ import { checkRateLimit, createRateLimitError } from '../_shared/rateLimit.ts';
 import { AddressResolutionError, collectToken, normalizeChain, quality } from '../_shared/scanner/collect.ts';
 import { scoreRecord } from '../_shared/scanner/scoring.ts';
 import { buildRows } from '../_shared/scanner/persist.ts';
-import { usable } from '../_shared/scanner/field.ts';
+import { ok, usable } from '../_shared/scanner/field.ts';
 import { ScanContext } from '../_shared/scanner/http.ts';
 import { collectGithub, communityFields } from '../_shared/scanner/social.ts';
 
@@ -74,7 +74,16 @@ Deno.serve(async (req) => {
     }
 
     // Social + GitHub inputs for the community/development dimensions (unchanged providers).
-    const links = usable(rec.market.links) ? rec.market.links.value : {};
+    let links = usable(rec.market.links) ? rec.market.links.value : {};
+    // Verified corrections for tokens whose CoinGecko links point at the wrong channels.
+    // A lookup failure (or no row) keeps the CoinGecko links; the scan never fails on it.
+    const { data: ov } = await supabase.from('token_social_overrides').select('telegram, discord, twitter, github, website, source_url').eq('token_address', rec.address_key).eq('chain_id', chainId).maybeSingle();
+    if (ov) {
+      const fix = Object.fromEntries(Object.entries({ telegram: ov.telegram, discord: ov.discord, twitter: ov.twitter, github: ov.github, website: ov.website }).filter(([, v]) => !!v));
+      links = { ...links, ...fix };
+      const ref = { source: 'social_override', fetched_at: new Date().toISOString(), raw_excerpt: { source_url: ov.source_url, fields: Object.keys(fix) } };
+      rec.market.links = ok(links, [...(rec.market.links.sources ?? []), ref]);
+    }
     const symbol = usable(rec.market.symbol) ? rec.market.symbol.value : null;
     const [lunar, telegram, discord, github] = await Promise.all([
       symbol ? fetchLunarCrushWithCache(symbol, rec.address_key, chainId, supabase, !!force_refresh).catch(() => null) : Promise.resolve(null),
