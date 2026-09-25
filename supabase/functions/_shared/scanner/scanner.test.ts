@@ -10,7 +10,7 @@ import { evmAdapter } from './evm.ts';
 import { computeUnlocks, datasetMatches, unlockSlugCandidates } from './market.ts';
 import { applyLabel, buildConcentration, classifyLabel, type Holder } from './holders.ts';
 import { runPlausibility } from './plausibility.ts';
-import { AddressResolutionError, collectToken, inferNoUnlocks } from './collect.ts';
+import { AddressResolutionError, collectLiquidity, collectToken, inferNoUnlocks } from './collect.ts';
 import { fetchUnlocks, resetUnlockCache } from './market.ts';
 import { buildRows, vestingText } from './persist.ts';
 import { collectGithub, communityFields } from './social.ts';
@@ -134,7 +134,7 @@ function fakeRecord(over: Partial<Record<string, any>> = {}): ScanRecord {
     chain: Object.fromEntries(chainKeys.map((k) => [k, u])),
     liquidity: { dex_liquidity_usd: u, pool_count: u, top_pools: u, dex_volume_24h_usd: u, slippage_10k_pct: u, slippage_100k_pct: u },
     unlocks: { emissions_source: u, next_unlock_date: u, next_unlock_amount: u, unlock_30d_amount: u, unlock_90d_amount: u, last_scheduled_event: u, unscheduled_supply: u },
-    derived: { circulating_ratio: u, noncirculating_supply: u, burned_since_max: u, fdv_to_mcap: u, unlock_30d_pct_of_circ: u, unlock_90d_pct_of_circ: u },
+    derived: { circulating_ratio: u, noncirculating_supply: u, max_supply_headroom: u, fdv_to_mcap: u, unlock_30d_pct_of_circ: u, unlock_90d_pct_of_circ: u },
     quality: { flags: [] },
   };
   for (const [k, v] of Object.entries(over)) {
@@ -725,4 +725,38 @@ Deno.test('scoring: the external top-10 share inherits corroboration from the to
   assert('top10_excl_noncirculating_pct' in t.inputs_used);
   const single = fakeRecord({ 'derived.circulating_ratio': ok(0.5, ref, two), 'chain.top10_pct': ok(40, ref, { corroborated: false }), 'chain.top10_excl_noncirculating_pct': ok(30, ref, { confidence: 'medium' }) });
   assertEquals(scoreRecord(single).dimensions.tokenomics.score, null);
+});
+
+// ---- Finding 11: missing liquidity fields are not measured zeros
+Deno.test('liquidity: pools without reserve data are not $0 liquidity; DexScreener is tried, and if it has none the result is unknown', async () => {
+  stubFetch((url) => {
+    if (url.includes('geckoterminal')) return { json: { data: [{ attributes: { name: 'A / B', address: 'p1' } }] } }; // no reserve_in_usd
+    if (url.includes('dexscreener')) return { json: [{ dexId: 'x', pairAddress: 'p2', baseToken: { symbol: 'A' }, quoteToken: { symbol: 'B' }, liquidity: { usd: 250000 }, volume: { h24: 1000 } }] };
+    return { status: 404, text: '{}' };
+  });
+  try {
+    const noDec = unknown<number>('missing_input');
+    const l = await collectLiquidity(new ScanContext(), '0x1', '0xabc', {} as any, noDec, noDec);
+    assertEquals(l.dex_liquidity_usd.value, 250000);
+    assert(String(l.dex_liquidity_usd.sources[0].source).includes('dexscreener'));
+  } finally {
+    restore();
+  }
+  stubFetch((url) => (url.includes('geckoterminal') ? { json: { data: [{ attributes: { name: 'A / B' } }] } } : { json: [{ dexId: 'x', pairAddress: 'p2' }] }));
+  try {
+    const noDec = unknown<number>('missing_input');
+    const l = await collectLiquidity(new ScanContext(), '0x1', '0xabc', {} as any, noDec, noDec);
+    assertEquals(l.dex_liquidity_usd.status, 'unknown');
+    assertEquals(l.dex_liquidity_usd.value, null);
+  } finally {
+    restore();
+  }
+  stubFetch((url) => (url.includes('geckoterminal') ? { json: { data: [] } } : { status: 404, text: '{}' })); // a real, empty answer
+  try {
+    const noDec = unknown<number>('missing_input');
+    const l = await collectLiquidity(new ScanContext(), '0x1', '0xabc', {} as any, noDec, noDec);
+    assertEquals(l.dex_liquidity_usd.value, 0); // measured: no pools
+  } finally {
+    restore();
+  }
 });

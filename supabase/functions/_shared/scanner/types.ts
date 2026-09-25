@@ -79,7 +79,7 @@ export interface ScanRecord {
   derived: {
     circulating_ratio: Field<number>; // circulating / total (market, same-definition pair)
     noncirculating_supply: Field<number>;
-    burned_since_max: Field<number>;
+    max_supply_headroom: Field<number>;
     fdv_to_mcap: Field<number>;
     unlock_30d_pct_of_circ: Field<number>;
     unlock_90d_pct_of_circ: Field<number>;

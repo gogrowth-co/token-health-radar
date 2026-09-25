@@ -102,36 +102,47 @@ export async function collectToken(
 
 const DEXSCREENER_CHAIN: Record<string, string> = { solana: 'solana', '0x1': 'ethereum', '0x38': 'bsc', '0x2105': 'base', '0xa4b1': 'arbitrum', '0x89': 'polygon', '0xa': 'optimism' };
 
-async function collectLiquidity(ctx: ScanContext, chainId: string, address: string, adapter: ChainAdapter, decimals: Field<number>, price: Field<number>): Promise<LiquidityFacts> {
+export async function collectLiquidity(ctx: ScanContext, chainId: string, address: string, adapter: ChainAdapter, decimals: Field<number>, price: Field<number>): Promise<LiquidityFacts> {
   // Fallback chain: GeckoTerminal (intermittently serves a bot challenge) -> DexScreener.
   const net = chainId === 'solana' ? 'solana' : EVM_CHAINS[chainId].gecko;
   type Pool = { dex: string; name: string; address: string; liquidity_usd: number; volume_24h_usd: number };
   let pools: Pool[] | null = null;
   let ref: SourceRef | null = null;
   let totalOnPage = 0;
+  let volumeComplete = true;
   const failRefs: SourceRef[] = [];
   let failReason: any = 'no_data';
   let failDetail: string | undefined;
   const gt = await ctx.fetchJson('geckoterminal', `https://api.geckoterminal.com/api/v2/networks/${net}/tokens/${address}/pools?page=1`, { headers: { Accept: 'application/json' }, retries: 3 });
-  if (gt.ok && Array.isArray(gt.data?.data)) {
-    totalOnPage = gt.data.data.length;
-    pools = gt.data.data.slice(0, 10).map((p: any) => ({
+  // A pool without a numeric reserve/volume is INCOMPLETE data, not a measured zero (Codex finding 11).
+  const finite = (v: unknown): number | null => (v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null);
+  const gtRows: any[] = gt.ok && Array.isArray(gt.data?.data) ? gt.data.data : [];
+  const gtUsable = gt.ok && Array.isArray(gt.data?.data) && (gtRows.length === 0 || gtRows.some((p: any) => finite(p.attributes?.reserve_in_usd) !== null));
+  if (gt.ok && gtUsable) {
+    totalOnPage = gtRows.length;
+    const all = gtRows.slice(0, 10);
+    pools = all.filter((p: any) => finite(p.attributes?.reserve_in_usd) !== null).map((p: any) => ({
       dex: p.relationships?.dex?.data?.id ?? 'unknown',
       name: p.attributes?.name ?? '',
       address: p.attributes?.address ?? '',
-      liquidity_usd: Number(p.attributes?.reserve_in_usd ?? 0),
-      volume_24h_usd: Number(p.attributes?.volume_usd?.h24 ?? 0),
+      liquidity_usd: finite(p.attributes?.reserve_in_usd) as number,
+      volume_24h_usd: finite(p.attributes?.volume_usd?.h24) as number,
     }));
-    ref = { ...gt.ref, raw_excerpt: { pools_on_page: totalOnPage } };
+    volumeComplete = pools.every((p) => Number.isFinite(p.volume_24h_usd));
+    pools = pools.map((p) => ({ ...p, volume_24h_usd: Number.isFinite(p.volume_24h_usd) ? p.volume_24h_usd : 0 }));
+    ref = { ...gt.ref, raw_excerpt: { pools_on_page: totalOnPage, pools_without_reserve_data: all.length - pools.length } };
   } else {
     failRefs.push(gt.ref);
     failReason = gt.ok ? 'no_data' : gt.reason;
-    failDetail = gt.ok ? 'unexpected response' : gt.detail;
+    failDetail = gt.ok ? 'GeckoTerminal answered but its pools carry no numeric reserve data' : gt.detail;
     const ds = await ctx.fetchJson('dexscreener', `https://api.dexscreener.com/token-pairs/v1/${DEXSCREENER_CHAIN[chainId]}/${address}`, { retries: 2 });
     if (ds.ok && Array.isArray(ds.data)) {
       const sorted = [...ds.data].sort((a: any, b: any) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0));
       totalOnPage = sorted.length;
-      pools = sorted.slice(0, 10).map((p: any) => ({ dex: p.dexId ?? 'unknown', name: `${p.baseToken?.symbol ?? '?'} / ${p.quoteToken?.symbol ?? '?'}`, address: p.pairAddress ?? '', liquidity_usd: Number(p.liquidity?.usd ?? 0), volume_24h_usd: Number(p.volume?.h24 ?? 0) }));
+      const dsRows = sorted.slice(0, 10).filter((p: any) => finite(p.liquidity?.usd) !== null);
+      pools = dsRows.map((p: any) => ({ dex: p.dexId ?? 'unknown', name: `${p.baseToken?.symbol ?? '?'} / ${p.quoteToken?.symbol ?? '?'}`, address: p.pairAddress ?? '', liquidity_usd: finite(p.liquidity?.usd) as number, volume_24h_usd: finite(p.volume?.h24) ?? 0 }));
+      volumeComplete = dsRows.every((p: any) => finite(p.volume?.h24) !== null);
+      if (sorted.length > 0 && pools.length === 0) pools = null; // pairs without liquidity data are not a measurement
       ref = { ...ds.ref, raw_excerpt: { pairs: sorted.length, fallback_after: `geckoterminal ${gt.ok ? 'no_data' : gt.reason}` } };
     } else {
       failRefs.push(ds.ref);
@@ -146,7 +157,7 @@ async function collectLiquidity(ctx: ScanContext, chainId: string, address: stri
         dex_liquidity_usd: ok(Math.round(pools.reduce((s, p) => s + p.liquidity_usd, 0)), ref, { unit: 'usd', ...opt }),
         pool_count: ok(totalOnPage, ref, { unit: 'pools', detail: 'pools on the first result page' }),
         top_pools: ok(pools, ref, opt),
-        dex_volume_24h_usd: ok(Math.round(pools.reduce((s, p) => s + p.volume_24h_usd, 0)), ref, { unit: 'usd', ...opt }),
+        dex_volume_24h_usd: volumeComplete ? ok(Math.round(pools.reduce((s, p) => s + p.volume_24h_usd, 0)), ref, { unit: 'usd', ...opt }) : unknown('no_data', 'some pools carry no 24h volume; the total would be understated', [ref], { unit: 'usd' }),
       }
       : { dex_liquidity_usd: ok(0, ref, { unit: 'usd', detail: 'no DEX pools found' }), pool_count: ok(0, ref, { unit: 'pools' }), top_pools: ok([], ref), dex_volume_24h_usd: ok(0, ref, { unit: 'usd' }) };
   } else {
@@ -208,8 +219,8 @@ function derive(rec: ScanRecord): ScanRecord['derived'] {
   return {
     circulating_ratio: ratio(m.circulating_supply, m.total_supply_market, 'circulating / total supply (market data, same definition)', 'ratio'),
     noncirculating_supply: diff(m.total_supply_market, m.circulating_supply, 'total minus circulating (market data)'),
-    burned_since_max: usable(m.max_supply) && usable(rec.chain.total_supply_onchain) && usable(m.platform_count) && m.platform_count.value <= 1
-      ? diff(m.max_supply, rec.chain.total_supply_onchain, 'max supply (CoinGecko) minus current on-chain supply; single-chain tokens only')
+    max_supply_headroom: usable(m.max_supply) && usable(rec.chain.total_supply_onchain) && usable(m.platform_count) && m.platform_count.value <= 1
+      ? diff(m.max_supply, rec.chain.total_supply_onchain, 'max supply (CoinGecko) minus current on-chain supply; single-chain tokens only. Tokens that may never have been minted or that were burned: NOT a burn figure')
       : unknown('missing_input', 'needs max supply and on-chain supply of a single-chain token', [], { unit: 'tokens' }),
     fdv_to_mcap: ratio(m.fdv_usd, m.market_cap_usd, 'FDV / market cap (CoinGecko)', 'ratio'),
     unlock_30d_pct_of_circ: ratio(rec.unlocks.unlock_30d_amount, m.circulating_supply, 'tokens unlocking in 30 days as % of circulating', 'pct', 100),
