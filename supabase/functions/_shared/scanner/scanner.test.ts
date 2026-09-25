@@ -6,6 +6,7 @@ import { assert, assertEquals } from 'jsr:@std/assert@1';
 import { crossCheckBool, crossCheckNumber, ok, unknown } from './field.ts';
 import { resetBreakers, ScanContext } from './http.ts';
 import { solanaAdapter } from './solana.ts';
+import { evmAdapter } from './evm.ts';
 import { computeUnlocks, datasetMatches, unlockSlugCandidates } from './market.ts';
 import { classifyLabel } from './holders.ts';
 import { runPlausibility } from './plausibility.ts';
@@ -367,6 +368,69 @@ Deno.test('scoring: a pausable Token-2022 mint with revoked authorities no longe
     const s = scoreRecord(rec);
     assert((s.dimensions.security.score ?? 100) < 100, `security ${s.dimensions.security.score}`);
     assertEquals(s.dimensions.security.inputs_used.pausable.points, 0);
+  } finally {
+    restore();
+  }
+});
+
+// ---- Finding 1: EVM bytecode inspection must be complete before "not present" counts
+const EVM_TOKEN = '0x1111111111111111111111111111111111111111';
+const EVM_IMPL = '0x2222222222222222222222222222222222222222';
+const IMPL_SLOT = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc';
+const ZERO_WORD = '0x' + '0'.repeat(64);
+function stubEvm(opts: { proxy: boolean; implCodeOk: boolean; tokenCode: string; implCode?: string }) {
+  stubFetch((_url, body) => {
+    const rpc = (result: unknown) => ({ json: { jsonrpc: '2.0', id: 1, result } });
+    if (!body?.method) return { status: 404, text: '{}' };
+    if (body.method === 'eth_call') return body.params[0].data === '0x313ce567' ? rpc('0x' + (18).toString(16).padStart(64, '0')) : body.params[0].data === '0x18160ddd' ? rpc('0x' + (10n ** 24n).toString(16).padStart(64, '0')) : rpc('0x');
+    if (body.method === 'eth_getStorageAt') return rpc(opts.proxy && body.params[1] === IMPL_SLOT ? '0x' + '0'.repeat(24) + EVM_IMPL.slice(2) : ZERO_WORD);
+    if (body.method === 'eth_getCode') {
+      if (body.params[0] === EVM_TOKEN) return rpc(opts.tokenCode);
+      return opts.implCodeOk ? rpc(opts.implCode ?? '0x6080') : { json: { jsonrpc: '2.0', id: 1, error: { code: -32000, message: 'boom' } } };
+    }
+    return rpc('0x');
+  });
+}
+
+Deno.test('evm: proxy whose implementation bytecode cannot be read is unknown, never "not mintable"', async () => {
+  stubEvm({ proxy: true, implCodeOk: false, tokenCode: '0x60806040' });
+  try {
+    const f = await evmAdapter.collect(new ScanContext(), EVM_TOKEN, {} as any, '0x1');
+    for (const k of ['mint_authority_active', 'pausable', 'blacklist'] as const) {
+      assertEquals(f[k].value, null, k);
+      assertEquals(f[k].status, 'unknown', k);
+    }
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('evm: a selector found in the token bytecode proves the capability even when the implementation read failed', async () => {
+  stubEvm({ proxy: true, implCodeOk: false, tokenCode: '0x608060406340c10f19' });
+  try {
+    const f = await evmAdapter.collect(new ScanContext(), EVM_TOKEN, {} as any, '0x1');
+    assertEquals(f.mint_authority_active.value, true);
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('evm: complete inspection with no known selector reads as absent, but on one source only (medium confidence)', async () => {
+  stubEvm({ proxy: false, implCodeOk: true, tokenCode: '0x60806040' });
+  try {
+    const f = await evmAdapter.collect(new ScanContext(), EVM_TOKEN, {} as any, '0x1');
+    assertEquals(f.mint_authority_active.value, false);
+    assertEquals(f.mint_authority_active.confidence, 'medium');
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('evm: proxy with a readable implementation finds selectors in the implementation', async () => {
+  stubEvm({ proxy: true, implCodeOk: true, tokenCode: '0x60806040', implCode: '0x6080604063a0712d68' });
+  try {
+    const f = await evmAdapter.collect(new ScanContext(), EVM_TOKEN, {} as any, '0x1');
+    assertEquals(f.mint_authority_active.value, true);
   } finally {
     restore();
   }

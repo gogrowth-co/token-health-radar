@@ -99,22 +99,46 @@ export const evmAdapter: ChainAdapter = {
     // Proxy: any standard implementation/beacon slot set.
     const slotSet = Object.entries(slotVals).filter(([, r]) => r.ok && r.data && !zeroAddr(r.data));
     const slotsOk = Object.values(slotVals).every((r) => r.ok);
-    const implAddr = (slotVals.eip1967_impl.ok && !zeroAddr(slotVals.eip1967_impl.data) ? slotVals.eip1967_impl.data : slotVals.zos_impl.ok && !zeroAddr(slotVals.zos_impl.data) ? slotVals.zos_impl.data : null) as string | null;
+    const slotAddr = (k: string): string | null => (slotVals[k].ok && slotVals[k].data && !zeroAddr(slotVals[k].data) ? addrFromWord(slotVals[k].data) : null);
+    const implAddr = slotAddr('eip1967_impl') ?? slotAddr('zos_impl') ?? slotAddr('eip1822_proxiable');
     const proxyOnchain: Field<boolean> = slotsOk || slotSet.length
-      ? ok(slotSet.length > 0, refOf(slotVals.eip1967_impl, { slots_set: slotSet.map(([k]) => k), implementation: implAddr ? addrFromWord(implAddr) : null }), { unit: 'bool', detail: 'EIP-1967 / EIP-1822 / beacon / OpenZeppelin-legacy slots' })
+      ? ok(slotSet.length > 0, refOf(slotVals.eip1967_impl, { slots_set: slotSet.map(([k]) => k), implementation: implAddr }), { unit: 'bool', detail: 'EIP-1967 / EIP-1822 / beacon / OpenZeppelin-legacy slots' })
       : unknown('provider_failed', 'storage reads failed', [slotVals.eip1967_impl.ref], { unit: 'bool' });
 
-    // Bytecode (token + implementation) for selector checks.
+    // Bytecode (token + every implementation it delegates to) for selector checks. Absence of a selector only
+    // means something when the WHOLE code path was read, so every step that fails is recorded (Codex review
+    // 2026-09-25, finding 1): incomplete inspection can prove a capability present, never absent.
+    const problems: string[] = [];
+    if (!code.ok) problems.push(`token bytecode unavailable (${code.reason})`);
     let bytecode = code.ok ? String(code.data ?? '') : '';
-    let codeRef = code.ref;
-    if (implAddr) {
-      const ic = await rpc('eth_getCode', [addrFromWord(implAddr), 'latest']);
-      if (ic.ok) bytecode += String(ic.data ?? '');
-      codeRef = { ...codeRef, raw_excerpt: { implementation_code_read: ic.ok } };
+    if (code.ok && bytecode.length <= 2) problems.push('token has no bytecode');
+    const impls: Array<{ kind: string; addr: string }> = [];
+    if (implAddr) impls.push({ kind: slotAddr('eip1967_impl') ? 'eip1967' : slotAddr('zos_impl') ? 'openzeppelin_legacy' : 'eip1822', addr: implAddr });
+    const clone = /^0x363d3d373d3d3d363d73([0-9a-f]{40})5af43d82803e903d91602b57fd5bf3/i.exec(bytecode); // EIP-1167 minimal proxy
+    if (clone) impls.push({ kind: 'eip1167_clone', addr: '0x' + clone[1].toLowerCase() });
+    const beaconAddr = slotAddr('eip1967_beacon');
+    if (beaconAddr) {
+      const bi = await rpc('eth_call', [{ to: beaconAddr, data: '0x5c60da1b' }, 'latest']); // implementation()
+      if (bi.ok && bi.data && bi.data !== '0x' && !zeroAddr(bi.data)) impls.push({ kind: 'beacon', addr: addrFromWord(bi.data) });
+      else problems.push('beacon implementation() could not be resolved');
     }
+    const implReads = await Promise.all(impls.map((i) => rpc('eth_getCode', [i.addr, 'latest'])));
+    const codeRef: SourceRef = { ...code.ref, raw_excerpt: { implementations: impls.map((i, n) => ({ kind: i.kind, address: i.addr, code_read: implReads[n].ok })) } };
+    impls.forEach((i, n) => {
+      const r = implReads[n];
+      if (r.ok && String(r.data ?? '').length > 2) bytecode += String(r.data);
+      else problems.push(`${i.kind} implementation bytecode unavailable (${i.addr})`);
+    });
+    const inspectionComplete = problems.length === 0;
     const has = (sels: string[]) => sels.some((s) => bytecode.includes('63' + s));
-    const selField = (sels: string[], label: string): Field<boolean> =>
-      code.ok && bytecode.length > 2 ? ok(has(sels), { ...codeRef, raw_excerpt: { ...codeRef.raw_excerpt, matched: sels.filter((s) => bytecode.includes('63' + s)) } }, { unit: 'bool', confidence: 'medium', detail: `${label}: function selector present in bytecode (a present function may still be role-gated or disabled)` }) : unknown(code.ok ? 'no_data' : code.reason, 'bytecode unavailable', [code.ref], { unit: 'bool' });
+    const selField = (sels: string[], label: string): Field<boolean> => {
+      if (!code.ok) return unknown(code.reason, 'bytecode unavailable', [code.ref], { unit: 'bool' });
+      const matched = sels.filter((s) => bytecode.includes('63' + s));
+      const ref: SourceRef = { ...codeRef, raw_excerpt: { ...codeRef.raw_excerpt, matched, inspection_problems: problems } };
+      if (matched.length) return ok(true, ref, { unit: 'bool', confidence: 'medium', detail: `${label}: function selector present in bytecode (a present function may still be role-gated or disabled)` });
+      if (!inspectionComplete) return unknown('no_data', `${label}: not found in the bytecode that was read, but inspection was incomplete (${problems.join('; ')}), so absence is not established`, [ref], { unit: 'bool' });
+      return ok(false, ref, { unit: 'bool', confidence: 'medium', detail: `${label}: none of the known function selectors is in the complete bytecode (token${impls.length ? ' + implementation' : ''}); a differently named function would not be caught, so this needs a second source` });
+    };
 
     // Owner: owner() or getOwner(); zero/dead = renounced.
     const ownerHex = own.ok && own.data && own.data !== '0x' ? own.data : getOwn.ok && getOwn.data && getOwn.data !== '0x' ? getOwn.data : null;
