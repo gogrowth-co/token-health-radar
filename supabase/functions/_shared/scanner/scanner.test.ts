@@ -13,6 +13,7 @@ import { runPlausibility } from './plausibility.ts';
 import { AddressResolutionError, collectToken, inferNoUnlocks } from './collect.ts';
 import { fetchUnlocks, resetUnlockCache } from './market.ts';
 import { buildRows, vestingText } from './persist.ts';
+import { collectGithub, communityFields } from './social.ts';
 import { scoreRecord } from './scoring.ts';
 import type { ScanRecord } from './types.ts';
 
@@ -150,7 +151,7 @@ Deno.test('scoring: missing required inputs -> dimension not scored, overall nul
   assertEquals(s.dimensions.community.score, null);
   assertEquals(s.dimensions.development.score, null);
   assertEquals(s.overall, null);
-  assertEquals(s.scoring_version, '2.0.0');
+  assertEquals(s.scoring_version, '2.1.0');
 });
 
 Deno.test('scoring: disputed input is excluded and blocks a required slot', () => {
@@ -622,4 +623,82 @@ Deno.test('persist: single-chain token keeps the on-chain total; a rejected circ
 Deno.test('persist: multichain token with no usable global total stores null, never the chain-local total', () => {
   const rec = fakeRecord({ 'market.platform_count': ok(4, ref), 'chain.total_supply_onchain': ok(50.2e9, ref) });
   assertEquals((buildRows(rec, scoreRecord(rec), null).token_tokenomics_cache as any).total_supply, null);
+});
+
+// ---- Finding 8: community and development go through the reliability layer
+function stubGithub(over: { commits?: number; issues?: number; contributors?: number; pushedAt?: string } = {}) {
+  Deno.env.set('GITHUB_API_KEY', 'test-key-not-real');
+  stubFetch((url) => {
+    const fail = { status: 503, text: 'unavailable' };
+    if (/\/commits\?/.test(url)) return over.commits === 0 ? fail : { json: Array.from({ length: over.commits ?? 12 }, () => ({ sha: 'x' })) };
+    if (/\/issues\?/.test(url)) return over.issues === 0 ? fail : { json: [{ state: 'closed' }, { state: 'closed' }, { state: 'open' }, { state: 'open', pull_request: {} }] };
+    if (/\/contributors\?/.test(url)) return over.contributors === 0 ? fail : { json: Array.from({ length: over.contributors ?? 8 }, () => ({ login: 'a' })) };
+    return { json: { stargazers_count: 500, forks_count: 40, pushed_at: over.pushedAt ?? '2026-09-20T00:00:00Z', archived: false, fork: false, language: 'Rust', created_at: '2022-01-01T00:00:00Z' } };
+  });
+}
+
+Deno.test('github: sub-request failures are unknown with a reason, never zero counts, and a required input blocks the score', async () => {
+  stubGithub({ commits: 0, issues: 0, contributors: 0 });
+  try {
+    const gh = await collectGithub(new ScanContext(), 'https://github.com/acme/tok', NOW);
+    for (const k of ['commits_30d', 'issue_close_ratio', 'open_issues', 'contributors_count'] as const) {
+      assertEquals(gh[k].value, null, k);
+      assertEquals(gh[k].status, 'unknown', k);
+    }
+    assertEquals(gh.stars.value, 500); // metadata call succeeded
+    const rec = fakeRecord();
+    rec.social = { github: gh, community: communityFields({ symbol: null, lunar: null, discordLinked: false, discordMembers: null, telegramLinked: false, telegramMembers: null }, NOW.toISOString()) };
+    const s = scoreRecord(rec);
+    assertEquals(s.dimensions.development.score, null);
+    assert(s.dimensions.development.reason!.includes('commits_30d'));
+  } finally {
+    restore();
+    Deno.env.delete('GITHUB_API_KEY');
+  }
+});
+
+Deno.test('github: healthy repo scores from real values; a future pushed_at earns nothing', async () => {
+  stubGithub();
+  try {
+    const gh = await collectGithub(new ScanContext(), 'https://github.com/acme/tok', NOW);
+    assertEquals(gh.commits_30d.value, 12);
+    assertEquals(gh.issue_close_ratio.value, 2 / 3); // the pull request is not an issue
+    const rec = fakeRecord();
+    rec.social = { github: gh, community: communityFields({ symbol: null, lunar: null, discordLinked: false, discordMembers: null, telegramLinked: false, telegramMembers: null }, NOW.toISOString()) };
+    assert((scoreRecord(rec).dimensions.development.score ?? 0) > 50);
+  } finally {
+    restore();
+  }
+  stubGithub({ pushedAt: '2030-01-01T00:00:00Z' });
+  try {
+    const gh = await collectGithub(new ScanContext(), 'https://github.com/acme/tok', NOW);
+    assertEquals(gh.last_push_age_days.status, 'unknown');
+    const rec = fakeRecord();
+    rec.social = { github: gh, community: communityFields({ symbol: null, lunar: null, discordLinked: false, discordMembers: null, telegramLinked: false, telegramMembers: null }, NOW.toISOString()) };
+    assertEquals(scoreRecord(rec).dimensions.development.score, null);
+  } finally {
+    restore();
+    Deno.env.delete('GITHUB_API_KEY');
+  }
+});
+
+Deno.test('github: no link and no key are unknown with a reason', async () => {
+  assertEquals((await collectGithub(new ScanContext(), undefined, NOW)).commits_30d.reason, 'not_found');
+  Deno.env.delete('GITHUB_API_KEY');
+  assertEquals((await collectGithub(new ScanContext(), 'https://github.com/a/b', NOW)).commits_30d.reason, 'provider_failed');
+});
+
+Deno.test('community: missing providers are unknown, a single input is not enough, zero is not a reading', () => {
+  const rec = fakeRecord();
+  const mk = (over: Record<string, unknown>) => ({ symbol: 'TOK', lunar: null, discordLinked: false, discordMembers: null, telegramLinked: false, telegramMembers: null, ...over }) as any;
+  rec.social = { github: undefined as any, community: communityFields(mk({ telegramLinked: true, telegramMembers: 50_000 }), NOW.toISOString()) };
+  const one = scoreRecord(rec).dimensions.community;
+  assertEquals(one.score, null);
+  assert(one.reason!.includes('at least 2'));
+  rec.social.community = communityFields(mk({ lunar: { sentiment: 80, social_dominance: 1, trend: 'up' } }), NOW.toISOString());
+  const three = scoreRecord(rec).dimensions.community;
+  assertEquals(three.score, Math.round(((35 + 15 + 10) / 70) * 100));
+  rec.social.community = communityFields(mk({ lunar: { sentiment: 0, social_dominance: 0, trend: null } }), NOW.toISOString());
+  assertEquals(rec.social.community.sentiment.status, 'unknown');
+  assertEquals(scoreRecord(rec).dimensions.community.score, null);
 });

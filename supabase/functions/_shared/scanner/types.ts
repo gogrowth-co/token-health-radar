@@ -3,6 +3,7 @@ import type { Field } from './field.ts';
 import type { ScanContext } from './http.ts';
 import type { ConcentrationFields } from './holders.ts';
 import type { MarketData, UnlockData } from './market.ts';
+import type { SocialFacts } from './social.ts';
 
 /** Everything a chain adapter measures on-chain (or via chain-specific providers). */
 export interface ChainFacts extends ConcentrationFields {
@@ -74,6 +75,7 @@ export interface ScanRecord {
   chain: ChainFacts;
   liquidity: LiquidityFacts;
   unlocks: UnlockData;
+  social?: SocialFacts; // community + GitHub inputs, attached by the caller after collectToken (needs the DB-backed LunarCrush cache)
   derived: {
     circulating_ratio: Field<number>; // circulating / total (market, same-definition pair)
     noncirculating_supply: Field<number>;

@@ -11,12 +11,11 @@
 //   missing input neither helps nor hurts.
 // - Overall = mean of scored dimensions, only if security is scored and at
 //   least 3 of 5 dimensions are; it names the dimensions it excludes.
-import { calculateCommunityScore, calculateDevelopmentScore } from '../scoringUtils.ts';
 import { type Field, usable } from './field.ts';
 import { isRenounced } from './evm.ts';
 import type { ScanRecord } from './types.ts';
 
-export const SCORING_VERSION = '2.0.0';
+export const SCORING_VERSION = '2.1.0';
 
 export interface DimensionScore {
   score: number | null;
@@ -39,7 +38,7 @@ export interface ScoreResult {
 // observation but earns no points and blocks a required slot.
 type Input = { name: string; field: Field<any> | undefined; max: number; points: (v: any) => number; required?: boolean; corroborated?: boolean };
 
-function dimension(inputs: Input[]): DimensionScore {
+function dimension(inputs: Input[], opts: { minInputs?: number } = {}): DimensionScore {
   const used: DimensionScore['inputs_used'] = {};
   const excluded: DimensionScore['inputs_excluded'] = {};
   const missingRequired: string[] = [];
@@ -54,6 +53,10 @@ function dimension(inputs: Input[]): DimensionScore {
     }
   }
   const max = Object.values(used).reduce((s, u) => s + u.max, 0);
+  const usedCount = Object.keys(used).length;
+  if (opts.minInputs && usedCount < opts.minInputs && !missingRequired.length) {
+    return { score: null, status: 'not_scored', reason: `only ${usedCount} usable input(s); at least ${opts.minInputs} are needed for this dimension`, inputs_used: used, inputs_excluded: excluded };
+  }
   if (missingRequired.length || max === 0) {
     return { score: null, status: 'not_scored', reason: missingRequired.length ? `required input not usable: ${missingRequired.join('; ')}` : 'no usable inputs', inputs_used: used, inputs_excluded: excluded };
   }
@@ -66,13 +69,7 @@ const band = (v: number, steps: Array<[number, number]>, otherwise: number) => {
   return otherwise;
 };
 
-export function scoreRecord(
-  rec: ScanRecord,
-  extras: {
-    community?: { sentiment: number | null; socialDominance: number | null; trend: string | null; discordMembers: number | null; telegramMembers: number | null } | null;
-    github?: any | null;
-  } = {},
-): ScoreResult {
+export function scoreRecord(rec: ScanRecord): ScoreResult {
   const c = rec.chain;
   const isSol = rec.chain_id === 'solana';
   const renounced = isSol ? null : isRenounced(c.owner_address);
@@ -116,14 +113,27 @@ export function scoreRecord(
     { name: 'liquidity_locked_pct', field: c.liquidity_locked_pct, max: 15, points: (v) => (v >= 90 ? 15 : v >= 50 ? 10 : v > 0 ? 5 : 0) },
   ]);
 
-  const cm = extras.community;
-  const hasCommunity = !!cm && (cm.sentiment !== null || cm.socialDominance !== null || cm.trend !== null || (cm.discordMembers ?? 0) > 0 || (cm.telegramMembers ?? 0) > 0);
-  const community: DimensionScore = hasCommunity
-    ? { score: calculateCommunityScore({ sentiment: cm!.sentiment, socialDominance: cm!.socialDominance, trend: cm!.trend, discordMembers: cm!.discordMembers ?? 0, telegramMembers: cm!.telegramMembers ?? 0 }), status: 'scored', inputs_used: { social: { value: cm, points: 0, max: 0 } }, inputs_excluded: {} }
-    : { score: null, status: 'not_scored', reason: 'no LunarCrush, Discord or Telegram data', inputs_used: {}, inputs_excluded: { social: 'no_data' } };
-  const development: DimensionScore = extras.github
-    ? { score: calculateDevelopmentScore(extras.github), status: 'scored', inputs_used: { github: { value: `${extras.github.owner}/${extras.github.repo}`, points: 0, max: 0 } }, inputs_excluded: {} }
-    : { score: null, status: 'not_scored', reason: 'no GitHub repository data', inputs_used: {}, inputs_excluded: { github: 'no_data' } };
+  // Community and development read Fields from rec.social (social.ts): a failed provider call or a zero reading is
+  // unknown and earns nothing; only usable inputs are scored, and at least two are needed.
+  const so = rec.social?.community;
+  const community = dimension([
+    { name: 'sentiment', field: so?.sentiment, max: 35, points: (v) => (v >= 75 ? 35 : v >= 60 ? 22 : v >= 45 ? 12 : 5) },
+    { name: 'social_dominance', field: so?.social_dominance, max: 25, points: (v) => (v >= 2 ? 25 : v >= 0.5 ? 15 : v >= 0.1 ? 8 : 3) },
+    { name: 'trend', field: so?.trend, max: 10, points: (v) => (v === 'up' ? 10 : v === 'flat' ? 5 : 0) },
+    { name: 'discord_members', field: so?.discord_members, max: 18, points: (v) => (v > 50000 ? 18 : v > 10000 ? 14 : v > 5000 ? 10 : v > 1000 ? 6 : 3) },
+    { name: 'telegram_members', field: so?.telegram_members, max: 12, points: (v) => (v > 50000 ? 12 : v > 10000 ? 9 : v > 5000 ? 6 : v > 1000 ? 4 : 2) },
+  ], { minInputs: 2 });
+
+  const gh = rec.social?.github;
+  const development = dimension([
+    { name: 'commits_30d', field: gh?.commits_30d, max: 40, points: (v) => (v > 20 ? 40 : v > 10 ? 30 : v > 5 ? 20 : v > 0 ? 10 : 0), required: true },
+    { name: 'last_push_age_days', field: gh?.last_push_age_days, max: 15, points: (v) => (v < 7 ? 15 : v < 30 ? 12 : v < 90 ? 8 : v < 180 ? 4 : 0), required: true },
+    { name: 'issue_close_ratio', field: gh?.issue_close_ratio, max: 25, points: (v) => (v > 0.8 ? 25 : v > 0.6 ? 20 : v > 0.4 ? 15 : v > 0.2 ? 10 : 0) },
+    { name: 'stars', field: gh?.stars, max: 8, points: (v) => (v > 1000 ? 8 : v > 100 ? 6 : v > 10 ? 4 : v > 0 ? 2 : 0) },
+    { name: 'forks', field: gh?.forks, max: 7, points: (v) => (v > 100 ? 7 : v > 20 ? 5 : v > 5 ? 3 : v > 0 ? 1 : 0) },
+    { name: 'contributors_count', field: gh?.contributors_count, max: 10, points: (v) => (v > 50 ? 10 : v > 20 ? 8 : v > 10 ? 6 : v > 5 ? 4 : v > 0 ? 2 : 0) },
+    { name: 'not_archived', field: gh?.is_archived, max: 10, points: (v) => (v ? 0 : 10) },
+  ]);
 
   const dimensions = { security, tokenomics, liquidity, community, development };
   const scored = Object.entries(dimensions).filter(([, d]) => d.score !== null);

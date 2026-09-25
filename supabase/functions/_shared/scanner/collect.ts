@@ -217,9 +217,11 @@ function derive(rec: ScanRecord): ScanRecord['derived'] {
   };
 }
 
-function quality(rec: ScanRecord, ctx: ScanContext, flags: DataQuality['flags']): DataQuality {
+export function quality(rec: ScanRecord, ctx: ScanContext, flags: DataQuality['flags']): DataQuality {
   const fields: Array<[string, Field<unknown>]> = [];
-  for (const [grp, obj] of Object.entries({ market: rec.market, chain: rec.chain, liquidity: rec.liquidity, unlocks: rec.unlocks, derived: rec.derived })) {
+  const groups: Record<string, unknown> = { market: rec.market, chain: rec.chain, liquidity: rec.liquidity, unlocks: rec.unlocks, derived: rec.derived };
+  if (rec.social) Object.assign(groups, { github: rec.social.github, community: rec.social.community });
+  for (const [grp, obj] of Object.entries(groups)) {
     for (const [k, f] of Object.entries(obj as Record<string, Field<unknown>>)) fields.push([`${grp}.${k}`, f]);
   }
   const na = fields.filter(([, f]) => f.reason === 'not_applicable').length;

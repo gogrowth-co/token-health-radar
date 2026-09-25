@@ -14,16 +14,17 @@
 // - The SEO snapshot is only regenerated when the caller passes
 //   `regenerate_snapshot: true` (bot-facing HTML is published content).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { fetchGitHubRepoData } from '../_shared/githubAPI.ts';
 import { fetchTelegramMembers } from '../_shared/apifyAPI.ts';
 import { fetchLunarCrushWithCache } from '../_shared/lunarcrushAPI.ts';
 import { fetchDiscordMemberCount } from '../_shared/discordAPI.ts';
 import { requireAuthOrInternal, getClientIp } from '../_shared/authGuard.ts';
 import { checkRateLimit, createRateLimitError } from '../_shared/rateLimit.ts';
-import { AddressResolutionError, collectToken, normalizeChain } from '../_shared/scanner/collect.ts';
+import { AddressResolutionError, collectToken, normalizeChain, quality } from '../_shared/scanner/collect.ts';
 import { scoreRecord } from '../_shared/scanner/scoring.ts';
 import { buildRows } from '../_shared/scanner/persist.ts';
 import { usable } from '../_shared/scanner/field.ts';
+import { ScanContext } from '../_shared/scanner/http.ts';
+import { collectGithub, communityFields } from '../_shared/scanner/social.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -62,9 +63,10 @@ Deno.serve(async (req) => {
       : null;
     const canonicalHint: string | null = canon?.data?.canonical_address ?? null;
 
+    const ctx = new ScanContext();
     let rec;
     try {
-      rec = await collectToken(rawAddress, chainId, { previous, canonicalHint });
+      rec = await collectToken(rawAddress, chainId, { ctx, previous, canonicalHint });
     } catch (e) {
       // Nothing is written when the address cannot be resolved: a failed scan must not replace cached data.
       const unresolved = e instanceof AddressResolutionError;
@@ -78,12 +80,15 @@ Deno.serve(async (req) => {
       symbol ? fetchLunarCrushWithCache(symbol, rec.address_key, chainId, supabase, !!force_refresh).catch(() => null) : Promise.resolve(null),
       links.telegram ? fetchTelegramMembers(links.telegram).catch(() => ({ members: null })) : Promise.resolve({ members: null }),
       links.discord ? fetchDiscordMemberCount(links.discord).catch(() => null) : Promise.resolve(null),
-      links.github ? fetchGitHubRepoData(links.github).catch(() => null) : Promise.resolve(null),
+      collectGithub(ctx, links.github),
     ]);
-    const score = scoreRecord(rec, {
-      community: { sentiment: lunar?.sentiment ?? null, socialDominance: lunar?.social_dominance ?? null, trend: lunar?.trend ?? null, discordMembers: discord ?? null, telegramMembers: telegram?.members ?? null },
+    // Community and development are Fields like everything else: a failed call is unknown with a reason, not 0 (Codex finding 8).
+    rec.social = {
       github,
-    });
+      community: communityFields({ symbol, lunar, discordLinked: !!links.discord, discordMembers: discord ?? null, telegramLinked: !!links.telegram, telegramMembers: telegram?.members ?? null }, rec.scanned_at),
+    };
+    rec.quality = quality(rec, ctx, rec.quality.flags);
+    const score = scoreRecord(rec);
     const rows = buildRows(rec, score, user_id || null);
 
     const writeErrors: Array<{ table: string; error: string }> = [];
@@ -100,8 +105,8 @@ Deno.serve(async (req) => {
         up('token_liquidity_cache', rows.token_liquidity_cache),
         up('token_community_cache', {
           ...key,
-          discord_members: discord ?? null,
-          telegram_members: telegram?.members ?? null,
+          discord_members: usable(rec.social.community.discord_members) ? rec.social.community.discord_members.value : null,
+          telegram_members: usable(rec.social.community.telegram_members) ? rec.social.community.telegram_members.value : null,
           galaxy_score: lunar?.galaxy_score ?? null,
           alt_rank: lunar?.alt_rank ?? null,
           sentiment: lunar?.sentiment ?? null,
@@ -111,23 +116,23 @@ Deno.serve(async (req) => {
           social_dominance: lunar?.social_dominance ?? null,
           trend: lunar?.trend ?? null,
           lunarcrush_fetched_at: lunar ? rec.scanned_at : null,
-          active_channels: [lunar ? 'lunarcrush' : null, telegram?.members ? 'telegram' : null, discord ? 'discord' : null].filter(Boolean),
+          active_channels: [lunar ? 'lunarcrush' : null, usable(rec.social.community.telegram_members) ? 'telegram' : null, usable(rec.social.community.discord_members) ? 'discord' : null].filter(Boolean),
           score: score.dimensions.community.score,
           updated_at: rec.scanned_at,
         }),
         up('token_development_cache', {
           ...key,
-          github_repo: github ? `${github.owner}/${github.repo}` : null,
-          is_open_source: github ? true : null,
-          stars: github?.stars ?? null,
-          forks: github?.forks ?? null,
-          commits_30d: github?.commits_30d ?? null,
-          contributors_count: github?.contributors_count ?? null,
-          open_issues: github?.open_issues ?? null,
-          last_commit: github?.last_push ?? null,
-          language: github?.language ?? null,
-          is_archived: github?.is_archived ?? null,
-          repo_created_at: github?.created_at ?? null,
+          github_repo: usable(github.repo) ? github.repo.value : null,
+          is_open_source: usable(github.repo) ? true : null,
+          stars: usable(github.stars) ? github.stars.value : null,
+          forks: usable(github.forks) ? github.forks.value : null,
+          commits_30d: usable(github.commits_30d) ? github.commits_30d.value : null,
+          contributors_count: usable(github.contributors_count) ? github.contributors_count.value : null,
+          open_issues: usable(github.open_issues) ? github.open_issues.value : null,
+          last_commit: usable(github.last_push) ? github.last_push.value : null,
+          language: usable(github.language) ? github.language.value : null,
+          is_archived: usable(github.is_archived) ? github.is_archived.value : null,
+          repo_created_at: usable(github.repo_created_at) ? github.repo_created_at.value : null,
           score: score.dimensions.development.score,
           updated_at: rec.scanned_at,
         }),
