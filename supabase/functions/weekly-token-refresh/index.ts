@@ -47,13 +47,13 @@ interface RefreshSummary {
   duration: number;
 }
 
-async function callFn(supabaseUrl: string, serviceKey: string, name: string, body: unknown, timeoutMs = 45000) {
+async function callFn(supabaseUrl: string, serviceKey: string, name: string, body: unknown, timeoutMs = 45000, extraHeaders: Record<string, string> = {}) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(`${supabaseUrl}/functions/v1/${name}`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json', ...extraHeaders },
       body: JSON.stringify(body),
       signal: ctrl.signal,
     });
@@ -95,6 +95,14 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const adminUserId = Deno.env.get('ADMIN_USER_ID');
+    // run-token-scan accepts a user JWT or x-internal-secret only. SUPABASE_SERVICE_ROLE_KEY is no
+    // longer a JWT, so without this header every scan in this job was rejected with 401.
+    const internalSecret = Deno.env.get('INTERNAL_API_SECRET');
+    const scanHeaders: Record<string, string> = internalSecret ? { 'x-internal-secret': internalSecret } : {};
+    // Test switch (cron-secret gated like the job itself): scan just these addresses, skip reports.
+    const reqBody = await req.json().catch(() => ({}));
+    const testTokens: string[] | null = Array.isArray(reqBody?.test_tokens) ? reqBody.test_tokens.map((a: unknown) => String(a).toLowerCase()) : null;
+    const skipReports = testTokens !== null;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     if (!adminUserId) {
@@ -105,11 +113,13 @@ Deno.serve(async (req) => {
     }
 
     const staleCutoff = new Date(Date.now() - STALE_AFTER_DAYS * 24 * 60 * 60 * 1000).toISOString();
-    const { data: tokenReports, error: fetchError } = await supabase
-      .from('token_reports')
-      .select('token_address, chain_id, token_symbol, updated_at')
-      .lt('updated_at', staleCutoff)
-      .order('updated_at', { ascending: true }); // stalest first — survives truncation
+    const { data: tokenReports, error: fetchError } = testTokens
+      ? await supabase.from('token_reports').select('token_address, chain_id, token_symbol, updated_at').in('token_address', testTokens)
+      : await supabase
+        .from('token_reports')
+        .select('token_address, chain_id, token_symbol, updated_at')
+        .lt('updated_at', staleCutoff)
+        .order('updated_at', { ascending: true }); // stalest first — survives truncation
 
     if (fetchError) {
       console.error('[WEEKLY-REFRESH] fetch error:', fetchError);
@@ -158,7 +168,7 @@ Deno.serve(async (req) => {
           force_refresh: true,
           user_id: null,
           batch_mode: true,
-        });
+        }, 45000, scanHeaders);
         if (r.ok) {
           summary.scanOk++;
         } else {
@@ -170,7 +180,7 @@ Deno.serve(async (req) => {
     );
 
     // Phase 2: report generation, concurrency 1 with backoff (shared OpenAI quota)
-    for (const token of batch) {
+    for (const token of skipReports ? [] : batch) {
       if (Date.now() > deadline) {
         summary.truncatedByBudget = true;
         break;
@@ -201,7 +211,7 @@ Deno.serve(async (req) => {
     // meant that on days when no token was stale (the common case, given
     // the staleness filter) the sitemap never rebuilt — so CMS changes
     // made outside a token refresh had no scheduled safety net.
-    {
+    if (!skipReports) {
       try {
         await supabase.functions.invoke('generate-sitemap', {
           body: { trigger_source: 'weekly_refresh', timestamp: new Date().toISOString() },
