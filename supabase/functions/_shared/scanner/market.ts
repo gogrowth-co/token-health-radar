@@ -125,6 +125,7 @@ export interface UnlockData {
   next_unlock_amount: Field<number>;
   unlock_30d_amount: Field<number>;
   unlock_90d_amount: Field<number>;
+  unlock_365d_amount: Field<number>;
   last_scheduled_event: Field<string>;
   // Supply the dataset does not schedule at all ("tbd"): the residual uncertainty behind every "no unlocks" claim.
   unscheduled_supply: Field<number>;
@@ -171,7 +172,7 @@ export function resetUnlockCache() {
 export async function fetchUnlocks(ctx: ScanContext, coingeckoId: string | null, name: string | null, chainId: string, address: string, now = new Date()): Promise<UnlockData> {
   const all = (reason: any, detail?: string, refs: SourceRef[] = []): UnlockData => {
     const f = unknown<any>(reason, detail, refs);
-    return { emissions_source: f, next_unlock_date: f, next_unlock_amount: f, unlock_30d_amount: f, unlock_90d_amount: f, last_scheduled_event: f, unscheduled_supply: f };
+    return { emissions_source: f, next_unlock_date: f, next_unlock_amount: f, unlock_30d_amount: f, unlock_90d_amount: f, unlock_365d_amount: f, last_scheduled_event: f, unscheduled_supply: f };
   };
   const slugs = unlockSlugCandidates(coingeckoId, name);
   if (!slugs.length) return all('missing_input', 'no CoinGecko id or name to map to a DeFiLlama emissions dataset');
@@ -282,7 +283,13 @@ export function computeUnlocks(data: any, slug: string, ref: SourceRef, now: Dat
   const window = (d: number): Field<number> => {
     if (!complete) return unknown('no_data', `not measured: schedule incomplete (${incompleteWhy}); scheduled amounts alone would understate what can unlock`, [ref], { unit: 'tokens' });
     const coveredNote = seriesEnd < nowS + d * 86400 ? `dataset schedule ends ${iso(seriesEnd)} with no further scheduled unlocks` : undefined;
-    return ok(Math.max(0, cumAt(nowS + d * 86400) - cumAt(nowS)), ref, { unit: 'tokens', confidence: 'medium', detail: coveredNote });
+    const amount = Math.max(0, cumAt(nowS + d * 86400) - cumAt(nowS));
+    // The completeness check only looks 90 days out. A schedule that is emitting now and ends inside a longer
+    // window may be renewed (governance-set emissions), so beyond 90 days the figure is only a lower bound.
+    if (d > 90 && seriesEnd < nowS + d * 86400 && increaseDays >= 3) {
+      return ok(amount, ref, { unit: 'tokens', confidence: 'low', bound: 'lower', detail: `lower bound: dataset schedule ends ${iso(seriesEnd)} while tokens are still unlocking; emissions after that date are not scheduled and not counted` });
+    }
+    return ok(amount, ref, { unit: 'tokens', confidence: 'medium', detail: coveredNote });
   };
 
   let nextDate: Field<string>;
@@ -309,6 +316,7 @@ export function computeUnlocks(data: any, slug: string, ref: SourceRef, now: Dat
     next_unlock_amount: nextAmt,
     unlock_30d_amount: window(30),
     unlock_90d_amount: window(90),
+    unlock_365d_amount: window(365),
     last_scheduled_event: lastAny ? ok(iso(lastAny.timestamp), ref, { unit: 'date' }) : unknown('no_data', undefined, [ref]),
     unscheduled_supply: unscheduled,
   };

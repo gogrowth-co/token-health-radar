@@ -122,7 +122,7 @@ Deno.test('labels: conservative classification', () => {
 
 function fakeRecord(over: Partial<Record<string, any>> = {}): ScanRecord {
   const u = unknown<any>('no_data');
-  const chainKeys = ['decimals', 'total_supply_onchain', 'token_standard', 'mint_authority_active', 'freeze_authority_active', 'permanent_delegate', 'transfer_hook', 'transfer_tax_pct', 'buy_tax_pct', 'sell_tax_pct', 'honeypot', 'upgradeable_proxy', 'owner_address', 'pausable', 'blacklist', 'liquidity_locked_pct', 'creator_holding_pct', 'holder_count', 'top1_pct', 'top5_pct', 'top10_pct', 'top20_pct', 'top10_excl_noncirculating_pct', 'noncirculating_labeled_pct', 'gini_coefficient', 'top_holders'];
+  const chainKeys = ['decimals', 'total_supply_onchain', 'token_standard', 'mint_authority_active', 'freeze_authority_active', 'permanent_delegate', 'transfer_hook', 'transfer_tax_pct', 'buy_tax_pct', 'sell_tax_pct', 'honeypot', 'upgradeable_proxy', 'owner_address', 'pausable', 'blacklist', 'liquidity_locked_pct', 'creator_holding_pct', 'burned_supply', 'metadata_update_authority_active', 'holder_count', 'top1_pct', 'top5_pct', 'top10_pct', 'top20_pct', 'top10_excl_noncirculating_pct', 'noncirculating_labeled_pct', 'gini_coefficient', 'top_holders'];
   const marketKeys = ['coingecko_id', 'name', 'symbol', 'logo_url', 'links', 'categories', 'platform_count', 'canonical_address', 'price_usd', 'market_cap_usd', 'fdv_usd', 'volume_24h_usd', 'circulating_supply', 'total_supply_market', 'max_supply'];
   const rec: any = {
     schema_version: 1,
@@ -134,8 +134,8 @@ function fakeRecord(over: Partial<Record<string, any>> = {}): ScanRecord {
     market: Object.fromEntries(marketKeys.map((k) => [k, u])),
     chain: Object.fromEntries(chainKeys.map((k) => [k, u])),
     liquidity: { dex_liquidity_usd: u, pool_count: u, top_pools: u, dex_volume_24h_usd: u, slippage_10k_pct: u, slippage_100k_pct: u },
-    unlocks: { emissions_source: u, next_unlock_date: u, next_unlock_amount: u, unlock_30d_amount: u, unlock_90d_amount: u, last_scheduled_event: u, unscheduled_supply: u },
-    derived: { circulating_ratio: u, noncirculating_supply: u, max_supply_headroom: u, fdv_to_mcap: u, unlock_30d_pct_of_circ: u, unlock_90d_pct_of_circ: u },
+    unlocks: { emissions_source: u, next_unlock_date: u, next_unlock_amount: u, unlock_30d_amount: u, unlock_90d_amount: u, unlock_365d_amount: u, last_scheduled_event: u, unscheduled_supply: u },
+    derived: { circulating_ratio: u, noncirculating_supply: u, max_supply_headroom: u, fdv_to_mcap: u, unlock_30d_pct_of_circ: u, unlock_90d_pct_of_circ: u, unlock_365d_pct_of_circ: u },
     quality: { flags: [] },
   };
   for (const [k, v] of Object.entries(over)) {
@@ -219,7 +219,10 @@ Deno.test('address: a lowercased mint containing L is recovered from CoinGecko a
     const rec = await collectToken(EXACT_L_MINT.toLowerCase(), 'solana');
     assertEquals(rec.address_canonical.value, EXACT_L_MINT);
     assert(rpcAddresses.length >= 2, 'expected mint-level RPC calls');
-    assert(rpcAddresses.every((a) => a === EXACT_L_MINT), `RPC must only see the exact-case mint, saw ${rpcAddresses.join(', ')}`);
+    // The Metaplex metadata account is derived FROM the exact-case mint; it is the only other address allowed.
+    const pda = await metadataPda(EXACT_L_MINT);
+    assert(rpcAddresses.every((a) => a === EXACT_L_MINT || a === pda), `RPC must only see the exact-case mint (or its metadata PDA), saw ${rpcAddresses.join(', ')}`);
+    assert(!rpcAddresses.includes(await metadataPda(EXACT_L_MINT.toLowerCase()).catch(() => 'n/a')), 'metadata PDA must be derived from the exact-case mint');
   } finally {
     restore();
   }
@@ -530,7 +533,7 @@ Deno.test('unlocks: linear vesting still running has no "none_scheduled" date bu
 
 Deno.test('unlocks: "no unlocks" inferred from full circulation is an UPPER BOUND, never zero, never a scheduled amount', () => {
   const nf = unknown<any>('not_found');
-  const unl = { emissions_source: nf, next_unlock_date: nf, next_unlock_amount: nf, unlock_30d_amount: nf, unlock_90d_amount: nf, last_scheduled_event: nf, unscheduled_supply: nf };
+  const unl = { emissions_source: nf, next_unlock_date: nf, next_unlock_amount: nf, unlock_30d_amount: nf, unlock_90d_amount: nf, unlock_365d_amount: nf, last_scheduled_event: nf, unscheduled_supply: nf };
   const two = { corroborated: true, confidence: 'high' as const };
   const base = { 'market.circulating_supply': ok(996, ref, two), 'market.total_supply_market': ok(1000, ref), 'chain.mint_authority_active': ok(false, ref, two) };
   const rec = fakeRecord(base);
@@ -1264,4 +1267,55 @@ Deno.test('sourcify: only a RUNTIME match for this exact chain/address counts (c
 Deno.test('sourcify: functions that switch a capability OFF are not the capability (disableMinting, unpause)', () => {
   assertEquals(matchingFunctions([fn('disableMinting'), fn('unpause'), fn('renounceOwnership')], /mint|pause/i), []);
   assertEquals(matchingFunctions([fn('mint'), fn('pause')], /mint|pause/i), ['mint', 'pause']);
+});
+
+import { b58decode, metadataPda, parseMetadata } from './metaplex.ts';
+
+Deno.test('metaplex: metadata PDA matches the live account for JUP (read on-chain 2026-09-25)', async () => {
+  assertEquals(await metadataPda('JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN'), '5pddDLA4taryBwRYGdtKmS9qkwssXD8vHECeNbCZnwUy');
+});
+
+Deno.test('metaplex: is_mutable is read after variable-length strings and creators; wrong mint or key is rejected', () => {
+  const mint = 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN';
+  const ua = '61aq585V8cR2sZBeawJFt2NPqmN7zDi1sws4KLs5xHXV';
+  const str = (s: string, pad: number) => {
+    const b = new Uint8Array(4 + pad);
+    new DataView(b.buffer).setUint32(0, pad, true);
+    b.set(new TextEncoder().encode(s), 4);
+    return b;
+  };
+  const build = (mutable: number, creators: number, key = 4, m = mint) => {
+    const parts = [new Uint8Array([key]), b58decode(ua), b58decode(m), str('Jupiter', 32), str('JUP', 10), str('https://x', 200), new Uint8Array(2)];
+    if (creators) {
+      const c = new Uint8Array(1 + 4 + creators * 34);
+      c[0] = 1;
+      new DataView(c.buffer).setUint32(1, creators, true);
+      parts.push(c);
+    } else parts.push(new Uint8Array([0]));
+    parts.push(new Uint8Array([1, mutable]));
+    const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+    let o = 0;
+    for (const p of parts) (out.set(p, o), (o += p.length));
+    return out;
+  };
+  assertEquals(parseMetadata(build(1, 0), mint), { updateAuthority: ua, isMutable: true, name: 'Jupiter' });
+  assertEquals(parseMetadata(build(0, 2), mint)?.isMutable, false);
+  assertEquals(parseMetadata(build(1, 0, 5), mint), null); // not Key::MetadataV1
+  assertEquals(parseMetadata(build(1, 0, 4, ua), mint), null); // metadata of a different mint
+  assertEquals(parseMetadata(build(7, 0), mint), null); // is_mutable must be a bool byte
+});
+
+Deno.test('unlocks: a schedule still emitting that ends inside 12 months gives a LOWER BOUND for the 12-month figure', () => {
+  const now = new Date('2026-09-25T00:00:00Z');
+  const t0 = now.getTime() / 1000;
+  const day = 86400;
+  // Emits 10 tokens/day from 60 days ago until 200 days from now; max supply fully covered, nothing "tbd".
+  const pts = Array.from({ length: 261 }, (_, i) => ({ timestamp: t0 - 60 * day + i * day, unlocked: i * 10 }));
+  const data = { metadata: { events: [] }, documentedData: { data: [{ label: 'emissions', data: pts }] }, supplyMetrics: { maxSupply: 2600, tbdAmount: 0 } };
+  const u = computeUnlocks(data, 'x', { source: 'defillama_emissions', fetched_at: now.toISOString() }, now);
+  assertEquals(u.unlock_90d_amount.status, 'ok');
+  assertEquals(u.unlock_90d_amount.bound, undefined);
+  assertEquals(u.unlock_365d_amount.status, 'ok');
+  assertEquals(u.unlock_365d_amount.bound, 'lower');
+  assertEquals(u.unlock_365d_amount.value, 2000);
 });

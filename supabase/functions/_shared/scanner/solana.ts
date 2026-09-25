@@ -8,6 +8,7 @@
 import { crossCheckBool, crossCheckNumber, type Field, ok, type SourceRef, unknown, usable } from './field.ts';
 import type { ScanContext } from './http.ts';
 import { applyLabel, buildConcentration, emptyConcentration, fetchNansenLabels, type Holder, round } from './holders.ts';
+import { metadataPda, parseMetadata } from './metaplex.ts';
 import type { ChainAdapter, ChainFacts } from './types.ts';
 
 const SYSTEM_PROGRAM = '11111111111111111111111111111111';
@@ -205,6 +206,44 @@ export const solanaAdapter: ChainAdapter = {
     }
     if (!concentration) concentration = emptyConcentration('no_data', 'holder data unavailable');
 
+    // ---- metadata update authority: can the name, symbol, logo and URI still be changed?
+    // Metaplex metadata account read from two RPC operators (is_mutable must agree); Token-2022 mints may
+    // instead carry their metadata in the tokenMetadata extension.
+    let metadataAuthority: Field<boolean>;
+    const pda = await metadataPda(mint).catch(() => null);
+    const readMeta = async (exclude?: string) => {
+      const r = await rpc('getAccountInfo', [pda, { encoding: 'base64' }], 'default', exclude);
+      const v = r.ok ? r.data?.value : null;
+      const bytes = v?.owner === 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s' && Array.isArray(v.data) ? Uint8Array.from(atob(v.data[0]), (c) => c.charCodeAt(0)) : null;
+      const md = bytes ? parseMetadata(bytes, mint) : null;
+      const ref: SourceRef = { ...r.ref, raw_excerpt: { method: 'getAccountInfo', metadata_account: pda, update_authority: md?.updateAuthority, is_mutable: md?.isMutable } };
+      return { r, v, md, ref };
+    };
+    const tokenMeta = ext('tokenMetadata');
+    if (!pda) {
+      metadataAuthority = unknown('no_data', 'could not derive the Metaplex metadata address', [], { unit: 'bool' });
+    } else {
+      const m1 = await readMeta();
+      const asField = (x: typeof m1, label: string): Field<boolean> =>
+        x.md
+          ? ok(x.md.isMutable, x.ref, { unit: 'bool', confidence: 'medium', detail: x.md.isMutable ? `metadata is mutable; update authority ${x.md.updateAuthority}` : 'metadata is immutable (is_mutable = false)' })
+          : unknown(x.r.ok ? 'no_data' : x.r.reason, `${label}: ${x.r.ok ? (x.v ? 'account is not a parsable Metaplex metadata account' : 'no Metaplex metadata account') : x.r.detail ?? 'RPC failed'}`, [x.ref], { unit: 'bool' });
+      if (m1.r.ok && !m1.v && is2022 && tokenMeta !== undefined) {
+        // No Metaplex account: the Token-2022 metadata extension is the metadata.
+        const ua = tokenMeta?.updateAuthority;
+        metadataAuthority = ua === null
+          ? ok(false, acctRef, { unit: 'bool', confidence: 'high', detail: 'Token-2022 tokenMetadata extension with no update authority' })
+          : typeof ua === 'string' && isValidSolanaAddress(ua)
+          ? ok(true, acctRef, { unit: 'bool', confidence: 'high', detail: `Token-2022 tokenMetadata update authority ${ua}` })
+          : unknown('no_data', 'Token-2022 tokenMetadata extension present but its update authority is malformed', [acctRef], { unit: 'bool' });
+      } else if (m1.r.ok && !m1.v) {
+        metadataAuthority = unknown('not_found', 'no Metaplex metadata account and no Token-2022 metadata extension', [m1.ref], { unit: 'bool' });
+      } else {
+        const m2 = m1.r.ok ? await readMeta(m1.r.ref.source) : m1;
+        metadataAuthority = crossCheckBool(asField(m1, 'metadata'), asField(m2, 'metadata (second RPC)'), 'metadata update authority');
+      }
+    }
+
     return {
       decimals: decimals !== null ? ok(decimals, acctRef, { unit: 'decimals', confidence: 'high' }) : acctMissing('decimals'),
       total_supply_onchain: crossCheckNumber(totalOnchain, mintSupply, { tolerance: 0.0001, unit: 'tokens', label: 'on-chain supply (getTokenSupply vs mint account)' }),
@@ -224,6 +263,8 @@ export const solanaAdapter: ChainAdapter = {
       ...concentration,
       liquidity_locked_pct: unknown('not_supported_on_chain', 'no free Solana source for LP lock status', [], { unit: 'pct' }),
       creator_holding_pct: unknown('not_supported_on_chain', 'needs an indexer to identify the deployer wallet', [], { unit: 'pct' }),
+      burned_supply: unknown('not_supported_on_chain', 'SPL burns destroy tokens (supply shrinks); measuring them needs the launch supply, which no free source provides', [], { unit: 'tokens' }),
+      metadata_update_authority_active: metadataAuthority,
     };
   },
 
