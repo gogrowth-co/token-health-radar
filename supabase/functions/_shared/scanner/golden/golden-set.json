@@ -139,15 +139,18 @@
           "evidence": "RPC freezeAuthority null; GeckoTerminal freeze_authority no"
         },
         "unlocks.next_unlock_date": {
-          "status": "unknown",
-          "reason": "not_found",
-          "evidence": "no DeFiLlama emissions dataset for bonk (404): not measured, must not read as 'no unlocks'"
+          "eq": "none_scheduled",
+          "evidence": "No DeFiLlama dataset for BONK (404), so this is derived: CoinGecko and CoinMarketCap both report circulating = total (87,994,386,166,828) and RPC shows mintAuthority null, so no supply can unlock or be minted. Checked 2026-09-24/25."
         },
         "flags": {
           "flag_absent": [
             "circulating_le_total",
             "decimals_order_of_magnitude"
           ]
+        },
+        "unlocks.emissions_source": {
+          "eq": "derived_fully_circulating",
+          "evidence": "see next_unlock_date"
         }
       }
     },
@@ -518,6 +521,10 @@
             "circulating_equals_total",
             "circulating_le_total"
           ]
+        },
+        "unlocks.next_unlock_date": {
+          "status": "unknown",
+          "evidence": "WBTC is mintable (custodian mint), so the fully-circulating inference must NOT apply"
         }
       }
     },

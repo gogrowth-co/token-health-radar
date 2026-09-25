@@ -72,6 +72,7 @@ export async function collectToken(
     quality: {} as DataQuality,
   };
   const flags = runPlausibility(rec, opts.previous);
+  rec.unlocks = inferNoUnlocks(rec);
   rec.derived = derive(rec);
   rec.quality = quality(rec, ctx, flags);
   return rec;
@@ -137,6 +138,34 @@ async function collectLiquidity(ctx: ScanContext, chainId: string, address: stri
     slip = { slippage_10k_pct: f, slippage_100k_pct: f };
   }
   return { ...base, ...slip };
+}
+
+/**
+ * No unlock dataset, but nothing left to unlock: when both market sources report
+ * (practically) all supply circulating AND supply cannot increase, upcoming
+ * unlocks are 0 by construction. Runs after plausibility, so a disputed or
+ * failed circulating figure never qualifies. Labeled as derived, with inputs.
+ */
+export function inferNoUnlocks(rec: ScanRecord): ScanRecord['unlocks'] {
+  const u = rec.unlocks;
+  if (u.emissions_source.reason !== 'not_found') return u; // dataset exists (or lookup failed): leave as is
+  const m = rec.market;
+  const c = rec.chain;
+  if (!usable(m.circulating_supply) || m.circulating_supply.confidence !== 'high' || !usable(m.total_supply_market)) return u;
+  const ratio = m.circulating_supply.value / m.total_supply_market.value;
+  if (ratio < 0.995) return u;
+  if (!usable(c.mint_authority_active) || c.mint_authority_active.value !== false) return u;
+  const sources = [...m.circulating_supply.sources, ...m.total_supply_market.sources, ...c.mint_authority_active.sources];
+  const detail = `derived: ${(ratio * 100).toFixed(2)}% of supply already circulating per CoinGecko and CoinMarketCap, and supply cannot increase (${rec.chain_id === 'solana' ? 'mint authority revoked' : 'not mintable'}); no DeFiLlama schedule exists`;
+  const zero = ok(0, sources, { unit: 'tokens', confidence: 'medium', detail });
+  return {
+    emissions_source: ok('derived_fully_circulating', sources, { confidence: 'medium', detail }),
+    next_unlock_date: ok('none_scheduled', sources, { unit: 'date', confidence: 'medium', detail }),
+    next_unlock_amount: zero,
+    unlock_30d_amount: zero,
+    unlock_90d_amount: zero,
+    last_scheduled_event: unknown('no_data', 'no schedule dataset', u.last_scheduled_event.sources),
+  };
 }
 
 function derive(rec: ScanRecord): ScanRecord['derived'] {

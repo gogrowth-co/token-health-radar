@@ -9,6 +9,7 @@ import { solanaAdapter } from './solana.ts';
 import { computeUnlocks, datasetMatches, unlockSlugCandidates } from './market.ts';
 import { classifyLabel } from './holders.ts';
 import { runPlausibility } from './plausibility.ts';
+import { inferNoUnlocks } from './collect.ts';
 import { scoreRecord } from './scoring.ts';
 import type { ScanRecord } from './types.ts';
 
@@ -221,4 +222,22 @@ Deno.test('unlocks: a series that stops while still emitting is unknown, not 0 (
   const done = computeUnlocks({ metadata: { events: [{ timestamp: t - 211 * day, noOfTokens: [500], unlockType: 'cliff' }] }, documentedData: { data: [{ label: 'team', data: finished }] } }, 'jup', ref, now);
   assertEquals(done.unlock_90d_amount.value, 0);
   assertEquals(done.next_unlock_date.value, 'none_scheduled');
+});
+
+Deno.test('unlocks: "none" is derived only when fully circulating per two sources AND supply cannot grow', () => {
+  const nf = unknown<any>('not_found');
+  const unl = { emissions_source: nf, next_unlock_date: nf, next_unlock_amount: nf, unlock_30d_amount: nf, unlock_90d_amount: nf, last_scheduled_event: nf };
+  const base = { 'market.circulating_supply': ok(100, ref, { confidence: 'high' }), 'market.total_supply_market': ok(100, ref), 'chain.mint_authority_active': ok(false, ref) };
+  const rec = fakeRecord(base);
+  rec.unlocks = unl;
+  assertEquals(inferNoUnlocks(rec).unlock_90d_amount.value, 0);
+  const mintable = fakeRecord({ ...base, 'chain.mint_authority_active': ok(true, ref) });
+  mintable.unlocks = unl;
+  assertEquals(inferNoUnlocks(mintable).unlock_90d_amount.status, 'unknown');
+  const oneSource = fakeRecord({ ...base, 'market.circulating_supply': ok(100, ref, { confidence: 'medium' }) });
+  oneSource.unlocks = unl;
+  assertEquals(inferNoUnlocks(oneSource).unlock_90d_amount.status, 'unknown');
+  const locked = fakeRecord({ ...base, 'market.circulating_supply': ok(80, ref, { confidence: 'high' }) });
+  locked.unlocks = unl;
+  assertEquals(inferNoUnlocks(locked).unlock_90d_amount.status, 'unknown');
 });
