@@ -10,6 +10,7 @@ export interface LunarCrushData {
   contributors_active: number | null;
   social_dominance: number | null;
   trend: string | null;
+  fetched_at?: string; // when the numbers were ACTUALLY obtained (a cache hit keeps its original time)
 }
 
 /**
@@ -191,7 +192,7 @@ export async function fetchLunarCrushWithCache(
       const fetchedAt = new Date(cached.lunarcrush_fetched_at);
       const ageHours = (Date.now() - fetchedAt.getTime()) / (1000 * 60 * 60);
       
-      if (ageHours < 6) {
+      if (ageHours >= 0 && ageHours < 6) { // a cache timestamp in the future is never 'fresh'
         console.log(`[LUNARCRUSH] Using cached data (${ageHours.toFixed(1)}h old) for ${tokenSymbol}`);
         return {
           galaxy_score: cached.galaxy_score,
@@ -201,16 +202,19 @@ export async function fetchLunarCrushWithCache(
           posts_active: cached.posts_active,
           contributors_active: cached.contributors_active,
           social_dominance: cached.social_dominance,
-          trend: cached.trend
+          trend: cached.trend,
+          fetched_at: cached.lunarcrush_fetched_at
         };
       }
     }
 
     console.log(`[LUNARCRUSH] Cache miss for ${tokenSymbol} — fetching fresh data`);
-    return await fetchLunarCrush(tokenSymbol);
+    const fresh = await fetchLunarCrush(tokenSymbol);
+    return fresh ? { ...fresh, fetched_at: new Date().toISOString() } : null;
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error(`[LUNARCRUSH] Cache check error: ${msg} — fetching fresh`);
-    return await fetchLunarCrush(tokenSymbol);
+    const fresh = await fetchLunarCrush(tokenSymbol);
+    return fresh ? { ...fresh, fetched_at: new Date().toISOString() } : null;
   }
 }

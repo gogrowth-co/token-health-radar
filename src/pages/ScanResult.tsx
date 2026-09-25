@@ -149,7 +149,7 @@ export default function ScanResult() {
                     success: true,
                     token_address: tokenAddress,
                     chain_id: chainId,
-                    overall_score: 0,
+                    overall_score: null,
                     token_info: {
                       name: selectedToken.name,
                       symbol: selectedToken.symbol,
@@ -163,11 +163,11 @@ export default function ScanResult() {
                       twitter_handle: "",
                       github_url: ""
                     },
-                    security: { score: 0, token_address: tokenAddress, chain_id: chainId },
-                    tokenomics: { score: 0, token_address: tokenAddress, chain_id: chainId },
-                    liquidity: { score: 0, token_address: tokenAddress, chain_id: chainId },
-                    development: { score: 0, token_address: tokenAddress, chain_id: chainId },
-                    community: { score: 0, token_address: tokenAddress, chain_id: chainId }
+                    security: { score: null, token_address: tokenAddress, chain_id: chainId },
+                    tokenomics: { score: null, token_address: tokenAddress, chain_id: chainId },
+                    liquidity: { score: null, token_address: tokenAddress, chain_id: chainId },
+                    development: { score: null, token_address: tokenAddress, chain_id: chainId },
+                    community: { score: null, token_address: tokenAddress, chain_id: chainId }
                   });
                   setLoading(false);
                   return;
@@ -206,14 +206,14 @@ export default function ScanResult() {
             
             if (result.status === 'rejected') {
               console.error(`[DB] ${cacheName} cache query failed:`, result.reason);
-              cacheData[cacheName] = { score: 0, token_address: tokenAddress, chain_id: chainId };
+              cacheData[cacheName] = { score: null, token_address: tokenAddress, chain_id: chainId };
             } else {
               const { data, error } = result.value;
               if (error) {
                 console.error(`[DB] ${cacheName} cache error:`, error);
-                cacheData[cacheName] = { score: 0, token_address: tokenAddress, chain_id: chainId };
+                cacheData[cacheName] = { score: null, token_address: tokenAddress, chain_id: chainId };
               } else {
-                cacheData[cacheName] = data || { score: 0, token_address: tokenAddress, chain_id: chainId };
+                cacheData[cacheName] = data || { score: null, token_address: tokenAddress, chain_id: chainId };
                 if (data && 'score' in data && (data as any).score > 0) {
                   hasValidScores = true;
                 }
@@ -221,18 +221,21 @@ export default function ScanResult() {
             }
           });
 
-          // Calculate overall score from valid scores only
+          // Overall score, same rule as scanner scoring v2 (_shared/scanner/scoring.ts):
+          // a null dimension is "not scored" and is left out; a real 0 counts.
+          // No overall unless security is scored and at least 3 of 5 dimensions are.
+          const scoreOf = (row: { score?: unknown } | null | undefined): number | null => (typeof row?.score === 'number' ? row.score : null);
           const scores = [
-            cacheData.security?.score || 0,
-            cacheData.tokenomics?.score || 0,
-            cacheData.liquidity?.score || 0,
-            cacheData.development?.score || 0,
-            cacheData.community?.score || 0
-          ].filter(score => score > 0);
-          
-          const overallScore = scores.length > 0 
+            scoreOf(cacheData.security),
+            scoreOf(cacheData.tokenomics),
+            scoreOf(cacheData.liquidity),
+            scoreOf(cacheData.development),
+            scoreOf(cacheData.community)
+          ].filter((score): score is number => score !== null);
+
+          const overallScore = scoreOf(cacheData.security) !== null && scores.length >= 3
             ? Math.round(scores.reduce((acc, curr) => acc + curr, 0) / scores.length)
-            : 0;
+            : null;
 
           console.log("ScanResult: Calculated overall score:", overallScore, "from scores:", scores);
 
@@ -410,7 +413,8 @@ export default function ScanResult() {
 
   // Get chain configuration for proper network display
   const chainConfig = getChainConfigByMoralisId(chainId);
-  const chainName = chainConfig?.name || "Ethereum";
+  const isSolanaChain = String(chainId).toLowerCase() === "solana";
+  const chainName = isSolanaChain ? "Solana" : (chainConfig?.name || "Ethereum");
 
   const displayDescription = (() => {
     const truncate = (s: string, max = 180) => (s.length <= max ? s : s.slice(0, max - 1).trimEnd() + '\u2026');
@@ -446,9 +450,9 @@ export default function ScanResult() {
     return finalText;
   })();
 
-  const networkName = chainConfig?.name === "Base" ? "BASE" : (chainConfig?.name === "Arbitrum" ? "ARB" : "ETH");
+  const networkName = isSolanaChain ? "SOL" : chainConfig?.name === "Base" ? "BASE" : (chainConfig?.name === "Arbitrum" ? "ARB" : "ETH");
   // Use the calculated overall score from the scan data
-  const overallScore = scanData.overall_score || 0;
+  const overallScore: number | null = typeof scanData.overall_score === 'number' ? scanData.overall_score : null;
 
   console.log("ScanResult: Displaying scores:", {
     overall: overallScore,
@@ -544,11 +548,11 @@ export default function ScanResult() {
           )}
 
           <CategoryScoresGrid
-            securityScore={scanData.security?.score || 0}
-            tokenomicsScore={scanData.tokenomics?.score || 0}
-            liquidityScore={scanData.liquidity?.score || 0}
-            communityScore={scanData.community?.score || 0}
-            developmentScore={scanData.development?.score || 0}
+            securityScore={typeof scanData.security?.score === 'number' ? scanData.security.score : null}
+            tokenomicsScore={typeof scanData.tokenomics?.score === 'number' ? scanData.tokenomics.score : null}
+            liquidityScore={typeof scanData.liquidity?.score === 'number' ? scanData.liquidity.score : null}
+            communityScore={typeof scanData.community?.score === 'number' ? scanData.community.score : null}
+            developmentScore={typeof scanData.development?.score === 'number' ? scanData.development.score : null}
             onCategoryClick={handleCategoryClick}
           />
 

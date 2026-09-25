@@ -1,0 +1,41 @@
+# Daily drift / provider-failure check for the token scanner (added 2026-09-24).
+# Runs the golden set (hand-verified expected values) and the offline unit tests.
+# A failure means: a provider is down or returning different data, or a token's
+# real values moved. Re-verify by hand before editing golden-set.json.
+# Read-only: no database access, no deploys. The deploy gate itself is scripts/deploy-scanner.sh
+# (edge functions deploy through the Supabase CLI, not through GitHub). Optional repo secrets improve
+# coverage (without them the second-source checks report "single source").
+name: scanner-golden-set
+on:
+  schedule:
+    - cron: '30 7 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'supabase/functions/_shared/scanner/**'
+      - 'supabase/functions/_shared/lunarcrushAPI.ts'
+      - 'supabase/functions/_shared/githubAPI.ts'
+      - 'supabase/functions/run-token-scan/**'
+      - 'supabase/functions/token-health-mcp/**'
+      - 'supabase/migrations/**'
+      - 'scripts/deploy-scanner.sh'
+      - '.github/workflows/scanner-golden-set.yml'
+jobs:
+  golden:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Unit tests (offline)
+        run: deno test -A supabase/functions/_shared/scanner/scanner.test.ts
+      - name: Golden set (live, read-only)
+        env:
+          COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+          COINMARKETCAP_API_KEY: ${{ secrets.COINMARKETCAP_API_KEY }}
+          NANSEN_API_KEY: ${{ secrets.NANSEN_API_KEY }}
+          HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
+          CHAINBASE_API_KEY: ${{ secrets.CHAINBASE_API_KEY }}
+        run: deno test -A supabase/functions/_shared/scanner/golden/

@@ -1,5 +1,5 @@
 // Helper function to find the main repository from an organization
-async function findMainRepository(owner: string, headers: any) {
+export async function findMainRepository(owner: string, headers: any) {
   try {
     // Try organization repos first
     let reposUrl = `https://api.github.com/orgs/${owner}/repos?sort=updated&per_page=100`;

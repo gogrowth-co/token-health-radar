@@ -1,0 +1,640 @@
+{
+  "description": "Golden test set for the THS scanner. Every expected value was verified by hand on 2026-09-24 from on-chain reads or primary sources, collected with standalone scripts that do not use the scanner code, and never copied from a THS page or report. The scanner must not deploy if any case fails (run: deno test -A golden/). A failure after deploy means drift or a provider problem: re-verify by hand before changing an expected value.",
+  "verified_at": "2026-09-24",
+  "verified_by": "claude-code session (scanner rebuild, Phases 1/1.5/2)",
+  "matchers": {
+    "eq": "value must equal exactly",
+    "approx + rel": "value within relative tolerance (0.02 = 2%)",
+    "approx + abs": "value within absolute tolerance (percentage points for pct fields)",
+    "status": "field status must be this (ok | unknown | disputed)",
+    "reason": "field reason code must be this",
+    "not_eq_path": "value must NOT equal the value at this other path (e.g. circulating must not be defaulted to total)",
+    "flag_absent": "no plausibility flag with this rule at severity warning or error",
+    "flag_present": "a plausibility flag with this rule (any severity) must exist"
+  },
+  "tokens": [
+    {
+      "id": "JUP",
+      "chain": "solana",
+      "address": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+      "why": "Acceptance token. The bug that started this rebuild: circulating stored as total, empty tokenomics inputs, lowercased mint.",
+      "expect": {
+        "chain.decimals": {
+          "eq": 6,
+          "evidence": "Solana RPC getTokenSupply, 2026-09-24T14:27:58Z"
+        },
+        "chain.total_supply_onchain": {
+          "approx": 6861486598,
+          "rel": 0.01,
+          "evidence": "Solana RPC getTokenSupply raw 6861486598387315 / 1e6, 2026-09-24T14:27:58Z (burns only lower it)"
+        },
+        "market.circulating_supply": {
+          "approx": 3319369204,
+          "rel": 0.03,
+          "status": "ok",
+          "evidence": "CoinGecko coins/jupiter-exchange-solana market_data.circulating_supply 3319369204.37 and CoinMarketCap quotes id 29210 3319369204.37, 2026-09-24"
+        },
+        "chain.top1_pct": {
+          "approx": 24.78,
+          "abs": 2,
+          "evidence": "RPC getTokenLargestAccounts / getTokenSupply, 2026-09-24T14:28:00Z"
+        },
+        "chain.top10_pct": {
+          "approx": 66.37,
+          "abs": 3,
+          "evidence": "RPC getTokenLargestAccounts sum of top 10 = 66.37%; GeckoTerminal top_10 66.372 on 2026-09-23"
+        },
+        "chain.top20_pct": {
+          "approx": 72.7,
+          "abs": 3,
+          "evidence": "RPC getTokenLargestAccounts sum of 20 = 72.70%"
+        },
+        "chain.mint_authority_active": {
+          "eq": false,
+          "evidence": "RPC getAccountInfo mintAuthority null"
+        },
+        "chain.freeze_authority_active": {
+          "eq": false,
+          "evidence": "RPC getAccountInfo freezeAuthority null"
+        },
+        "chain.token_standard": {
+          "eq": "spl-token",
+          "evidence": "mint account owner TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        "unlocks.next_unlock_date": {
+          "status": "unknown",
+          "reason": "no_data",
+          "evidence": "DeFiLlama emissions/jupiter: 35 events, none after 2026-02-25, BUT supplyMetrics.tbdAmount = 3,542,925,885.7 of 7,000,000,000 (50.6%) has no schedule, so 'no dated unlocks' is not 'nothing left to unlock' (checked 2026-09-25)"
+        },
+        "derived.circulating_ratio": {
+          "approx": 0.4838,
+          "abs": 0.03,
+          "evidence": "3319369204 / 6861486686 (CoinGecko pair)"
+        },
+        "flags": {
+          "flag_absent": [
+            "circulating_equals_total",
+            "decimals_order_of_magnitude",
+            "circulating_le_total"
+          ]
+        },
+        "unlocks.unscheduled_supply": {
+          "status": "ok",
+          "approx": 3542925886,
+          "rel": 0.02,
+          "evidence": "DeFiLlama emissions/jupiter supplyMetrics.tbdAmount"
+        }
+      }
+    },
+    {
+      "id": "JUP_LOWERCASED",
+      "chain": "solana",
+      "address": "jupyiwryjfskupiha7hker8vutaefosybkedznsdvcn",
+      "why": "What weekly-token-refresh sends (token_reports stores addresses lowercased). Before the fix: RPC value null read as 'authorities revoked', GeckoTerminal 404, score 63.",
+      "expect": {
+        "address_canonical": {
+          "eq": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+          "evidence": "CoinGecko detail_platforms.solana.contract_address; RPC getAccountInfo on the lowercased string returns value null (verified 2026-09-24)"
+        },
+        "chain.total_supply_onchain": {
+          "approx": 6861486598,
+          "rel": 0.01,
+          "evidence": "same as JUP"
+        },
+        "market.circulating_supply": {
+          "approx": 3319369204,
+          "rel": 0.03,
+          "evidence": "same as JUP"
+        },
+        "chain.mint_authority_active": {
+          "eq": false,
+          "evidence": "same as JUP"
+        }
+      }
+    },
+    {
+      "id": "BONK",
+      "chain": "solana",
+      "address": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "why": "Solana memecoin, burns, 5 decimals; both market sources report circulating equal to total (legitimately).",
+      "expect": {
+        "chain.decimals": {
+          "eq": 5,
+          "evidence": "RPC getTokenSupply decimals 5, 2026-09-24T14:28:03Z"
+        },
+        "chain.total_supply_onchain": {
+          "approx": 87994386122429,
+          "rel": 0.01,
+          "evidence": "RPC getTokenSupply"
+        },
+        "market.circulating_supply": {
+          "approx": 87994386166828,
+          "rel": 0.03,
+          "evidence": "CoinGecko 87994386166827.88 and CoinMarketCap id 23095 87994386166827.88"
+        },
+        "chain.top10_pct": {
+          "approx": 38.41,
+          "abs": 5,
+          "evidence": "RPC top 10 = 38.41%; GeckoTerminal top_10 38.5266 (2026-09-24T04:49Z)"
+        },
+        "chain.mint_authority_active": {
+          "eq": false,
+          "evidence": "RPC getAccountInfo mintAuthority null; GeckoTerminal mint_authority no"
+        },
+        "chain.freeze_authority_active": {
+          "eq": false,
+          "evidence": "RPC freezeAuthority null; GeckoTerminal freeze_authority no"
+        },
+        "unlocks.next_unlock_date": {
+          "status": "unknown",
+          "reason": "no_data",
+          "evidence": "No DeFiLlama dataset for BONK (404). Derived only as an UPPER BOUND: CoinGecko and CoinMarketCap both report circulating ~= total (87,994,386,166,828) and RPC shows mintAuthority null, so at most the tiny remainder could still enter circulation. A date is not invented. Checked 2026-09-24/25."
+        },
+        "flags": {
+          "flag_absent": [
+            "circulating_le_total",
+            "decimals_order_of_magnitude"
+          ]
+        },
+        "unlocks.emissions_source": {
+          "eq": "derived_fully_circulating",
+          "evidence": "see next_unlock_date"
+        },
+        "unlocks.unlock_90d_amount": {
+          "status": "ok",
+          "approx": 0,
+          "abs": 1000000000.0,
+          "evidence": "derived upper bound (remaining non-circulating supply), <0.002% of supply; not a scheduled amount"
+        }
+      }
+    },
+    {
+      "id": "PYTH",
+      "chain": "solana",
+      "address": "HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3",
+      "why": "Solana token with a large locked portion and a dated future cliff; an old report claimed it was fully circulating.",
+      "expect": {
+        "chain.decimals": {
+          "eq": 6,
+          "evidence": "RPC getTokenSupply"
+        },
+        "chain.total_supply_onchain": {
+          "approx": 9999959742,
+          "rel": 0.01,
+          "evidence": "RPC getTokenSupply 2026-09-24T14:28:07Z"
+        },
+        "market.circulating_supply": {
+          "approx": 7874959742,
+          "rel": 0.03,
+          "evidence": "CoinGecko 7874959741.99 and CoinMarketCap id 28177 7874959741.99"
+        },
+        "chain.top10_pct": {
+          "approx": 47.24,
+          "abs": 5,
+          "evidence": "RPC top 10 = 47.24%; GeckoTerminal top_10 47.2355"
+        },
+        "chain.mint_authority_active": {
+          "eq": false,
+          "evidence": "RPC mintAuthority null; GeckoTerminal no"
+        },
+        "chain.freeze_authority_active": {
+          "eq": false,
+          "evidence": "RPC freezeAuthority null; GeckoTerminal no"
+        },
+        "unlocks.next_unlock_date": {
+          "eq": "2027-05-21",
+          "evidence": "DeFiLlama emissions/pyth-network: next cliff 2027-05-21, 2,125,000,000 PYTH"
+        },
+        "unlocks.next_unlock_amount": {
+          "approx": 2125000000,
+          "rel": 0.01,
+          "evidence": "same"
+        },
+        "derived.circulating_ratio": {
+          "approx": 0.7875,
+          "abs": 0.03,
+          "evidence": "7874959742 / 10000000000 (CoinGecko pair)"
+        },
+        "flags": {
+          "flag_absent": [
+            "circulating_equals_total"
+          ]
+        }
+      }
+    },
+    {
+      "id": "UNI",
+      "chain": "0x1",
+      "address": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
+      "why": "Multichain governance token. GoPlus says not mintable; the verified source has mint(address,uint) callable by minter() = 0x1a9c8182... (governance timelock). Sources disagree, so the field must be disputed, not scored.",
+      "expect": {
+        "chain.decimals": {
+          "eq": 18,
+          "evidence": "eth_call decimals() via publicnode, 2026-09-24T14:32:33Z"
+        },
+        "chain.total_supply_onchain": {
+          "approx": 1000000000,
+          "rel": 0.005,
+          "evidence": "eth_call totalSupply() = 1e27 raw"
+        },
+        "market.circulating_supply": {
+          "approx": 620592423,
+          "rel": 0.03,
+          "evidence": "CoinGecko 620592422.61; CoinMarketCap id 7083 620588422.61"
+        },
+        "chain.top10_pct": {
+          "approx": 52.07,
+          "abs": 3,
+          "evidence": "Ethplorer top 10 52.07%; GoPlus top 10 52.08%"
+        },
+        "chain.upgradeable_proxy": {
+          "eq": false,
+          "evidence": "EIP-1967/OZ-legacy slots all zero; GoPlus is_proxy 0"
+        },
+        "chain.mint_authority_active": {
+          "status": "ok",
+          "eq": true,
+          "corroborated": true,
+          "evidence": "hand-verified truth: mintable by governance (Sourcify source: function mint(address dst, uint rawAmount); minter() returns the governance timelock). Sourcify + bytecode selector now settle what GoPlus (is_mintable 0) got wrong."
+        },
+        "chain.honeypot": {
+          "eq": false,
+          "evidence": "GoPlus is_honeypot 0; honeypot.is simulation isHoneypot false, buy/sell tax 0"
+        },
+        "chain.sell_tax_pct": {
+          "approx": 0,
+          "abs": 0.5,
+          "evidence": "honeypot.is sellTax 0; GoPlus sell_tax 0"
+        },
+        "unlocks.next_unlock_date": {
+          "status": "unknown",
+          "reason": "no_data",
+          "evidence": "DeFiLlama emissions/uniswap: cumulative series ends 2026-10-19 and increases on 29 of its final 30 days (ongoing daily emission), no forward schedule beyond that; checked 2026-09-24. Not measured, which is not 'no unlocks'."
+        },
+        "flags": {
+          "flag_absent": [
+            "decimals_order_of_magnitude"
+          ]
+        },
+        "unlocks.unlock_90d_amount": {
+          "status": "unknown",
+          "reason": "no_data",
+          "evidence": "same: 90-day window extends past the dataset's schedule while emissions are ongoing"
+        }
+      }
+    },
+    {
+      "id": "AAVE",
+      "chain": "0x1",
+      "address": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
+      "why": "Upgradeable proxy where GoPlus returns blank mint/pause/blacklist fields: blank must be unknown, never false.",
+      "expect": {
+        "chain.decimals": {
+          "eq": 18,
+          "evidence": "eth_call decimals()"
+        },
+        "chain.total_supply_onchain": {
+          "approx": 16000000,
+          "rel": 0.005,
+          "evidence": "eth_call totalSupply()"
+        },
+        "market.circulating_supply": {
+          "approx": 15429021,
+          "rel": 0.03,
+          "evidence": "CoinGecko 15429020.98; CoinMarketCap id 7278 15429020.98"
+        },
+        "chain.top10_pct": {
+          "approx": 43.84,
+          "abs": 3,
+          "evidence": "Ethplorer 43.84%; GoPlus 43.84%"
+        },
+        "chain.upgradeable_proxy": {
+          "eq": true,
+          "evidence": "EIP-1967 implementation slot = 0x5d4aa78b08bc7c530e21bf7447988b1be7991322; GoPlus is_proxy 1"
+        },
+        "unlocks.next_unlock_date": {
+          "status": "unknown",
+          "reason": "no_data",
+          "evidence": "DeFiLlama emissions/aave: series ends 2026-09-24 (today) and increases on 29 of its final 30 days (~4,732 AAVE); no forward schedule; checked 2026-09-24"
+        }
+      }
+    },
+    {
+      "id": "LINK",
+      "chain": "0x1",
+      "address": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
+      "why": "Large non-proxy ERC-677 with a big non-circulating reserve (ratio ~0.75).",
+      "expect": {
+        "chain.decimals": {
+          "eq": 18,
+          "evidence": "eth_call decimals()"
+        },
+        "chain.total_supply_onchain": {
+          "approx": 1000000000,
+          "rel": 0.005,
+          "evidence": "eth_call totalSupply()"
+        },
+        "market.circulating_supply": {
+          "approx": 748099970,
+          "rel": 0.03,
+          "evidence": "CoinGecko 748099970.42; CoinMarketCap id 1975 748099970.42"
+        },
+        "chain.top10_pct": {
+          "approx": 31.51,
+          "abs": 3,
+          "evidence": "Ethplorer 31.51%; GoPlus 31.51%"
+        },
+        "chain.upgradeable_proxy": {
+          "eq": false,
+          "evidence": "proxy slots zero; GoPlus is_proxy 0"
+        },
+        "chain.mint_authority_active": {
+          "status": "ok",
+          "eq": false,
+          "corroborated": true,
+          "evidence": "LINK (ERC677) verified source has no mint function (Sourcify ABI: transfer, transferAndCall, approve, ...); bytecode and GoPlus agree"
+        },
+        "chain.honeypot": {
+          "eq": false,
+          "evidence": "GoPlus 0; honeypot.is false"
+        },
+        "unlocks.next_unlock_date": {
+          "status": "unknown",
+          "reason": "no_data",
+          "evidence": "DeFiLlama emissions/chainlink: 126 events, none in the future, BUT supplyMetrics.tbdAmount = 251,990,421 (25.2%) has no schedule (checked 2026-09-25)"
+        },
+        "unlocks.unscheduled_supply": {
+          "status": "ok",
+          "approx": 251990421,
+          "rel": 0.05,
+          "evidence": "DeFiLlama emissions/chainlink supplyMetrics.tbdAmount"
+        }
+      }
+    },
+    {
+      "id": "ONDO",
+      "chain": "0x1",
+      "address": "0xfAbA6f8e4a5E8Ab82F62fe7C39859FA577269BE3",
+      "why": "Unlock/lockup schedule test: dated cliffs every January until 2028. Also a second GoPlus mintable error.",
+      "expect": {
+        "chain.decimals": {
+          "eq": 18,
+          "evidence": "eth_call decimals()"
+        },
+        "chain.total_supply_onchain": {
+          "approx": 10000000000,
+          "rel": 0.005,
+          "evidence": "eth_call totalSupply()"
+        },
+        "market.circulating_supply": {
+          "approx": 4869330647,
+          "rel": 0.03,
+          "evidence": "CoinGecko 4869330647; CoinMarketCap id 21159 4869330647"
+        },
+        "chain.top10_pct": {
+          "approx": 68.15,
+          "abs": 3,
+          "evidence": "Ethplorer 68.15%; GoPlus 68.23%"
+        },
+        "unlocks.next_unlock_date": {
+          "eq": "2027-01-17",
+          "evidence": "DeFiLlama emissions/ondo-finance: 2027-01-17 cliffs: Ecosystem Growth 792,052,170.84 + Protocol Development 660,000,000 + Private Sales 258,049,208.80"
+        },
+        "unlocks.next_unlock_amount": {
+          "approx": 1710101380,
+          "rel": 0.01,
+          "evidence": "sum of the three 2027-01-17 cliffs"
+        },
+        "unlocks.unlock_90d_amount": {
+          "status": "unknown",
+          "reason": "no_data",
+          "evidence": "DeFiLlama emissions/ondo-finance: no dated events in the window, but 23.8% of supply (2,376,156,513) is unscheduled ('tbd'), so a 0 would be a lower bound presented as a measurement (checked 2026-09-25)"
+        },
+        "chain.mint_authority_active": {
+          "status": "ok",
+          "eq": true,
+          "corroborated": true,
+          "evidence": "hand-verified truth: mintable (Sourcify exact_match source: function mint(address account, uint256 rawAmount), role-gated). GoPlus is_mintable 0 was wrong."
+        },
+        "chain.upgradeable_proxy": {
+          "eq": false,
+          "evidence": "proxy slots zero; GoPlus is_proxy 0"
+        }
+      }
+    },
+    {
+      "id": "USDC",
+      "chain": "0x1",
+      "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "why": "Stablecoin: upgradeable proxy, blacklist and pause authorities, and a global (all-chain) market supply far above the Ethereum contract's supply.",
+      "expect": {
+        "chain.decimals": {
+          "eq": 6,
+          "evidence": "eth_call decimals()"
+        },
+        "chain.total_supply_onchain": {
+          "approx": 50211382954,
+          "rel": 0.1,
+          "evidence": "eth_call totalSupply() 2026-09-24T14:33:04Z (mints/burns daily: 10% band)"
+        },
+        "chain.upgradeable_proxy": {
+          "eq": true,
+          "evidence": "OpenZeppelin-legacy implementation slot = 0x43506849d7c04f9138d1a2050bbf3a0c054402dd; GoPlus is_proxy 1"
+        },
+        "chain.owner_address": {
+          "eq": "0xfcb19e6a322b27c06842a71e8c725399f049ae3a",
+          "evidence": "eth_call owner()"
+        },
+        "chain.blacklist": {
+          "eq": true,
+          "evidence": "bytecode has blacklist(address) and isBlacklisted(address)"
+        },
+        "chain.pausable": {
+          "eq": true,
+          "evidence": "bytecode has pause() and paused(); paused() = 0 now"
+        },
+        "chain.mint_authority_active": {
+          "status": "ok",
+          "eq": true,
+          "corroborated": true,
+          "evidence": "USDC proxy: Sourcify resolves implementation FiatTokenV2_2 (0x43506849...) whose verified ABI has mint(address,uint256)"
+        },
+        "chain.top10_pct": {
+          "approx": 27.17,
+          "abs": 5,
+          "evidence": "Ethplorer 27.17%; GoPlus 27.16%"
+        },
+        "flags": {
+          "flag_absent": [
+            "circulating_le_total",
+            "decimals_order_of_magnitude"
+          ],
+          "flag_present": [
+            "onchain_vs_market_total"
+          ]
+        }
+      }
+    },
+    {
+      "id": "PEPE",
+      "chain": "0x1",
+      "address": "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+      "why": "Renounced memecoin whose blacklist function still exists (onlyOwner, owner 0x0). GoPlus also reports pausable, but the source has no pause function.",
+      "expect": {
+        "chain.decimals": {
+          "eq": 18,
+          "evidence": "eth_call decimals()"
+        },
+        "chain.total_supply_onchain": {
+          "approx": 420689899645077,
+          "rel": 0.01,
+          "evidence": "eth_call totalSupply()"
+        },
+        "chain.owner_address": {
+          "eq": "0x0000000000000000000000000000000000000000",
+          "evidence": "eth_call owner() = 0x0 (renounced)"
+        },
+        "chain.blacklist": {
+          "eq": true,
+          "evidence": "Sourcify source: function blacklist(address _address, bool _isBlacklisting) external onlyOwner"
+        },
+        "chain.pausable": {
+          "status": "ok",
+          "eq": false,
+          "corroborated": true,
+          "evidence": "hand-verified truth: not pausable (no pause function in the verified source); verified ABI + bytecode agree, GoPlus transfer_pausable 1 was wrong"
+        },
+        "chain.top10_pct": {
+          "approx": 36.75,
+          "abs": 3,
+          "evidence": "Ethplorer 36.75%; GoPlus 36.75%"
+        },
+        "chain.honeypot": {
+          "eq": false,
+          "evidence": "GoPlus 0; honeypot.is false"
+        }
+      }
+    },
+    {
+      "id": "WBTC",
+      "chain": "0x1",
+      "address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+      "why": "Wrapped token where circulating legitimately equals total: the plausibility rule must not raise a warning or error.",
+      "expect": {
+        "chain.decimals": {
+          "eq": 8,
+          "evidence": "eth_call decimals()"
+        },
+        "chain.total_supply_onchain": {
+          "approx": 116132.18,
+          "rel": 0.05,
+          "evidence": "eth_call totalSupply() 2026-09-24T14:33:18Z (mint/burn on custody: 5% band)"
+        },
+        "market.circulating_supply": {
+          "approx": 116132.18,
+          "rel": 0.05,
+          "status": "ok",
+          "evidence": "CoinGecko 116132.18 = total; CoinMarketCap id 3717 116499.19 = total"
+        },
+        "chain.owner_address": {
+          "eq": "0xca06411bd7a7296d7dbdd0050dfc846e95febeb7",
+          "evidence": "eth_call owner()"
+        },
+        "chain.upgradeable_proxy": {
+          "eq": false,
+          "evidence": "proxy slots zero; GoPlus is_proxy 0"
+        },
+        "chain.mint_authority_active": {
+          "eq": true,
+          "evidence": "bytecode mint(address,uint256); GoPlus is_mintable 1"
+        },
+        "flags": {
+          "flag_absent": [
+            "circulating_equals_total",
+            "circulating_le_total"
+          ]
+        },
+        "unlocks.next_unlock_date": {
+          "status": "unknown",
+          "evidence": "WBTC is mintable (custodian mint), so the fully-circulating inference must NOT apply"
+        }
+      }
+    },
+    {
+      "id": "ZEROX0",
+      "chain": "0x1",
+      "address": "0x5a3e6A77ba2f983eC0d371ea3B475F8Bc0811AD5",
+      "why": "Transfer-tax token (0x0). Tax read from contract storage, not just from scanners.",
+      "expect": {
+        "chain.decimals": {
+          "eq": 9,
+          "evidence": "eth_call decimals() = 9, 2026-09-24T14:57Z"
+        },
+        "chain.total_supply_onchain": {
+          "approx": 1000000000,
+          "rel": 0.005,
+          "evidence": "eth_call totalSupply() = 1e18 raw / 1e9"
+        },
+        "chain.buy_tax_pct": {
+          "approx": 5,
+          "abs": 0.5,
+          "evidence": "storage slot 7 (_finalTax, per Sourcify storageLayout) = 5; tax = amount*_finalTax/100 once _buyCount (slot 10 = 201324) > _reduceTaxAt 60. honeypot.is buyTax 4.99, GoPlus 0.0499"
+        },
+        "chain.sell_tax_pct": {
+          "approx": 5,
+          "abs": 0.5,
+          "evidence": "same mechanism; honeypot.is sellTax 4.99"
+        },
+        "chain.owner_address": {
+          "eq": "0x0000000000000000000000000000000000000000",
+          "evidence": "storage slot 0 (_owner) = 0"
+        },
+        "chain.honeypot": {
+          "eq": false,
+          "evidence": "honeypot.is simulation succeeded, isHoneypot false; GoPlus 0"
+        },
+        "chain.top10_pct": {
+          "approx": 51.37,
+          "abs": 5,
+          "evidence": "Ethplorer top 10 51.37%"
+        }
+      }
+    },
+    {
+      "id": "TBR",
+      "chain": "solana",
+      "address": "DB3kwRkM7TSLyUWAoU383qvLL4WUvmc8SHZt8adWpump",
+      "why": "Very new pump.fun memecoin (pool created 2026-09-24T14:28Z). Not listed on any market-data source: circulating must be unknown (not_listed), never defaulted to total. Holder shares move by the minute, so only stable facts are asserted.",
+      "expect": {
+        "chain.decimals": {
+          "eq": 6,
+          "evidence": "RPC getTokenSupply, 2026-09-24T14:37:14Z"
+        },
+        "chain.total_supply_onchain": {
+          "approx": 1000000000,
+          "rel": 0.001,
+          "evidence": "RPC getTokenSupply = 1,000,000,000 (pump.fun standard supply)"
+        },
+        "chain.mint_authority_active": {
+          "eq": false,
+          "evidence": "RPC mintAuthority null"
+        },
+        "chain.freeze_authority_active": {
+          "eq": false,
+          "evidence": "RPC freezeAuthority null"
+        },
+        "market.circulating_supply": {
+          "status": "unknown",
+          "reason": "not_listed",
+          "not_eq_path": "chain.total_supply_onchain",
+          "evidence": "CoinGecko coins/solana/contract 404 'coin not found'"
+        },
+        "market.coingecko_id": {
+          "status": "unknown",
+          "reason": "not_listed",
+          "evidence": "same"
+        }
+      }
+    }
+  ]
+}

@@ -15,7 +15,7 @@ import DataFreshnessIndicator from "@/components/DataFreshnessIndicator";
 import ShareScanResult from "@/components/ShareScanResult";
 
 // Mini health score widget with better visibility for dark and light themes
-function MiniHealthScore({ score = 0 }: { score: number }) {
+function MiniHealthScore({ score = null }: { score: number | null }) {
   const isMobile = useIsMobile();
   const size = isMobile ? 43 : 58; // 20% bigger: 36*1.2=43, 48*1.2=58
   const radius = isMobile ? 19 : 26; // 20% bigger: 16*1.2=19, 22*1.2=26
@@ -44,7 +44,7 @@ function MiniHealthScore({ score = 0 }: { score: number }) {
           fill="none"
           stroke="#F59E0B"
           strokeWidth={isMobile ? 3.6 : 4.8} // 20% bigger: 3*1.2=3.6, 4*1.2=4.8
-          strokeDasharray={`${arcLength} ${circumference - arcLength}`}
+          strokeDasharray={score === null ? `0 ${circumference}` : `${arcLength} ${circumference - arcLength}`}
           strokeDashoffset={circumference * 0.2}
           strokeLinecap="round"
           style={{ transition: "stroke-dasharray 0.3s" }}
@@ -58,11 +58,11 @@ function MiniHealthScore({ score = 0 }: { score: number }) {
           dy=".1em"
           className="fill-black dark:fill-white"
         >
-          {Math.round(score)}
+          {score === null ? '\u2014' : Math.round(score)}
         </text>
       </svg>
       <span className={`${isMobile ? 'text-[12px]' : 'text-[14.4px]'} font-medium mt-1 text-[#9CA3AF] dark:text-[#A3A3B3]`}>
-        Health Score
+        {score === null ? 'Not scored' : 'Health Score'}
       </span>
     </div>
   );
@@ -79,7 +79,7 @@ interface TokenProfileProps {
   price: number;
   priceChange: number;
   marketCap: string;
-  overallScore?: number;
+  overallScore?: number | null; // null = not scored
   description?: string;
   network?: string;
   chainId?: string;
@@ -97,7 +97,7 @@ export default function TokenProfile({
   price,
   priceChange,
   marketCap,
-  overallScore = 0,
+  overallScore = null,
   description,
   network = "ETH",
   chainId = "0x1",

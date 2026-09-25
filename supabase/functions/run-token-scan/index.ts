@@ -1,924 +1,178 @@
-// Full token scan with all API integrations
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { fetchMoralisPriceData, fetchMoralisTokenStats, fetchMoralisTokenPairs, fetchMoralisTokenOwners, fetchMoralisMetadata } from '../_shared/moralisAPI.ts'
-import { fetchGitHubRepoData } from '../_shared/githubAPI.ts'
-import { fetchTelegramMembers } from '../_shared/apifyAPI.ts'
-import { fetchLunarCrushWithCache } from '../_shared/lunarcrushAPI.ts'
-import { fetchDiscordMemberCount } from '../_shared/discordAPI.ts'
-import { calculateSecurityScore, calculateLiquidityScore, calculateTokenomicsScore, calculateDevelopmentScore, calculateCommunityScore } from '../_shared/scoringUtils.ts'
-import { isSolanaChain } from '../_shared/chainConfig.ts'
-import {
-  fetchSPLMintInfo, 
-  fetchSolanaLiquidity, 
-  fetchSolanaMarketData,
-  calculateSolanaSecurityScore,
-  calculateSolanaTokenomicsScore,
-  calculateSolanaLiquidityScore
-} from '../_shared/solanaAPI.ts'
-import { requireAuthOrInternal, getClientIp } from '../_shared/authGuard.ts'
-import { checkRateLimit, createRateLimitError } from '../_shared/rateLimit.ts'
-import { fetchCoinGeckoTokenData } from '../_shared/coingeckoAPI.ts'
-import { fetchGeckoTerminalPairs } from '../_shared/geckoterminalAPI.ts'
-import { fetchEtherscanTokenStats } from '../_shared/etherscanAPI.ts'
-import { fetchTopHolderConcentration, fetchPriceVolatility } from '../_shared/chainbaseAPI.ts'
-import { fetchNansenTopHolders } from '../_shared/nansenAPI.ts'
+// Full token scan, rebuilt 2026-09-24 on the scanner reliability layer
+// (_shared/scanner/). Data collection, provenance, cross-checks and
+// plausibility live in collectToken(); scoring (v2, null-gated) in
+// scoreRecord(); row mapping in buildRows(). This file only does auth, the
+// social/GitHub fetches, and database writes (every write's error is checked).
+//
+// Behaviour changes vs the pre-2026-09-24 version:
+// - Solana addresses are resolved to their exact case (a lowercased mint used
+//   to read as "authorities revoked" and score security 100).
+// - Circulating supply comes from CoinGecko + CoinMarketCap, never from total supply.
+// - Unknown inputs are null with a reason; a dimension missing a required input
+//   is not scored, and the overall score says which dimensions it excludes.
+// - Cache rows get a real updated_at, and all rows of a scan are written in one transaction (persist_token_scan).
+// - The SEO snapshot is only regenerated when the caller passes
+//   `regenerate_snapshot: true` (bot-facing HTML is published content).
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { fetchTelegramMembers } from '../_shared/apifyAPI.ts';
+import { fetchLunarCrushWithCache } from '../_shared/lunarcrushAPI.ts';
+import { fetchDiscordMemberCount } from '../_shared/discordAPI.ts';
+import { requireAuthOrInternal, getClientIp } from '../_shared/authGuard.ts';
+import { checkRateLimit, createRateLimitError } from '../_shared/rateLimit.ts';
+import { AddressResolutionError, collectToken, normalizeChain, quality } from '../_shared/scanner/collect.ts';
+import { scoreRecord } from '../_shared/scanner/scoring.ts';
+import { buildRows } from '../_shared/scanner/persist.ts';
+import { usable } from '../_shared/scanner/field.ts';
+import { ScanContext } from '../_shared/scanner/http.ts';
+import { collectGithub, communityFields } from '../_shared/scanner/social.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-internal-secret',
-}
+};
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-)
-
-// Chain config for EVM chains
-const CHAINS: Record<string, { goplus: string; name: string; moralis: string }> = {
-  '0x1': { goplus: '1', name: 'Ethereum', moralis: '0x1' },
-  '0x89': { goplus: '137', name: 'Polygon', moralis: '0x89' },
-  '0x38': { goplus: '56', name: 'BSC', moralis: '0x38' },
-  '0xa4b1': { goplus: '42161', name: 'Arbitrum', moralis: '0xa4b1' },
-  '0x2105': { goplus: '8453', name: 'Base', moralis: '0x2105' },
-}
-
-function normalizeChainId(chainId: string): string {
-  if (!chainId) return '0x1'
-  const clean = chainId.toLowerCase().trim()
-  
-  // Handle Solana explicitly
-  if (clean === 'solana' || clean === 'sol') return 'solana'
-  
-  if (clean.startsWith('0x')) return clean
-  const num = parseInt(clean)
-  if (!isNaN(num)) return '0x' + num.toString(16)
-  const nameMap: Record<string, string> = { ethereum: '0x1', eth: '0x1', polygon: '0x89', bsc: '0x38', base: '0x2105', arbitrum: '0xa4b1' }
-  return nameMap[clean] || '0x1'
-}
-
-// Simple fetch with timeout
-async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response | null> {
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), timeoutMs)
-  try {
-    const res = await fetch(url, { ...options, signal: controller.signal })
-    clearTimeout(timeout)
-    return res
-  } catch {
-    clearTimeout(timeout)
-    return null
-  }
-}
-
-// GoPlus security data
-async function fetchGoPlus(tokenAddress: string, chainId: string) {
-  const chain = CHAINS[chainId]
-  if (!chain) return null
-  
-  const APP_KEY = Deno.env.get('GOPLUS_APP_KEY')
-  const APP_SECRET = Deno.env.get('GOPLUS_APP_SECRET')
-  if (!APP_KEY || !APP_SECRET) {
-    console.log(`[GOPLUS] Missing API keys`)
-    return null
-  }
-
-  try {
-    console.log(`[GOPLUS] Fetching security data for ${tokenAddress} on chain ${chain.goplus}`)
-    
-    const time = Math.floor(Date.now() / 1000)
-    const input = `${APP_KEY}${time}${APP_SECRET}`
-    const hash = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(input))
-    const sign = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
-    
-    const authRes = await fetchWithTimeout('https://api.gopluslabs.io/api/v1/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ app_key: APP_KEY, time, sign })
-    }, 8000)
-    
-    if (!authRes?.ok) {
-      console.log(`[GOPLUS] Auth failed: ${authRes?.status}`)
-      return null
-    }
-    const authData = await authRes.json()
-    if (authData.code !== 1 || !authData.result?.access_token) {
-      console.log(`[GOPLUS] Invalid auth response`)
-      return null
-    }
-    
-    const token = authData.result.access_token
-    const url = `https://api.gopluslabs.io/api/v1/token_security/${chain.goplus}?contract_addresses=${tokenAddress.toLowerCase()}`
-    
-    const res = await fetchWithTimeout(url, {
-      method: 'GET',
-      headers: { 'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}` }
-    }, 8000)
-    
-    if (!res?.ok) {
-      console.log(`[GOPLUS] Security fetch failed: ${res?.status}`)
-      return null
-    }
-    const data = await res.json()
-    if (data.code !== 1 || !data.result) return null
-    
-    const tokenData = data.result[tokenAddress.toLowerCase()]
-    if (!tokenData) return null
-    
-    console.log(`[GOPLUS] Success - Got security data`)
-    
-    // Calculate liquidity lock days from LP holders
-    let liquidityLockedDays = 0
-    if (tokenData.lp_holders && Array.isArray(tokenData.lp_holders)) {
-      for (const holder of tokenData.lp_holders) {
-        if (holder.is_locked === 1 && holder.locked_detail) {
-          for (const lock of holder.locked_detail) {
-            if (lock.end_time) {
-              const endDate = new Date(lock.end_time * 1000)
-              const daysUntilUnlock = Math.max(0, Math.floor((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-              liquidityLockedDays = Math.max(liquidityLockedDays, daysUntilUnlock)
-            }
-          }
-        }
-      }
-    }
-    
-    return {
-      ownership_renounced: tokenData.is_open_source === '1',
-      can_mint: tokenData.is_mintable === '1',
-      honeypot_detected: tokenData.is_honeypot === '1',
-      is_proxy: tokenData.is_proxy === '1',
-      contract_verified: tokenData.is_open_source === '1',
-      is_liquidity_locked: tokenData.lp_holders?.some((h: any) => h.is_locked === 1) || false,
-      liquidity_locked_days: liquidityLockedDays,
-      is_blacklisted: tokenData.is_blacklisted === '1',
-      freeze_authority: tokenData.can_take_back_ownership === '1'
-    }
-  } catch (error) {
-    console.error(`[GOPLUS] Error:`, error)
-    return null
-  }
-}
-
-// Extract social links from Moralis metadata
-function extractSocialLinks(metadata: any): { twitter?: string; telegram?: string; discord?: string; github?: string; website?: string } {
-  const links: any = {}
-  
-  if (!metadata?.links) return links
-  
-  const metaLinks = metadata.links
-  
-  // Handle different link formats from Moralis
-  if (typeof metaLinks === 'object') {
-    // Check for twitter
-    if (metaLinks.twitter) links.twitter = metaLinks.twitter
-    else if (metaLinks.twitter_url) links.twitter = metaLinks.twitter_url
-    
-    // Check for telegram
-    if (metaLinks.telegram) links.telegram = metaLinks.telegram
-    else if (metaLinks.telegram_channel_identifier) links.telegram = `https://t.me/${metaLinks.telegram_channel_identifier}`
-    
-    // Check for discord
-    if (metaLinks.discord) links.discord = metaLinks.discord
-    
-    // Check for github
-    if (metaLinks.github) links.github = metaLinks.github
-    else if (metaLinks.repos_url?.github && metaLinks.repos_url.github.length > 0) {
-      links.github = metaLinks.repos_url.github[0]
-    }
-    
-    // Check for website
-    if (metaLinks.website) links.website = metaLinks.website
-    else if (metaLinks.homepage && metaLinks.homepage.length > 0) links.website = metaLinks.homepage[0]
-  }
-  
-  console.log(`[LINKS] Extracted social links:`, links)
-  return links
-}
-
-// Extract Twitter handle from URL
-function extractTwitterHandle(twitterUrl: string): string | null {
-  if (!twitterUrl) return null
-  const match = twitterUrl.match(/(?:twitter\.com|x\.com)\/([a-zA-Z0-9_]+)/)
-  return match ? match[1] : null
-}
+const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
 Deno.serve(async (req) => {
-  const startTime = Date.now()
-  const requestId = `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-  
-  console.log(`[${requestId}] ========== FULL TOKEN SCAN STARTED ==========`)
+  const startTime = Date.now();
+  const requestId = `scan_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  if (req.method === 'GET') return json({ success: true, message: 'Full token scan edge function running' });
 
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  if (req.method === 'GET') {
-    return new Response(JSON.stringify({ success: true, message: 'Full token scan edge function running' }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
-  }
-
-  // SECURITY: require either a valid Supabase JWT or x-internal-secret header.
-  const auth = await requireAuthOrInternal(req, corsHeaders)
-  if (auth.blocked) return auth.blocked
-
-  // Per-IP rate limit (defense in depth, even for authenticated users)
-  const ip = getClientIp(req)
-  const rl = await checkRateLimit({
-    maxRequests: auth.via === 'internal' ? 1000 : 30,
-    windowSeconds: 3600,
-    identifier: auth.userId || ip,
-    namespace: 'run-token-scan',
-  })
-  if (!rl.allowed) return createRateLimitError(rl, corsHeaders)
+  const auth = await requireAuthOrInternal(req, corsHeaders);
+  if (auth.blocked) return auth.blocked;
+  const rl = await checkRateLimit({ maxRequests: auth.via === 'internal' ? 1000 : 30, windowSeconds: 3600, identifier: auth.userId || getClientIp(req), namespace: 'run-token-scan' });
+  if (!rl.allowed) return createRateLimitError(rl, corsHeaders);
 
   try {
-    const bodyText = await req.text()
-    if (!bodyText.trim()) {
-      return new Response(JSON.stringify({ success: false, error: 'Empty body' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+    const bodyText = await req.text();
+    if (!bodyText.trim()) return json({ success: false, error: 'Empty body' }, 400);
+    const { token_address: rawAddress, chain_id, user_id, force_refresh, regenerate_snapshot, dry_run } = JSON.parse(bodyText);
+    const chainId = normalizeChain(chain_id || '0x1');
+    if (!chainId) return json({ success: false, error: 'Unsupported chain' }, 400);
+    if (!rawAddress || typeof rawAddress !== 'string') return json({ success: false, error: 'Invalid token address' }, 400);
+
+    // Previous scan (for the supply-jump plausibility rule). Tolerates the v2 columns not existing yet.
+    const prev = await supabase.from('token_scans').select('field_data, scanned_at').eq('token_address', rawAddress.trim().toLowerCase()).eq('chain_id', chainId).not('field_data', 'is', null).order('scanned_at', { ascending: false }).limit(1).maybeSingle();
+    const previous = prev.data?.field_data ? { total_supply_onchain: prev.data.field_data?.chain?.total_supply_onchain?.value ?? null, scanned_at: prev.data.scanned_at, record: prev.data.field_data } : null;
+
+    // Exact-case Solana mint stored by an earlier scan (the DB lowercases addresses). Ignored if the column doesn't exist yet.
+    const canon = chainId === 'solana'
+      ? await supabase.from('token_scans').select('canonical_address').eq('token_address', rawAddress.trim().toLowerCase()).eq('chain_id', chainId).not('canonical_address', 'is', null).order('scanned_at', { ascending: false }).limit(1).maybeSingle()
+      : null;
+    const canonicalHint: string | null = canon?.data?.canonical_address ?? null;
+
+    const ctx = new ScanContext();
+    let rec;
+    try {
+      rec = await collectToken(rawAddress, chainId, { ctx, previous, canonicalHint });
+    } catch (e) {
+      // Nothing is written when the address cannot be resolved: a failed scan must not replace cached data.
+      const unresolved = e instanceof AddressResolutionError;
+      return json({ success: false, error: (e as Error).message, error_code: unresolved ? 'address_not_resolved' : 'invalid_request', request_id: requestId }, unresolved ? 422 : 400);
     }
 
-    const { token_address: rawAddress, chain_id, user_id, force_refresh } = JSON.parse(bodyText)
-    const chainId = normalizeChainId(chain_id || '0x1')
-    
-    console.log(`[${requestId}] Token: ${rawAddress}, Chain: ${chainId}, Force: ${force_refresh}`)
+    // Social + GitHub inputs for the community/development dimensions (unchanged providers).
+    const links = usable(rec.market.links) ? rec.market.links.value : {};
+    const symbol = usable(rec.market.symbol) ? rec.market.symbol.value : null;
+    const [lunar, telegram, discord, github] = await Promise.all([
+      symbol ? fetchLunarCrushWithCache(symbol, rec.address_key, chainId, supabase, !!force_refresh).catch(() => null) : Promise.resolve(null),
+      links.telegram ? fetchTelegramMembers(links.telegram).catch(() => ({ members: null })) : Promise.resolve({ members: null }),
+      links.discord ? fetchDiscordMemberCount(links.discord).catch(() => null) : Promise.resolve(null),
+      collectGithub(ctx, links.github),
+    ]);
+    // Community and development are Fields like everything else: a failed call is unknown with a reason, not 0 (Codex finding 8).
+    rec.social = {
+      github,
+      community: communityFields({ symbol, lunar, discordLinked: !!links.discord, discordMembers: discord ?? null, telegramLinked: !!links.telegram, telegramMembers: telegram?.members ?? null }, rec.scanned_at),
+    };
+    rec.quality = quality(rec, ctx, rec.quality.flags);
+    const score = scoreRecord(rec);
+    const rows = buildRows(rec, score, user_id || null);
 
-    // Route to Solana scan if chain is Solana
-    if (isSolanaChain(chainId)) {
-      console.log(`[${requestId}] Routing to Solana scan path`)
-      return await scanSolanaToken(rawAddress, user_id, requestId, startTime)
-    }
-
-    // EVM scan path - normalize address to lowercase
-    const token_address = rawAddress?.toLowerCase().trim()
-    
-    if (!token_address || !/^0x[a-fA-F0-9]{40}$/.test(token_address)) {
-      return new Response(JSON.stringify({ success: false, error: 'Invalid token address' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
-    }
-
-    const chain = CHAINS[chainId]
-    if (!chain) {
-      return new Response(JSON.stringify({ success: false, error: 'Unsupported chain' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
-    }
-
-    // ========== PHASE 1: Core API Calls (parallel) ==========
-    console.log(`[${requestId}] Phase 1: Core API calls...`)
-    
-    // `let` (not `const`) for the four Moralis-sourced values that Phase 1.5
-    // below may overwrite with fallback data when Moralis itself fails.
-    // eslint-disable-next-line prefer-const
-    let [goplus, metadata, priceData, tokenStats, tokenPairs, tokenOwners] = await Promise.all([
-      fetchGoPlus(token_address, chainId),
-      fetchMoralisMetadata(token_address, chainId),
-      fetchMoralisPriceData(token_address, chainId),
-      fetchMoralisTokenStats(token_address, chainId),
-      fetchMoralisTokenPairs(token_address, chainId),
-      fetchMoralisTokenOwners(token_address, chainId)
-    ])
-    
-    console.log(`[${requestId}] Phase 1 results: goplus=${!!goplus}, metadata=${!!metadata}, price=${!!priceData}, stats=${!!tokenStats}, pairs=${!!tokenPairs}, owners=${!!tokenOwners}`)
-
-    // ========== PHASE 1.5: fallbacks for any Moralis call that failed ==========
-    // Added 2026-09-14 (Moralis plan lapsed 2026-09-01, all 5 endpoints 401).
-    // Each fallback only runs for the specific piece Moralis didn't provide —
-    // if Moralis is restored later, none of these calls fire and behavior is
-    // unchanged. These four are independent of each other and of the merge
-    // below, so they run in one Promise.all instead of sequential awaits —
-    // sequential awaits here is what took a plain scan from ~4s to ~15s+
-    // once Chainbase was added on top of the original three fallbacks.
-    // (Nansen's holder lookup is NOT in this batch — see below.)
-    const needsCoinGecko = !metadata || !priceData
-    const needsGeckoTerminal = !tokenPairs
-    const needsEtherscan = !tokenStats
-
-    const [cgFallback, gtFallback, esFallback, priceVolatility] = await Promise.all([
-      needsCoinGecko ? fetchCoinGeckoTokenData(token_address, chainId) : Promise.resolve(null),
-      needsGeckoTerminal ? fetchGeckoTerminalPairs(token_address, chainId) : Promise.resolve(null),
-      needsEtherscan ? fetchEtherscanTokenStats(token_address, chainId) : Promise.resolve(null),
-      fetchPriceVolatility(token_address, chainId, 7),
-    ])
-
-    console.log(`[${requestId}] CoinGecko fallback: ${cgFallback ? 'got data' : needsCoinGecko ? 'no data' : 'not needed'}`)
-    console.log(`[${requestId}] GeckoTerminal fallback: ${gtFallback ? `${gtFallback.total_pairs} pools` : needsGeckoTerminal ? 'no data' : 'not needed'}`)
-    console.log(`[${requestId}] Etherscan fallback: ${esFallback ? `supply=${esFallback.total_supply}` : needsEtherscan ? 'no data' : 'not needed'}`)
-    console.log(`[${requestId}] Chainbase price volatility: ${priceVolatility ? `${priceVolatility.volatility_pct.toFixed(1)}% over ${priceVolatility.data_points} points` : 'no data'}`)
-
-    // Merge fallback data into the same variable names scoringUtils already
-    // consumes below, so nothing downstream needs to know which source won.
-    if (!metadata && cgFallback) {
-      metadata = {
-        name: cgFallback.name,
-        symbol: cgFallback.symbol,
-        decimals: 18,
-        logo: cgFallback.logo,
-        thumbnail: cgFallback.logo,
-        total_supply: cgFallback.total_supply || '0',
-        verified_contract: false,
-        possible_spam: false,
-        description: cgFallback.description,
-        links: cgFallback.links,
-        security_score: null,
-        market_cap: cgFallback.market_cap,
-        circulating_supply: cgFallback.circulating_supply,
-        fully_diluted_valuation: null,
-      }
-    }
-    if (!priceData && cgFallback) {
-      priceData = {
-        current_price_usd: cgFallback.current_price_usd,
-        price_change_24h: cgFallback.price_change_24h,
-        market_cap_usd: cgFallback.market_cap || 0,
-        trading_volume_24h_usd: cgFallback.trading_volume_24h_usd,
-        name: cgFallback.name,
-        symbol: cgFallback.symbol,
-      }
-    }
-    if (!tokenPairs && gtFallback) {
-      tokenPairs = {
-        total_pairs: gtFallback.total_pairs,
-        total_liquidity_usd: gtFallback.total_liquidity_usd,
-        major_pairs: gtFallback.major_pairs,
-      }
-    }
-    if (!tokenStats && esFallback) {
-      tokenStats = {
-        total_supply: esFallback.total_supply || '0',
-        holders: 0,
-        transfers: 0,
-        total_supply_formatted: esFallback.total_supply || '0',
-        decimals: null,
-        name: null,
-        symbol: null,
-      }
-    }
-
-    // Holder concentration: Nansen first — it excludes labeled protocol/
-    // pool/lock addresses from the top 10 (see nansenAPI.ts; verified live
-    // on AERO, whose #1 "holder" at 49.9% of supply is its own vote-escrow
-    // contract, not a whale). Chainbase is a tier-3 fallback, used only when
-    // both Moralis Owners AND Nansen are unavailable — it can't tell a
-    // whale from protocol infrastructure, so it's a strictly lower-quality
-    // source and only worth calling when nothing better is available.
-    //
-    // Neither call can join the Promise.all above: both need metadata's
-    // total_supply (Nansen too, as of the fix below — its own
-    // ownership_percentage field is unreliable), which only exists after
-    // the CoinGecko merge just above. This does mean Nansen's call is back
-    // to being sequential rather than parallelized with the batch above —
-    // a deliberate trade: correctness (a real bug, not hypothetical — see
-    // fix note) over shaving off this one call's latency.
-    // Must be TOTAL supply, not circulating — see chainbaseAPI.ts for why
-    // (circulating-only denominator produced an impossible >100% result
-    // live on AERO, whose circulating supply is ~half its total supply).
-    const totalSupply = metadata?.total_supply ? parseFloat(metadata.total_supply) : null
-
-    let nansenResult: Awaited<ReturnType<typeof fetchNansenTopHolders>> = null
-    if (!tokenOwners) {
-      nansenResult = await fetchNansenTopHolders(token_address, chainId, totalSupply)
-      console.log(`[${requestId}] Nansen holder concentration: ${nansenResult ? `top10=${nansenResult.top_10_pct_of_supply?.toFixed(1)}% (excluded ${nansenResult.excluded_infra_pct.toFixed(1)}% as protocol infra)` : 'no data'}`)
-    }
-
-    let holderConcentration: Awaited<ReturnType<typeof fetchTopHolderConcentration>> = null
-    let concentrationSource: 'nansen' | 'chainbase' | null = nansenResult ? 'nansen' : null
-    if (!tokenOwners && !nansenResult) {
-      holderConcentration = await fetchTopHolderConcentration(token_address, chainId, totalSupply)
-      concentrationSource = holderConcentration ? 'chainbase' : null
-      console.log(`[${requestId}] Chainbase holder concentration (tier-3 fallback): ${holderConcentration ? `top10=${holderConcentration.top_10_pct_of_supply?.toFixed(1)}%` : 'no data'}`)
-    }
-
-    const concentrationPct = nansenResult?.top_10_pct_of_supply ?? holderConcentration?.top_10_pct_of_supply ?? null
-
-    // Extract social links for Phase 2 (now works from either Moralis or the
-    // CoinGecko fallback metadata above, since both populate `metadata.links`
-    // in the same shape).
-    const socialLinks = extractSocialLinks(metadata)
-
-    // ========== PHASE 2: Social & GitHub API Calls (parallel) ==========
-    console.log(`[${requestId}] Phase 2: Social & GitHub API calls...`)
-    console.log(`[${requestId}] Social links for Phase 2:`, socialLinks)
-    
-    const twitterHandle = extractTwitterHandle(socialLinks.twitter || '')
-    const symbol = metadata?.symbol || priceData?.symbol || 'UNKNOWN'
-    
-    const [lunarCrushData, telegramData, discordMembers, githubData] = await Promise.all([
-      fetchLunarCrushWithCache(symbol, token_address, chainId, supabase, !!force_refresh),
-      socialLinks.telegram ? fetchTelegramMembers(socialLinks.telegram) : Promise.resolve({ members: null }),
-      socialLinks.discord ? fetchDiscordMemberCount(socialLinks.discord) : Promise.resolve(null),
-      socialLinks.github ? fetchGitHubRepoData(socialLinks.github) : Promise.resolve(null)
-    ])
-    
-    console.log(`[${requestId}] Phase 2 results: lunarcrush=${!!lunarCrushData}, telegram=${telegramData?.members || 0}, discord=${discordMembers || 0}, github=${!!githubData}`)
-
-    // ========== PHASE 3: Calculate Scores ==========
-    console.log(`[${requestId}] Phase 3: Calculating scores...`)
-    
-    // Security Score
-    const securityScore = calculateSecurityScore(goplus, null, goplus)
-    console.log(`[${requestId}] Security score: ${securityScore}`)
-    
-    // Liquidity Score
-    const liquidityData = {
-      trading_volume_24h_usd: priceData?.trading_volume_24h_usd || 0,
-      market_cap_usd: metadata?.market_cap || 0,
-      is_liquidity_locked: goplus?.is_liquidity_locked || false,
-      liquidity_locked_days: goplus?.liquidity_locked_days || 0
-    }
-    const liquidityScore = calculateLiquidityScore(liquidityData, liquidityData)
-    console.log(`[${requestId}] Liquidity score: ${liquidityScore}`)
-    
-    // Tokenomics Score
-    const tokenomicsScore = calculateTokenomicsScore(
-      metadata,
-      priceData,
-      tokenStats,
-      tokenOwners,
-      tokenPairs,
-      {
-        top_10_pct_of_supply: concentrationPct,
-        source: concentrationSource ?? undefined,
-        volatility_pct: priceVolatility?.volatility_pct ?? null,
-        period_days: priceVolatility?.period_days,
-      }
-    )
-    console.log(`[${requestId}] Tokenomics score: ${tokenomicsScore}`)
-    
-    // Community Score
-    const communityScore = calculateCommunityScore({
-      sentiment: lunarCrushData?.sentiment ?? null,
-      socialDominance: lunarCrushData?.social_dominance ?? null,
-      trend: lunarCrushData?.trend ?? null,
-      discordMembers: discordMembers || 0,
-      telegramMembers: telegramData?.members || 0
-    })
-    console.log(`[${requestId}] Community score: ${communityScore}`)
-    
-    // Development Score
-    const developmentScore = calculateDevelopmentScore(githubData)
-    console.log(`[${requestId}] Development score: ${developmentScore}`)
-    
-    // Overall Score
-    const scores = [securityScore, liquidityScore, tokenomicsScore, communityScore, developmentScore]
-    const overallScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-    console.log(`[${requestId}] Overall score: ${overallScore}`)
-
-    // ========== PHASE 4: Save to Database ==========
-    console.log(`[${requestId}] Phase 4: Saving to database...`)
-    
-    const name = metadata?.name || priceData?.name || `Token ${token_address.slice(0, 8)}`
-    const description = metadata?.description || `${name} (${symbol}) on ${chain.name}`
-
-    await Promise.all([
-      // Token data cache
-      supabase.from('token_data_cache').upsert({
-        token_address,
-        chain_id: chainId,
-        name,
-        symbol,
-        description,
-        logo_url: metadata?.logo || metadata?.thumbnail || '',
-        current_price_usd: priceData?.current_price_usd || 0,
-        price_change_24h: priceData?.price_change_24h,
-        market_cap_usd: metadata?.market_cap || null,
-        circulating_supply: metadata?.circulating_supply ? parseFloat(metadata.circulating_supply) : null,
-        website_url: socialLinks.website || null,
-        twitter_handle: twitterHandle || null,
-        github_url: socialLinks.github || null
-      }, { onConflict: 'token_address,chain_id' }),
-      
-      // Security cache
-      supabase.from('token_security_cache').upsert({
-        token_address,
-        chain_id: chainId,
-        ownership_renounced: goplus?.ownership_renounced ?? null,
-        can_mint: goplus?.can_mint ?? null,
-        honeypot_detected: goplus?.honeypot_detected ?? null,
-        contract_verified: goplus?.contract_verified ?? null,
-        is_proxy: goplus?.is_proxy ?? null,
-        is_liquidity_locked: goplus?.is_liquidity_locked ?? false,
-        is_blacklisted: goplus?.is_blacklisted ?? null,
-        freeze_authority: goplus?.freeze_authority ?? null,
-        liquidity_lock_info: goplus?.liquidity_locked_days ? `${goplus.liquidity_locked_days} days` : null,
-        score: securityScore
-      }, { onConflict: 'token_address,chain_id' }),
-      
-      // Tokenomics cache
-      supabase.from('token_tokenomics_cache').upsert({
-        token_address,
-        chain_id: chainId,
-        total_supply: metadata?.total_supply ? parseFloat(metadata.total_supply) : null,
-        circulating_supply: metadata?.circulating_supply ? parseFloat(metadata.circulating_supply) : null,
-        dex_liquidity_usd: tokenPairs?.total_liquidity_usd || null,
-        major_dex_pairs: tokenPairs?.major_pairs || null,
-        // Stays null when only Nansen/Chainbase are available — that metric
-        // is deliberately NOT a Gini coefficient (see nansenAPI.ts /
-        // chainbaseAPI.ts) and must never be stored under this column as if
-        // it were one.
-        distribution_gini_coefficient: tokenOwners?.gini_coefficient || null,
-        holder_concentration_risk: tokenOwners?.concentration_risk
-          || (nansenResult?.top_10_pct_of_supply != null
-            ? `Top 10 of ${nansenResult.holders_analyzed} sampled hold ${nansenResult.top_10_pct_of_supply.toFixed(1)}% of total supply, excluding ${nansenResult.excluded_infra_pct.toFixed(1)}% held by protocol/pool/lock addresses (Nansen estimate, not Gini)`
-            : holderConcentration?.top_10_pct_of_supply != null
-            ? `Top 10 of ${holderConcentration.holders_analyzed} sampled hold ${holderConcentration.top_10_pct_of_supply.toFixed(1)}% of total supply (Chainbase estimate, not Gini)`
-            : null),
-        top_holders_count: tokenOwners?.total_holders || null,
-        data_confidence_score: (tokenStats && (tokenOwners || nansenResult || holderConcentration) && tokenPairs) ? 80 : (tokenStats || tokenOwners || nansenResult || holderConcentration) ? 50 : 20,
-        last_holder_analysis: (tokenOwners || nansenResult || holderConcentration) ? new Date().toISOString() : null,
-        score: tokenomicsScore
-      }, { onConflict: 'token_address,chain_id' }),
-      
-      // Liquidity cache
-      supabase.from('token_liquidity_cache').upsert({
-        token_address,
-        chain_id: chainId,
-        trading_volume_24h_usd: priceData?.trading_volume_24h_usd || 0,
-        liquidity_locked_days: goplus?.liquidity_locked_days || null,
-        holder_distribution: tokenOwners?.concentration_risk || null,
-        dex_depth_status: tokenPairs?.total_liquidity_usd > 1000000 ? 'Deep' : 
-                         tokenPairs?.total_liquidity_usd > 100000 ? 'Moderate' : 
-                         tokenPairs?.total_liquidity_usd > 10000 ? 'Shallow' : 'Very Low',
-        score: liquidityScore
-      }, { onConflict: 'token_address,chain_id' }),
-      
-      // Community cache
-      supabase.from('token_community_cache').upsert({
-        token_address,
-        chain_id: chainId,
-        twitter_followers: 0,
-        discord_members: discordMembers || 0,
-        telegram_members: telegramData?.members || 0,
-        twitter_verified: null,
-        twitter_growth_7d: null,
-        galaxy_score: lunarCrushData?.galaxy_score ?? null,
-        alt_rank: lunarCrushData?.alt_rank ?? null,
-        sentiment: lunarCrushData?.sentiment ?? null,
-        interactions_24h: lunarCrushData?.interactions_24h ?? null,
-        posts_active: lunarCrushData?.posts_active ?? null,
-        contributors_active: lunarCrushData?.contributors_active ?? null,
-        social_dominance: lunarCrushData?.social_dominance ?? null,
-        trend: lunarCrushData?.trend ?? null,
-        lunarcrush_fetched_at: lunarCrushData ? new Date().toISOString() : null,
-        active_channels: [
-          lunarCrushData ? 'lunarcrush' : null,
-          telegramData?.members ? 'telegram' : null,
-          discordMembers ? 'discord' : null
-        ].filter(Boolean),
-        score: communityScore
-      }, { onConflict: 'token_address,chain_id' }),
-      
-      // Development cache
-      supabase.from('token_development_cache').upsert({
-        token_address,
-        chain_id: chainId,
-        github_repo: githubData ? `${githubData.owner}/${githubData.repo}` : null,
-        is_open_source: !!githubData,
-        stars: githubData?.stars || 0,
-        forks: githubData?.forks || 0,
-        commits_30d: githubData?.commits_30d || 0,
-        contributors_count: githubData?.contributors_count || 0,
-        open_issues: githubData?.open_issues || 0,
-        last_commit: githubData?.last_push || null,
-        language: githubData?.language || null,
-        is_archived: githubData?.is_archived || false,
-        repo_created_at: githubData?.created_at || null,
-        score: developmentScore
-      }, { onConflict: 'token_address,chain_id' }),
-      
-      // Token scan record
-      supabase.from('token_scans').insert({
-        token_address,
-        chain_id: chainId,
-        user_id: user_id || null,
-        score_total: overallScore,
-        is_anonymous: !user_id,
-        pro_scan: false
-      })
-    ])
-
-    const processingTime = Date.now() - startTime
-    console.log(`[${requestId}] ========== SCAN COMPLETE in ${processingTime}ms ==========`)
-    console.log(`[${requestId}] Scores: Security=${securityScore}, Liquidity=${liquidityScore}, Tokenomics=${tokenomicsScore}, Community=${communityScore}, Development=${developmentScore}, Overall=${overallScore}`)
-
-    // Fire-and-forget: regenerate the SEO snapshot for this token (bots love fresh HTML)
-    if (symbol) {
-      fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/regenerate-seo-snapshot`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+    const writeErrors: Array<{ table: string; error: string }> = [];
+    let scanId: string | null = null;
+    if (!dry_run) {
+      const key = { token_address: rec.address_key, chain_id: chainId };
+      const caches = {
+        token_data_cache: rows.token_data_cache,
+        token_security_cache: rows.token_security_cache,
+        token_tokenomics_cache: rows.token_tokenomics_cache,
+        token_liquidity_cache: rows.token_liquidity_cache,
+        token_community_cache: {
+          ...key,
+          discord_members: usable(rec.social.community.discord_members) ? rec.social.community.discord_members.value : null,
+          telegram_members: usable(rec.social.community.telegram_members) ? rec.social.community.telegram_members.value : null,
+          galaxy_score: lunar?.galaxy_score ?? null,
+          alt_rank: lunar?.alt_rank ?? null,
+          sentiment: lunar?.sentiment ?? null,
+          interactions_24h: lunar?.interactions_24h ?? null,
+          posts_active: lunar?.posts_active ?? null,
+          contributors_active: lunar?.contributors_active ?? null,
+          social_dominance: lunar?.social_dominance ?? null,
+          trend: lunar?.trend ?? null,
+          lunarcrush_fetched_at: lunar ? (lunar.fetched_at ?? rec.scanned_at) : null, // a cache hit must not look freshly fetched
+          active_channels: [lunar ? 'lunarcrush' : null, usable(rec.social.community.telegram_members) ? 'telegram' : null, usable(rec.social.community.discord_members) ? 'discord' : null].filter(Boolean),
+          score: score.dimensions.community.score,
+          updated_at: rec.scanned_at,
         },
-        body: JSON.stringify({ kind: 'token', symbol }),
-      }).catch((e) => console.warn(`[${requestId}] snapshot regen failed:`, e?.message))
-    }
+        token_development_cache: {
+          ...key,
+          github_repo: usable(github.repo) ? github.repo.value : null,
+          is_open_source: usable(github.repo) ? true : null,
+          stars: usable(github.stars) ? github.stars.value : null,
+          forks: usable(github.forks) ? github.forks.value : null,
+          commits_30d: usable(github.commits_30d) ? github.commits_30d.value : null,
+          contributors_count: usable(github.contributors_count) ? github.contributors_count.value : null,
+          open_issues: usable(github.open_issues) ? github.open_issues.value : null,
+          last_commit: usable(github.last_push) ? github.last_push.value : null,
+          language: usable(github.language) ? github.language.value : null,
+          is_archived: usable(github.is_archived) ? github.is_archived.value : null,
+          repo_created_at: usable(github.repo_created_at) ? github.repo_created_at.value : null,
+          score: score.dimensions.development.score,
+          updated_at: rec.scanned_at,
+        },
+      };
+      // ONE transaction (migration 20260925120000): every cache row and the history row land together, or none do.
+      const { data: id, error } = await supabase.rpc('persist_token_scan', { p_caches: caches, p_scan: { ...rows.token_scans, ...rows.token_scans_v2 } });
+      if (error) writeErrors.push({ table: 'persist_token_scan', error: error.message });
+      else scanId = id as string;
 
-    return new Response(JSON.stringify({
-      success: true,
-      token_address,
+      // Bot-facing snapshot only after a scan was actually stored.
+      if (!error && regenerate_snapshot === true && symbol) {
+        fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/regenerate-seo-snapshot`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
+          body: JSON.stringify({ kind: 'token', symbol }),
+        }).catch((e) => console.warn(`[${requestId}] snapshot regen failed:`, e?.message));
+      }
+    }
+    if (writeErrors.length) console.error(`[${requestId}] write errors`, JSON.stringify(writeErrors));
+
+    const d = score.dimensions;
+    const writeFailed = writeErrors.length > 0;
+    return json({
+      success: !writeFailed,
+      token_address: rec.address_key,
+      canonical_address: rec.address_canonical.value,
       chain_id: chainId,
-      overall_score: overallScore,
-      token_name: name,
+      overall_score: score.overall,
+      overall_reason: score.overall_reason,
+      excluded_dimensions: score.excluded_dimensions,
+      scoring_version: score.scoring_version,
+      token_name: usable(rec.market.name) ? rec.market.name.value : null,
       token_symbol: symbol,
-      scores: {
-        security: securityScore,
-        liquidity: liquidityScore,
-        tokenomics: tokenomicsScore,
-        community: communityScore,
-        development: developmentScore
-      },
-      processing_time_ms: processingTime
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
-
+      scores: { security: d.security.score, liquidity: d.liquidity.score, tokenomics: d.tokenomics.score, community: d.community.score, development: d.development.score },
+      data_quality: { completeness_pct: rec.quality.completeness_pct, required_missing: rec.quality.required_missing, provider_failures: rec.quality.provider_failures, flags: rec.quality.flags, paid_credits: rec.quality.paid_credits },
+      write_errors: writeErrors,
+      scan_id: scanId,
+      dry_run: !!dry_run,
+      ...(dry_run ? { record: rec, rows } : {}),
+      processing_time_ms: Date.now() - startTime,
+    }, writeFailed ? 500 : 200); // callers (weekly refresh) key off the HTTP status
   } catch (error) {
-    console.error(`[${requestId}] Error:`, error)
-    
-    return new Response(JSON.stringify({
-      success: false,
-      error: error.message || 'Scan failed',
-      request_id: requestId,
-      processing_time_ms: Date.now() - startTime
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
+    console.error(`[${requestId}] Error:`, error);
+    return json({ success: false, error: (error as Error).message || 'Scan failed', request_id: requestId, processing_time_ms: Date.now() - startTime }, 500);
   }
-})
-
-/**
- * Dedicated Solana (SPL) token scan function
- * Uses Solana RPC, GeckoTerminal, CoinGecko, and social/GitHub APIs
- */
-async function scanSolanaToken(
-  mintAddress: string, 
-  userId: string | null, 
-  requestId: string,
-  startTime: number
-): Promise<Response> {
-  try {
-    console.log(`[${requestId}] ========== SOLANA TOKEN SCAN ==========`)
-    console.log(`[${requestId}] Mint address: ${mintAddress}`)
-
-    // Validate Solana address format (Base58, 32-44 chars)
-    const solanaAddressPattern = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
-    if (!mintAddress || !solanaAddressPattern.test(mintAddress.trim())) {
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Invalid Solana mint address',
-        chain: 'solana'
-      }), {
-        status: 400, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
-    }
-
-    // Keep original case for Solana addresses (Base58 is case-sensitive)
-    const normalizedMint = mintAddress.trim()
-
-    // Phase 1: Fetch core Solana data in parallel
-    console.log(`[${requestId}] Phase 1: Fetching Solana data...`)
-    const [mintInfo, liquidityData, marketData] = await Promise.all([
-      fetchSPLMintInfo(normalizedMint),
-      fetchSolanaLiquidity(normalizedMint),
-      fetchSolanaMarketData(normalizedMint)
-    ])
-
-    console.log(`[${requestId}] Phase 1 results: mintInfo=${!!mintInfo.isInitialized}, liquidity=$${liquidityData.totalLiquidity}, marketData=${!!marketData}`)
-
-    // Phase 2: Fetch social and GitHub data from CoinGecko links
-    console.log(`[${requestId}] Phase 2: Fetching social & GitHub data...`)
-    
-    // Extract Twitter handle from CoinGecko twitter_url
-    let twitterHandle: string | null = null
-    if (marketData?.twitter_url) {
-      const match = marketData.twitter_url.match(/(?:twitter\.com|x\.com)\/([a-zA-Z0-9_]+)/)
-      twitterHandle = match ? match[1] : null
-    }
-    
-    console.log(`[${requestId}] Social links from CoinGecko:`, {
-      twitter: marketData?.twitter_url || 'none',
-      telegram: marketData?.telegram_url || 'none',
-      github: marketData?.github_url || 'none',
-      website: marketData?.website_url || 'none'
-    })
-    
-    // Fetch social metrics, Discord, and GitHub data in parallel
-    const symbol = marketData?.symbol || 'SPL'
-    const [lunarCrushData, telegramData, discordMembers, githubData] = await Promise.all([
-      fetchLunarCrushWithCache(symbol, normalizedMint, 'solana', supabase, false),
-      marketData?.telegram_url ? fetchTelegramMembers(marketData.telegram_url) : Promise.resolve({ members: null }),
-      marketData?.discord_url ? fetchDiscordMemberCount(marketData.discord_url) : Promise.resolve(null),
-      marketData?.github_url ? fetchGitHubRepoData(marketData.github_url) : Promise.resolve(null)
-    ])
-    
-    console.log(`[${requestId}] Phase 2 results: lunarcrush=${!!lunarCrushData}, telegram=${telegramData?.members || 0} members, discord=${discordMembers || 0} members, github=${githubData ? `${githubData.repo} (${githubData.stars} stars)` : 'none'}`)
-
-    // Phase 3: Calculate scores
-    console.log(`[${requestId}] Phase 3: Calculating scores...`)
-    
-    const securityScore = calculateSolanaSecurityScore(mintInfo)
-    const tokenomicsScore = calculateSolanaTokenomicsScore(mintInfo, marketData)
-    const liquidityScore = calculateSolanaLiquidityScore(liquidityData)
-    
-    // Calculate REAL community score based on fetched data
-    const communityScore = calculateCommunityScore({
-      sentiment: lunarCrushData?.sentiment ?? null,
-      socialDominance: lunarCrushData?.social_dominance ?? null,
-      trend: lunarCrushData?.trend ?? null,
-      discordMembers: discordMembers || 0,
-      telegramMembers: telegramData?.members || 0
-    })
-    
-    // Calculate REAL development score based on GitHub data
-    const developmentScore = calculateDevelopmentScore(githubData)
-    
-    const overallScore = Math.round(
-      (securityScore + tokenomicsScore + liquidityScore + communityScore + developmentScore) / 5
-    )
-
-    console.log(`[${requestId}] Scores: Security=${securityScore}, Tokenomics=${tokenomicsScore}, Liquidity=${liquidityScore}, Community=${communityScore}, Development=${developmentScore}, Overall=${overallScore}`)
-
-    // Phase 4: Prepare data for database
-    const name = marketData?.name || `SPL Token ${normalizedMint.slice(0, 8)}`
-    const description = marketData?.description || `${name} is an SPL token on Solana.`
-
-    // Phase 5: Save to database with chain='solana'
-    console.log(`[${requestId}] Phase 4: Saving to database...`)
-
-    await Promise.all([
-      // Token data cache with social links
-      supabase.from('token_data_cache').upsert({
-        token_address: normalizedMint,
-        chain_id: 'solana',
-        name,
-        symbol,
-        description,
-        logo_url: marketData?.image || '',
-        current_price_usd: marketData?.current_price || 0,
-        price_change_24h: marketData?.price_change_24h || null,
-        market_cap_usd: marketData?.market_cap || null,
-        circulating_supply: mintInfo.supply ? parseFloat(mintInfo.supply) / Math.pow(10, mintInfo.decimals || 0) : null,
-        website_url: marketData?.website_url || null,
-        twitter_handle: twitterHandle || null,
-        github_url: marketData?.github_url || null
-      }, { onConflict: 'token_address,chain_id' }),
-
-      // Security cache with Solana-specific fields
-      supabase.from('token_security_cache').upsert({
-        token_address: normalizedMint,
-        chain_id: 'solana',
-        ownership_renounced: mintInfo.mintAuthority === null,
-        freeze_authority: mintInfo.freezeAuthority !== null,
-        can_mint: mintInfo.mintAuthority !== null,
-        contract_verified: true, // SPL tokens are always "verified" as standard
-        honeypot_detected: false, // Not applicable for SPL
-        is_proxy: false, // Not applicable for SPL
-        score: securityScore
-      }, { onConflict: 'token_address,chain_id' }),
-
-      // Tokenomics cache - fix supply parsing (raw supply is already a string number)
-      supabase.from('token_tokenomics_cache').upsert({
-        token_address: normalizedMint,
-        chain_id: 'solana',
-        total_supply: mintInfo.supply ? parseFloat(mintInfo.supply) / Math.pow(10, mintInfo.decimals || 0) : null,
-        circulating_supply: mintInfo.supply ? parseFloat(mintInfo.supply) / Math.pow(10, mintInfo.decimals || 0) : null,
-        dex_liquidity_usd: liquidityData.totalLiquidity > 0 ? liquidityData.totalLiquidity : null,
-        major_dex_pairs: liquidityData.majorPools?.length > 0 ? liquidityData.majorPools : null,
-        tvl_usd: liquidityData.totalLiquidity > 0 ? liquidityData.totalLiquidity : null,
-        score: tokenomicsScore
-      }, { onConflict: 'token_address,chain_id' }),
-
-      // Liquidity cache - add trading volume from major pools
-      supabase.from('token_liquidity_cache').upsert({
-        token_address: normalizedMint,
-        chain_id: 'solana',
-        trading_volume_24h_usd: liquidityData.majorPools?.reduce((sum, pool) => sum + (pool.volume_24h || 0), 0) || null,
-        dex_depth_status: liquidityData.totalLiquidity > 1000000 ? 'Deep' : 
-                         liquidityData.totalLiquidity > 100000 ? 'Moderate' : 
-                         liquidityData.totalLiquidity > 10000 ? 'Shallow' : 'Very Low',
-        cex_listings: 0,
-        score: liquidityScore
-      }, { onConflict: 'token_address,chain_id' }),
-
-      // Community cache with LunarCrush data
-      supabase.from('token_community_cache').upsert({
-        token_address: normalizedMint,
-        chain_id: 'solana',
-        twitter_followers: 0,
-        telegram_members: telegramData?.members || 0,
-        discord_members: discordMembers || 0,
-        galaxy_score: lunarCrushData?.galaxy_score ?? null,
-        alt_rank: lunarCrushData?.alt_rank ?? null,
-        sentiment: lunarCrushData?.sentiment ?? null,
-        interactions_24h: lunarCrushData?.interactions_24h ?? null,
-        posts_active: lunarCrushData?.posts_active ?? null,
-        contributors_active: lunarCrushData?.contributors_active ?? null,
-        social_dominance: lunarCrushData?.social_dominance ?? null,
-        trend: lunarCrushData?.trend ?? null,
-        lunarcrush_fetched_at: lunarCrushData ? new Date().toISOString() : null,
-        active_channels: [
-          lunarCrushData ? 'lunarcrush' : null,
-          telegramData?.members ? 'telegram' : null,
-          discordMembers ? 'discord' : null
-        ].filter(Boolean),
-        score: communityScore
-      }, { onConflict: 'token_address,chain_id' }),
-
-      // Development cache with REAL GitHub data
-      supabase.from('token_development_cache').upsert({
-        token_address: normalizedMint,
-        chain_id: 'solana',
-        github_repo: githubData ? `${githubData.owner}/${githubData.repo}` : null,
-        is_open_source: !!githubData,
-        stars: githubData?.stars || null,
-        forks: githubData?.forks || null,
-        commits_30d: githubData?.commits_30d || null,
-        contributors_count: githubData?.contributors_count || null,
-        last_commit: githubData?.last_push || null,
-        language: githubData?.language || null,
-        is_archived: githubData?.is_archived || null,
-        score: developmentScore
-      }, { onConflict: 'token_address,chain_id' }),
-
-      // Token scan record
-      supabase.from('token_scans').insert({
-        token_address: normalizedMint,
-        chain_id: 'solana',
-        user_id: userId || null,
-        score_total: overallScore,
-        is_anonymous: !userId,
-        pro_scan: false
-      })
-    ])
-
-    const processingTime = Date.now() - startTime
-    console.log(`[${requestId}] ========== SOLANA SCAN COMPLETE in ${processingTime}ms ==========`)
-
-    // Fire-and-forget: regenerate the SEO snapshot for this token
-    if (symbol) {
-      fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/regenerate-seo-snapshot`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-        },
-        body: JSON.stringify({ kind: 'token', symbol }),
-      }).catch((e) => console.warn(`[${requestId}] snapshot regen failed:`, e?.message))
-    }
-
-    return new Response(JSON.stringify({
-      success: true,
-      chain: 'solana',
-      token_address: normalizedMint,
-      overall_score: overallScore,
-      token_name: name,
-      token_symbol: symbol,
-      scores: {
-        security: securityScore,
-        liquidity: liquidityScore,
-        tokenomics: tokenomicsScore,
-        community: communityScore,
-        development: developmentScore
-      },
-      social_data: {
-        twitter_handle: twitterHandle,
-        lunarcrush: lunarCrushData,
-        telegram_members: telegramData?.members || null,
-        discord_members: discordMembers || null,
-        github_repo: githubData ? `${githubData.owner}/${githubData.repo}` : null
-      },
-      solana_specific: {
-        mint_authority_renounced: mintInfo.mintAuthority === null,
-        freeze_authority_disabled: mintInfo.freezeAuthority === null,
-        decimals: mintInfo.decimals,
-        total_supply: mintInfo.supply
-      },
-      processing_time_ms: processingTime
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
-
-  } catch (error: any) {
-    console.error(`[${requestId}] Solana scan error:`, error)
-    
-    // Defensive: Never throw, return graceful error
-    return new Response(JSON.stringify({
-      success: false,
-      chain: 'solana',
-      error: 'Solana scan failed',
-      details: error.message || 'Unknown error',
-      request_id: requestId,
-      processing_time_ms: Date.now() - startTime
-    }), {
-      status: 200, // Return 200 to avoid runtime errors on client
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
-  }
-}
+});

@@ -106,9 +106,14 @@ async function handleScanToken(args: { address: string; chain: string }) {
     symbol: data.token_symbol,
     address,
     chain: args.chain,
-    overall_score: data.overall_score,
+    overall_score: data.overall_score ?? null,
+    overall_reason: data.overall_reason ?? null,
     scores: data.scores,
-    verdict: generateVerdict(data.scores ?? {}, data.overall_score ?? 0),
+    scoring_version: data.scoring_version ?? null,
+    // A missing overall is "not enough verified data", never a score of 0.
+    verdict: typeof data.overall_score === 'number'
+      ? generateVerdict(data.scores ?? {}, data.overall_score)
+      : `Not scored: ${data.overall_reason ?? 'not enough verified data'}.`,
     scan_duration_ms: Date.now() - start,
   };
 }
@@ -143,8 +148,9 @@ async function handleGetCachedScores(args: { address: string; chain: string }) {
     development: devCache.data?.score ?? null,
   };
 
+  // Same rule as the scanner (scoring v2): an overall needs security plus at least 3 of 5 scored dimensions.
   const validScores = Object.values(scores).filter((s): s is number => s !== null);
-  const overall_score = validScores.length
+  const overall_score = scores.security !== null && validScores.length >= 3
     ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length)
     : null;
 
@@ -166,7 +172,7 @@ async function handleGetCachedScores(args: { address: string; chain: string }) {
     scores,
     last_scanned_at,
     cache_age_hours,
-    verdict: overall_score ? generateVerdict(scores, overall_score) : null,
+    verdict: overall_score !== null ? generateVerdict(scores, overall_score) : 'Not scored: not enough verified data.',
   };
 }
 

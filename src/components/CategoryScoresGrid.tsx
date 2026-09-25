@@ -3,17 +3,17 @@ import CategoryScoreCard from "./CategoryScoreCard";
 
 interface CategoryScore {
   category: string;
-  score: number;
+  score: number | null; // null = not scored (missing or disputed inputs), never shown as 0
   level: string;
   color: string;
 }
 
 interface CategoryScoresGridProps {
-  securityScore: number;
-  tokenomicsScore: number;
-  liquidityScore: number;
-  communityScore: number;
-  developmentScore: number;
+  securityScore: number | null;
+  tokenomicsScore: number | null;
+  liquidityScore: number | null;
+  communityScore: number | null;
+  developmentScore: number | null;
   onCategoryClick: (category: string) => void;
 }
 
@@ -25,13 +25,15 @@ export default function CategoryScoresGrid({
   developmentScore,
   onCategoryClick
 }: CategoryScoresGridProps) {
-  const getScoreLevel = (score: number) => {
+  const getScoreLevel = (score: number | null) => {
+    if (score === null) return "not_scored";
     if (score >= 70) return "high";
     if (score >= 40) return "medium";
     return "low";
   };
 
-  const getScoreColor = (score: number) => {
+  const getScoreColor = (score: number | null) => {
+    if (score === null) return "muted";
     if (score >= 70) return "success";
     if (score >= 40) return "warning";
     return "danger";

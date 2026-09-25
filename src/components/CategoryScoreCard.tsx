@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 
 interface CategoryScoreCardProps {
   category: string;
-  score: number;
+  score: number | null; // null = not scored
   level: string;
   color: string;
   onClick?: () => void;
@@ -26,6 +26,8 @@ export default function CategoryScoreCard({
         return 'bg-gradient-to-br from-amber-400 to-orange-500';
       case 'danger':
         return 'bg-gradient-to-br from-red-400 to-rose-500';
+      case 'muted':
+        return 'bg-gradient-to-br from-slate-300 to-slate-400';
       case 'info':
       default:
         return 'bg-gradient-to-br from-blue-400 to-indigo-500';
@@ -40,6 +42,8 @@ export default function CategoryScoreCard({
         return 'text-warning';
       case 'danger':
         return 'text-danger';
+      case 'muted':
+        return 'text-muted-foreground';
       case 'info':
       default:
         return 'text-info';
@@ -54,6 +58,8 @@ export default function CategoryScoreCard({
         return 'Good';
       case 'low':
         return 'Needs Improvement';
+      case 'not_scored':
+        return 'Not scored';
       default:
         return 'Unknown';
     }
@@ -68,7 +74,7 @@ export default function CategoryScoreCard({
       
       <div className="flex flex-col items-center gap-2 p-1">
         <div className={`text-3xl font-bold ${getTextColorClass()}`}>
-          {score}
+          {score === null ? '\u2014' : score}
         </div>
         
         <div className="text-sm font-medium capitalize">
@@ -76,7 +82,7 @@ export default function CategoryScoreCard({
         </div>
         
         <Progress 
-          value={score} 
+          value={score ?? 0} 
           className={`h-1.5 w-full ${color === 'success' ? 'bg-green-100 dark:bg-green-900/30' : 
                    color === 'warning' ? 'bg-amber-100 dark:bg-amber-900/30' : 
                    color === 'danger' ? 'bg-red-100 dark:bg-red-900/30' : 
