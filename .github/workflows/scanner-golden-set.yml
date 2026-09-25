@@ -2,7 +2,8 @@
 # Runs the golden set (hand-verified expected values) and the offline unit tests.
 # A failure means: a provider is down or returning different data, or a token's
 # real values moved. Re-verify by hand before editing golden-set.json.
-# Read-only: no database access, no deploys. Optional repo secrets improve
+# Read-only: no database access, no deploys. The deploy gate itself is scripts/deploy-scanner.sh
+# (edge functions deploy through the Supabase CLI, not through GitHub). Optional repo secrets improve
 # coverage (without them the second-source checks report "single source").
 name: scanner-golden-set
 on:
@@ -10,7 +11,15 @@ on:
     - cron: '30 7 * * *'
   workflow_dispatch:
   pull_request:
-    paths: ['supabase/functions/_shared/scanner/**', 'supabase/functions/run-token-scan/**']
+    paths:
+      - 'supabase/functions/_shared/scanner/**'
+      - 'supabase/functions/_shared/lunarcrushAPI.ts'
+      - 'supabase/functions/_shared/githubAPI.ts'
+      - 'supabase/functions/run-token-scan/**'
+      - 'supabase/functions/token-health-mcp/**'
+      - 'supabase/migrations/**'
+      - 'scripts/deploy-scanner.sh'
+      - '.github/workflows/scanner-golden-set.yml'
 jobs:
   golden:
     runs-on: ubuntu-latest

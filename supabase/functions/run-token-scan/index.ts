@@ -10,7 +10,7 @@
 // - Circulating supply comes from CoinGecko + CoinMarketCap, never from total supply.
 // - Unknown inputs are null with a reason; a dimension missing a required input
 //   is not scored, and the overall score says which dimensions it excludes.
-// - Cache rows get a real updated_at.
+// - Cache rows get a real updated_at, and all rows of a scan are written in one transaction (persist_token_scan).
 // - The SEO snapshot is only regenerated when the caller passes
 //   `regenerate_snapshot: true` (bot-facing HTML is published content).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -92,22 +92,15 @@ Deno.serve(async (req) => {
     const rows = buildRows(rec, score, user_id || null);
 
     const writeErrors: Array<{ table: string; error: string }> = [];
+    let scanId: string | null = null;
     if (!dry_run) {
-      const up = async (table: string, row: Record<string, unknown>): Promise<boolean> => {
-        const { error } = await supabase.from(table).upsert(row, { onConflict: 'token_address,chain_id' });
-        if (error) writeErrors.push({ table, error: error.message });
-        return !error;
-      };
       const key = { token_address: rec.address_key, chain_id: chainId };
-      // The parent row goes first (the other caches reference it); if it fails nothing else is written, and the scan
-      // history is only recorded when every cache write succeeded, so no half-written scan is ever presented as one.
-      const parentOk = await up('token_data_cache', rows.token_data_cache);
-      if (!parentOk) writeErrors.push({ table: 'token_*_cache', error: 'parent token_data_cache write failed; dependent cache writes skipped' });
-      if (parentOk) await Promise.all([
-        up('token_security_cache', rows.token_security_cache),
-        up('token_tokenomics_cache', rows.token_tokenomics_cache),
-        up('token_liquidity_cache', rows.token_liquidity_cache),
-        up('token_community_cache', {
+      const caches = {
+        token_data_cache: rows.token_data_cache,
+        token_security_cache: rows.token_security_cache,
+        token_tokenomics_cache: rows.token_tokenomics_cache,
+        token_liquidity_cache: rows.token_liquidity_cache,
+        token_community_cache: {
           ...key,
           discord_members: usable(rec.social.community.discord_members) ? rec.social.community.discord_members.value : null,
           telegram_members: usable(rec.social.community.telegram_members) ? rec.social.community.telegram_members.value : null,
@@ -123,8 +116,8 @@ Deno.serve(async (req) => {
           active_channels: [lunar ? 'lunarcrush' : null, usable(rec.social.community.telegram_members) ? 'telegram' : null, usable(rec.social.community.discord_members) ? 'discord' : null].filter(Boolean),
           score: score.dimensions.community.score,
           updated_at: rec.scanned_at,
-        }),
-        up('token_development_cache', {
+        },
+        token_development_cache: {
           ...key,
           github_repo: usable(github.repo) ? github.repo.value : null,
           is_open_source: usable(github.repo) ? true : null,
@@ -139,23 +132,15 @@ Deno.serve(async (req) => {
           repo_created_at: usable(github.repo_created_at) ? github.repo_created_at.value : null,
           score: score.dimensions.development.score,
           updated_at: rec.scanned_at,
-        }),
-      ]);
-      // Scan history: full field-level record when the v2 columns exist; base row otherwise. Only if all caches were written.
-      if (writeErrors.length === 0) {
-        let ins = await supabase.from('token_scans').insert({ ...rows.token_scans, ...rows.token_scans_v2 });
-        // Fall back ONLY for a missing v2 column (not for any error that merely mentions "column").
-        const missingV2 = ins.error && /(column|schema cache)/i.test(ins.error.message) && /(scoring_version|dimension_scores|field_data|data_quality|completeness_pct|canonical_address)/i.test(ins.error.message);
-        if (missingV2) {
-          writeErrors.push({ table: 'token_scans', error: `v2 columns missing (migration 20260924120000 not applied): ${ins.error!.message}` });
-          ins = await supabase.from('token_scans').insert(rows.token_scans);
-        }
-        if (ins.error) writeErrors.push({ table: 'token_scans', error: ins.error.message });
-      } else {
-        writeErrors.push({ table: 'token_scans', error: 'scan history not recorded because a cache write failed' });
-      }
+        },
+      };
+      // ONE transaction (migration 20260925120000): every cache row and the history row land together, or none do.
+      const { data: id, error } = await supabase.rpc('persist_token_scan', { p_caches: caches, p_scan: { ...rows.token_scans, ...rows.token_scans_v2 } });
+      if (error) writeErrors.push({ table: 'persist_token_scan', error: error.message });
+      else scanId = id as string;
 
-      if (regenerate_snapshot === true && symbol) {
+      // Bot-facing snapshot only after a scan was actually stored.
+      if (!error && regenerate_snapshot === true && symbol) {
         fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/regenerate-seo-snapshot`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
@@ -166,7 +151,7 @@ Deno.serve(async (req) => {
     if (writeErrors.length) console.error(`[${requestId}] write errors`, JSON.stringify(writeErrors));
 
     const d = score.dimensions;
-    const writeFailed = writeErrors.some((w) => !w.error.startsWith('v2 columns missing'));
+    const writeFailed = writeErrors.length > 0;
     return json({
       success: !writeFailed,
       token_address: rec.address_key,
@@ -181,6 +166,7 @@ Deno.serve(async (req) => {
       scores: { security: d.security.score, liquidity: d.liquidity.score, tokenomics: d.tokenomics.score, community: d.community.score, development: d.development.score },
       data_quality: { completeness_pct: rec.quality.completeness_pct, required_missing: rec.quality.required_missing, provider_failures: rec.quality.provider_failures, flags: rec.quality.flags, paid_credits: rec.quality.paid_credits },
       write_errors: writeErrors,
+      scan_id: scanId,
       dry_run: !!dry_run,
       ...(dry_run ? { record: rec, rows } : {}),
       processing_time_ms: Date.now() - startTime,
