@@ -50,6 +50,9 @@ export default function ScanResult() {
   const addressFromParam = searchParams.get("address") || "";
   const rawTokenAddress = tokenFromParam || addressFromParam; // Use token param first, fallback to address
   const tokenAddress = normalizeAddress(rawTokenAddress); // CRITICAL: Normalize to lowercase
+  // Cache tables store every address lowercased (enforce_lowercase_address trigger),
+  // including case-sensitive Solana mints, so DB lookups must use the lowercase key.
+  const dbAddress = tokenAddress.toLowerCase();
   const chainId = normalizeChainId(searchParams.get("chain") || "0x1"); // Normalize chain ID
   const coinGeckoId = searchParams.get("id") || "";
   const isLimited = searchParams.get("limited") === "true";
@@ -126,7 +129,7 @@ export default function ScanResult() {
           const { data: tokenData, error: tokenError } = await supabase
             .from('token_data_cache')
             .select('*')
-            .eq('token_address', tokenAddress)
+            .eq('token_address', dbAddress)
             .eq('chain_id', chainId)
             .maybeSingle();
 
@@ -186,12 +189,12 @@ export default function ScanResult() {
 
           // Now load all cache data with chain support
           const cacheQueries = [
-            { name: 'security', query: supabase.from('token_security_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
-            { name: 'tokenomics', query: supabase.from('token_tokenomics_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
-            { name: 'liquidity', query: supabase.from('token_liquidity_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
-            { name: 'development', query: supabase.from('token_development_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
-            { name: 'community', query: supabase.from('token_community_cache').select('*').eq('token_address', tokenAddress).eq('chain_id', chainId).maybeSingle() },
-            { name: 'descOverride', query: supabase.from('token_description_overrides').select('description').eq('token_address', tokenAddress).maybeSingle() },
+            { name: 'security', query: supabase.from('token_security_cache').select('*').eq('token_address', dbAddress).eq('chain_id', chainId).maybeSingle() },
+            { name: 'tokenomics', query: supabase.from('token_tokenomics_cache').select('*').eq('token_address', dbAddress).eq('chain_id', chainId).maybeSingle() },
+            { name: 'liquidity', query: supabase.from('token_liquidity_cache').select('*').eq('token_address', dbAddress).eq('chain_id', chainId).maybeSingle() },
+            { name: 'development', query: supabase.from('token_development_cache').select('*').eq('token_address', dbAddress).eq('chain_id', chainId).maybeSingle() },
+            { name: 'community', query: supabase.from('token_community_cache').select('*').eq('token_address', dbAddress).eq('chain_id', chainId).maybeSingle() },
+            { name: 'descOverride', query: supabase.from('token_description_overrides').select('description').eq('token_address', dbAddress).maybeSingle() },
             { name: 'agentToken', query: supabase.from('agent_tokens').select('category, agent_framework, coingecko_id').eq('token_address', tokenAddress).maybeSingle() }
           ];
 
