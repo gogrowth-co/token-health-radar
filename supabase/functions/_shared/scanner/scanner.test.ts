@@ -209,6 +209,7 @@ Deno.test('address: a lowercased mint containing L is recovered from CoinGecko a
     if (url.includes('api.coingecko.com')) return { json: { id: 'l-token', name: 'L Token', symbol: 'ltk', detail_platforms: { solana: { contract_address: EXACT_L_MINT } }, platforms: { solana: EXACT_L_MINT }, market_data: {} } };
     if (body?.method) {
       if (['getAccountInfo', 'getTokenSupply', 'getTokenLargestAccounts'].includes(body.method)) rpcAddresses.push(String(body.params?.[0]));
+      if (body.method === 'getAccountInfo' && body.params?.[0] === EXACT_L_MINT) return { json: { jsonrpc: '2.0', id: 1, result: { context: { slot: 1 }, value: { owner: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA', data: { parsed: { type: 'mint', info: { decimals: 6, supply: '1000', mintAuthority: null, freezeAuthority: null } } } } } } };
       return { json: { jsonrpc: '2.0', id: 1, result: { context: { slot: 1 }, value: null } } };
     }
     return { status: 404, text: '{}' };
@@ -247,6 +248,7 @@ Deno.test('address: a stored exact-case address is used without any lookup guess
   const seen: string[] = [];
   stubFetch((url, body) => {
     seen.push(body?.method ? `rpc:${body.params?.[0]}` : url);
+    if (body?.method === 'getAccountInfo') return { json: { jsonrpc: '2.0', id: 1, result: { context: { slot: 1 }, value: { owner: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA', data: { parsed: { type: 'mint', info: { decimals: 6, supply: '1000', mintAuthority: null, freezeAuthority: null } } } } } } };
     return { status: 404, text: '{}' };
   });
   try {
@@ -756,6 +758,63 @@ Deno.test('liquidity: pools without reserve data are not $0 liquidity; DexScreen
     const noDec = unknown<number>('missing_input');
     const l = await collectLiquidity(new ScanContext(), '0x1', '0xabc', {} as any, noDec, noDec);
     assertEquals(l.dex_liquidity_usd.value, 0); // measured: no pools
+  } finally {
+    restore();
+  }
+});
+
+// ---- Codex round 2: finding 6 (identity verification) and finding 5 (malformed extension states)
+Deno.test('address: a mint with no account at that exact case stops the scan (typo / bad stored hint), nothing is written', async () => {
+  stubFetch((_url, body) => (body?.method ? { json: { jsonrpc: '2.0', id: 1, result: { context: { slot: 1 }, value: null } } } : { status: 404, text: '{}' }));
+  try {
+    let err: unknown = null;
+    try {
+      await collectToken(EXACT_L_MINT, 'solana');
+    } catch (e) {
+      err = e;
+    }
+    assert(err instanceof AddressResolutionError, 'a mixed-case address with no mint account must not produce a record');
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('address: a wrong stored hint is dropped and the exact case is recovered from CoinGecko instead', async () => {
+  const wrong = EXACT_L_MINT.replace('LmWq', 'Lmwq'); // typo'd hint: same lowercase, different case
+  const seen: string[] = [];
+  stubFetch((url, body) => {
+    if (url.includes('api.coingecko.com')) return { json: { id: 'l-token', name: 'L Token', symbol: 'ltk', detail_platforms: { solana: { contract_address: EXACT_L_MINT } }, platforms: { solana: EXACT_L_MINT }, market_data: {} } };
+    if (body?.method === 'getAccountInfo') {
+      seen.push(String(body.params[0]));
+      return { json: { jsonrpc: '2.0', id: 1, result: { context: { slot: 1 }, value: body.params[0] === EXACT_L_MINT ? { owner: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA', data: { parsed: { type: 'mint', info: { decimals: 6, supply: '1000', mintAuthority: null, freezeAuthority: null } } } } : null } } };
+    }
+    if (body?.method) return { json: { jsonrpc: '2.0', id: 1, result: { context: { slot: 1 }, value: null } } };
+    return { status: 404, text: '{}' };
+  });
+  try {
+    const rec = await collectToken(EXACT_L_MINT.toLowerCase(), 'solana', { canonicalHint: wrong });
+    assertEquals(rec.address_canonical.value, EXACT_L_MINT);
+    assert(seen.includes(wrong), 'the hint was tried first');
+  } finally {
+    restore();
+  }
+});
+
+Deno.test('solana: recognised Token-2022 extensions with missing/malformed state are unknown, never "no delegate / no hook / no fee / not pausable"', async () => {
+  stubSolanaMint({ decimals: 6, supply: '1000000000', mintAuthority: null, freezeAuthority: null, extensions: [{ extension: 'permanentDelegate', state: {} }, { extension: 'transferHook', state: {} }, { extension: 'transferFeeConfig' }, { extension: 'pausableConfig' }] }, TOKEN_2022_PROGRAM);
+  try {
+    const f = await solanaAdapter.collect(new ScanContext(), EXACT_L_MINT, {} as any, 'solana');
+    for (const k of ['permanent_delegate', 'transfer_hook', 'transfer_tax_pct', 'pausable'] as const) assertEquals(f[k].status, 'unknown', k);
+    const rec = fakeRecord(Object.fromEntries(Object.entries(f).map(([k, v]) => [`chain.${k}`, v])));
+    assertEquals(scoreRecord(rec).dimensions.security.inputs_used.permanent_delegate, undefined);
+  } finally {
+    restore();
+  }
+  stubSolanaMint({ decimals: 6, supply: '1000000000', mintAuthority: null, freezeAuthority: null, extensions: [{ extension: 'permanentDelegate', state: { delegate: null } }, { extension: 'transferHook', state: { programId: null, authority: null } }, { extension: 'pausableConfig', state: { authority: null, paused: false } }] }, TOKEN_2022_PROGRAM);
+  try {
+    const f = await solanaAdapter.collect(new ScanContext(), EXACT_L_MINT, {} as any, 'solana');
+    assertEquals(f.permanent_delegate.value, false);
+    assertEquals(f.transfer_hook.value, false);
   } finally {
     restore();
   }

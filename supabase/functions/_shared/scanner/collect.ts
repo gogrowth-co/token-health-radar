@@ -53,12 +53,14 @@ export async function collectToken(
 
   // 1. Resolve the exact-case address BEFORE any address-dependent provider call.
   let canonical: Field<string>;
+  let usedHint = false;
   if (!isSol) canonical = ok(input.toLowerCase(), { source: 'input', fetched_at: scannedAt }, { confidence: 'high', detail: 'EVM addresses are case-insensitive' });
   else if (!lowercaseSolana) canonical = ok(input, { source: 'input', fetched_at: scannedAt }, { confidence: 'high', detail: 'mixed-case input used as-is' });
   else {
     const hint = opts.canonicalHint?.trim();
     if (hint && isValidSolanaAddress(hint) && hint.toLowerCase() === input) {
-      canonical = ok(hint, { source: 'stored_canonical_address', fetched_at: scannedAt }, { confidence: 'high', detail: 'exact-case mint from a previous scan (recovered from CoinGecko then)' });
+      usedHint = true;
+      canonical = ok(hint, { source: 'stored_canonical_address', fetched_at: scannedAt }, { confidence: 'high', detail: 'exact-case mint from a previous scan; verified below by a positive mint-account read' });
     } else {
       // CoinGecko's contract lookup is case-insensitive and returns the exact-case address. CoinMarketCap is skipped here: it needs the exact case.
       const probe = await fetchMarketData(ctx, platform, input, null);
@@ -75,6 +77,12 @@ export async function collectToken(
 
   // 2. Chain facts, liquidity, unlocks.
   const chain = await adapter.collect(ctx, address, marketFinal, chainId);
+  // Positive identity check (Codex round 2, finding 6): a Solana address is only accepted when a mint account exists
+  // at exactly that case. A wrong stored hint is dropped and recovery retried; otherwise the scan stops before any write.
+  if (isSol && chain.token_standard.status === 'unknown' && chain.token_standard.reason === 'not_found') {
+    if (usedHint) return collectToken(addressInput, chainIdInput, { ...opts, canonicalHint: null });
+    throw new AddressResolutionError(`no mint account exists at ${address} (exact case); nothing was written`);
+  }
   const liquidity = await collectLiquidity(ctx, chainId, address, adapter, chain.decimals, marketFinal.price_usd);
   // The raw DeFiLlama dataset is cached in market.ts (24h from its original fetch); time-dependent values are recomputed every scan.
   const unlocks = await fetchUnlocks(ctx, usable(marketFinal.coingecko_id) ? marketFinal.coingecko_id.value : null, usable(marketFinal.name) ? marketFinal.name.value : null, chainId, address, new Date(scannedAt));

@@ -109,15 +109,35 @@ export const solanaAdapter: ChainAdapter = {
     const exts: Array<{ extension: string; state: any }> = Array.isArray(rawExts) ? rawExts : [];
     const extUndecoded = is2022 && (extsMalformed || exts.some((e) => e.extension === 'unparseableExtension'));
     const ext = (name: string) => exts.find((e) => e.extension === name)?.state;
-    const extField = <T>(label: string, read: () => Field<T>): Field<T> =>
-      !info ? acctMissing(label) : extUndecoded ? unknown('no_data', `${label}: Token-2022 extensions could not be fully decoded, so the absence of this extension cannot be confirmed`, [acctRef]) : read();
+    // A recognised extension whose state is missing the fields we read is malformed: unknown, not "disabled".
+    const badState = (name: string, valid: (st: any) => boolean): boolean => {
+      const e = exts.find((x) => x.extension === name);
+      return !!e && !valid(e.state);
+    };
+    const isObj = (st: any) => typeof st === 'object' && st !== null;
+    const hasKey = (st: any, k: string) => isObj(st) && k in st && (st[k] === null || typeof st[k] === 'string');
+    const feeOk = (st: any) => isObj(st) && [st.newerTransferFee, st.olderTransferFee].some((f: any) => isObj(f) && Number.isFinite(Number(f.transferFeeBasisPoints)));
+    const malformed: Record<string, boolean> = {
+      permanentDelegate: badState('permanentDelegate', (st) => hasKey(st, 'delegate')),
+      transferHook: badState('transferHook', (st) => hasKey(st, 'programId')),
+      transferFeeConfig: badState('transferFeeConfig', feeOk),
+      pausableConfig: badState('pausableConfig', isObj),
+    };
+    const extField = <T>(label: string, read: () => Field<T>, extName?: string): Field<T> =>
+      !info
+        ? acctMissing(label)
+        : extUndecoded
+        ? unknown('no_data', `${label}: Token-2022 extensions could not be fully decoded, so the absence of this extension cannot be confirmed`, [acctRef])
+        : extName && malformed[extName]
+        ? unknown('no_data', `${label}: the ${extName} extension is present but its state is malformed or incomplete`, [acctRef])
+        : read();
     const fee = ext('transferFeeConfig');
     const transferTax: Field<number> = extField('transfer fee', () =>
       ok(fee ? Number(fee.newerTransferFee?.transferFeeBasisPoints ?? fee.olderTransferFee?.transferFeeBasisPoints ?? 0) / 100 : 0, acctRef, {
         unit: 'pct',
         confidence: 'high',
         detail: is2022 ? (fee ? 'Token-2022 transferFeeConfig' : 'Token-2022 mint without transfer fee') : 'SPL Token program has no transfer-fee mechanism',
-      }));
+      }), 'transferFeeConfig');
 
     // ---- supply (on-chain, chain scope)
     const supplyRes = await rpc('getTokenSupply', [mint], 'default', acct.ok ? acct.ref.source : undefined); // different operator than the mint-account read
@@ -189,15 +209,15 @@ export const solanaAdapter: ChainAdapter = {
       token_standard: info ? ok(is2022 ? 'spl-token-2022' : program === TOKEN_PROGRAM ? 'spl-token' : String(program), acctRef) : acctMissing('token program'),
       mint_authority_active: crossCheckBool(mintActive, usable(gtMint) ? gtMint : rpc2Mint, 'mint authority'),
       freeze_authority_active: crossCheckBool(freezeActive, usable(gtFreeze) ? gtFreeze : rpc2Freeze, 'freeze authority'),
-      permanent_delegate: extField('permanent delegate', () => ok(!!ext('permanentDelegate')?.delegate, acctRef, { unit: 'bool', confidence: 'high', detail: is2022 ? undefined : 'not possible on SPL Token program' })),
-      transfer_hook: extField('transfer hook', () => ok(!!ext('transferHook')?.programId, acctRef, { unit: 'bool', confidence: 'high' })),
+      permanent_delegate: extField('permanent delegate', () => ok(!!ext('permanentDelegate')?.delegate, acctRef, { unit: 'bool', confidence: 'high', detail: is2022 ? undefined : 'not possible on SPL Token program' }), 'permanentDelegate'),
+      transfer_hook: extField('transfer hook', () => ok(!!ext('transferHook')?.programId, acctRef, { unit: 'bool', confidence: 'high' }), 'transferHook'),
       transfer_tax_pct: transferTax,
       buy_tax_pct: unknown('not_applicable', 'Solana has no per-direction buy tax; see transfer_tax_pct', [], { unit: 'pct' }),
       sell_tax_pct: unknown('not_applicable', 'Solana has no per-direction sell tax; see transfer_tax_pct', [], { unit: 'pct' }),
       honeypot: unknown('not_applicable', 'EVM honeypot simulation does not apply; freeze authority, permanent delegate and transfer hook cover the Solana equivalents', [], { unit: 'bool' }),
       upgradeable_proxy: unknown('not_applicable', 'SPL mints have no per-token contract code to upgrade', [], { unit: 'bool' }),
       owner_address: unknown('not_applicable', 'SPL mints have no owner; see mint/freeze authority', []),
-      pausable: extField('pausable', () => ok(!!ext('pausableConfig'), acctRef, { unit: 'bool', confidence: 'high', detail: 'Token-2022 pausable extension (the pause authority can halt all transfers)' })),
+      pausable: extField('pausable', () => ok(!!ext('pausableConfig'), acctRef, { unit: 'bool', confidence: 'high', detail: 'Token-2022 pausable extension (the pause authority can halt all transfers)' }), 'pausableConfig'),
       blacklist: unknown('not_applicable', 'SPL has no blacklist; a freeze authority is the equivalent control', [], { unit: 'bool' }),
       ...concentration,
       liquidity_locked_pct: unknown('not_supported_on_chain', 'no free Solana source for LP lock status', [], { unit: 'pct' }),
