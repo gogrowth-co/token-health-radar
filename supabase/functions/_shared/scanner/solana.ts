@@ -42,7 +42,10 @@ export const solanaAdapter: ChainAdapter = {
   nansenChain: () => 'solana',
 
   async collect(ctx: ScanContext, mint: string, market): Promise<ChainFacts> {
-    const rpc = (method: string, params: unknown[], which: 'default' | 'largest' = 'default') => ctx.rpc<any>('solana_rpc', endpoints(which), method, params);
+    // `exclude` = an endpoint's source id (e.g. 'solana_rpc:helius') to skip, so a second read of the same
+    // fact comes from a different operator and counts as an independent source.
+    const rpc = (method: string, params: unknown[], which: 'default' | 'largest' = 'default', exclude?: string) =>
+      ctx.rpc<any>('solana_rpc', endpoints(which).filter((e) => `solana_rpc:${e.name}` !== exclude), method, params);
 
     // ---- mint account: decimals, supply, authorities, program, Token-2022 extensions
     const acct = await rpc('getAccountInfo', [mint, { encoding: 'jsonParsed' }]);
@@ -72,15 +75,31 @@ export const solanaAdapter: ChainAdapter = {
     const decimals = info && Number.isInteger(Number(info.decimals)) && Number(info.decimals) >= 0 && Number(info.decimals) <= 36 ? Number(info.decimals) : null;
     // An authority is REVOKED only when the parsed account says so explicitly (`null`). A property that is
     // missing from the response is unknown, never "revoked" (Codex review 2026-09-25, finding 5).
-    const authority = (key: 'mintAuthority' | 'freezeAuthority', label: string): Field<boolean> => {
-      if (!info) return acctMissing(label);
-      const raw = info[key];
-      if (raw === null) return ok(false, acctRef, { unit: 'bool' });
-      if (typeof raw === 'string' && raw.length > 0) return ok(true, acctRef, { unit: 'bool' });
-      return unknown('no_data', `${label}: "${key}" is ${raw === undefined ? 'absent from' : 'malformed in'} the parsed mint account; absent is not the same as revoked`, [acctRef], { unit: 'bool' });
+    const authorityOf = (i: any, r: SourceRef, key: 'mintAuthority' | 'freezeAuthority', label: string): Field<boolean> => {
+      const raw = i[key];
+      if (raw === null) return ok(false, r, { unit: 'bool' });
+      if (typeof raw === 'string' && raw.length > 0) return ok(true, r, { unit: 'bool' });
+      return unknown('no_data', `${label}: "${key}" is ${raw === undefined ? 'absent from' : 'malformed in'} the parsed mint account; absent is not the same as revoked`, [r], { unit: 'bool' });
     };
+    const authority = (key: 'mintAuthority' | 'freezeAuthority', label: string): Field<boolean> => (info ? authorityOf(info, acctRef, key, label) : acctMissing(label));
     const mintActive = authority('mintAuthority', 'mint authority');
     const freezeActive = authority('freezeAuthority', 'freeze authority');
+    // Second, independent reading of the authorities: GeckoTerminal when it answered, otherwise the same account
+    // read from a DIFFERENT RPC operator (so a GeckoTerminal outage does not leave the value uncorroborated).
+    const gtMint = gtBool(gta?.mint_authority, 'mint authority');
+    const gtFreeze = gtBool(gta?.freeze_authority, 'freeze authority');
+    let rpc2Mint: Field<boolean> = unknown('no_data', 'second RPC read not needed or unavailable', [], { unit: 'bool' });
+    let rpc2Freeze: Field<boolean> = rpc2Mint;
+    if (info && (!usable(gtMint) || !usable(gtFreeze))) {
+      const acct2 = await rpc('getAccountInfo', [mint, { encoding: 'jsonParsed' }], 'default', acct.ref.source);
+      const p2 = acct2.ok ? acct2.data?.value?.data?.parsed : null;
+      const i2 = p2?.type === 'mint' ? p2.info : null;
+      const r2: SourceRef = { ...acct2.ref, raw_excerpt: { method: 'getAccountInfo', mintAuthority: i2?.mintAuthority, freezeAuthority: i2?.freezeAuthority } };
+      if (i2) {
+        rpc2Mint = authorityOf(i2, r2, 'mintAuthority', 'mint authority (second RPC)');
+        rpc2Freeze = authorityOf(i2, r2, 'freezeAuthority', 'freeze authority (second RPC)');
+      } else rpc2Mint = rpc2Freeze = unknown(acct2.ok ? 'no_data' : acct2.reason, 'second RPC operator returned no parsed mint account', [r2], { unit: 'bool' });
+    }
 
     // Token-2022 extensions that change holder risk. The decoder omits `extensions` when a mint has none;
     // a present-but-malformed list, or an extension the RPC could not decode, means we cannot rule an extension out.
@@ -101,7 +120,7 @@ export const solanaAdapter: ChainAdapter = {
       }));
 
     // ---- supply (on-chain, chain scope)
-    const supplyRes = await rpc('getTokenSupply', [mint]);
+    const supplyRes = await rpc('getTokenSupply', [mint], 'default', acct.ok ? acct.ref.source : undefined); // different operator than the mint-account read
     let totalOnchain: Field<number>;
     if (supplyRes.ok && supplyRes.data?.value) {
       const v = supplyRes.data.value;
@@ -164,8 +183,8 @@ export const solanaAdapter: ChainAdapter = {
       decimals: decimals !== null ? ok(decimals, acctRef, { unit: 'decimals', confidence: 'high' }) : acctMissing('decimals'),
       total_supply_onchain: crossCheckNumber(totalOnchain, mintSupply, { tolerance: 0.0001, unit: 'tokens', label: 'on-chain supply (getTokenSupply vs mint account)' }),
       token_standard: info ? ok(is2022 ? 'spl-token-2022' : program === TOKEN_PROGRAM ? 'spl-token' : String(program), acctRef) : acctMissing('token program'),
-      mint_authority_active: crossCheckBool(mintActive, gtBool(gta?.mint_authority, 'mint authority'), 'mint authority'),
-      freeze_authority_active: crossCheckBool(freezeActive, gtBool(gta?.freeze_authority, 'freeze authority'), 'freeze authority'),
+      mint_authority_active: crossCheckBool(mintActive, usable(gtMint) ? gtMint : rpc2Mint, 'mint authority'),
+      freeze_authority_active: crossCheckBool(freezeActive, usable(gtFreeze) ? gtFreeze : rpc2Freeze, 'freeze authority'),
       permanent_delegate: extField('permanent delegate', () => ok(!!ext('permanentDelegate')?.delegate, acctRef, { unit: 'bool', confidence: 'high', detail: is2022 ? undefined : 'not possible on SPL Token program' })),
       transfer_hook: extField('transfer hook', () => ok(!!ext('transferHook')?.programId, acctRef, { unit: 'bool', confidence: 'high' })),
       transfer_tax_pct: transferTax,

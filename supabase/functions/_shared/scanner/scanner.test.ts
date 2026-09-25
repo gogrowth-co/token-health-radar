@@ -173,7 +173,7 @@ Deno.test('scoring: disputed input is excluded and blocks a required slot', () =
 });
 
 Deno.test('scoring: known inputs only; optional missing inputs do not count', () => {
-  const s = scoreRecord(fakeRecord({ 'chain.mint_authority_active': ok(false, ref), 'chain.freeze_authority_active': ok(false, ref) }));
+  const s = scoreRecord(fakeRecord({ 'chain.mint_authority_active': ok(false, ref, { corroborated: true }), 'chain.freeze_authority_active': ok(false, ref, { corroborated: true }) }));
   assertEquals(s.dimensions.security.score, 100);
 });
 
@@ -185,7 +185,7 @@ Deno.test('plausibility: circulating > total is flagged and taken out of scoring
 });
 
 Deno.test('plausibility: circulating == total confirmed by two sources is info only (WBTC case)', () => {
-  const rec = fakeRecord({ 'market.circulating_supply': ok(100, ref, { confidence: 'high' }), 'market.total_supply_market': ok(100, ref) });
+  const rec = fakeRecord({ 'market.circulating_supply': ok(100, ref, { confidence: 'high', corroborated: true }), 'market.total_supply_market': ok(100, ref) });
   const flags = runPlausibility(rec);
   assert(flags.every((f) => f.severity === 'info'));
 });
@@ -228,7 +228,7 @@ Deno.test('unlocks: a series that stops while still emitting is unknown, not 0 (
 Deno.test('unlocks: "none" is derived only when fully circulating per two sources AND supply cannot grow', () => {
   const nf = unknown<any>('not_found');
   const unl = { emissions_source: nf, next_unlock_date: nf, next_unlock_amount: nf, unlock_30d_amount: nf, unlock_90d_amount: nf, last_scheduled_event: nf };
-  const base = { 'market.circulating_supply': ok(100, ref, { confidence: 'high' }), 'market.total_supply_market': ok(100, ref), 'chain.mint_authority_active': ok(false, ref) };
+  const base = { 'market.circulating_supply': ok(100, ref, { confidence: 'high', corroborated: true }), 'market.total_supply_market': ok(100, ref), 'chain.mint_authority_active': ok(false, ref, { corroborated: true }) };
   const rec = fakeRecord(base);
   rec.unlocks = unl;
   assertEquals(inferNoUnlocks(rec).unlock_90d_amount.value, 0);
@@ -238,7 +238,7 @@ Deno.test('unlocks: "none" is derived only when fully circulating per two source
   const oneSource = fakeRecord({ ...base, 'market.circulating_supply': ok(100, ref, { confidence: 'medium' }) });
   oneSource.unlocks = unl;
   assertEquals(inferNoUnlocks(oneSource).unlock_90d_amount.status, 'unknown');
-  const locked = fakeRecord({ ...base, 'market.circulating_supply': ok(80, ref, { confidence: 'high' }) });
+  const locked = fakeRecord({ ...base, 'market.circulating_supply': ok(80, ref, { confidence: 'high', corroborated: true }) });
   locked.unlocks = unl;
   assertEquals(inferNoUnlocks(locked).unlock_90d_amount.status, 'unknown');
 });
@@ -431,6 +431,52 @@ Deno.test('evm: proxy with a readable implementation finds selectors in the impl
   try {
     const f = await evmAdapter.collect(new ScanContext(), EVM_TOKEN, {} as any, '0x1');
     assertEquals(f.mint_authority_active.value, true);
+  } finally {
+    restore();
+  }
+});
+
+// ---- Finding 2: two independent sources are required for the score-driving fields
+Deno.test('cross-checks: one source is ok but NOT corroborated; two agreeing sources are; a dispute is not', () => {
+  const single = crossCheckNumber(ok(100, ref), unknown('timeout'), { label: 'x' });
+  assertEquals([single.status, single.corroborated], ['ok', false]);
+  assertEquals(crossCheckNumber(ok(100, ref), ok(100.5, ref), { label: 'x' }).corroborated, true);
+  assertEquals(crossCheckNumber(ok(100, ref), ok(150, ref), { label: 'x' }).corroborated, false);
+  assertEquals(crossCheckBool(ok(false, ref), unknown('rate_limited'), 'm').corroborated, false);
+  assertEquals(crossCheckBool(ok(false, ref), ok(false, ref), 'm').corroborated, true);
+});
+
+Deno.test('scoring: a single-source mint/freeze authority earns no points and blocks the security score', () => {
+  const single = crossCheckBool(ok(false, ref), unknown('rate_limited'), 'mint');
+  const s = scoreRecord(fakeRecord({ 'chain.mint_authority_active': single, 'chain.freeze_authority_active': ok(false, ref, { corroborated: true }) }));
+  assertEquals(s.dimensions.security.score, null);
+  assert(s.dimensions.security.inputs_excluded.mint_authority_active.startsWith('not_corroborated'));
+});
+
+Deno.test('scoring: single-source circulating supply or top-10 share cannot score tokenomics', () => {
+  const twoSrc = { corroborated: true, confidence: 'high' as const };
+  const good = { 'derived.circulating_ratio': ok(0.5, ref, twoSrc), 'chain.top10_pct': ok(30, ref, twoSrc) };
+  assert(scoreRecord(fakeRecord(good)).dimensions.tokenomics.score !== null);
+  assertEquals(scoreRecord(fakeRecord({ ...good, 'derived.circulating_ratio': ok(0.5, ref, { corroborated: false }) })).dimensions.tokenomics.score, null);
+  assertEquals(scoreRecord(fakeRecord({ ...good, 'chain.top10_pct': ok(30, ref, { corroborated: false }) })).dimensions.tokenomics.score, null);
+});
+
+Deno.test('solana: authorities and supply are read from a different RPC operator when GeckoTerminal is down', async () => {
+  const served: Record<string, string[]> = {};
+  stubFetch((url, body) => {
+    if (body?.method) (served[body.method] ??= []).push(url);
+    if (body?.method === 'getAccountInfo') return { json: { jsonrpc: '2.0', id: 1, result: { context: { slot: 1 }, value: { owner: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA', data: { parsed: { type: 'mint', info: { decimals: 6, supply: '1000000000', mintAuthority: null, freezeAuthority: null } } } } } } };
+    if (body?.method === 'getTokenSupply') return { json: { jsonrpc: '2.0', id: 1, result: { context: { slot: 1 }, value: { amount: '1000000000', decimals: 6 } } } };
+    if (body?.method) return { json: { jsonrpc: '2.0', id: 1, result: { context: { slot: 1 }, value: null } } };
+    return { status: 503, text: 'down' }; // GeckoTerminal unavailable
+  });
+  try {
+    const f = await solanaAdapter.collect(new ScanContext(), EXACT_L_MINT, {} as any, 'solana');
+    assertEquals(f.mint_authority_active.corroborated, true);
+    assertEquals(f.freeze_authority_active.corroborated, true);
+    assertEquals(f.total_supply_onchain.corroborated, true);
+    assert(served.getAccountInfo.length >= 2 && new Set(served.getAccountInfo).size >= 2, 'the two mint-account reads must hit different endpoints');
+    assert(served.getTokenSupply[0] !== served.getAccountInfo[0], 'supply read must use a different endpoint than the first mint-account read');
   } finally {
     restore();
   }

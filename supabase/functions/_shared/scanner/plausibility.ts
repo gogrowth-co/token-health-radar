@@ -8,8 +8,8 @@ const FUTURE_SKEW_MS = 5 * 60_000;
 
 function fail<T>(f: Field<T>, detail: string, how: 'unknown' | 'disputed' = 'disputed'): Field<T> {
   return how === 'unknown'
-    ? { ...f, value: null, status: 'unknown', reason: 'failed_plausibility', confidence: undefined, detail }
-    : { ...f, status: 'disputed', reason: 'failed_plausibility', confidence: 'low', detail };
+    ? { ...f, value: null, status: 'unknown', reason: 'failed_plausibility', confidence: undefined, corroborated: false, detail }
+    : { ...f, status: 'disputed', reason: 'failed_plausibility', confidence: 'low', corroborated: false, detail };
 }
 
 export function runPlausibility(rec: ScanRecord, previous?: { total_supply_onchain?: number | null; scanned_at?: string } | null): Flag[] {
@@ -29,7 +29,7 @@ export function runPlausibility(rec: ScanRecord, previous?: { total_supply_oncha
   // 2. Circulating == total is allowed only when a source reports it (never derived);
   //    confirmed by two sources = fine (WBTC, BONK); single source = warning.
   if (usable(m.circulating_supply) && usable(m.total_supply_market) && relDiff(m.circulating_supply.value, m.total_supply_market.value) < 0.001) {
-    const twoSources = m.circulating_supply.confidence === 'high';
+    const twoSources = m.circulating_supply.corroborated === true;
     flags.push({ rule: 'circulating_equals_total', severity: twoSources ? 'info' : 'warning', field: 'market.circulating_supply', detail: twoSources ? 'fully circulating, reported by two sources' : 'fully circulating per a single source only' });
   }
   // 3. Percentages: 0..100 and monotonic top-N.
@@ -55,7 +55,7 @@ export function runPlausibility(rec: ScanRecord, previous?: { total_supply_oncha
     } else if (single && relDiff(c.total_supply_onchain.value, m.total_supply_market.value) > 0.02) {
       // Single-chain token: on-chain and market totals should agree (2%).
       flags.push({ rule: 'onchain_vs_market_total', severity: 'warning', field: 'chain.total_supply_onchain', detail: `single-chain token: on-chain ${c.total_supply_onchain.value} vs market ${m.total_supply_market.value}` });
-      c.total_supply_onchain = { ...c.total_supply_onchain, status: 'disputed', reason: 'sources_disagree', confidence: 'low', detail: 'on-chain vs market total supply differ >2% on a single-chain token' };
+      c.total_supply_onchain = { ...c.total_supply_onchain, status: 'disputed', reason: 'sources_disagree', confidence: 'low', corroborated: false, detail: 'on-chain vs market total supply differ >2% on a single-chain token' };
     } else if (!single && relDiff(c.total_supply_onchain.value, m.total_supply_market.value) > 0.02) {
       flags.push({ rule: 'onchain_vs_market_total', severity: 'info', field: 'chain.total_supply_onchain', detail: `multichain or differently-defined total: on-chain (this chain) ${c.total_supply_onchain.value} vs market (global) ${m.total_supply_market.value}` });
     }

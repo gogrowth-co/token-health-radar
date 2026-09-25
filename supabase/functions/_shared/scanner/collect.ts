@@ -1,7 +1,7 @@
 // Scanner orchestrator: collect every field for one token into a ScanRecord.
 // Pure data collection: no DB access, no scoring. Used by run-token-scan and
 // by the golden-set tests, so what the tests check is what production runs.
-import { type Field, ok, type SourceRef, unknown, usable } from './field.ts';
+import { corroborated, type Field, ok, type SourceRef, unknown, usable } from './field.ts';
 import { ScanContext } from './http.ts';
 import { fetchMarketData, fetchUnlocks } from './market.ts';
 import { runPlausibility } from './plausibility.ts';
@@ -190,10 +190,10 @@ export function inferNoUnlocks(rec: ScanRecord): ScanRecord['unlocks'] {
   if (u.emissions_source.reason !== 'not_found') return u; // dataset exists (or lookup failed): leave as is
   const m = rec.market;
   const c = rec.chain;
-  if (!usable(m.circulating_supply) || m.circulating_supply.confidence !== 'high' || !usable(m.total_supply_market)) return u;
+  if (!corroborated(m.circulating_supply) || !usable(m.total_supply_market)) return u;
   const ratio = m.circulating_supply.value / m.total_supply_market.value;
   if (ratio < 0.995) return u;
-  if (!usable(c.mint_authority_active) || c.mint_authority_active.value !== false) return u;
+  if (!corroborated(c.mint_authority_active) || c.mint_authority_active.value !== false) return u;
   const sources = [...m.circulating_supply.sources, ...m.total_supply_market.sources, ...c.mint_authority_active.sources];
   const detail = `derived: ${(ratio * 100).toFixed(2)}% of supply already circulating per CoinGecko and CoinMarketCap, and supply cannot increase (${rec.chain_id === 'solana' ? 'mint authority revoked' : 'not mintable'}); no DeFiLlama schedule exists`;
   const zero = ok(0, sources, { unit: 'tokens', confidence: 'medium', detail });
@@ -211,7 +211,8 @@ function derive(rec: ScanRecord): ScanRecord['derived'] {
   const m = rec.market;
   const ratio = (a: Field<number>, b: Field<number>, label: string, unit: string, mult = 1): Field<number> => {
     if (!usable(a) || !usable(b) || b.value === 0) return unknown(a.status === 'disputed' || b.status === 'disputed' ? 'sources_disagree' : 'missing_input', `${label}: input missing or disputed`, [], { unit });
-    return ok(Math.round((a.value / b.value) * mult * 1e4) / 1e4, [...a.sources, ...b.sources], { unit, confidence: a.confidence === 'high' && b.confidence === 'high' ? 'high' : 'medium', detail: label });
+    const both = a.corroborated === true && b.corroborated === true;
+    return ok(Math.round((a.value / b.value) * mult * 1e4) / 1e4, [...a.sources, ...b.sources], { unit, confidence: both ? 'high' : 'medium', corroborated: both, detail: label });
   };
   const diff = (a: Field<number>, b: Field<number>, label: string): Field<number> => {
     if (!usable(a) || !usable(b)) return unknown('missing_input', `${label}: input missing or disputed`, [], { unit: 'tokens' });

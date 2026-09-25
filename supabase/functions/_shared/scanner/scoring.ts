@@ -34,7 +34,10 @@ export interface ScoreResult {
   dimensions: Record<'security' | 'tokenomics' | 'liquidity' | 'community' | 'development', DimensionScore>;
 }
 
-type Input = { name: string; field: Field<any> | undefined; max: number; points: (v: any) => number; required?: boolean };
+// `corroborated`: the handoff requires two independent sources for the fields that drive a score (supply,
+// circulating supply, holder concentration, mint and freeze authority). A single-source value is kept as an
+// observation but earns no points and blocks a required slot.
+type Input = { name: string; field: Field<any> | undefined; max: number; points: (v: any) => number; required?: boolean; corroborated?: boolean };
 
 function dimension(inputs: Input[]): DimensionScore {
   const used: DimensionScore['inputs_used'] = {};
@@ -42,9 +45,10 @@ function dimension(inputs: Input[]): DimensionScore {
   const missingRequired: string[] = [];
   for (const i of inputs) {
     const f = i.field as Field<any> | undefined;
-    if (f && (usable(f) as boolean)) used[i.name] = { value: f.value, points: i.points(f.value), max: i.max };
+    const single = !!f && (usable(f) as boolean) && !!i.corroborated && f.corroborated !== true;
+    if (f && (usable(f) as boolean) && !single) used[i.name] = { value: f.value, points: i.points(f.value), max: i.max };
     else {
-      const why = !f ? 'missing' : f.status === 'disputed' ? `disputed (${f.reason ?? 'sources_disagree'})` : (f.reason ?? 'unknown');
+      const why = !f ? 'missing' : single ? 'not_corroborated (one source only; two independent sources required)' : f.status === 'disputed' ? `disputed (${f.reason ?? 'sources_disagree'})` : (f.reason ?? 'unknown');
       if (f?.reason !== 'not_applicable') excluded[i.name] = why;
       if (i.required) missingRequired.push(`${i.name}: ${why}`);
     }
@@ -76,8 +80,8 @@ export function scoreRecord(
 
   const security = isSol
     ? dimension([
-      { name: 'mint_authority_active', field: c.mint_authority_active, max: 35, points: (v) => (v ? 0 : 35), required: true },
-      { name: 'freeze_authority_active', field: c.freeze_authority_active, max: 30, points: (v) => (v ? 0 : 30), required: true },
+      { name: 'mint_authority_active', field: c.mint_authority_active, max: 35, points: (v) => (v ? 0 : 35), required: true, corroborated: true },
+      { name: 'freeze_authority_active', field: c.freeze_authority_active, max: 30, points: (v) => (v ? 0 : 30), required: true, corroborated: true },
       { name: 'permanent_delegate', field: c.permanent_delegate, max: 15, points: (v) => (v ? 0 : 15) },
       { name: 'transfer_hook', field: c.transfer_hook, max: 10, points: (v) => (v ? 0 : 10) },
       { name: 'pausable', field: c.pausable, max: 10, points: (v) => (v ? 0 : 10) },
@@ -85,7 +89,7 @@ export function scoreRecord(
     ])
     : dimension([
       { name: 'honeypot', field: c.honeypot, max: 30, points: (v) => (v ? 0 : 30), required: true },
-      { name: 'mint_authority_active', field: c.mint_authority_active, max: 20, points: (v) => privileged(v, 20, 15, 0), required: true },
+      { name: 'mint_authority_active', field: c.mint_authority_active, max: 20, points: (v) => privileged(v, 20, 15, 0), required: true, corroborated: true },
       { name: 'upgradeable_proxy', field: c.upgradeable_proxy, max: 15, points: (v) => (v ? 5 : 15) },
       { name: 'pausable', field: c.pausable, max: 10, points: (v) => privileged(v, 10, 8, 3) },
       { name: 'blacklist', field: c.blacklist, max: 10, points: (v) => privileged(v, 10, 8, 3) },
@@ -98,8 +102,9 @@ export function scoreRecord(
   const useExternal = usable(c.top10_excl_noncirculating_pct) && usable(c.top10_pct);
   const conc: Field<number> = useExternal ? c.top10_excl_noncirculating_pct : c.top10_pct;
   const tokenomics = dimension([
-    { name: 'circulating_ratio', field: rec.derived.circulating_ratio, max: 35, points: (v) => band(v, [[0.3, 6], [0.5, 12], [0.7, 18], [0.9, 24]], 35), required: true },
-    { name: useExternal ? 'top10_excl_noncirculating_pct' : 'top10_pct', field: conc, max: 40, points: (v) => band(v, [[20, 40], [35, 32], [50, 22], [70, 12]], 4), required: true },
+    { name: 'circulating_ratio', field: rec.derived.circulating_ratio, max: 35, points: (v) => band(v, [[0.3, 6], [0.5, 12], [0.7, 18], [0.9, 24]], 35), required: true, corroborated: true },
+    // The external share is derived from the same holder list as top10_pct, so the base top-10 reading's corroboration gates both.
+    { name: useExternal ? 'top10_excl_noncirculating_pct' : 'top10_pct', field: usable(c.top10_pct) && c.top10_pct.corroborated === true ? conc : { ...conc, corroborated: false }, max: 40, points: (v) => band(v, [[20, 40], [35, 32], [50, 22], [70, 12]], 4), required: true, corroborated: true },
     { name: 'unlock_90d_pct_of_circ', field: rec.derived.unlock_90d_pct_of_circ, max: 25, points: (v) => band(v, [[0.001, 25], [2, 20], [5, 12], [10, 6]], 0) },
   ]);
 

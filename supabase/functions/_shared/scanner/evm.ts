@@ -92,9 +92,15 @@ export const evmAdapter: ChainAdapter = {
 
     const decimals = dec.ok && dec.data && dec.data !== '0x' ? parseInt(dec.data, 16) : null;
     const decF: Field<number> = decimals !== null && decimals <= 36 ? ok(decimals, refOf(dec, { decimals: dec.data }), { unit: 'decimals', confidence: 'high' }) : unknown(dec.ok ? 'no_data' : dec.reason, dec.ok ? 'decimals() returned nothing' : dec.detail, [dec.ref]);
-    const total: Field<number> = ts.ok && ts.data && ts.data !== '0x' && decimals !== null
-      ? ok(Number(BigInt(ts.data)) / 10 ** decimals, refOf(ts, { totalSupply_raw: BigInt(ts.data).toString(), decimals }), { unit: 'tokens', decimals, scope: 'chain', confidence: 'medium' })
-      : unknown(ts.ok ? (decimals === null ? 'missing_input' : 'no_data') : ts.reason, ts.ok ? 'totalSupply() or decimals unavailable' : ts.detail, [ts.ref], { unit: 'tokens', scope: 'chain' });
+    const totalFrom = (r: typeof ts): Field<number> =>
+      r.ok && r.data && r.data !== '0x' && decimals !== null
+        ? ok(Number(BigInt(r.data)) / 10 ** decimals, refOf(r, { totalSupply_raw: BigInt(r.data).toString(), decimals }), { unit: 'tokens', decimals, scope: 'chain', confidence: 'medium' })
+        : unknown(r.ok ? (decimals === null ? 'missing_input' : 'no_data') : r.reason, r.ok ? 'totalSupply() or decimals unavailable' : r.detail, [r.ref], { unit: 'tokens', scope: 'chain' });
+    // Second, independent read of totalSupply from a DIFFERENT RPC operator (Codex review finding 2).
+    const ts2 = ts.ok
+      ? await ctx.rpc<string>(`evm_rpc_${chain.goplus}`, chain.rpcs.filter((r) => `evm_rpc_${chain.goplus}:${r.name}` !== ts.ref.source), 'eth_call', [{ to: a, data: '0x18160ddd' }, 'latest'])
+      : ts;
+    const total: Field<number> = crossCheckNumber(totalFrom(ts), totalFrom(ts2), { tolerance: 0.001, unit: 'tokens', label: 'totalSupply (two RPC operators)' });
 
     // Proxy: any standard implementation/beacon slot set.
     const slotSet = Object.entries(slotVals).filter(([, r]) => r.ok && r.data && !zeroAddr(r.data));
@@ -321,7 +327,7 @@ function crossCheckOwner(onchain: Field<string>, gpOwner: unknown, gpRef: Source
   const gpVal = typeof gpOwner === 'string' && gpOwner !== '' ? gpOwner.toLowerCase() : null;
   const sources = [...onchain.sources.map((s) => ({ ...s, value: onchain.value })), { ...gpRef, value: gpVal }];
   if (usable(onchain) && gpVal) {
-    return onchain.value === gpVal ? { ...onchain, confidence: 'high', sources } : { ...onchain, status: 'disputed', reason: 'sources_disagree', confidence: 'low', detail: `owner: on-chain ${onchain.value} vs GoPlus ${gpVal}`, sources };
+    return onchain.value === gpVal ? { ...onchain, confidence: 'high', corroborated: true, sources } : { ...onchain, status: 'disputed', reason: 'sources_disagree', confidence: 'low', detail: `owner: on-chain ${onchain.value} vs GoPlus ${gpVal}`, sources };
   }
   return { ...onchain, sources };
 }
