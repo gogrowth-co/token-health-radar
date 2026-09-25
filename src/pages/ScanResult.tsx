@@ -413,7 +413,8 @@ export default function ScanResult() {
 
   // Get chain configuration for proper network display
   const chainConfig = getChainConfigByMoralisId(chainId);
-  const chainName = chainConfig?.name || "Ethereum";
+  const isSolanaChain = String(chainId).toLowerCase() === "solana";
+  const chainName = isSolanaChain ? "Solana" : (chainConfig?.name || "Ethereum");
 
   const displayDescription = (() => {
     const truncate = (s: string, max = 180) => (s.length <= max ? s : s.slice(0, max - 1).trimEnd() + '\u2026');
@@ -449,7 +450,7 @@ export default function ScanResult() {
     return finalText;
   })();
 
-  const networkName = chainConfig?.name === "Base" ? "BASE" : (chainConfig?.name === "Arbitrum" ? "ARB" : "ETH");
+  const networkName = isSolanaChain ? "SOL" : chainConfig?.name === "Base" ? "BASE" : (chainConfig?.name === "Arbitrum" ? "ARB" : "ETH");
   // Use the calculated overall score from the scan data
   const overallScore: number | null = typeof scanData.overall_score === 'number' ? scanData.overall_score : null;
 
