@@ -85,6 +85,12 @@ verify_jwt = false
 [functions.token-health-mcp]
 verify_jwt = false
 
+[functions.x402-scan]
+verify_jwt = false
+
+[functions.x402-ledger]
+verify_jwt = false
+
 [functions.kiwify-webhook]
 verify_jwt = false
 

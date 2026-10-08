@@ -1,0 +1,17 @@
+{
+  "name": "ths-x402-agent-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Example agent that pays Token Health Scan per call in USDC on Solana over x402",
+  "license": "MIT",
+  "dependencies": {
+    "@scure/base": "^2.4.0",
+    "@solana/kit": "^5.5.1",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.99.0",
+    "@x402/core": "^2.28.0",
+    "@x402/fetch": "^2.28.0",
+    "@x402/svm": "^2.28.0"
+  }
+}

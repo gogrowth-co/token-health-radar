@@ -1,6 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.7";
 import { checkRateLimit, createRateLimitError } from "../_shared/rateLimit.ts";
 import { getClientIp } from "../_shared/authGuard.ts";
+import { executePaidScan } from "../_shared/paidScan.ts";
+import type { PaymentPayload } from "../_shared/x402.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -16,7 +18,7 @@ const TOOLS = [
   {
     name: "scan_token",
     description:
-      "Run a full health scan on a crypto token. Analyzes security, liquidity, tokenomics, community, and development across EVM chains and Solana. Returns a 0–100 score per dimension and an overall health score. Takes 5–20 seconds.",
+      "PAID, 0.02 USDC per call on Solana via x402 (no account or API key). Run a full health scan on a crypto token. Analyzes security, liquidity, tokenomics, community, and development across EVM chains and Solana. Returns a 0–100 score per dimension and an overall health score. Takes 5–20 seconds. Call without payment to receive the x402 PaymentRequired; retry with the signed payment in _meta[\"x402/payment\"]. USDC only moves after the scan succeeds.",
     inputSchema: {
       type: "object",
       properties: {
@@ -79,45 +81,6 @@ function generateVerdict(scores: Record<string, number | null>, overall: number)
   return `${level} (${overall}/100).${weakStr}`;
 }
 
-async function handleScanToken(args: { address: string; chain: string }) {
-  const chain_id = normalizeChain(args.chain);
-  const address = isSolana(args.chain) ? args.address : args.address.toLowerCase();
-  const start = Date.now();
-
-  const res = await fetch(
-    `${Deno.env.get("SUPABASE_URL")}/functions/v1/run-token-scan`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-      },
-      body: JSON.stringify({ token_address: address, chain_id, user_id: null, force_refresh: false }),
-    },
-  );
-
-  const data = await res.json();
-  if (!res.ok || !data?.success) {
-    throw new Error(data?.error ?? `Scan failed (HTTP ${res.status})`);
-  }
-
-  return {
-    name: data.token_name,
-    symbol: data.token_symbol,
-    address,
-    chain: args.chain,
-    overall_score: data.overall_score ?? null,
-    overall_reason: data.overall_reason ?? null,
-    scores: data.scores,
-    scoring_version: data.scoring_version ?? null,
-    // A missing overall is "not enough verified data", never a score of 0.
-    verdict: typeof data.overall_score === 'number'
-      ? generateVerdict(data.scores ?? {}, data.overall_score)
-      : `Not scored: ${data.overall_reason ?? 'not enough verified data'}.`,
-    scan_duration_ms: Date.now() - start,
-  };
-}
-
 async function handleGetCachedScores(args: { address: string; chain: string }) {
   const chain_id = normalizeChain(args.chain);
   const addr = isSolana(args.chain) ? args.address : args.address.toLowerCase();
@@ -174,6 +137,58 @@ async function handleGetCachedScores(args: { address: string; chain: string }) {
     cache_age_hours,
     verdict: overall_score !== null ? generateVerdict(scores, overall_score) : 'Not scored: not enough verified data.',
   };
+}
+
+
+// x402 over MCP: https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/mcp.md
+async function handlePaidScan(
+  args: { address: string; chain: string },
+  payment: PaymentPayload | null,
+  ok: (result: any) => Response,
+  err: (code: number, message: string) => Response,
+) {
+  const outcome = await executePaidScan({
+    payment,
+    channel: "mcp",
+    input: { address: args.address, chain: args.chain },
+    resource: {
+      url: `mcp://tool/scan_token?chain=${encodeURIComponent(args.chain)}&address=${encodeURIComponent(args.address)}`,
+      description: "Token Health Scan: 0-100 health score across security, liquidity, tokenomics, community and development",
+      mimeType: "application/json",
+      serviceName: "Token Health Scan",
+      tags: ["token-risk", "security", "solana"],
+    },
+  });
+  switch (outcome.kind) {
+    case "invalid_input":
+      return err(-32602, outcome.message);
+    case "not_configured":
+      return err(-32603, "x402 payments are not configured on this deployment");
+    case "facilitator_down":
+    case "ledger_error":
+      return err(-32603, "Payment service unavailable, try again shortly");
+    case "not_scored":
+      return ok({
+        isError: true,
+        content: [{ type: "text", text: JSON.stringify({ error: "Not scored: not enough verified data for a verdict. You were not charged.", partial: outcome.result }, null, 2) }],
+      });
+    case "scan_failed":
+      return err(-32603, `Scan failed. You were not charged. ${outcome.message}`);
+    case "payment_required":
+      // Per the x402 MCP transport spec (specs/transports-v2/mcp.md, "Payment Required Signaling") the
+      // requirements go in structuredContent and, identically, in content[0].text. The official @x402/mcp
+      // client reads structuredContent.
+      return ok({
+        isError: true,
+        structuredContent: outcome.required,
+        content: [{ type: "text", text: JSON.stringify(outcome.required) }],
+      });
+    case "ok":
+      return ok({
+        content: [{ type: "text", text: JSON.stringify({ ...outcome.result, payment: { transaction: outcome.settle.transaction, explorer: outcome.explorer } }, null, 2) }],
+        _meta: { "x402/payment-response": outcome.settle },
+      });
+  }
 }
 
 // --- Main JSON-RPC 2.0 Router ---
@@ -237,7 +252,7 @@ Deno.serve(async (req: Request) => {
 
         let toolResult: any;
         if (name === "scan_token") {
-          toolResult = await handleScanToken(args);
+          return await handlePaidScan(args, params?._meta?.["x402/payment"] ?? null, ok, err);
         } else if (name === "get_cached_scores") {
           toolResult = await handleGetCachedScores(args);
         } else {
