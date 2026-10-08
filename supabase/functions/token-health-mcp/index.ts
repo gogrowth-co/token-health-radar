@@ -63,10 +63,6 @@ function normalizeChain(chain: string): string {
   return map[chain.toLowerCase()] ?? "0x1";
 }
 
-function isSolana(chain: string): boolean {
-  return ["solana", "sol"].includes(chain.toLowerCase());
-}
-
 function generateVerdict(scores: Record<string, number | null>, overall: number): string {
   const level =
     overall >= 80 ? "Healthy token"
@@ -83,7 +79,9 @@ function generateVerdict(scores: Record<string, number | null>, overall: number)
 
 async function handleGetCachedScores(args: { address: string; chain: string }) {
   const chain_id = normalizeChain(args.chain);
-  const addr = isSolana(args.chain) ? args.address : args.address.toLowerCase();
+  // The cache tables store every address lowercased, Solana mints included (run-token-scan restores the
+  // exact case separately). Looking up a base58 mint in its original case never matched.
+  const addr = args.address.trim().toLowerCase();
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
