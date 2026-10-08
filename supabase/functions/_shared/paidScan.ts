@@ -176,7 +176,14 @@ export async function executePaidScan(req: PaidScanRequest): Promise<PaidScanOut
   if (insertError || !row) return { kind: "ledger_error", message: insertError?.message ?? "could not record payment" };
   const mark = (patch: Record<string, unknown>) => db.from("x402_payments").update(patch).eq("id", row.id);
 
-  const verified = await verifyPayment(cfg, req.payment, requirements);
+  let verified: Awaited<ReturnType<typeof verifyPayment>>;
+  try {
+    verified = await verifyPayment(cfg, req.payment, requirements);
+  } catch (e) {
+    // Nothing was settled: free the payment for a retry.
+    await mark({ status: "void", error: `verify: ${(e as Error).message}`.slice(0, 500) });
+    return { kind: "facilitator_down", message: "facilitator unreachable during verify" };
+  }
   if (!verified.isValid) {
     await mark({ status: "void", error: `verify: ${verified.reason ?? "invalid"}` });
     return required(`Payment verification failed: ${verified.reason ?? "invalid payment"}`);
@@ -190,19 +197,33 @@ export async function executePaidScan(req: PaidScanRequest): Promise<PaidScanOut
     return { kind: "scan_failed", message: (e as Error).message };
   }
 
-  const settle = await settlePayment(cfg, req.payment, requirements);
+  let settle: SettleResponse;
+  try {
+    settle = await settlePayment(cfg, req.payment, requirements);
+  } catch (e) {
+    // The facilitator may or may not have broadcast. Keep the row retryable and flag it for reconciliation.
+    await mark({ status: "unsettled", payer: verified.payer ?? null, error: `settle: no response (${(e as Error).message})`.slice(0, 500) });
+    return { kind: "facilitator_down", message: "facilitator unreachable during settle" };
+  }
   if (!settle.success) {
     await mark({ status: "unsettled", payer: settle.payer ?? verified.payer ?? null, error: `settle: ${settle.errorReason}` });
     return required(`Settlement failed: ${settle.errorReason}`);
   }
 
-  await mark({
+  // The payer has been charged and the scan is delivered. Record it, retrying once; if the ledger is down the
+  // transaction signature is in the logs for reconciliation.
+  const settledPatch = {
     status: "settled",
     settled_at: new Date().toISOString(),
     payer: settle.payer ?? verified.payer ?? null,
     tx_signature: settle.transaction,
     overall_score: result.overall_score,
     scoring_version: result.scoring_version,
-  });
+  };
+  let recorded = await mark(settledPatch);
+  if (recorded.error) recorded = await mark(settledPatch);
+  if (recorded.error) {
+    console.error(`[x402] settled but ledger update failed: tx=${settle.transaction} payload_hash=${payloadHash} error=${recorded.error.message}`);
+  }
   return { kind: "ok", result, settle, explorer: explorerUrl(settle.network, settle.transaction) };
 }
