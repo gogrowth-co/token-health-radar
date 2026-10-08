@@ -29,6 +29,7 @@ import Copilot from "./pages/Copilot";
 import NotFound from "./pages/NotFound";
 import Publications from "./pages/Publications";
 import DynamicPage from "./pages/DynamicPage";
+import AgentPayments from "./pages/AgentPayments";
 import AIAgents from "./pages/AIAgents";
 import AgentScan from "./pages/AgentScan";
 import AgentScanResult from "./pages/AgentScanResult";
@@ -130,6 +131,7 @@ const App = () => {
                     <Route path="/solana-launchpads" element={<SolanaLaunchpads />} />
                     <Route path="/ethereum-launchpads" element={<EthereumLaunchpads />} />
                     <Route path="/ai-agents" element={<AIAgents />} />
+                    <Route path="/agent-payments" element={<AgentPayments />} />
                     <Route path="/agent-scan" element={<AgentScan />} />
                     <Route path="/agent-scan/search" element={<AgentScanSearch />} />
                     <Route path="/agent-scan/:chain/:agentId" element={<AgentScanResult />} />

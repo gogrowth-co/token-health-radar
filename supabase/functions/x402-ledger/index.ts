@@ -22,7 +22,7 @@ Deno.serve(async (req: Request) => {
 
   const { data, error } = await db
     .from("x402_payments")
-    .select("settled_at, network, payer, tx_signature, amount_atomic, token_address, chain, overall_score, scoring_version, channel")
+    .select("settled_at, network, payer, tx_signature, amount_atomic, token_address, token_symbol, chain, overall_score, scores, scoring_version, channel")
     .eq("status", "settled")
     .order("settled_at", { ascending: false })
     .limit(limit);

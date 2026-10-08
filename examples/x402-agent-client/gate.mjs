@@ -8,7 +8,7 @@
 // The gate never opens a position. It only decides which candidates the agent is allowed to look at next.
 //
 //   SOLANA_KEYPAIR_PATH=<keypair.json> node gate.mjs                 # screen up to 10 tokens, spend cap 0.50 USDC
-//   GATE_MAX_TOKENS=5 GATE_MAX_SPEND_USDC=0.20 SOLANA_KEYPAIR_PATH=... node gate.mjs
+//   GATE_MAX_TOKENS=5 GATE_MAX_SPEND_USDC=0.20 GATE_MAX_PRICE_USDC=0.05 SOLANA_KEYPAIR_PATH=... node gate.mjs
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { x402Client, wrapFetchWithPayment, decodePaymentResponseHeader } from "@x402/fetch";
@@ -20,6 +20,7 @@ const KEY = process.env.SOLANA_KEYPAIR_PATH;
 const ENDPOINT = process.env.THS_X402_URL ?? "https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/x402-scan";
 const MAX_TOKENS = Number(process.env.GATE_MAX_TOKENS ?? 10);
 const MAX_SPEND = Number(process.env.GATE_MAX_SPEND_USDC ?? 0.5);
+const MAX_PRICE = Number(process.env.GATE_MAX_PRICE_USDC ?? 0.05); // refuse any single scan priced above this
 const MIN_TVL = Number(process.env.GATE_MIN_TVL_USD ?? 50_000);
 const MIN_VOL = Number(process.env.GATE_MIN_VOLUME_24H_USD ?? 10_000);
 const OUT_DIR = process.env.GATE_OUT_DIR ?? "./out";
@@ -76,17 +77,27 @@ const spentBefore = log.reduce((s, d) => s + (d.usdc ?? 0), 0);
 const recent = new Set(log.filter((d) => Date.now() - Date.parse(d.at) < RESCAN_AFTER_MS && d.tx).map((d) => d.mint));
 
 const signer = toClientSvmSigner(await createKeyPairSignerFromBytes(Uint8Array.from(JSON.parse(readFileSync(KEY, "utf8")))));
-const paidFetch = wrapFetchWithPayment(fetch, new x402Client().register("solana:*", new ExactSvmScheme(signer)));
+// The server names the price. The client enforces its own ceiling and counts what it actually agreed to pay.
+let lastPrice = 0;
+const client = new x402Client()
+  .register("solana:*", new ExactSvmScheme(signer))
+  .registerPolicy((_version, reqs) => {
+    const ok = reqs.filter((r) => Number(r.amount) / 1e6 <= MAX_PRICE);
+    if (ok[0]) lastPrice = Number(ok[0].amount) / 1e6;
+    return ok;
+  });
+const paidFetch = wrapFetchWithPayment(fetch, client);
 
 const queue = candidates().filter((c) => !recent.has(c.mint)).slice(0, MAX_TOKENS);
-console.log(`candidates to screen: ${queue.length} (cap ${MAX_TOKENS} tokens, ${MAX_SPEND} USDC this run)`);
+console.log(`candidates to screen: ${queue.length} (cap ${MAX_TOKENS} tokens, ${MAX_SPEND} USDC this run, max ${MAX_PRICE} USDC per scan)`);
 
 let spent = 0;
 for (const c of queue) {
-  if (spent + 0.02 > MAX_SPEND + 1e-9) {
+  if (spent + (lastPrice || MAX_PRICE) > MAX_SPEND + 1e-9) {
     console.log("spend cap reached, stopping");
     break;
   }
+  lastPrice = 0;
   const entry = { at: new Date().toISOString(), mint: c.mint, symbol: c.symbol, pair: c.pair, poolId: c.poolId, tvlUsd: c.tvlUsd, volume24hUsd: c.volume24hUsd, aprPct: c.aprPct };
   try {
     const res = await paidFetch(`${ENDPOINT}?chain=solana&address=${encodeURIComponent(c.mint)}`);
@@ -104,9 +115,9 @@ for (const c of queue) {
     const settled = receipt ? decodePaymentResponseHeader(receipt) : null;
     Object.assign(entry, decide(body), {
       overall: body.overall_score, scores: body.scores, verdict: body.verdict, scoringVersion: body.scoring_version,
-      tx: settled?.transaction ?? body.payment?.transaction, explorer: body.payment?.explorer, usdc: 0.02,
+      tx: settled?.transaction ?? body.payment?.transaction, explorer: body.payment?.explorer, usdc: lastPrice,
     });
-    spent += 0.02;
+    spent += lastPrice;
   } catch (e) {
     Object.assign(entry, { decision: "error", reason: String(e.message ?? e).slice(0, 300), usdc: 0 });
   }

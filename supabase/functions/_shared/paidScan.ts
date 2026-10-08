@@ -229,6 +229,8 @@ export async function executePaidScan(req: PaidScanRequest): Promise<PaidScanOut
     tx_signature: settle.transaction,
     overall_score: result.overall_score,
     scoring_version: result.scoring_version,
+    token_symbol: result.symbol,
+    scores: result.scores,
   };
   let recorded = await mark(settledPatch);
   if (recorded.error) recorded = await mark(settledPatch);
