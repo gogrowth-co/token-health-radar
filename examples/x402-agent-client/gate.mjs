@@ -79,10 +79,15 @@ const recent = new Set(log.filter((d) => Date.now() - Date.parse(d.at) < RESCAN_
 const signer = toClientSvmSigner(await createKeyPairSignerFromBytes(Uint8Array.from(JSON.parse(readFileSync(KEY, "utf8")))));
 // The server names the price. The client enforces its own ceiling and counts what it actually agreed to pay.
 let lastPrice = 0;
+let spent = 0;
 const client = new x402Client()
   .register("solana:*", new ExactSvmScheme(signer))
   .registerPolicy((_version, reqs) => {
-    const ok = reqs.filter((r) => Number(r.amount) / 1e6 <= MAX_PRICE);
+    // Runs on the current quote, before anything is signed: both ceilings are checked against what is being asked now.
+    const ok = reqs.filter((r) => {
+      const price = Number(r.amount) / 1e6;
+      return price <= MAX_PRICE && spent + price <= MAX_SPEND + 1e-9;
+    });
     if (ok[0]) lastPrice = Number(ok[0].amount) / 1e6;
     return ok;
   });
@@ -91,9 +96,8 @@ const paidFetch = wrapFetchWithPayment(fetch, client);
 const queue = candidates().filter((c) => !recent.has(c.mint)).slice(0, MAX_TOKENS);
 console.log(`candidates to screen: ${queue.length} (cap ${MAX_TOKENS} tokens, ${MAX_SPEND} USDC this run, max ${MAX_PRICE} USDC per scan)`);
 
-let spent = 0;
 for (const c of queue) {
-  if (spent + (lastPrice || MAX_PRICE) > MAX_SPEND + 1e-9) {
+  if (spent >= MAX_SPEND - 1e-9) {
     console.log("spend cap reached, stopping");
     break;
   }
@@ -119,7 +123,7 @@ for (const c of queue) {
     });
     spent += lastPrice;
   } catch (e) {
-    Object.assign(entry, { decision: "error", reason: String(e.message ?? e).slice(0, 300), usdc: 0 });
+    Object.assign(entry, { decision: "error", reason: String(e.message ?? e).slice(0, 300), usdc: 0 }); // includes "no payment option within the price or spend ceiling"
   }
   log.push(entry);
   writeFileSync(logPath, JSON.stringify(log, null, 2));
