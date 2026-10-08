@@ -144,6 +144,8 @@ export async function executePaidScan(req: PaidScanRequest): Promise<PaidScanOut
 
   if (!req.payment) return required();
   if (!matchesRequirements(req.payment.accepted, requirements)) return required("Payment does not match the requirements");
+  // Bind the payment to the scan it was signed for: the client echoes the resource it was quoted.
+  if (req.payment.resource?.url !== req.resource.url) return required("Payment was signed for a different resource");
 
   const db = ledger();
   const payloadHash = await sha256Hex(JSON.stringify(req.payment.payload));

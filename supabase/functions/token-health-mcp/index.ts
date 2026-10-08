@@ -152,7 +152,7 @@ async function handlePaidScan(
     channel: "mcp",
     input: { address: args.address, chain: args.chain },
     resource: {
-      url: "mcp://tool/scan_token",
+      url: `mcp://tool/scan_token?chain=${encodeURIComponent(args.chain)}&address=${encodeURIComponent(args.address)}`,
       description: "Token Health Scan: 0-100 health score across security, liquidity, tokenomics, community and development",
       mimeType: "application/json",
       serviceName: "Token Health Scan",
