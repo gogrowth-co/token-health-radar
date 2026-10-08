@@ -79,7 +79,8 @@ export function loadX402Config(): X402Config | null {
   const network = Deno.env.get("X402_NETWORK") || SOLANA_MAINNET;
   if (!USDC_MINT[network]) return null;
   const priceUsd = Number(Deno.env.get("X402_PRICE_USD") || "0.02");
-  if (!Number.isFinite(priceUsd) || priceUsd <= 0) return null;
+  // A price that rounds to zero atomic units would authorize a free scan.
+  if (!Number.isFinite(priceUsd) || usdToAtomic(priceUsd) === "0") return null;
   return {
     facilitatorUrl: (Deno.env.get("X402_FACILITATOR_URL") || "https://facilitator.payai.network").replace(/\/$/, ""),
     network,

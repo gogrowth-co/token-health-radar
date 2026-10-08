@@ -170,6 +170,9 @@ async function handlePaidScan(
     case "scan_failed":
       return err(-32603, `Scan failed. You were not charged. ${outcome.message}`);
     case "payment_required":
+      // Per the x402 MCP transport spec (specs/transports-v2/mcp.md, "Payment Required Signaling") the
+      // requirements go in structuredContent and, identically, in content[0].text. The official @x402/mcp
+      // client reads structuredContent.
       return ok({
         isError: true,
         structuredContent: outcome.required,

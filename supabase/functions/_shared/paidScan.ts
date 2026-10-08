@@ -157,8 +157,22 @@ export async function executePaidScan(req: PaidScanRequest): Promise<PaidScanOut
     chain: norm.chainName,
     payload_hash: payloadHash,
   };
-  const { data: row, error: insertError } = await db.from("x402_payments").insert({ ...base, status: "pending" }).select("id").single();
-  if (insertError?.code === "23505") return required("This payment was already used");
+  let { data: row, error: insertError } = await db.from("x402_payments").insert({ ...base, status: "pending" }).select("id").single();
+  if (insertError?.code === "23505") {
+    // Same signed payment again. Only a payment that never settled (verify failed, scan failed, or a transient
+    // settle failure) may be retried; the claim is atomic so two concurrent retries cannot both win.
+    const claim = await db
+      .from("x402_payments")
+      .update({ status: "pending", error: null })
+      .eq("payload_hash", payloadHash)
+      .in("status", ["void", "unsettled"])
+      .select("id")
+      .maybeSingle();
+    if (claim.error) return { kind: "ledger_error", message: claim.error.message };
+    if (!claim.data) return required("This payment was already used");
+    row = claim.data;
+    insertError = null;
+  }
   if (insertError || !row) return { kind: "ledger_error", message: insertError?.message ?? "could not record payment" };
   const mark = (patch: Record<string, unknown>) => db.from("x402_payments").update(patch).eq("id", row.id);
 

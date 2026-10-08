@@ -4,12 +4,23 @@ import {
   buildRequirements,
   decodeHeader,
   encodeHeader,
+  loadX402Config,
   matchesRequirements,
   SOLANA_MAINNET,
   usdToAtomic,
   type X402Config,
 } from "./x402.ts";
 import { normalizeScanInput } from "./paidScan.ts";
+
+Deno.test("a price that rounds to zero atomic units is not a valid configuration", () => {
+  Deno.env.set("X402_PAYEE_SOLANA", "PayeeAddr");
+  Deno.env.set("X402_PRICE_USD", "0.0000001");
+  assertEquals(loadX402Config(), null);
+  Deno.env.set("X402_PRICE_USD", "0.02");
+  assertEquals(loadX402Config()?.priceUsd, 0.02);
+  Deno.env.delete("X402_PAYEE_SOLANA");
+  Deno.env.delete("X402_PRICE_USD");
+});
 
 const cfg: X402Config = { facilitatorUrl: "https://f.example", network: SOLANA_MAINNET, payTo: "PayeeAddr", priceUsd: 0.02, memo: true };
 
