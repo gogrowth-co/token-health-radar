@@ -111,6 +111,7 @@ export type PaidScanOutcome =
   | { kind: "ledger_error"; message: string }
   | { kind: "payment_required"; required: PaymentRequired }
   | { kind: "scan_failed"; message: string }
+  | { kind: "not_scored"; result: ScanResult }
   | { kind: "ok"; result: ScanResult; settle: SettleResponse; explorer: string };
 
 export interface PaidScanRequest {
@@ -197,6 +198,13 @@ export async function executePaidScan(req: PaidScanRequest): Promise<PaidScanOut
   } catch (e) {
     await mark({ status: "void", payer: verified.payer ?? null, error: `scan: ${(e as Error).message}`.slice(0, 500) });
     return { kind: "scan_failed", message: (e as Error).message };
+  }
+
+  // No overall score means the scanner could not verify enough data to give a verdict. The payer gets the
+  // partial data for free and nothing is settled: you pay for a result you can act on.
+  if (typeof result.overall_score !== "number") {
+    await mark({ status: "void", payer: verified.payer ?? null, error: "not_scored", scoring_version: result.scoring_version });
+    return { kind: "not_scored", result };
   }
 
   let settle: SettleResponse;

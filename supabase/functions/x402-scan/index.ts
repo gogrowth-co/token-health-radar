@@ -63,6 +63,8 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Payment service unavailable, try again shortly", detail: outcome.message }, 503);
     case "payment_required":
       return json(outcome.required, 402, { "PAYMENT-REQUIRED": encodeHeader(outcome.required) });
+    case "not_scored":
+      return json({ error: "Not scored: not enough verified data for a verdict. You were not charged.", partial: outcome.result }, 422);
     case "scan_failed":
       return json({ error: "Scan failed. You were not charged.", detail: outcome.message }, 502);
     case "ok":

@@ -167,6 +167,11 @@ async function handlePaidScan(
     case "facilitator_down":
     case "ledger_error":
       return err(-32603, "Payment service unavailable, try again shortly");
+    case "not_scored":
+      return ok({
+        isError: true,
+        content: [{ type: "text", text: JSON.stringify({ error: "Not scored: not enough verified data for a verdict. You were not charged.", partial: outcome.result }, null, 2) }],
+      });
     case "scan_failed":
       return err(-32603, `Scan failed. You were not charged. ${outcome.message}`);
     case "payment_required":

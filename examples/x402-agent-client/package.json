@@ -8,6 +8,8 @@
   "dependencies": {
     "@scure/base": "^2.4.0",
     "@solana/kit": "^5.5.1",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.99.0",
     "@x402/core": "^2.28.0",
     "@x402/fetch": "^2.28.0",
     "@x402/svm": "^2.28.0"
