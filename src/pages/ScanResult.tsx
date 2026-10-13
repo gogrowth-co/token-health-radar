@@ -39,6 +39,8 @@ export default function ScanResult() {
   const isMobile = useIsMobile();
   const { isAdmin } = useUserRole();
   const [scanData, setScanData] = useState<any>(null);
+  // Which token the shown scanData belongs to ("chain:address").
+  const [scanDataKey, setScanDataKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ScanCategory>(ScanCategory.Security);
@@ -68,12 +70,18 @@ export default function ScanResult() {
     isLimited
   });
 
-  // Check user's scan access status
+  // Check user's scan access status. Waits for the result to load so a bad
+  // link or failed lookup never spends a Pro scan.
+  const currentKey = `${chainId}:${tokenAddress}`;
+  const hasScanData = !!scanData && scanDataKey === currentKey;
   useEffect(() => {
     const checkScanAccess = async () => {
-      if (isAuthenticated) {
+      if (isAuthenticated && hasScanData) {
         try {
-          const accessData = await checkUserHasProAccess();
+          // Opening a full result spends a Pro scan (once per token).
+          const accessData = await checkUserHasProAccess(
+            tokenAddress && chainId && !isLimited ? { tokenAddress, chainId } : undefined
+          );
           setScanLimitData(accessData);
         } catch (error) {
           console.error("Error checking scan access:", error);
@@ -82,10 +90,11 @@ export default function ScanResult() {
     };
 
     checkScanAccess();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, hasScanData, tokenAddress, chainId, isLimited]);
 
   useEffect(() => {
     const loadScanData = async () => {
+      const dataKey = `${chainId}:${tokenAddress}`;
       try {
         setLoading(true);
         setError(null);
@@ -110,6 +119,7 @@ export default function ScanResult() {
 
             if (cacheAge < CACHE_TTL) {
               console.log(`[CACHE] Using cached scan data (age: ${Math.round(cacheAge / 1000)}s)`);
+              setScanDataKey(dataKey);
               setScanData(cachedEntry.data);
               setLoading(false); // Show cached data immediately!
               // Continue to fetch fresh data in background below
@@ -148,6 +158,8 @@ export default function ScanResult() {
                 const selectedToken = JSON.parse(selectedTokenData);
                 if (selectedToken.address === tokenAddress || selectedToken.id === coinGeckoId) {
                   console.log("ScanResult: Using fallback data from localStorage");
+                  // Fallback summary only: not a real result, so no key (no scan spent).
+                  setScanDataKey(null);
                   setScanData({
                     success: true,
                     token_address: tokenAddress,
@@ -277,6 +289,7 @@ export default function ScanResult() {
             agentToken: cacheData.agentToken?.category ? cacheData.agentToken : null,
           };
 
+          setScanDataKey(dataKey);
           setScanData(freshScanData);
 
           // Cache the fresh data to localStorage for instant future loads
@@ -320,7 +333,7 @@ export default function ScanResult() {
   const isPro = () => {
     if (!isAuthenticated) return false; // Anonymous users never get Pro view
     if (isLimited) return false; // Explicitly limited
-    if (!scanLimitData) return true; // Default to Pro if no limit data (safety)
+    if (!scanLimitData) return false; // Locked until the scan check answers
     return scanLimitData.hasPro; // Use the actual check result
   };
 

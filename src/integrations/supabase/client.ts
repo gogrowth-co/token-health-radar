@@ -34,8 +34,11 @@ export const handleSupabaseError = (error: any, fallbackMessage: string = 'An er
   return fallbackMessage;
 };
 
-// Enhanced helper to check if a user has Pro access for their scans
-export const checkUserHasProAccess = async (): Promise<{
+// Checks the user's Pro scan status. Passing the token being viewed spends a
+// Pro scan the first time the user opens that token's full result.
+export const checkUserHasProAccess = async (
+  token?: { tokenAddress: string; chainId: string }
+): Promise<{
   hasPro: boolean;
   proScanAvailable: boolean;
   plan?: string;
@@ -43,7 +46,9 @@ export const checkUserHasProAccess = async (): Promise<{
   scanLimit?: number;
 }> => {
   try {
-    const { data, error } = await supabase.functions.invoke("check-scan-access");
+    const { data, error } = await supabase.functions.invoke("check-scan-access", token ? {
+      body: { token_address: token.tokenAddress, chain_id: token.chainId },
+    } : undefined);
     
     if (error) {
       console.error("Error checking scan access:", error);

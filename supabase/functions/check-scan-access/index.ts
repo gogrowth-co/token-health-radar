@@ -65,22 +65,54 @@ serve(async (req) => {
       );
     }
 
-    // Get user's subscriber data
+    // A scan result page passes the token it is showing; that spends one Pro
+    // scan the first time this user opens that token.
+    let body: { token_address?: string; chain_id?: string } = {};
+    try {
+      body = await req.json();
+    } catch {
+      // No body: read-only status check.
+    }
+
+    if (body.token_address && body.chain_id) {
+      const { data: consumeData, error: consumeError } = await supabase.rpc("consume_pro_scan", {
+        p_user_id: user.id,
+        p_chain_id: String(body.chain_id),
+        p_token_address: String(body.token_address),
+      });
+      if (consumeError) {
+        throw new Error(`consume_pro_scan failed: ${consumeError.message}`);
+      }
+      console.log(`Pro scan check for ${user.id} on ${body.chain_id}:${body.token_address}:`, consumeData);
+      return new Response(
+        JSON.stringify({
+          canScan: true,
+          canSelectToken: true,
+          hasPro: consumeData.hasPro,
+          proScanAvailable: consumeData.hasPro || consumeData.scansUsed < consumeData.scanLimit,
+          plan: consumeData.plan,
+          scansUsed: consumeData.scansUsed,
+          scanLimit: consumeData.scanLimit,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
+    // Read-only status: is a Pro scan still available?
     const { data: subscriberData, error: subscriberError } = await supabase
       .from("subscribers")
-      .select("plan, scans_used, pro_scan_limit")
+      .select("plan, scans_used, pro_scan_limit, scans_period_start")
       .eq("id", user.id)
       .single();
 
     if (subscriberError) {
       console.error(`Error fetching subscriber data: ${subscriberError.message}`);
-      // If there's an error, default to free tier with conservative limits
       return new Response(
-        JSON.stringify({ 
-          canScan: true, // Always allow initial search
-          canSelectToken: true, // Assume they can select a token until proven otherwise
-          plan: "free", 
-          scansUsed: 0, 
+        JSON.stringify({
+          canScan: true,
+          canSelectToken: true,
+          plan: "free",
+          scansUsed: 0,
           scanLimit: 3,
           hasPro: false,
           proScanAvailable: false,
@@ -90,51 +122,24 @@ serve(async (req) => {
       );
     }
 
-    // Default to free tier if no data found
     const plan = subscriberData?.plan || "free";
-    const scansUsed = subscriberData?.scans_used || 0;
-    const scanLimit = subscriberData?.pro_scan_limit || 3;
+    const scanLimit = plan === "free" ? 3 : (subscriberData?.pro_scan_limit || 3);
+    // Paid plans get a fresh allowance once a month; consume_pro_scan applies
+    // the reset, this only reports it.
+    const periodStart = subscriberData?.scans_period_start ? new Date(subscriberData.scans_period_start) : new Date();
+    const monthAgo = new Date();
+    monthAgo.setMonth(monthAgo.getMonth() - 1);
+    const periodExpired = (plan === "pro" || plan === "lifetime") && periodStart < monthAgo;
+    const scansUsed = periodExpired ? 0 : (subscriberData?.scans_used || 0);
 
+    const proScanAvailable = scansUsed < scanLimit;
     console.log(`User plan: ${plan}, scans used: ${scansUsed}, scan limit: ${scanLimit}`);
-
-    // Initial search is always allowed
-    let canScan = true;
-    let canSelectToken = true;
-    let hasPro = false;
-    let proScanAvailable = false;
-    
-    // CRITICAL: Always allow scanning - just control whether they get Pro features
-    if (plan === "pro") {
-      if (scansUsed < scanLimit) {
-        hasPro = true;         // Access full scan 
-        proScanAvailable = true; // Can perform a new Pro scan
-      } else {
-        hasPro = false;        // Access free scan
-        proScanAvailable = false; // Cannot perform new Pro scan
-        // But can still scan as Free user - don't block scanning
-        canScan = true;
-        canSelectToken = true;
-      }
-    } else if (plan === "free") {
-      if (scansUsed < 3) {
-        hasPro = true;          // First 3 free scans show unblurred content
-        proScanAvailable = true; // Can perform a Pro scan
-      } else {
-        hasPro = false;         // No Pro features
-        proScanAvailable = false; // Cannot perform new Pro scan
-        // But can still scan as Free user - don't block scanning
-        canScan = true;
-        canSelectToken = true;
-      }
-    }
-
-    console.log(`Can scan: ${canScan}, can select token: ${canSelectToken}, has pro: ${hasPro}, pro scan available: ${proScanAvailable}`);
 
     return new Response(
       JSON.stringify({
-        canScan,
-        canSelectToken,
-        hasPro,
+        canScan: true,
+        canSelectToken: true,
+        hasPro: proScanAvailable,
         proScanAvailable,
         plan,
         scansUsed,
@@ -143,10 +148,10 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
-    console.error(`Error checking scan access: ${error.message}`);
+    console.error(`Error checking scan access: ${(error as Error).message}`);
     return new Response(
       JSON.stringify({ 
-        error: error.message, 
+        error: (error as Error).message, 
         canScan: false, 
         canSelectToken: false,
         hasPro: false,
