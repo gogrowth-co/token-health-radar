@@ -359,6 +359,17 @@ async function loadReputation() {
     <td>${f.payment_verified ? `<span style="color:var(--good)">✓</span> ${txLink(f.payment_tx)}` : `<span style="color:var(--warn)">${esc(f.unverified_reason ?? "none")}</span>`} · <a class="mono" href="https://monadvision.com/tx/${f.tx}" target="_blank" rel="noopener">rating tx</a></td></tr>`).join("");
 }
 
+// Fallback when the HyperSync endpoint is down: read the registry directly. Ratings are listed but can't be
+// checked against payments, so none of them is presented as verified.
+async function loadReputationFromRegistry() {
+  const clients = await pub.readContract({ address: REPUTATION, abi: repAbi, functionName: "getClients", args: [AGENT_ID] });
+  if (!clients.length) { $("rep-summary").innerHTML = `<span class="hint">No feedback yet.</span>`; return; }
+  const [cl, , vals, decs, tag1s, tag2s] = await pub.readContract({ address: REPUTATION, abi: repAbi, functionName: "readAllFeedback", args: [AGENT_ID, clients, "", "", false] });
+  $("rep-summary").innerHTML = `<span class="big">${vals.length}</span><span class="hint"> rating${vals.length === 1 ? "" : "s"} in the registry (revoked ones excluded). Payment checks are unavailable right now, so no average is shown.</span>`;
+  $("rep-rows").innerHTML = vals.map((v, i) => `<tr><td>${addrLink(cl[i], short(cl[i]))}</td><td>${esc(tag1s[i])}${tag2s[i] ? " / " + esc(tag2s[i]) : ""}</td>
+    <td class="mono">${Number(v) / 10 ** decs[i]}</td><td><span class="hint" style="margin:0">not checked</span></td></tr>`).join("");
+}
+
 let onchain = null;
 function renderRecon() {
   if (!onchain) return;
@@ -485,7 +496,11 @@ $("rate").addEventListener("click", async () => {
 });
 
 loadIdentity().catch((e) => { $("identity").innerHTML = `<span class="k">error</span><span>${esc(e.message)}</span>`; });
-loadReputation().catch((e) => { $("rep-summary").innerHTML = `<span class="hint">${esc(e.shortMessage ?? e.message)}</span>`; $("recon").textContent = "Onchain check unavailable right now."; });
+loadReputation().catch(async () => {
+  $("recon").textContent = "Onchain check (Envio HyperSync) is unavailable right now, so the ledger is shown unreconciled.";
+  try { await loadReputationFromRegistry(); }
+  catch (e) { $("rep-summary").innerHTML = `<span class="hint">${esc(e.shortMessage ?? e.message)}</span>`; }
+});
 loadLedger().catch(() => { $("ledger").innerHTML = `<tr><td colspan="6" class="hint">ledger unavailable</td></tr>`; $("report").innerHTML = `<div style="padding:28px" class="hint">ledger unavailable</div>`; });
 </script>
 </body>

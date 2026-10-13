@@ -41,8 +41,8 @@ type Log = { block_number: number; transaction_hash: string; log_index: number; 
 async function hypersync(token: string, logFilter: Record<string, unknown>) {
   const logs: Log[] = [];
   const time = new Map<number, number>();
-  let from = FROM_BLOCK, height = 0;
-  for (let page = 0; page < 20; page++) {
+  let from = FROM_BLOCK, height = 0, complete = false;
+  for (let page = 0; page < 200; page++) {
     const res = await fetch(HYPERSYNC, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -63,9 +63,11 @@ async function hypersync(token: string, logFilter: Record<string, unknown>) {
       for (const b of batch.blocks ?? []) time.set(Number(b.number), Number(b.timestamp));
     }
     height = body.archive_height;
-    if (!body.next_block || body.next_block > height) break;
+    if (!body.next_block || body.next_block > height) { complete = true; break; }
     from = body.next_block;
   }
+  // Partial history would make the reconciliation and the rating checks look authoritative when they are not.
+  if (!complete) throw new Error(`hypersync history incomplete: stopped at block ${from} of ${height}`);
   return { logs, time, height };
 }
 
