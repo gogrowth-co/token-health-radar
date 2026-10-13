@@ -58,7 +58,9 @@ async function hypersync(token: string, logFilter: Record<string, unknown>) {
     });
     if (!res.ok) throw new Error(`hypersync HTTP ${res.status}`);
     const body = await res.json();
-    for (const batch of body.data ?? []) {
+    // HyperSync's JSON API returns data as an array of batches; accept a single batch object too.
+    const batches = Array.isArray(body.data) ? body.data : body.data ? [body.data] : [];
+    for (const batch of batches) {
       for (const l of batch.logs ?? []) logs.push(l);
       for (const b of batch.blocks ?? []) time.set(Number(b.number), Number(b.timestamp));
     }
