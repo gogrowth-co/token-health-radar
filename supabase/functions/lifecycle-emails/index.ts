@@ -60,7 +60,8 @@ function link(path: string, campaign: Key): string {
 
 type Block = { p: string } | { list: string[] } | { ol: string[] } | { button: [string, string] };
 
-function render(preview: string, blocks: Block[], footer = ""): { html: string; text: string } {
+function render(preview: string, blocks: Block[], extraFooter = ""): { html: string; text: string } {
+  const footer = extraFooter ? `${extraFooter}<br>${ADDRESS}` : ADDRESS;
   const html: string[] = [];
   const text: string[] = [];
   for (const b of blocks) {
@@ -135,7 +136,7 @@ async function buildEmail(key: Key, userId: string) {
         { p: "You have 3 Pro Scans on your account. When you need more, PRO gives you 10 Pro Scans per month, plus PDF and CSV export. It's $20 per month, or $120 per year." },
         { button: ["See PRO plans", link("/pricing", "day3")] },
         { p: "If a result confused you, reply and I'll walk you through it." },
-      ], `You got this because you created a Token Health Scan account. <a href="${unsub}" style="color:#6B7280;">Unsubscribe from tips</a>.<br>${ADDRESS}`),
+      ], `You got this because you created a Token Health Scan account. <a href="${unsub}" style="color:#6B7280;">Unsubscribe from tips</a>.`),
     };
   }
   return {
