@@ -34,6 +34,7 @@ import AgentScan from "./pages/AgentScan";
 import AgentScanResult from "./pages/AgentScanResult";
 import AgentScanSearch from "./pages/AgentScanSearch";
 import AgentDirectory from "./pages/AgentDirectory";
+import Unsubscribe from "./pages/Unsubscribe";
 import AdminRoute from "./components/admin/AdminRoute";
 import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
@@ -127,6 +128,7 @@ const App = () => {
                     <Route path="/ltd-thank-you" element={<Navigate to="/pricing" replace />} />
                     <Route path="/privacy" element={<Privacy />} />
                     <Route path="/terms" element={<Terms />} />
+                    <Route path="/unsubscribe" element={<Unsubscribe />} />
                     <Route path="/token-scan-guide" element={<TokenScanGuide />} />
                     <Route path="/token-sniffer-vs-tokenhealthscan" element={<TokenSnifferComparison />} />
                     <Route path="/solana-launchpads" element={<SolanaLaunchpads />} />

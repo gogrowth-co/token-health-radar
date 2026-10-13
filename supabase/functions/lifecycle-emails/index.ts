@@ -14,8 +14,12 @@
  *
  * POST {"test_to": "...", "key": "welcome|day3|pro"} sends one email to a test
  * address without touching the database.
- * GET or POST ?unsub=<user_id>&sig=<hmac> opts a user out of day3 (one-click
- * List-Unsubscribe).
+ * Unsubscribe (ENG-075): only a POST with ?unsub=<user_id>&sig=<hmac> opts a user out of
+ * day3. That covers RFC 8058 one-click (List-Unsubscribe-Post) and the button on
+ * tokenhealthscan.com/unsubscribe, which the email footer links to. A GET changes
+ * nothing: email security scanners open every link in a message, so a GET that
+ * unsubscribed would opt people out silently. A GET here redirects to the confirm page.
+ * A bad signature gets 403.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -119,7 +123,9 @@ async function buildEmail(key: Key, userId: string) {
     };
   }
   if (key === "day3") {
-    const unsub = `${FN_URL}?unsub=${userId}&sig=${await sign(userId)}`;
+    const qs = `unsub=${userId}&sig=${await sign(userId)}`;
+    const unsub = `${FN_URL}?${qs}`; // List-Unsubscribe header: mail clients POST here
+    const confirmPage = `${SITE}/unsubscribe?${qs}`; // footer link: a page with a button
     return {
       subject: "How I read a token health score",
       unsub,
@@ -136,7 +142,7 @@ async function buildEmail(key: Key, userId: string) {
         { p: "You have 3 Pro Scans on your account. When you need more, PRO gives you 10 Pro Scans per month, plus PDF and CSV export. It's $20 per month, or $120 per year." },
         { button: ["See PRO plans", link("/pricing", "day3")] },
         { p: "If a result confused you, reply and I'll walk you through it." },
-      ], `You got this because you created a Token Health Scan account. <a href="${unsub}" style="color:#6B7280;">Unsubscribe from tips</a>.`),
+      ], `You got this because you created a Token Health Scan account. <a href="${confirmPage}" style="color:#6B7280;">Unsubscribe from tips</a>.`),
     };
   }
   return {
@@ -191,22 +197,40 @@ async function sendViaResend(to: string, key: Key, userId: string, idempotencyKe
   return body.id as string;
 }
 
-async function handleUnsubscribe(url: URL): Promise<Response> {
+function sameHex(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+// The confirm page on tokenhealthscan.com calls this with fetch, so POST answers need CORS.
+const UNSUB_CORS = {
+  "Access-Control-Allow-Origin": SITE,
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "content-type",
+};
+
+async function handleUnsubscribe(req: Request, url: URL): Promise<Response> {
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: UNSUB_CORS });
   const userId = url.searchParams.get("unsub") || "";
   const sig = url.searchParams.get("sig") || "";
-  const page = (msg: string, status = 200) =>
-    new Response(
-      `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Token Health Scan</title>` +
-        `<div style="font-family:Inter,Helvetica,Arial,sans-serif;max-width:480px;margin:80px auto;padding:0 16px;color:#1F2937;">` +
-        `<p style="font-weight:700;color:#3B66FF;">Token Health Scan</p><p style="font-size:18px;">${msg}</p></div>`,
-      { status, headers: { "Content-Type": "text/html; charset=utf-8" } },
-    );
-  if (!/^[0-9a-f-]{36}$/.test(userId) || sig !== (await sign(userId))) {
-    return page("This unsubscribe link is not valid.", 400);
+  const reply = (msg: string, status: number) =>
+    new Response(msg, { status, headers: { ...UNSUB_CORS, "Content-Type": "text/plain; charset=utf-8" } });
+  if (!/^[0-9a-f-]{36}$/.test(userId) || !sameHex(sig, await sign(userId))) {
+    return reply("This unsubscribe link is not valid.", 403);
+  }
+  // GET/HEAD never change anything (link scanners prefetch them). Send people to the confirm page.
+  if (req.method !== "POST") {
+    const qs = new URLSearchParams({ unsub: userId, sig }).toString();
+    return new Response(null, { status: 303, headers: { Location: `${SITE}/unsubscribe?${qs}` } });
   }
   const { error } = await supabase.from("subscribers").update({ email_opt_out: true }).eq("id", userId);
-  if (error) return page("Something went wrong. Reply to any email and I'll remove you by hand.", 500);
-  return page("You're unsubscribed from tips. You'll still get emails about your account and billing.");
+  if (error) {
+    console.error(`[lifecycle] unsubscribe ${userId} failed: ${error.message}`);
+    return reply("Something went wrong. Reply to any email and I'll remove you by hand.", 500);
+  }
+  return reply("You're unsubscribed from tips. You'll still get emails about your account and billing.", 200);
 }
 
 async function runDue(): Promise<Record<string, number>> {
@@ -240,7 +264,7 @@ async function runDue(): Promise<Record<string, number>> {
 
 Deno.serve(async (req) => {
   const url = new URL(req.url);
-  if (url.searchParams.has("unsub")) return handleUnsubscribe(url);
+  if (url.searchParams.has("unsub")) return handleUnsubscribe(req, url);
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
   if (!isAuthorized(req)) return new Response("Unauthorized", { status: 401 });
 
