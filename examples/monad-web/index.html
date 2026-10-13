@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Health Scan on Monad · x402 + ERC-8004</title>
+<meta name="description" content="Token risk scores AI agents and people buy for 0.02 USDC on Monad over x402, from a service verifiable onchain through ERC-8004 agent #10387.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0b0a12; --panel:#110f1b; --panel2:#16131f; --line:#2c2842; --ink:#ecebf3; --dim:#9d98b5; --faint:#6f6a88; --mon:#8f7bff; --ok:#3ddc97; --bad:#ff5d6c; --gold:#ffb800; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--ink); font-family:Inter,system-ui,sans-serif; font-size:16px; line-height:1.5; }
+  body::before { content:""; position:fixed; width:900px; height:900px; left:-300px; top:-420px; background:radial-gradient(circle, rgba(131,110,249,.28), transparent 62%); pointer-events:none; z-index:0; }
+  .wrap { max-width:1120px; margin:0 auto; padding:56px 24px 80px; position:relative; z-index:1; }
+  .eyebrow { font:700 13px 'JetBrains Mono',monospace; letter-spacing:3px; text-transform:uppercase; color:#a99bff; }
+  h1 { font:800 clamp(38px,6vw,64px)/1.02 Montserrat,sans-serif; letter-spacing:-2px; margin:16px 0 18px; }
+  h1 span { color:var(--mon); }
+  .lede { font-size:20px; color:#c9c6dc; max-width:760px; }
+  .lede b { color:#fff; font-weight:600; }
+  .chips { display:flex; flex-wrap:wrap; gap:10px; margin-top:26px; }
+  .chip { font:600 13px Inter; color:var(--dim); padding:6px 13px; border:1px solid var(--line); border-radius:999px; }
+  .chip b { color:#fff; }
+  h2 { font:800 24px Montserrat,sans-serif; letter-spacing:-.4px; margin-bottom:6px; }
+  .hint { color:var(--dim); font-size:15px; margin-bottom:18px; }
+  section { margin-top:56px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width:820px) { .grid { grid-template-columns:1fr; } }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:22px 24px; }
+  .label { font:700 12px 'JetBrains Mono',monospace; letter-spacing:2px; text-transform:uppercase; color:var(--mon); margin-bottom:12px; }
+  .kv { display:grid; grid-template-columns:130px 1fr; gap:8px 14px; font-size:14px; }
+  .kv .k { color:var(--faint); }
+  .mono { font-family:'JetBrains Mono',monospace; font-size:13px; word-break:break-all; }
+  a { color:#b3a6ff; text-decoration:none; } a:hover { text-decoration:underline; }
+  .big { font:800 44px Montserrat,sans-serif; letter-spacing:-1px; }
+  .muted { color:var(--dim); }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); }
+  th { color:var(--faint); font:600 12px Inter; text-transform:uppercase; letter-spacing:1px; }
+  .score { font:700 14px 'JetBrains Mono',monospace; color:var(--gold); }
+  .try { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:20px; }
+  @media (max-width:820px) { .try { grid-template-columns:1fr; } }
+  label { display:block; font-size:13px; color:var(--dim); margin:14px 0 6px; }
+  select, input { width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:11px 12px; font:14px 'JetBrains Mono',monospace; }
+  .btns { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+  button { font:600 15px Inter; border-radius:10px; padding:11px 18px; border:1px solid var(--line); background:var(--panel2); color:var(--ink); cursor:pointer; }
+  button.primary { background:var(--mon); border-color:var(--mon); color:#0b0a12; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  .log { background:#07060c; border:1px solid var(--line); border-radius:12px; padding:16px 18px; font:13px/1.7 'JetBrains Mono',monospace; color:#d6d3e6; min-height:300px; white-space:pre-wrap; word-break:break-word; }
+  .log .s { color:var(--mon); font-weight:700; } .log .p { color:var(--ok); font-weight:700; } .log .f { color:var(--bad); font-weight:700; } .log .v { color:var(--gold); }
+  .bars { margin-top:10px; }
+  .bar { display:grid; grid-template-columns:110px 1fr 40px; gap:10px; align-items:center; font-size:13px; margin:6px 0; }
+  .bar .track { height:8px; background:var(--panel2); border-radius:99px; overflow:hidden; }
+  .bar .fill { height:100%; background:var(--mon); border-radius:99px; }
+  footer { margin-top:64px; color:var(--faint); font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Monad Metropolis · Trust, Identity &amp; AI Infrastructure</div>
+  <h1>Token Health Scan<br><span>on Monad</span></h1>
+  <p class="lede">Token risk scores that AI agents <b>pay for</b> per call, <b>0.02 USDC on Monad over x402</b>, from a service they can <b>verify onchain</b> through ERC-8004 before they sign. Everything on this page is read live from Monad mainnet.</p>
+  <div class="chips">
+    <span class="chip"><b>ERC-8004</b> agent #10387</span>
+    <span class="chip"><b>x402</b> v2 · exact · EIP-3009</span>
+    <span class="chip"><b>Monad</b> chain 143</span>
+    <span class="chip"><a href="https://github.com/gogrowth-co/token-health-radar/tree/feat/x402-monad">Source on GitHub</a></span>
+  </div>
+
+  <section>
+    <h2>1. Who you'd be paying</h2>
+    <p class="hint">Read from the ERC-8004 registries on Monad, in your browser. No server in between.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="label">Identity Registry</div>
+        <div class="kv" id="identity"><span class="k">loading</span><span>reading Monad…</span></div>
+      </div>
+      <div class="card">
+        <div class="label">Reputation Registry</div>
+        <div id="rep-summary"><span class="muted">reading Monad…</span></div>
+        <table style="margin-top:14px"><thead><tr><th>#</th><th>Scanned chain</th><th>Value</th><th>Rated by</th></tr></thead><tbody id="rep-rows"></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Try it: buy one scan for 0.02 USDC</h2>
+    <p class="hint">Get a quote for free. Paying needs a browser wallet with a little USDC on Monad. You sign an authorization; Monad's x402 facilitator pays the gas and settles only if the scan returns a score.</p>
+    <div class="try">
+      <div class="card">
+        <div class="label">Token</div>
+        <label for="preset">Pick one</label>
+        <select id="preset">
+          <option value="base|0x940181a94a35a4569e4529a3cdfb74e38fd98631">AERO · Base</option>
+          <option value="ethereum|0x1f9840a85d5af5bf1d1762f925bdaddc4201f984">UNI · Ethereum</option>
+          <option value="arbitrum|0x912ce59144191c1204e64559fe8253a0e49e6548">ARB · Arbitrum</option>
+          <option value="solana|JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN">JUP · Solana</option>
+          <option value="ethereum|0x6982508145454ce325ddbe47a25d4ec3d2311933">PEPE · Ethereum</option>
+          <option value="custom|">Custom…</option>
+        </select>
+        <label for="chain">Chain</label>
+        <select id="chain"><option>ethereum</option><option>base</option><option>bsc</option><option>polygon</option><option>arbitrum</option><option>solana</option></select>
+        <label for="addr">Token address</label>
+        <input id="addr" spellcheck="false">
+        <div class="btns">
+          <button id="quote">Get quote (free)</button>
+          <button id="pay" class="primary" disabled>Connect wallet &amp; pay 0.02 USDC</button>
+        </div>
+        <div class="btns"><button id="rate" disabled>Rate the service onchain</button></div>
+        <div id="result" class="bars"></div>
+      </div>
+      <div class="log" id="log">Pick a token and get a quote.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Every paid scan settled on Monad</h2>
+    <p class="hint">From the public ledger. Each row links to its USDC transfer on Monad.</p>
+    <div class="card"><table><thead><tr><th>When (UTC)</th><th>Token</th><th>Chain scanned</th><th>Score</th><th>Paid</th><th>Tx</th></tr></thead><tbody id="ledger"><tr><td colspan="6" class="muted">loading…</td></tr></tbody></table></div>
+  </section>
+
+  <footer>
+    Token Health Scan by Gabriel Mangabeira · MIT · <a href="https://tokenhealthscan.com">tokenhealthscan.com</a> ·
+    <a href="https://8004scan.io/agents/monad/10387">8004scan</a> ·
+    <a href="https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/x402-ledger">ledger JSON</a>
+  </footer>
+</div>
+
+<script type="module">
+import { createPublicClient, createWalletClient, custom, http, defineChain, keccak256, toHex, isAddressEqual } from "https://cdn.jsdelivr.net/npm/viem@2.21.0/+esm";
+
+const monad = defineChain({ id: 143, name: "Monad", nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 },
+  rpcUrls: { default: { http: ["https://rpc.monad.xyz"] } }, blockExplorers: { default: { name: "MonadVision", url: "https://monadvision.com" } } });
+const AGENT_ID = 10387n;
+const IDENTITY = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
+const REPUTATION = "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63";
+const USDC = "0x754704Bc059F8C67012fEd69BC8A327a5aafb603";
+const NETWORK = "eip155:143";
+const LEDGER = "https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/x402-ledger?limit=200";
+
+const idAbi = [
+  { type: "function", name: "tokenURI", stateMutability: "view", inputs: [{ type: "uint256" }], outputs: [{ type: "string" }] },
+  { type: "function", name: "getAgentWallet", stateMutability: "view", inputs: [{ type: "uint256" }], outputs: [{ type: "address" }] },
+  { type: "function", name: "ownerOf", stateMutability: "view", inputs: [{ type: "uint256" }], outputs: [{ type: "address" }] },
+];
+const repAbi = [
+  { type: "function", name: "getClients", stateMutability: "view", inputs: [{ type: "uint256" }], outputs: [{ type: "address[]" }] },
+  { type: "function", name: "readAllFeedback", stateMutability: "view", inputs: [{ type: "uint256" }, { type: "address[]" }, { type: "string" }, { type: "string" }, { type: "bool" }],
+    outputs: [{ type: "address[]" }, { type: "uint64[]" }, { type: "int128[]" }, { type: "uint8[]" }, { type: "string[]" }, { type: "string[]" }, { type: "bool[]" }] },
+  { type: "event", name: "NewFeedback", inputs: [
+    { indexed: true, name: "agentId", type: "uint256" }, { indexed: true, name: "clientAddress", type: "address" }, { indexed: false, name: "feedbackIndex", type: "uint64" },
+    { indexed: false, name: "value", type: "int128" }, { indexed: false, name: "valueDecimals", type: "uint8" }, { indexed: true, name: "indexedTag1", type: "string" },
+    { indexed: false, name: "tag1", type: "string" }, { indexed: false, name: "tag2", type: "string" }, { indexed: false, name: "endpoint", type: "string" },
+    { indexed: false, name: "feedbackURI", type: "string" }, { indexed: false, name: "feedbackHash", type: "bytes32" }] },
+  { type: "function", name: "giveFeedback", stateMutability: "nonpayable", inputs: [
+    { type: "uint256" }, { type: "int128" }, { type: "uint8" }, { type: "string" }, { type: "string" }, { type: "string" }, { type: "string" }, { type: "bytes32" }], outputs: [] },
+];
+
+const pub = createPublicClient({ chain: monad, transport: http() });
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const short = (a) => a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "";
+const addrLink = (a) => `<a class="mono" href="https://monadvision.com/address/${a}" target="_blank" rel="noopener">${a}</a>`;
+const txLink = (h, label) => `<a class="mono" href="https://monadvision.com/tx/${h}" target="_blank" rel="noopener">${label ?? short(h)}</a>`;
+const logEl = $("log");
+const log = (html) => { logEl.innerHTML += "\n" + html; logEl.scrollTop = logEl.scrollHeight; };
+const S = (c, t) => `<span class="${c}">${t}</span>`;
+
+let agentWallet = null, endpoint = null, lastQuote = null, lastPaid = null, lastResource = null;
+
+async function loadIdentity() {
+  const [uri, wallet, owner] = await Promise.all([
+    pub.readContract({ address: IDENTITY, abi: idAbi, functionName: "tokenURI", args: [AGENT_ID] }),
+    pub.readContract({ address: IDENTITY, abi: idAbi, functionName: "getAgentWallet", args: [AGENT_ID] }),
+    pub.readContract({ address: IDENTITY, abi: idAbi, functionName: "ownerOf", args: [AGENT_ID] }),
+  ]);
+  const card = JSON.parse(atob(uri.split(",")[1]));
+  agentWallet = wallet;
+  endpoint = card.services.find((s) => s.name === "x402")?.endpoint;
+  $("identity").innerHTML = `
+    <span class="k">Agent</span><span><b>#${AGENT_ID}</b> · ${esc(card.name)} ${card.active ? S("p", "active") : ""}</span>
+    <span class="k">Agent wallet</span><span>${addrLink(wallet)}<br><span class="muted" style="font-size:13px">x402 payments must go here</span></span>
+    <span class="k">Owner</span><span>${addrLink(owner)}</span>
+    <span class="k">x402 endpoint</span><span class="mono">${esc(endpoint)}</span>
+    <span class="k">Card</span><span class="muted">stored onchain as a data: URI · x402Support ${card.x402Support}</span>`;
+}
+
+async function loadReputation() {
+  const clients = await pub.readContract({ address: REPUTATION, abi: repAbi, functionName: "getClients", args: [AGENT_ID] });
+  if (!clients.length) { $("rep-summary").innerHTML = `<span class="muted">No feedback yet.</span>`; return; }
+  const [cl, idx, vals, decs, , tag2s, revoked] = await pub.readContract({ address: REPUTATION, abi: repAbi, functionName: "readAllFeedback", args: [AGENT_ID, clients, "", "", false] });
+  const n = vals.length, avg = vals.reduce((s, v, i) => s + Number(v) / 10 ** decs[i], 0) / n;
+  $("rep-summary").innerHTML = `<span class="big">${avg.toFixed(0)}</span><span class="muted"> / 100 average · ${n} rating${n > 1 ? "s" : ""} from ${clients.length} paying client${clients.length > 1 ? "s" : ""}</span>`;
+  $("rep-rows").innerHTML = vals.map((v, i) =>
+    `<tr><td>${idx[i]}</td><td>${esc(tag2s[i])}</td><td class="score">${Number(v) / 10 ** decs[i]}</td><td><a class="mono" href="https://monadvision.com/address/${cl[i]}" target="_blank" rel="noopener">${short(cl[i])}</a></td></tr>`).join("");
+}
+
+async function loadLedger() {
+  const data = await (await fetch(LEDGER)).json();
+  const rows = data.payments.filter((p) => p.network === NETWORK);
+  $("ledger").innerHTML = rows.length ? rows.map((p) => `<tr>
+    <td class="mono">${esc(p.settled_at.replace("T", " ").slice(0, 16))}</td><td>${esc(p.token_symbol ?? "?")}</td><td>${esc(p.chain)}</td>
+    <td class="score">${p.overall_score}</td><td>${p.usdc} USDC</td><td>${txLink(p.tx_signature)}</td></tr>`).join("")
+    : `<tr><td colspan="6" class="muted">No Monad payments yet.</td></tr>`;
+}
+
+// token picker
+function applyPreset() {
+  const [chain, addr] = $("preset").value.split("|");
+  if (chain !== "custom") { $("chain").value = chain; $("addr").value = addr; }
+  else { $("addr").value = ""; $("addr").focus(); }
+}
+$("preset").addEventListener("change", applyPreset);
+applyPreset();
+
+function b64json(obj) { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
+function unb64(s) { return JSON.parse(decodeURIComponent(escape(atob(s)))); }
+
+$("quote").addEventListener("click", async () => {
+  lastQuote = null; $("pay").disabled = true; $("result").innerHTML = "";
+  logEl.innerHTML = "";
+  if (!endpoint) { log(S("f", "Identity not loaded yet, try again in a second.")); return; }
+  const url = `${endpoint}?chain=${encodeURIComponent($("chain").value)}&address=${encodeURIComponent($("addr").value.trim())}`;
+  log(S("s", "[quote] GET x402-scan (no payment)"));
+  const r = await fetch(url);
+  if (r.status !== 402) { log(S("f", `expected 402, got ${r.status}: `) + esc(await r.text())); return; }
+  const required = unb64(r.headers.get("PAYMENT-REQUIRED"));
+  log("  offered: " + required.accepts.map((a) => `${a.amount / 1e6} USDC on ${a.network}`).join(" | "));
+  const q = required.accepts.find((a) => a.network === NETWORK && a.scheme === "exact");
+  log(S("s", "\n[verify] Monad quote vs ERC-8004 identity"));
+  const checks = [
+    ["Monad option offered", !!q],
+    ["asset is Monad USDC", q && isAddressEqual(q.asset, USDC)],
+    ["price ≤ 0.02 USDC", q && BigInt(q.amount) <= 20000n],
+    ["payTo == ERC-8004 agentWallet", q && isAddressEqual(q.payTo, agentWallet)],
+  ];
+  for (const [name, ok] of checks) log(`  ${ok ? S("p", "PASS") : S("f", "FAIL")}  ${name}`);
+  if (checks.some(([, ok]) => !ok)) { log(S("f", "\nRefusing to pay.")); return; }
+  lastQuote = { url, required, q };
+  $("pay").disabled = false;
+  log("\nQuote verified. Paying is optional and needs a wallet with 0.02 USDC on Monad.");
+});
+
+async function wallet() {
+  if (!window.ethereum) throw new Error("No browser wallet found (MetaMask, Rabby, Phantom EVM…)");
+  const wc = createWalletClient({ chain: monad, transport: custom(window.ethereum) });
+  const [account] = await wc.requestAddresses();
+  try { await wc.switchChain({ id: 143 }); } catch { await wc.addChain({ chain: monad }); await wc.switchChain({ id: 143 }); }
+  return { wc, account };
+}
+
+$("pay").addEventListener("click", async () => {
+  const { url, required, q } = lastQuote;
+  $("pay").disabled = true;
+  try {
+    const { wc, account } = await wallet();
+    log(S("s", `\n[pay] signing ${q.amount / 1e6} USDC from ${short(account)} (EIP-3009, gasless)`));
+    const nonce = keccak256(toHex(crypto.getRandomValues(new Uint8Array(32))));
+    const authorization = { from: account, to: q.payTo, value: q.amount, validAfter: "0", validBefore: String(Math.floor(Date.now() / 1000) + q.maxTimeoutSeconds), nonce };
+    const signature = await wc.signTypedData({ account,
+      domain: { name: q.extra.name, version: q.extra.version, chainId: 143, verifyingContract: q.asset },
+      types: { TransferWithAuthorization: [
+        { name: "from", type: "address" }, { name: "to", type: "address" }, { name: "value", type: "uint256" },
+        { name: "validAfter", type: "uint256" }, { name: "validBefore", type: "uint256" }, { name: "nonce", type: "bytes32" }] },
+      primaryType: "TransferWithAuthorization",
+      message: { ...authorization, value: BigInt(authorization.value), validAfter: 0n, validBefore: BigInt(authorization.validBefore) },
+    });
+    const payload = { x402Version: 2, payload: { authorization, signature }, resource: required.resource, accepted: q };
+    log("  signed. scanning (5-25 s), USDC settles only if the scan returns a score…");
+    const r = await fetch(url, { headers: { "PAYMENT-SIGNATURE": b64json(payload) } });
+    const text = await r.text(); const body = JSON.parse(text);
+    if (r.status === 422) { log(S("v", "  not scored: not enough verified data. You were not charged.")); return; }
+    if (r.status !== 200) { log(S("f", `  HTTP ${r.status}: `) + esc(body.error ?? text)); $("pay").disabled = false; return; }
+    lastPaid = { body, text }; lastResource = url;
+    log(`  ${esc(body.name)} (${esc(body.symbol)}): ` + S("v", esc(body.verdict)));
+    log(`  paid: ${txLink(body.payment.transaction)}`);
+    $("result").innerHTML = Object.entries(body.scores).map(([k, v]) => `<div class="bar"><span>${k}</span><span class="track"><span class="fill" style="width:${v ?? 0}%"></span></span><span class="score">${v ?? "n/a"}</span></div>`).join("");
+    $("rate").disabled = false;
+    loadLedger();
+  } catch (e) { log(S("f", "  " + esc(e.shortMessage ?? e.message))); $("pay").disabled = false; }
+});
+
+$("rate").addEventListener("click", async () => {
+  $("rate").disabled = true;
+  try {
+    const { wc, account } = await wallet();
+    const { body, text } = lastPaid;
+    log(S("s", "\n[rate] giveFeedback on the ERC-8004 Reputation Registry (needs a little MON for gas)"));
+    const hash = await wc.writeContract({ account, address: REPUTATION, abi: repAbi, functionName: "giveFeedback",
+      args: [AGENT_ID, 100n, 0, "token-scan", $("chain").value, endpoint, `https://monadvision.com/tx/${body.payment.transaction}`, keccak256(toHex(text))] });
+    log("  sent: " + txLink(hash));
+    const rc = await pub.waitForTransactionReceipt({ hash });
+    log(rc.status === "success" ? S("p", "  feedback recorded onchain") : S("f", "  reverted"));
+    loadReputation();
+  } catch (e) { log(S("f", "  " + esc(e.shortMessage ?? e.message))); $("rate").disabled = false; }
+});
+
+loadIdentity().catch((e) => { $("identity").innerHTML = `<span class="k">error</span><span>${esc(e.message)}</span>`; });
+loadReputation().catch((e) => { $("rep-summary").innerHTML = `<span class="muted">${esc(e.shortMessage ?? e.message)}</span>`; });
+loadLedger().catch(() => { $("ledger").innerHTML = `<tr><td colspan="6" class="muted">ledger unavailable</td></tr>`; });
+</script>
+</body>
+</html>

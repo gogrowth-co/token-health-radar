@@ -6,6 +6,8 @@
 
 **Token risk scores that AI agents pay for per call, in USDC on Monad, from a service they can verify onchain before they sign.**
 
+**Try it live: [ths-monad.pages.dev](https://ths-monad.pages.dev)**. Reads the ERC-8004 identity and reputation straight from Monad, gets a quote, runs the payee check, and lets you buy a scan with your own wallet.
+
 An agent about to buy a token needs to know if it's a trap. It can't sign up for a dashboard, can't hold an API key, and
 can't tell a real service from a fake one. Token Health Scan sells a 0-100 health score for **0.02 USDC per scan over
 x402**, settled on Monad, and is registered as **ERC-8004 agent #10387** so an agent can check who it's paying first.
@@ -85,6 +87,8 @@ supabase/functions/
   x402-ledger/           # public read-only ledger
   token-health-mcp/      # MCP server, paid scan via _meta["x402/payment"]
   run-token-scan/        # the scan itself
+examples/monad-web/
+  index.html             # ths-monad.pages.dev: live identity, reputation, quote check, pay from your wallet
 examples/monad-agent/
   register-ths.mjs       # mints the ERC-8004 identity, writes the agent card onchain
   pay-scan.mjs           # the trust-checking agent: discover, check, verify quote, pay, rate
