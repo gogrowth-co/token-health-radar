@@ -1,0 +1,11 @@
+{
+  "name": "token-health-scan-actor",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Token Health Scan on Apify: 0-100 crypto token risk score with evidence, pay per scored scan.",
+  "main": "src/main.js",
+  "scripts": { "start": "node src/main.js" },
+  "dependencies": { "apify": "^3.4.0" },
+  "license": "MIT"
+}

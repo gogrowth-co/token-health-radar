@@ -88,6 +88,9 @@ verify_jwt = false
 [functions.x402-scan]
 verify_jwt = false
 
+[functions.partner-scan]
+verify_jwt = false
+
 [functions.x402-ledger]
 verify_jwt = false
 

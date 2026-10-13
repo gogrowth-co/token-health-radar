@@ -1,0 +1,24 @@
+{
+  "actorSpecification": 1,
+  "fields": {},
+  "views": {
+    "overview": {
+      "title": "Scores",
+      "transformation": { "fields": ["status", "symbol", "name", "chain", "address", "overall_score", "verdict", "scores", "charged"] },
+      "display": {
+        "component": "table",
+        "properties": {
+          "status": { "label": "Status" },
+          "symbol": { "label": "Symbol" },
+          "name": { "label": "Name" },
+          "chain": { "label": "Chain" },
+          "address": { "label": "Address" },
+          "overall_score": { "label": "Score", "format": "number" },
+          "verdict": { "label": "Verdict" },
+          "scores": { "label": "Dimension scores", "format": "object" },
+          "charged": { "label": "Charged", "format": "boolean" }
+        }
+      }
+    }
+  }
+}

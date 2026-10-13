@@ -1,0 +1,21 @@
+{
+  "title": "Token Health Scan input",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "tokens": {
+      "title": "Tokens to scan",
+      "type": "array",
+      "description": "One token per line as chain:address. Chains: ethereum, base, bsc, arbitrum, polygon, solana. Example: base:0x940181a94a35a4569e4529a3cdfb74e38fd98631",
+      "editor": "stringList",
+      "prefill": ["base:0x940181a94a35a4569e4529a3cdfb74e38fd98631", "solana:JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
+    },
+    "includeEvidence": {
+      "title": "Include evidence",
+      "type": "boolean",
+      "description": "Add the inputs behind every dimension score (value, points, max) and the inputs left out with the reason.",
+      "default": true
+    }
+  },
+  "required": ["tokens"]
+}

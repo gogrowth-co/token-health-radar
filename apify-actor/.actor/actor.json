@@ -1,0 +1,11 @@
+{
+  "actorSpecification": 1,
+  "name": "token-health-scan",
+  "title": "Token Health Scan: Crypto Token Risk Score",
+  "description": "Score any token on Ethereum, Base, BNB Chain, Arbitrum, Polygon or Solana from 0 to 100 across security, liquidity, tokenomics, community and development, with the evidence behind every point. Pay only for scored scans.",
+  "version": "1.0",
+  "buildTag": "latest",
+  "input": "./input_schema.json",
+  "storages": { "dataset": "./dataset_schema.json" },
+  "dockerfile": "../Dockerfile"
+}
