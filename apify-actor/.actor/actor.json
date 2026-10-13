@@ -6,6 +6,13 @@
   "version": "1.0",
   "buildTag": "latest",
   "input": "./input_schema.json",
-  "storages": { "dataset": "./dataset_schema.json" },
-  "dockerfile": "../Dockerfile"
+  "storages": {
+    "dataset": "./dataset_schema.json"
+  },
+  "dockerfile": "../Dockerfile",
+  "defaultRunOptions": {
+    "build": "latest",
+    "memoryMbytes": 256,
+    "timeoutSecs": 900
+  }
 }

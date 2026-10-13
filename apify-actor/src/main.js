@@ -25,7 +25,8 @@ let charged = 0;
 
 async function scan(job) {
   if (limitReached) return;
-  const base = { chain: job.chain, address: job.address, input: job.line };
+  // Every row carries every table column, so a free row shows empty cells instead of "undefined".
+  const base = { chain: job.chain, address: job.address, input: job.line, symbol: null, name: null, overall_score: null, scores: null };
   let res, body;
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
@@ -54,10 +55,10 @@ async function scan(job) {
     await Actor.pushData({ ...base, status: "not_scored", charged: false, verdict: "Not scored: not enough verified data. Not charged.", partial: body.partial ?? null });
     log.info(`${job.line}: not scored (free)`);
   } else if (status === 400) {
-    await Actor.pushData({ ...base, status: "invalid_input", charged: false, error: body.error });
+    await Actor.pushData({ ...base, status: "invalid_input", charged: false, verdict: `Invalid input: ${body.error}. Not charged.`, error: body.error });
     log.warning(`${job.line}: ${body.error}`);
   } else {
-    await Actor.pushData({ ...base, status: "failed", charged: false, error: body?.error ?? `HTTP ${status}` });
+    await Actor.pushData({ ...base, status: "failed", charged: false, verdict: "Scan failed. Not charged.", error: body?.error ?? `HTTP ${status}` });
     log.warning(`${job.line}: scan failed (${body?.error ?? status}), not charged`);
   }
 }
