@@ -5,10 +5,12 @@
  *   day3     free accounts, 3 to 7 days after signup, unless they opted out
  *   pro      when plan becomes 'pro'
  *
- * pg_cron POSTs here every 10 minutes (x-cron-secret = LIFECYCLE_CRON_SECRET).
- * public.lifecycle_due() picks who is due; public.lifecycle_emails records every
- * send, so nobody gets the same email twice. Rows that existed before launch were
- * backfilled as 'skipped'.
+ * A trigger on subscribers POSTs here right after a signup or an upgrade to pro,
+ * so those emails go out within seconds. pg_cron also POSTs every 10 minutes as
+ * the safety net (retries, day3). Both use x-cron-secret = LIFECYCLE_CRON_SECRET.
+ * public.lifecycle_claim() marks due rows 'sending' and returns only the rows this
+ * run won, so a trigger run and a cron run never email the same person twice.
+ * Rows that existed before launch were backfilled as 'skipped'.
  *
  * POST {"test_to": "...", "key": "welcome|day3|pro"} sends one email to a test
  * address without touching the database.
@@ -206,8 +208,8 @@ async function handleUnsubscribe(url: URL): Promise<Response> {
 
 async function runDue(): Promise<Record<string, number>> {
   const counts = { sent: 0, failed: 0 };
-  const { data: due, error } = await supabase.rpc("lifecycle_due", { p_limit: 50 });
-  if (error) throw new Error(`lifecycle_due: ${error.message}`);
+  const { data: due, error } = await supabase.rpc("lifecycle_claim", { p_limit: 50 });
+  if (error) throw new Error(`lifecycle_claim: ${error.message}`);
   for (const row of due ?? []) {
     const { user_id, email, email_key, attempts } = row as {
       user_id: string; email: string; email_key: Key; attempts: number;
