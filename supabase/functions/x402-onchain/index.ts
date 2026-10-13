@@ -67,6 +67,32 @@ async function hypersync(token: string, logFilter: Record<string, unknown>) {
   return { logs, time, height };
 }
 
+/**
+ * A rating counts as payment-backed only if the payment it links to is a USDC transfer into the agent wallet
+ * FROM the rater's own address (x402 exact on EVM is an EIP-3009 transfer from the payer, so payer == rater),
+ * and each payment backs at most one rating (the earliest). Linking someone else's payment, or reusing one,
+ * leaves the rating unverified.
+ */
+function verifyFeedback<F extends { client: string | null; payment_tx: string | null }>(
+  feedback: F[],
+  transfers: { tx: string; from: string | null }[],
+) {
+  const byTx = new Map(transfers.map((t) => [t.tx.toLowerCase(), t]));
+  const used = new Set<string>();
+  return feedback.map((f) => {
+    const key = f.payment_tx?.toLowerCase() ?? "";
+    const t = byTx.get(key);
+    let reason: string | null = null;
+    if (!f.payment_tx) reason = "no payment linked";
+    else if (!t) reason = "linked tx is not a USDC payment to the agent";
+    else if (!f.client || t.from !== f.client.toLowerCase()) reason = "payment was made by a different address";
+    else if (used.has(key)) reason = "payment already backs another rating";
+    const ok = reason === null;
+    if (ok) used.add(key);
+    return { ...f, payment_verified: ok, unverified_reason: reason };
+  });
+}
+
 const iso = (t?: number) => (t ? new Date(t * 1000).toISOString() : null);
 const addr = (topic?: string) => (topic ? "0x" + topic.slice(-40) : null);
 
@@ -115,7 +141,6 @@ Deno.serve(async (req) => {
       return { tx: r.tx_signature, token: r.token_symbol, chain: r.chain, onchain: !!t, matches: ok };
     });
     const ledgerTx = new Set(ledger.map((r) => String(r.tx_signature).toLowerCase()));
-    const paidTx = new Set(transfers.map((t) => t.tx.toLowerCase()));
 
     return new Response(JSON.stringify({
       source: "Envio HyperSync (monad.hypersync.xyz)",
@@ -129,7 +154,7 @@ Deno.serve(async (req) => {
         onchain_not_in_ledger: transfers.filter((t) => !ledgerTx.has(t.tx.toLowerCase())).length,
         rows,
       },
-      feedback: feedback.map((f) => ({ ...f, payment_verified: !!f.payment_tx && paidTx.has(f.payment_tx.toLowerCase()) })),
+      feedback: verifyFeedback(feedback, transfers),
       transfers,
     }), { headers: CORS });
   } catch (e) {

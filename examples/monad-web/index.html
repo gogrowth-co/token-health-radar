@@ -119,7 +119,7 @@
 
   <section>
     <h2>Who you'd be paying</h2>
-    <p class="hint">Identity is read live from the ERC-8004 Identity Registry in your browser. Ratings come from the full Reputation Registry history, read through Envio HyperSync, and each one is checked for a real x402 payment behind it.</p>
+    <p class="hint">Identity is read live from the ERC-8004 Identity Registry in your browser. Ratings come from the full Reputation Registry history, read through Envio HyperSync, and each one is checked for a real x402 payment behind it, made by the rater, used only once.</p>
     <div class="grid2">
       <div class="card">
         <div class="label">Identity Registry</div>
@@ -356,7 +356,7 @@ async function loadReputation() {
   $("rep-rows").innerHTML = fb.map((f) => `<tr style="${f.payment_verified ? "" : "opacity:.6"}">
     <td>${addrLink(f.client, short(f.client))}</td><td>${esc(f.tag1)}${f.tag2 ? " / " + esc(f.tag2) : ""}</td>
     <td class="mono" style="color:${colorFor(f.value)}">${f.value}</td>
-    <td>${f.payment_verified ? `<span style="color:var(--good)">✓</span> ${txLink(f.payment_tx)}` : `<span style="color:var(--warn)">none</span>`} · <a class="mono" href="https://monadvision.com/tx/${f.tx}" target="_blank" rel="noopener">rating tx</a></td></tr>`).join("");
+    <td>${f.payment_verified ? `<span style="color:var(--good)">✓</span> ${txLink(f.payment_tx)}` : `<span style="color:var(--warn)">${esc(f.unverified_reason ?? "none")}</span>`} · <a class="mono" href="https://monadvision.com/tx/${f.tx}" target="_blank" rel="noopener">rating tx</a></td></tr>`).join("");
 }
 
 let onchain = null;
