@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -15,8 +15,6 @@ import ScanLoading from "./pages/ScanLoading";
 import ScanResult from "./pages/ScanResult";
 import Pricing from "./pages/Pricing";
 import Dashboard from "./pages/Dashboard";
-import LTD from "./pages/LTD";
-import LTDThankYou from "./pages/LTDThankYou";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import TokenScanGuide from "./pages/TokenScanGuide";
@@ -122,8 +120,9 @@ const App = () => {
                     <Route path="/pricing" element={<Pricing />} />
                     <Route path="/copilot" element={<Copilot />} />
                     <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/ltd" element={<LTD />} />
-                    <Route path="/ltd-thank-you" element={<LTDThankYou />} />
+                    {/* Lifetime deal sunset 2026-10-13: old links go to pricing. */}
+                    <Route path="/ltd" element={<Navigate to="/pricing" replace />} />
+                    <Route path="/ltd-thank-you" element={<Navigate to="/pricing" replace />} />
                     <Route path="/privacy" element={<Privacy />} />
                     <Route path="/terms" element={<Terms />} />
                     <Route path="/token-scan-guide" element={<TokenScanGuide />} />

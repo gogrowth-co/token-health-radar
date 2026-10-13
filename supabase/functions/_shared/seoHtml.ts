@@ -410,8 +410,7 @@ type StaticKey =
   | "/agent-scan"
   | "/copilot"
   | "/privacy"
-  | "/terms"
-  | "/ltd";
+  | "/terms";
 
 const STATIC_DEFS: Record<StaticKey, { title: string; description: string; h1: string; body: string; jsonLd?: unknown[] }> = {
   "/": {
@@ -649,12 +648,6 @@ const STATIC_DEFS: Record<StaticKey, { title: string; description: string; h1: s
         isPartOf: { "@type": "WebSite", name: SITE_NAME, url: SITE_URL },
       },
     ],
-  },
-  "/ltd": {
-    title: `Lifetime Deal — ${SITE_NAME}`,
-    description: "Lifetime access to Token Health Scan Pro features.",
-    h1: "Lifetime Deal",
-    body: `<p>One-time payment for lifetime Pro access. Limited availability.</p>`,
   },
   "/token-sniffer-vs-tokenhealthscan": {
     title: `Token Sniffer vs Token Health Scan — Honest Comparison`,

@@ -72,8 +72,7 @@ const STATIC_ROUTES = new Set([
   "/copilot",
   "/publications",
   "/privacy",
-  "/terms",
-  "/ltd"
+  "/terms"
 ]);
 
 const DYNAMIC_ROUTES = [
