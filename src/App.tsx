@@ -10,6 +10,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Confirm from "./pages/Confirm";
+import ResetPassword from "./pages/ResetPassword";
 import ScanChain from "./pages/ScanChain";
 import ScanLoading from "./pages/ScanLoading";
 import ScanResult from "./pages/ScanResult";
@@ -114,6 +115,7 @@ const App = () => {
                       </ErrorBoundary>
                     } />
                     <Route path="/confirm" element={<Confirm />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/scan/:chain/:address" element={<ScanChain />} />
                     <Route path="/scan-loading" element={<ScanLoading />} />
                     <Route path="/scan-result" element={<ScanResult />} />
