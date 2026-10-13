@@ -1,0 +1,19 @@
+{
+  "$schema": "https://apify.com/schemas/v1/output.ide.json",
+  "actorOutputSchemaVersion": 1,
+  "title": "Token Health Scan output",
+  "properties": {
+    "scores": {
+      "type": "string",
+      "title": "Scores",
+      "description": "One row per token: status, score, verdict, dimension scores and whether it was charged.",
+      "template": "{{links.apiDefaultDatasetUrl}}/items?view=overview"
+    },
+    "results": {
+      "type": "string",
+      "title": "Full results with evidence",
+      "description": "Every field, including the evidence behind each dimension score.",
+      "template": "{{links.apiDefaultDatasetUrl}}/items"
+    }
+  }
+}
