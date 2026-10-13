@@ -149,17 +149,6 @@ async function handleCheckoutCompleted(session: any) {
 
   console.log(`[STRIPE] Customer: ${customer}, Subscription: ${subscription}`);
 
-  // Get customer email to match with our users
-  const customerData = await stripe.customers.retrieve(customer);
-  const email = customerData.email;
-
-  if (!email) {
-    console.log("[STRIPE] Customer email not found");
-    return;
-  }
-
-  console.log(`[STRIPE] Processing checkout for email: ${email}`);
-
   // Get subscription details to determine the plan
   const subscriptionData = await stripe.subscriptions.retrieve(subscription);
   const priceId = subscriptionData.items.data[0]?.price.id;
@@ -172,19 +161,23 @@ async function handleCheckoutCompleted(session: any) {
   const plan = getPlanFromPriceId(priceId);
   console.log(`[STRIPE] Determined plan: ${plan} from price ID: ${priceId}`);
 
-  // Find user by email instead of directly accessing auth.users
-  const { data: userData, error: userError } = await supabase
-    .from('subscribers')
-    .select('id')
-    .eq('email', email)
-    .single();
-
-  if (userError || !userData) {
-    console.error(`[STRIPE] User not found for email: ${email}`, userError);
-    return;
+  // subscribers has no email column. create-checkout puts the user id in the
+  // session metadata and stores the Stripe customer id on the subscriber row,
+  // so match on those.
+  let userId = session.metadata?.user_id;
+  if (!userId) {
+    const { data: userData, error: userError } = await supabase
+      .from('subscribers')
+      .select('id')
+      .eq('stripe_customer_id', customer)
+      .limit(1);
+    userId = userData?.[0]?.id;
+    if (userError || !userId) {
+      // Throw so the webhook answers 400 and Stripe retries instead of
+      // dropping a paid checkout.
+      throw new Error(`Subscriber not found for customer ${customer}: ${userError?.message ?? 'no row'}`);
+    }
   }
-
-  const userId = userData.id;
   console.log(`[STRIPE] Found user ID: ${userId}`);
 
   // Update the subscriber record
@@ -200,10 +193,9 @@ async function handleCheckoutCompleted(session: any) {
     .eq('id', userId);
 
   if (error) {
-    console.error(`[STRIPE] Error updating subscriber ${userId}:`, error.message);
-  } else {
-    console.log(`[STRIPE] Successfully updated subscriber ${userId} to plan: ${plan}`);
+    throw new Error(`Error updating subscriber ${userId}: ${error.message}`);
   }
+  console.log(`[STRIPE] Successfully updated subscriber ${userId} to plan: ${plan}`);
 }
 
 // Handle customer.subscription.updated event
