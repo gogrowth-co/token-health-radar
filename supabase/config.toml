@@ -91,6 +91,9 @@ verify_jwt = false
 [functions.x402-ledger]
 verify_jwt = false
 
+[functions.x402-onchain]
+verify_jwt = false
+
 [functions.kiwify-webhook]
 verify_jwt = false
 

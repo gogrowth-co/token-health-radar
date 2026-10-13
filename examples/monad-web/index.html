@@ -78,6 +78,7 @@
   .kv { display:grid; grid-template-columns:120px 1fr; gap:8px 14px; font-size:14px; }
   .kv .k { color:var(--faint); }
   .addr { font:13px 'JetBrains Mono',monospace; word-break:break-all; }
+  td .addr, td .mono { white-space:nowrap; word-break:normal; }
   .big { font:800 44px Montserrat,sans-serif; letter-spacing:-1px; }
   table { width:100%; border-collapse:collapse; font-size:14px; }
   th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); }
@@ -118,7 +119,7 @@
 
   <section>
     <h2>Who you'd be paying</h2>
-    <p class="hint">Read live from the ERC-8004 registries on Monad, in your browser. No server in between.</p>
+    <p class="hint">Identity is read live from the ERC-8004 Identity Registry in your browser. Ratings come from the full Reputation Registry history, read through Envio HyperSync, and each one is checked for a real x402 payment behind it.</p>
     <div class="grid2">
       <div class="card">
         <div class="label">Identity Registry</div>
@@ -127,7 +128,7 @@
       <div class="card">
         <div class="label">Reputation Registry</div>
         <div id="rep-summary"><span class="hint">reading Monad…</span></div>
-        <table style="margin-top:12px"><thead><tr><th>#</th><th>Scanned chain</th><th>Rating</th><th>Rated by</th></tr></thead><tbody id="rep-rows"></tbody></table>
+        <table style="margin-top:12px"><thead><tr><th>Rated by</th><th>Tag</th><th>Rating</th><th>Backed by payment</th></tr></thead><tbody id="rep-rows"></tbody></table>
       </div>
     </div>
   </section>
@@ -164,7 +165,8 @@
 
   <section>
     <h2>Every paid scan settled on Monad</h2>
-    <p class="hint">From the public ledger. Each row links to its USDC transfer.</p>
+    <p class="hint">From our ledger, then checked against Monad itself: every USDC transfer into the agent wallet, read through Envio HyperSync.</p>
+    <div class="card" id="recon" style="margin-bottom:14px;font-size:15px">Checking the ledger against the chain…</div>
     <div class="card"><table><thead><tr><th>When (UTC)</th><th>Token</th><th>Chain scanned</th><th>Score</th><th>Paid</th><th>Tx</th></tr></thead><tbody id="ledger"><tr><td colspan="6" class="hint">loading…</td></tr></tbody></table></div>
   </section>
 
@@ -173,7 +175,7 @@
     <a href="https://github.com/gogrowth-co/token-health-radar/tree/feat/x402-monad">source</a> ·
     <a href="https://tokenhealthscan.com">tokenhealthscan.com</a> ·
     <a href="https://8004scan.io/agents/monad/10387">8004scan</a> ·
-    <a href="https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/x402-ledger">ledger JSON</a>
+    <a href="https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/x402-ledger">ledger JSON</a> · <a href="https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/x402-onchain">onchain JSON (Envio HyperSync)</a>
   </footer>
 </div>
 
@@ -188,6 +190,7 @@ const REPUTATION = "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63";
 const USDC = "0x754704Bc059F8C67012fEd69BC8A327a5aafb603";
 const NETWORK = "eip155:143";
 const LEDGER = "https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/x402-ledger?limit=200";
+const ONCHAIN = "https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/x402-onchain";
 
 const idAbi = [
   { type: "function", name: "tokenURI", stateMutability: "view", inputs: [{ type: "uint256" }], outputs: [{ type: "string" }] },
@@ -340,13 +343,30 @@ async function loadIdentity() {
 }
 
 async function loadReputation() {
-  const clients = await pub.readContract({ address: REPUTATION, abi: repAbi, functionName: "getClients", args: [AGENT_ID] });
-  if (!clients.length) { $("rep-summary").innerHTML = `<span class="hint">No feedback yet.</span>`; return; }
-  const [cl, idx, vals, decs, , tag2s] = await pub.readContract({ address: REPUTATION, abi: repAbi, functionName: "readAllFeedback", args: [AGENT_ID, clients, "", "", false] });
-  const n = vals.length, avg = vals.reduce((s, v, i) => s + Number(v) / 10 ** decs[i], 0) / n;
-  $("rep-summary").innerHTML = `<span class="big">${avg.toFixed(0)}</span><span class="hint"> / 100 average · ${n} rating${n > 1 ? "s" : ""} from ${clients.length} paying client${clients.length > 1 ? "s" : ""}. Each rating links to the payment it reviews.</span>`;
-  $("rep-rows").innerHTML = vals.map((v, i) =>
-    `<tr><td>${idx[i]}</td><td>${esc(tag2s[i])}</td><td class="mono" style="color:var(--ok)">${Number(v) / 10 ** decs[i]}</td><td>${addrLink(cl[i], short(cl[i]))}</td></tr>`).join("");
+  const r = await fetch(ONCHAIN);
+  if (!r.ok) throw new Error("onchain history unavailable");
+  const d = await r.json();
+  onchain = d;
+  renderRecon();
+  const fb = d.feedback;
+  if (!fb.length) { $("rep-summary").innerHTML = `<span class="hint">No feedback yet.</span>`; return; }
+  const paid = fb.filter((f) => f.payment_verified), unpaid = fb.filter((f) => !f.payment_verified);
+  const avg = paid.length ? paid.reduce((a, f) => a + f.value, 0) / paid.length : null;
+  $("rep-summary").innerHTML = `<span class="big">${avg == null ? "–" : avg.toFixed(0)}</span><span class="hint"> / 100 from <b style="color:var(--ink)">${paid.length} rating${paid.length === 1 ? "" : "s"} backed by a verified payment</b>.${unpaid.length ? ` ${unpaid.length} unpaid rating${unpaid.length === 1 ? " is" : "s are"} shown but not counted: anyone can post one, so it proves nothing.` : ""}</span>`;
+  $("rep-rows").innerHTML = fb.map((f) => `<tr style="${f.payment_verified ? "" : "opacity:.6"}">
+    <td>${addrLink(f.client, short(f.client))}</td><td>${esc(f.tag1)}${f.tag2 ? " / " + esc(f.tag2) : ""}</td>
+    <td class="mono" style="color:${colorFor(f.value)}">${f.value}</td>
+    <td>${f.payment_verified ? `<span style="color:var(--good)">✓</span> ${txLink(f.payment_tx)}` : `<span style="color:var(--warn)">none</span>`} · <a class="mono" href="https://monadvision.com/tx/${f.tx}" target="_blank" rel="noopener">rating tx</a></td></tr>`).join("");
+}
+
+let onchain = null;
+function renderRecon() {
+  if (!onchain) return;
+  const c = onchain.reconciliation;
+  const ok = c.ledger_payments > 0 && c.matching === c.ledger_payments && c.onchain_not_in_ledger === 0;
+  $("recon").innerHTML = `<span style="color:${ok ? "var(--good)" : "var(--warn)"};font-weight:700">${ok ? "✓" : "!"} Ledger matches the chain:</span>
+    ${c.matching} of ${c.ledger_payments} payments found onchain with the same amount and payer, ${c.onchain_not_in_ledger} transfers to the agent wallet missing from the ledger.
+    <span class="hint" style="margin:0">Checked through Envio HyperSync, blocks ${onchain.scanned.from_block.toLocaleString("en-US")} to ${onchain.scanned.to_block.toLocaleString("en-US")}.</span>`;
 }
 
 function fromLedger(p) {
@@ -445,7 +465,7 @@ $("pay").addEventListener("click", async () => {
     $("mine").innerHTML = `<div class="report">${renderReport({ ...body, tx: body.payment.transaction, payer: body.payment.payer, at: new Date().toISOString() })}</div>`;
     $("mine").scrollIntoView({ behavior: "smooth" });
     $("rate").disabled = false;
-    loadLedger();
+    loadLedger(); setTimeout(() => loadReputation().catch(() => {}), 4000);
   } catch (e) { log(S("f", "  " + esc(e.shortMessage ?? e.message))); $("pay").disabled = false; }
 });
 
@@ -465,7 +485,7 @@ $("rate").addEventListener("click", async () => {
 });
 
 loadIdentity().catch((e) => { $("identity").innerHTML = `<span class="k">error</span><span>${esc(e.message)}</span>`; });
-loadReputation().catch((e) => { $("rep-summary").innerHTML = `<span class="hint">${esc(e.shortMessage ?? e.message)}</span>`; });
+loadReputation().catch((e) => { $("rep-summary").innerHTML = `<span class="hint">${esc(e.shortMessage ?? e.message)}</span>`; $("recon").textContent = "Onchain check unavailable right now."; });
 loadLedger().catch(() => { $("ledger").innerHTML = `<tr><td colspan="6" class="hint">ledger unavailable</td></tr>`; $("report").innerHTML = `<div style="padding:28px" class="hint">ledger unavailable</div>`; });
 </script>
 </body>
