@@ -26,6 +26,8 @@ Built for the Monad Metropolis hackathon, Trust, Identity & AI Infrastructure tr
 | **ERC-8004 feedback** | Each rating links the payment tx and a hash of the result | Shipped |
 | **Paid MCP tool** | The same paid scan over MCP (`_meta["x402/payment"]`) | Shipped |
 | **Public ledger** | Every settled scan with its explorer link | Shipped |
+| **Onchain reconciliation (Envio HyperSync)** | Full ERC-8004 feedback history + every USDC payment to the agent, read via HyperSync; ratings count only if a real payment backs them; ledger checked against the chain | Shipped |
+| **Evidence in every report** | Each input behind each score: value, points earned, inputs excluded and why | Shipped |
 
 ## Live on Monad mainnet (verifiable now)
 
@@ -61,9 +63,9 @@ agent #10387. A lookalike endpoint can copy the 402 byte for byte, but it can't 
 checks this before it signs, and the impersonation test in [`spoof-server.mjs`](examples/monad-agent/spoof-server.mjs)
 shows it refusing.
 
-**Reputation that can't be padded with free reviews.** Every ERC-8004 feedback entry the agent posts carries the
+**Reputation that can't be padded with free reviews, and we check.** Every ERC-8004 feedback entry the agent posts carries the
 payment transaction as its `feedbackURI` and a hash of the scan result as its `feedbackHash`. A rating points to a
-real, paid call anyone can open.
+real, paid call anyone can open. The [`x402-onchain`](https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/x402-onchain) endpoint reads the full feedback history through Envio HyperSync and counts a rating only if a matching USDC payment exists. It already caught one: an unpaid 5/100 rating from an unknown address, shown on the page but not counted.
 
 **The payer only pays for an answer.** The server verifies the signed authorization, runs the scan, and settles only if
 the scanner produced a score. A token the scanner can't verify returns 422 with the partial data, free.
@@ -84,7 +86,8 @@ supabase/functions/
     paidScan.ts          # verify -> scan -> settle, one payment = one scan, ledger writes
     scanner/             # scoring engine (security, liquidity, tokenomics, community, development)
   x402-scan/             # paid HTTP endpoint (402 / PAYMENT-SIGNATURE / PAYMENT-RESPONSE)
-  x402-ledger/           # public read-only ledger
+  x402-ledger/           # public read-only ledger (with per-scan evidence)
+  x402-onchain/          # Envio HyperSync: ERC-8004 feedback + USDC payments on Monad, ledger reconciliation
   token-health-mcp/      # MCP server, paid scan via _meta["x402/payment"]
   run-token-scan/        # the scan itself
 examples/monad-web/
