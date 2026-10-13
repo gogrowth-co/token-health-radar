@@ -195,6 +195,9 @@ async function handleCheckoutCompleted(session: any) {
       stripe_subscription_id: subscription,
       plan: plan,
       pro_scan_limit: PRO_SCAN_LIMIT,
+      // Fresh monthly allowance from the day they pay.
+      scans_used: 0,
+      scans_period_start: new Date().toISOString(),
       updated_at: new Date().toISOString()
     })
     .eq('id', userId);
@@ -292,6 +295,7 @@ async function handleInvoicePaid(invoice: any) {
       .update({
         pro_scan_limit: PRO_SCAN_LIMIT,
         scans_used: 0,
+        scans_period_start: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', userId);
