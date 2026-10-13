@@ -78,19 +78,19 @@ export default function AgentPayments() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
-        <title>Pay-per-scan token risk API for AI agents (x402, USDC on Solana) | Token Health Scan</title>
+        <title>Pay-per-scan token risk API for AI agents (x402, USDC on Solana, Base or Monad) | Token Health Scan</title>
         <meta
           name="description"
-          content="AI agents pay 0.02 USDC per Token Health Scan over x402. No account, no API key. USDC only moves after a successful scan. Every payment is public."
+          content="AI agents pay 0.02 USDC per Token Health Scan over x402, on Solana, Base or Monad. No account, no API key. USDC only moves after a successful scan. Every payment is public."
         />
       </Helmet>
       <Navbar />
       <main className="container mx-auto max-w-5xl px-4 py-12 space-y-12">
         <section className="space-y-4">
-          <Badge variant="secondary">x402 · USDC on Solana · MCP</Badge>
+          <Badge variant="secondary">x402 · USDC on Solana, Base or Monad · MCP</Badge>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight">Token risk checks that AI agents can pay for</h1>
           <p className="text-lg text-muted-foreground max-w-3xl">
-            An agent calls the API, gets a price, pays 0.02 USDC, and receives a 0-100 health score across security, liquidity,
+            An agent calls the API, gets a price, pays 0.02 USDC on Solana, Base or Monad, and receives a 0-100 health score across security, liquidity,
             tokenomics, community and development. No account. No API key. USDC only moves after the scan succeeds, and if the
             scanner cannot verify enough data for a verdict, the agent is not charged.
           </p>
@@ -114,7 +114,7 @@ export default function AgentPayments() {
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">Live payment ledger</h2>
           <p className="text-muted-foreground">
-            Every row is a real USDC transfer on Solana mainnet. Open the transaction to check the payer, the payee and the amount
+            Every row is a real USDC transfer on Solana, Base or Monad mainnet. Open the transaction to check the payer, the payee and the amount
             yourself. The outcome column applies Sasha Coin&apos;s entry rule (overall ≥ {RULE.minOverall}, security ≥ {RULE.minSecurity}, liquidity ≥{" "}
             {RULE.minLiquidity}) to the stored scores. Sasha screens candidate pools with it before it looks at them; the screen never
             opens a position.
@@ -182,10 +182,10 @@ export default function AgentPayments() {
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">How an agent pays</h2>
           <ol className="list-decimal pl-6 space-y-2 text-muted-foreground">
-            <li>Call the endpoint. The server answers HTTP 402 with the price, the USDC mint and the payee.</li>
-            <li>The agent signs a USDC transfer and retries with a <code>PAYMENT-SIGNATURE</code> header. The facilitator pays the network fee.</li>
+            <li>Call the endpoint. The server answers HTTP 402 with one quote per network (Solana, Base, Monad): price, USDC contract and payee. The agent picks one.</li>
+            <li>The agent signs a USDC payment and retries with a <code>PAYMENT-SIGNATURE</code> header. The facilitator pays the network fee.</li>
             <li>The server verifies the payment, runs the scan, and only then settles. A failed scan or an unscored token costs nothing.</li>
-            <li>The response carries the verdict and a link to the settled Solana transaction.</li>
+            <li>The response carries the verdict and a link to the settled transaction on the network it paid on.</li>
           </ol>
           <pre className="overflow-x-auto rounded-lg border bg-muted/40 p-4 text-sm">
 {`# 1. see the price (HTTP 402 + PAYMENT-REQUIRED header)
