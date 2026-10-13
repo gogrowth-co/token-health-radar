@@ -2,6 +2,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@12.18.0?dts";
+import {
+  FREE_SCAN_LIMIT,
+  getPlanFromPriceId,
+  isThsPrice,
+  planForSubscription,
+  PRO_SCAN_LIMIT,
+} from "./billing.ts";
 
 // Initialize Stripe with the secret key
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -13,6 +20,11 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// Deno only has async Web Crypto, so signatures must be checked with
+// constructEventAsync and this provider. The sync constructEvent throws on
+// every request, which rejected every Stripe event with a 400.
+const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -62,10 +74,12 @@ serve(async (req) => {
     // Verify signature and construct the event
     let event;
     try {
-      event = stripe.webhooks.constructEvent(
+      event = await stripe.webhooks.constructEventAsync(
         body,
         signature,
-        webhookSecret
+        webhookSecret,
+        undefined,
+        cryptoProvider
       );
       console.log(`[STRIPE-WEBHOOK-${requestId}] Signature verification successful`);
     } catch (signatureError: any) {
@@ -116,24 +130,13 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error(`Error processing webhook: ${error.message}`);
+    console.error(`Error processing webhook: ${(error as Error).message}`);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
-
-// Helper function to determine plan from price ID
-function getPlanFromPriceId(priceId: string): "free" | "pro" {
-  const monthlyPriceId = "price_1RQK5tD41aNWIHmd4YspKxDi";
-  const annualPriceId = "price_1RQK5tD41aNWIHmd1p46UCwl";
-  
-  if (priceId === monthlyPriceId || priceId === annualPriceId) {
-    return "pro";
-  }
-  return "free";
-}
 
 // Handle checkout.session.completed event
 async function handleCheckoutCompleted(session: any) {
@@ -158,6 +161,10 @@ async function handleCheckoutCompleted(session: any) {
     return;
   }
 
+  if (!isThsPrice(priceId)) {
+    console.log(`[STRIPE] Ignoring checkout for non-THS price ${priceId}`);
+    return;
+  }
   const plan = getPlanFromPriceId(priceId);
   console.log(`[STRIPE] Determined plan: ${plan} from price ID: ${priceId}`);
 
@@ -187,7 +194,7 @@ async function handleCheckoutCompleted(session: any) {
       stripe_customer_id: customer,
       stripe_subscription_id: subscription,
       plan: plan,
-      pro_scan_limit: 10,  // Reset scan limit to 10
+      pro_scan_limit: PRO_SCAN_LIMIT,
       updated_at: new Date().toISOString()
     })
     .eq('id', userId);
@@ -209,8 +216,12 @@ async function handleSubscriptionUpdated(subscription: any) {
     console.log("Missing customer ID or price ID");
     return;
   }
-  
-  const plan = status === "active" ? getPlanFromPriceId(priceId) : "free";
+  if (!isThsPrice(priceId)) {
+    console.log(`[STRIPE] Ignoring subscription ${subscriptionId} on non-THS price ${priceId}`);
+    return;
+  }
+
+  const plan = planForSubscription(status, priceId);
   
   // Find subscriber by Stripe customer ID
   const { data: subscribers, error: findError } = await supabase
@@ -231,14 +242,16 @@ async function handleSubscriptionUpdated(subscription: any) {
     .from('subscribers')
     .update({
       plan: plan,
-      pro_scan_limit: plan === "pro" ? 10 : 3,
+      stripe_subscription_id: subscriptionId,
+      pro_scan_limit: plan === "pro" ? PRO_SCAN_LIMIT : FREE_SCAN_LIMIT,
       updated_at: new Date().toISOString()
     })
     .eq('id', userId);
-  
+
   if (updateError) {
-    console.error(`Error updating subscriber: ${updateError.message}`);
+    throw new Error(`Error updating subscriber ${userId}: ${updateError.message}`);
   }
+  console.log(`[STRIPE] Subscription ${subscriptionId} is ${status}: subscriber ${userId} set to ${plan}`);
 }
 
 // Handle invoice.paid event
@@ -250,7 +263,12 @@ async function handleInvoicePaid(invoice: any) {
     console.log("Missing customer ID or subscription ID");
     return;
   }
-  
+  const lines = invoice.lines?.data ?? [];
+  if (!lines.some((line: any) => isThsPrice(line.price?.id))) {
+    console.log(`[STRIPE] Ignoring invoice ${invoice.id} with no THS price`);
+    return;
+  }
+
   // Find subscriber by Stripe customer ID
   const { data: subscribers, error: findError } = await supabase
     .from('subscribers')
@@ -272,14 +290,14 @@ async function handleInvoicePaid(invoice: any) {
     const { error: updateError } = await supabase
       .from('subscribers')
       .update({
-        pro_scan_limit: 10,  // Reset to monthly limit
-        scans_used: 0,       // Reset used scans count
+        pro_scan_limit: PRO_SCAN_LIMIT,
+        scans_used: 0,
         updated_at: new Date().toISOString()
       })
       .eq('id', userId);
     
     if (updateError) {
-      console.error(`Error updating scan limits: ${updateError.message}`);
+      throw new Error(`Error updating scan limits for ${userId}: ${updateError.message}`);
     } else {
       console.log(`Successfully reset scan counts for user ${userId} on new billing cycle`);
     }
@@ -296,9 +314,14 @@ async function handlePaymentFailed(invoice: any) {
 // Handle customer.subscription.deleted event
 async function handleSubscriptionDeleted(subscription: any) {
   const customerId = subscription.customer;
-  
+  const priceId = subscription.items?.data?.[0]?.price?.id;
+
   if (!customerId) {
     console.log("Missing customer ID");
+    return;
+  }
+  if (!isThsPrice(priceId)) {
+    console.log(`[STRIPE] Ignoring deleted subscription ${subscription.id} on non-THS price ${priceId}`);
     return;
   }
   
@@ -321,12 +344,13 @@ async function handleSubscriptionDeleted(subscription: any) {
     .from('subscribers')
     .update({
       plan: 'free',
-      pro_scan_limit: 3,  // Reset to free tier limit
+      pro_scan_limit: FREE_SCAN_LIMIT,
       updated_at: new Date().toISOString()
     })
     .eq('id', userId);
-  
+
   if (updateError) {
-    console.error(`Error updating subscriber: ${updateError.message}`);
+    throw new Error(`Error updating subscriber ${userId}: ${updateError.message}`);
   }
+  console.log(`[STRIPE] Subscription ${subscription.id} deleted: subscriber ${userId} set to free`);
 }
