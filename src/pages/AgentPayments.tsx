@@ -197,7 +197,11 @@ SOLANA_KEYPAIR_PATH=~/.config/solana/id.json node pay-scan.mjs solana <token-add
 # MCP: tool "scan_token" on ${FUNCTIONS_URL}/token-health-mcp`}
           </pre>
           <p className="text-sm text-muted-foreground">
-            Scans Ethereum, BNB Chain, Base, Arbitrum, Polygon and Solana. Open source (MIT):{" "}
+            No wallet? The same scan is on the{" "}
+            <a className="underline" href="https://apify.com/gmangabeira2/token-health-scan" target="_blank" rel="noopener noreferrer">
+              Apify Store
+            </a>{" "}
+            at 0.02 USD per scored token. Scans Ethereum, BNB Chain, Base, Arbitrum, Polygon and Solana. Open source (MIT):{" "}
             <a className="underline" href={REPO_DOCS} target="_blank" rel="noopener noreferrer">
               docs, client and server code
             </a>

@@ -19,7 +19,7 @@ Built for the Monad Metropolis hackathon, Trust, Identity & AI Infrastructure tr
 |---|---|---|
 | **Token scan** | 0-100 score across security, liquidity, tokenomics, community and development, for tokens on Ethereum, Base, BNB Chain, Polygon, Arbitrum and Solana | Shipped |
 | **x402 on Monad** | Pay per scan in native USDC on Monad. EIP-3009 authorization, the Monad facilitator pays gas | Shipped |
-| **Multi-network 402** | One 402 response quotes Monad and Solana. The payer picks the rail | Shipped |
+| **Multi-network 402** | One 402 response quotes Monad, Solana and Base. The payer picks the rail | Shipped |
 | **Pay only for a result** | Verify, then scan, then settle. Unscored tokens return 422 and nothing settles | Shipped |
 | **ERC-8004 identity** | Agent #10387 on Monad. The x402 payee is the wallet the Identity Registry records | Shipped |
 | **Trust-checking agent** | Reads identity and reputation, refuses a quote that pays anyone else, rates the service after | Shipped |
@@ -28,6 +28,7 @@ Built for the Monad Metropolis hackathon, Trust, Identity & AI Infrastructure tr
 | **Public ledger** | Every settled scan with its explorer link | Shipped |
 | **Onchain reconciliation (Envio HyperSync)** | Full ERC-8004 feedback history + every USDC payment to the agent, read via HyperSync; ratings count only if a real payment backs them; ledger checked against the chain | Shipped |
 | **Evidence in every report** | Each input behind each score: value, points earned, inputs excluded and why | Shipped |
+| **Apify Store** | The same scan for buyers without a wallet: [apify.com/gmangabeira2/token-health-scan](https://apify.com/gmangabeira2/token-health-scan), $0.02 per scored token. Source in [`apify-actor/`](apify-actor/) | Shipped |
 
 ## Live on Monad mainnet (verifiable now)
 
