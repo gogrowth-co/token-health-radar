@@ -1,5 +1,5 @@
 /**
- * x402-scan: pay-per-call token health scan. USDC on Solana or Monad, no account, no API key.
+ * x402-scan: pay-per-call token health scan. USDC on Solana, Base or Monad, no account, no API key.
  *
  *   GET|POST /functions/v1/x402-scan?chain=solana&address=<token>
  *   1. No PAYMENT-SIGNATURE header -> 402 + PAYMENT-REQUIRED (base64 PaymentRequired)
@@ -49,7 +49,7 @@ Deno.serve(async (req: Request) => {
       description: "Token Health Scan: 0-100 health score across security, liquidity, tokenomics, community and development",
       mimeType: "application/json",
       serviceName: "Token Health Scan",
-      tags: ["token-risk", "security", "solana", "monad"],
+      tags: ["token-risk", "security", "solana", "base", "monad"],
     },
   });
 

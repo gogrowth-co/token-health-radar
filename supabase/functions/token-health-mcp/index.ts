@@ -18,7 +18,7 @@ const TOOLS = [
   {
     name: "scan_token",
     description:
-      "PAID, 0.02 USDC per call on Solana or Monad via x402 (no account or API key). Run a full health scan on a crypto token. Analyzes security, liquidity, tokenomics, community, and development across EVM chains and Solana. Returns a 0–100 score per dimension and an overall health score. Takes 5–20 seconds. Call without payment to receive the x402 PaymentRequired; retry with the signed payment in _meta[\"x402/payment\"]. USDC only moves after the scan succeeds.",
+      "PAID, 0.02 USDC per call on Solana, Base or Monad via x402 (no account or API key). Run a full health scan on a crypto token. Analyzes security, liquidity, tokenomics, community, and development across EVM chains and Solana. Returns a 0–100 score per dimension and an overall health score. Takes 5–20 seconds. Call without payment to receive the x402 PaymentRequired; retry with the signed payment in _meta[\"x402/payment\"]. USDC only moves after the scan succeeds.",
     inputSchema: {
       type: "object",
       properties: {

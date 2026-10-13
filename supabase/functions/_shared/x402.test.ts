@@ -1,12 +1,15 @@
 import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
+  BASE_MAINNET,
   buildPaymentRequired,
   buildRequirements,
   decodeHeader,
+  explorerUrl,
   encodeHeader,
   loadX402Config,
   matchesRequirements,
   MONAD_MAINNET,
+  networkLabel,
   type Rail,
   SOLANA_MAINNET,
   usdToAtomic,
@@ -89,6 +92,39 @@ Deno.test("Monad match is case-insensitive on addresses but still rejects redire
   assert(!matchesRequirements({ ...req, payTo: "0x0000000000000000000000000000000000000001" }, req));
   assert(!matchesRequirements({ ...req, amount: "19999" }, req));
   assert(!matchesRequirements({ ...req, network: "eip155:10143" }, req));
+});
+
+const base: Rail = { facilitatorUrl: "https://b.example", network: BASE_MAINNET, payTo: "0x12C479936bE431fBea60c376112561252b1E68Bb" };
+
+Deno.test("Base rail: Base USDC signs under the \"USD Coin\" domain, not Monad's \"USDC\"", () => {
+  const req = buildRequirements(cfg, base, undefined, "ths:base:0xabc");
+  assertEquals(req.network, "eip155:8453");
+  assertEquals(req.asset, "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913");
+  assertEquals(req.amount, "20000");
+  assertEquals(req.maxTimeoutSeconds, 300);
+  assertEquals(req.extra, { name: "USD Coin", version: "2" });
+  assert(!matchesRequirements({ ...req, network: MONAD_MAINNET }, req));
+});
+
+Deno.test("Base payments label and link to Base", () => {
+  assertEquals(networkLabel(BASE_MAINNET), "Base");
+  assertEquals(networkLabel(MONAD_MAINNET), "Monad");
+  assertEquals(networkLabel(SOLANA_MAINNET), "Solana");
+  assertEquals(explorerUrl(BASE_MAINNET, "0xabc"), "https://basescan.org/tx/0xabc");
+});
+
+Deno.test("loadX402Config offers Base between Solana and Monad, and rejects a bad Base payee", () => {
+  Deno.env.set("X402_PAYEE_SOLANA", "PayeeAddr");
+  Deno.env.set("X402_PAYEE_BASE", "0x12C479936bE431fBea60c376112561252b1E68Bb");
+  Deno.env.set("X402_PAYEE_MONAD", "0x12C479936bE431fBea60c376112561252b1E68Bb");
+  const cfg3 = loadX402Config();
+  assertEquals(cfg3?.rails.map((r) => r.network), [SOLANA_MAINNET, BASE_MAINNET, MONAD_MAINNET]);
+  assertEquals(cfg3?.rails[1].facilitatorUrl, "https://facilitator.payai.network");
+  Deno.env.set("X402_PAYEE_BASE", "not-an-address");
+  assertEquals(loadX402Config()?.rails.map((r) => r.network), [SOLANA_MAINNET, MONAD_MAINNET]);
+  Deno.env.delete("X402_PAYEE_BASE");
+  Deno.env.delete("X402_PAYEE_SOLANA");
+  Deno.env.delete("X402_PAYEE_MONAD");
 });
 
 Deno.test("loadX402Config offers each configured rail", () => {

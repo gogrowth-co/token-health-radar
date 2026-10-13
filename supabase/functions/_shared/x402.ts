@@ -1,7 +1,8 @@
 /**
- * x402 v2 (exact scheme) resource-server helpers. Two payment rails, offered side by side in one
+ * x402 v2 (exact scheme) resource-server helpers. Up to three payment rails, offered side by side in one
  * PaymentRequired so the paying agent picks its network:
  *   - Solana: USDC SPL transfer, PayAI facilitator pays the fee (specs/schemes/exact/scheme_exact_svm.md)
+ *   - Base:   USDC EIP-3009 transferWithAuthorization, PayAI facilitator pays gas (scheme_exact_evm.md)
  *   - Monad:  USDC EIP-3009 transferWithAuthorization, Monad facilitator pays gas (scheme_exact_evm.md)
  *
  * Spec: https://github.com/x402-foundation/x402/tree/main/specs
@@ -13,11 +14,14 @@
  * This module only builds requirements and talks to a facilitator over the
  * standard /supported, /verify and /settle HTTP contract. It never holds keys
  * and never signs: the payer signs, the facilitator pays the network fee and
- * broadcasts, USDC goes straight from the payer to X402_PAYEE_SOLANA / X402_PAYEE_MONAD.
+ * broadcasts, USDC goes straight from the payer to X402_PAYEE_SOLANA / X402_PAYEE_BASE / X402_PAYEE_MONAD.
  */
 
 export const SOLANA_MAINNET = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
 export const SOLANA_DEVNET = "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1";
+
+export const BASE_MAINNET = "eip155:8453";
+export const BASE_SEPOLIA = "eip155:84532";
 
 export const MONAD_MAINNET = "eip155:143";
 export const MONAD_TESTNET = "eip155:10143";
@@ -28,11 +32,29 @@ const USDC_MINT: Record<string, string> = {
   // Circle native USDC on Monad. EIP-712 domain name is "USDC" (not "USD Coin"), version "2".
   [MONAD_MAINNET]: "0x754704Bc059F8C67012fEd69BC8A327a5aafb603",
   [MONAD_TESTNET]: "0x534b2f3A21130d7a60830c2Df862319e593943A3",
+  // Circle native USDC on Base.
+  [BASE_MAINNET]: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  [BASE_SEPOLIA]: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+};
+// EIP-712 domain name of each EVM USDC contract (version is "2" on all of them). The payer signs against
+// this domain, so a wrong name makes every signature fail verification.
+const USDC_DOMAIN_NAME: Record<string, string> = {
+  [MONAD_MAINNET]: "USDC",
+  [MONAD_TESTNET]: "USDC",
+  [BASE_MAINNET]: "USD Coin",
+  [BASE_SEPOLIA]: "USDC",
 };
 const USDC_DECIMALS = 6;
 
 export function isEvm(network: string): boolean {
   return network.startsWith("eip155:");
+}
+
+/** Human name of a rail's network, for 402 messages. */
+export function networkLabel(network: string): string {
+  if (network === BASE_MAINNET || network === BASE_SEPOLIA) return "Base";
+  if (network === MONAD_MAINNET || network === MONAD_TESTNET) return "Monad";
+  return "Solana";
 }
 
 /** One way to pay: a network, the facilitator that settles on it, and who gets the USDC. */
@@ -56,7 +78,7 @@ export interface PaymentRequirements {
   asset: string;
   payTo: string;
   maxTimeoutSeconds: number;
-  /** Solana: feePayer (+ memo). Monad: the USDC EIP-712 domain name and version. */
+  /** Solana: feePayer (+ memo). EVM (Base, Monad): the USDC EIP-712 domain name and version. */
   extra: { feePayer?: string; memo?: string; name?: string; version?: string };
 }
 
@@ -101,6 +123,15 @@ export function loadX402Config(): X402Config | null {
       network: solNetwork,
       payTo: solPayee,
       facilitatorUrl: (Deno.env.get("X402_FACILITATOR_URL") || "https://facilitator.payai.network").replace(/\/$/, ""),
+    });
+  }
+  const basePayee = Deno.env.get("X402_PAYEE_BASE");
+  const baseNetwork = Deno.env.get("X402_BASE_NETWORK") || BASE_MAINNET;
+  if (basePayee && /^0x[0-9a-fA-F]{40}$/.test(basePayee) && USDC_MINT[baseNetwork]) {
+    rails.push({
+      network: baseNetwork,
+      payTo: basePayee,
+      facilitatorUrl: (Deno.env.get("X402_BASE_FACILITATOR_URL") || "https://facilitator.payai.network").replace(/\/$/, ""),
     });
   }
   const monadPayee = Deno.env.get("X402_PAYEE_MONAD");
@@ -161,7 +192,7 @@ export function buildRequirements(cfg: X402Config, rail: Rail, feePayer?: string
     payTo: rail.payTo,
     maxTimeoutSeconds: evm ? 300 : 60,
     extra: evm
-      ? { name: "USDC", version: "2" }
+      ? { name: USDC_DOMAIN_NAME[rail.network], version: "2" }
       : { feePayer: feePayer ?? "", ...(cfg.memo && memo ? { memo } : {}) },
   };
 }
@@ -242,6 +273,8 @@ export async function sha256Hex(text: string): Promise<string> {
 export function explorerUrl(network: string, signature: string): string {
   if (network === MONAD_MAINNET) return `https://monadvision.com/tx/${signature}`;
   if (network === MONAD_TESTNET) return `https://testnet.monadvision.com/tx/${signature}`;
+  if (network === BASE_MAINNET) return `https://basescan.org/tx/${signature}`;
+  if (network === BASE_SEPOLIA) return `https://sepolia.basescan.org/tx/${signature}`;
   const cluster = network === SOLANA_DEVNET ? "?cluster=devnet" : "";
   return `https://solscan.io/tx/${signature}${cluster}`;
 }

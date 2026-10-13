@@ -5,7 +5,7 @@
  * USDC only moves after the scan succeeded. A payment that fails verification or a scan that
  * fails never reaches /settle, so the payer is not charged for a result they did not get.
  *
- * The 402 offers one quote per configured rail (Solana and/or Monad); the payer picks one and the
+ * The 402 offers one quote per configured rail (Solana, Base and/or Monad); the payer picks one and the
  * verify/settle calls go to that rail's facilitator.
  *
  * Every attempt is written to public.x402_payments. payload_hash is unique, so a signed
@@ -17,7 +17,7 @@ import {
   buildPaymentRequired,
   buildRequirements,
   explorerUrl,
-  isEvm,
+  networkLabel,
   loadX402Config,
   matchesRequirements,
   probeRail,
@@ -185,7 +185,7 @@ export async function executePaidScan(req: PaidScanRequest): Promise<PaidScanOut
     }
   }
   if (quotes.length === 0) return { kind: "facilitator_down", message: failures.join("; ") };
-  const networks = quotes.map((q) => (isEvm(q.rail.network) ? "Monad" : "Solana")).join(" or ");
+  const networks = quotes.map((q) => networkLabel(q.rail.network)).join(" or ");
   const required = (error?: string) => ({
     kind: "payment_required" as const,
     required: buildPaymentRequired(quotes.map((q) => q.requirements), req.resource, error ?? `Payment required: pay per scan in USDC on ${networks}`),
