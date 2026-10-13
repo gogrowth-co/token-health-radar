@@ -123,22 +123,30 @@ export function usdToAtomic(usd: number): string {
   return Math.round(usd * 10 ** USDC_DECIMALS).toString();
 }
 
-const feePayerCache = new Map<string, { value: string; at: number }>();
+const supportedCache = new Map<string, { feePayer: string; at: number }>();
 
-/** Solana only: the facilitator advertises the fee payer the client must put in the transaction. */
-export async function getFeePayer(rail: Rail): Promise<string> {
+/**
+ * Asks the rail's facilitator whether it supports exact on this network, so a rail whose facilitator
+ * is down is not offered. On Solana it also returns the fee payer the client must put in the transaction
+ * (empty string on EVM, where the facilitator pays gas through EIP-3009).
+ */
+export async function probeRail(rail: Rail): Promise<string> {
   const key = `${rail.facilitatorUrl}|${rail.network}`;
-  const hit = feePayerCache.get(key);
-  if (hit && Date.now() - hit.at < 5 * 60_000) return hit.value;
+  const hit = supportedCache.get(key);
+  if (hit && Date.now() - hit.at < 5 * 60_000) return hit.feePayer;
   const res = await fetch(`${rail.facilitatorUrl}/supported`, { signal: AbortSignal.timeout(8000) });
   if (!res.ok) throw new Error(`facilitator /supported returned HTTP ${res.status}`);
   const data = await res.json();
   const kind = (data?.kinds ?? []).find(
     (k: any) => k?.x402Version === 2 && k?.scheme === "exact" && k?.network === rail.network,
   );
-  const feePayer = kind?.extra?.feePayer;
-  if (typeof feePayer !== "string") throw new Error(`facilitator does not support exact on ${rail.network}`);
-  feePayerCache.set(key, { value: feePayer, at: Date.now() });
+  if (!kind) throw new Error(`facilitator does not support exact on ${rail.network}`);
+  let feePayer = "";
+  if (!isEvm(rail.network)) {
+    feePayer = kind?.extra?.feePayer;
+    if (typeof feePayer !== "string") throw new Error(`facilitator advertises no fee payer on ${rail.network}`);
+  }
+  supportedCache.set(key, { feePayer, at: Date.now() });
   return feePayer;
 }
 
@@ -192,8 +200,13 @@ export function matchesRequirements(accepted: Partial<PaymentRequirements> | und
     (accepted.extra?.memo ?? null) === (req.extra.memo ?? null);
 }
 
+// Bounded so a hung facilitator throws inside the Edge Function's lifetime, and the ledger row moves to
+// void (verify) or unsettled (settle) where the signed payment can be retried, instead of staying pending.
+const FACILITATOR_TIMEOUT_MS = { "/verify": 15_000, "/settle": 45_000 } as const;
+
 async function facilitatorCall(rail: Rail, path: "/verify" | "/settle", payload: PaymentPayload, req: PaymentRequirements) {
   const res = await fetch(`${rail.facilitatorUrl}${path}`, {
+    signal: AbortSignal.timeout(FACILITATOR_TIMEOUT_MS[path]),
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ x402Version: 2, paymentPayload: payload, paymentRequirements: req }),

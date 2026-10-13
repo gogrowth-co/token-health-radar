@@ -17,10 +17,10 @@ import {
   buildPaymentRequired,
   buildRequirements,
   explorerUrl,
-  getFeePayer,
   isEvm,
   loadX402Config,
   matchesRequirements,
+  probeRail,
   settlePayment,
   sha256Hex,
   verifyPayment,
@@ -143,8 +143,8 @@ export async function executePaidScan(req: PaidScanRequest): Promise<PaidScanOut
   const failures: string[] = [];
   for (const rail of cfg.rails) {
     try {
-      const feePayer = isEvm(rail.network) ? undefined : await getFeePayer(rail);
-      quotes.push({ rail, requirements: buildRequirements(cfg, rail, feePayer, memo) });
+      const feePayer = await probeRail(rail);
+      quotes.push({ rail, requirements: buildRequirements(cfg, rail, feePayer || undefined, memo) });
     } catch (e) {
       failures.push(`${rail.network}: ${(e as Error).message}`);
     }
