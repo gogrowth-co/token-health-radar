@@ -73,6 +73,39 @@ export interface ScanResult {
   scoring_version: string | null;
   verdict: string;
   scan_duration_ms: number;
+  /** Why each dimension scored what it did: the inputs used (value, points, max) and the inputs left out. */
+  evidence: ScanEvidence | null;
+}
+
+export interface ScanEvidence {
+  completeness_pct: number | null;
+  dimensions: Record<string, {
+    score: number | null;
+    status: string;
+    reason?: string;
+    inputs_used: Record<string, { value: unknown; points: number; max: number }>;
+    inputs_excluded: Record<string, string>;
+  }>;
+}
+
+/**
+ * run-token-scan stores the full score breakdown in token_scans in the same transaction as the scan, so the evidence
+ * is read back from there (by scan_id, else the latest row for the token). Never fails the paid scan: null on error.
+ */
+async function loadEvidence(scanId: string | null, address: string, chainId: string): Promise<ScanEvidence | null> {
+  try {
+    const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    let query = db.from("token_scans").select("dimension_scores, completeness_pct");
+    query = scanId
+      ? query.eq("id", scanId)
+      : query.eq("token_address", address).eq("chain_id", chainId).order("scanned_at", { ascending: false });
+    const { data } = await query.limit(1).maybeSingle();
+    const dims = (data?.dimension_scores as any)?.dimensions;
+    if (!dims) return null;
+    return { completeness_pct: data?.completeness_pct ?? null, dimensions: dims };
+  } catch {
+    return null;
+  }
 }
 
 function verdictFor(scores: Record<string, number | null>, overall: number | null, reason: string | null): string {
@@ -95,6 +128,7 @@ export async function runScan(address: string, chainName: string, chainId: strin
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data?.success) throw new Error(data?.error ?? `Scan failed (HTTP ${res.status})`);
+  const evidence = await loadEvidence(data.scan_id ?? null, address, chainId);
   return {
     name: data.token_name ?? null,
     symbol: data.token_symbol ?? null,
@@ -106,6 +140,7 @@ export async function runScan(address: string, chainName: string, chainId: strin
     scoring_version: data.scoring_version ?? null,
     verdict: verdictFor(data.scores ?? {}, data.overall_score ?? null, data.overall_reason ?? null),
     scan_duration_ms: Date.now() - start,
+    evidence,
   };
 }
 
@@ -247,6 +282,7 @@ export async function executePaidScan(req: PaidScanRequest): Promise<PaidScanOut
     scoring_version: result.scoring_version,
     token_symbol: result.symbol,
     scores: result.scores,
+    evidence: result.evidence,
   };
   let recorded = await mark(settledPatch);
   if (recorded.error) recorded = await mark(settledPatch);

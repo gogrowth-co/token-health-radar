@@ -4,54 +4,95 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Token Health Scan on Monad · x402 + ERC-8004</title>
-<meta name="description" content="Token risk scores AI agents and people buy for 0.02 USDC on Monad over x402, from a service verifiable onchain through ERC-8004 agent #10387.">
+<meta name="description" content="Token risk reports AI agents buy for 0.02 USDC on Monad over x402, from a service verifiable onchain through ERC-8004 agent #10387.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#0b0a12; --panel:#110f1b; --panel2:#16131f; --line:#2c2842; --ink:#ecebf3; --dim:#9d98b5; --faint:#6f6a88; --mon:#8f7bff; --ok:#3ddc97; --bad:#ff5d6c; --gold:#ffb800; }
+  :root { --bg:#0b0a12; --panel:#110f1b; --panel2:#17141f; --line:#2c2842; --ink:#ecebf3; --dim:#a19cb8; --faint:#6f6a88; --mon:#8f7bff;
+          --good:#3ddc97; --ok:#ffb800; --warn:#ff9548; --bad:#ff5d6c; }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { background:var(--bg); color:var(--ink); font-family:Inter,system-ui,sans-serif; font-size:16px; line-height:1.5; }
-  body::before { content:""; position:fixed; width:900px; height:900px; left:-300px; top:-420px; background:radial-gradient(circle, rgba(131,110,249,.28), transparent 62%); pointer-events:none; z-index:0; }
-  .wrap { max-width:1120px; margin:0 auto; padding:56px 24px 80px; position:relative; z-index:1; }
-  .eyebrow { font:700 13px 'JetBrains Mono',monospace; letter-spacing:3px; text-transform:uppercase; color:#a99bff; }
-  h1 { font:800 clamp(38px,6vw,64px)/1.02 Montserrat,sans-serif; letter-spacing:-2px; margin:16px 0 18px; }
-  h1 span { color:var(--mon); }
-  .lede { font-size:20px; color:#c9c6dc; max-width:760px; }
-  .lede b { color:#fff; font-weight:600; }
-  .chips { display:flex; flex-wrap:wrap; gap:10px; margin-top:26px; }
-  .chip { font:600 13px Inter; color:var(--dim); padding:6px 13px; border:1px solid var(--line); border-radius:999px; }
-  .chip b { color:#fff; }
-  h2 { font:800 24px Montserrat,sans-serif; letter-spacing:-.4px; margin-bottom:6px; }
-  .hint { color:var(--dim); font-size:15px; margin-bottom:18px; }
-  section { margin-top:56px; }
-  .grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-  @media (max-width:820px) { .grid { grid-template-columns:1fr; } }
-  .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:22px 24px; }
-  .label { font:700 12px 'JetBrains Mono',monospace; letter-spacing:2px; text-transform:uppercase; color:var(--mon); margin-bottom:12px; }
-  .kv { display:grid; grid-template-columns:130px 1fr; gap:8px 14px; font-size:14px; }
-  .kv .k { color:var(--faint); }
-  .mono { font-family:'JetBrains Mono',monospace; font-size:13px; word-break:break-all; }
+  body::before { content:""; position:fixed; width:900px; height:900px; left:-300px; top:-420px; background:radial-gradient(circle, rgba(131,110,249,.26), transparent 62%); pointer-events:none; }
+  .wrap { max-width:1160px; margin:0 auto; padding:52px 24px 80px; position:relative; }
   a { color:#b3a6ff; text-decoration:none; } a:hover { text-decoration:underline; }
+  .mono { font-family:'JetBrains Mono',monospace; }
+  .eyebrow { font:700 13px 'JetBrains Mono',monospace; letter-spacing:3px; text-transform:uppercase; color:#a99bff; }
+  h1 { font:800 clamp(36px,5.6vw,60px)/1.03 Montserrat,sans-serif; letter-spacing:-2px; margin:14px 0 16px; }
+  h1 span, .accent { color:var(--mon); }
+  .lede { font-size:20px; color:#c9c6dc; max-width:780px; }
+  .lede b { color:#fff; font-weight:600; }
+  h2 { font:800 26px Montserrat,sans-serif; letter-spacing:-.5px; }
+  .hint { color:var(--dim); font-size:15px; margin:6px 0 20px; max-width:820px; }
+  section { margin-top:64px; }
+
+  /* how it works */
+  .steps { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:30px; }
+  @media (max-width:860px) { .steps { grid-template-columns:1fr 1fr; } }
+  .step { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px 18px; }
+  .step .n { font:700 12px 'JetBrains Mono',monospace; color:var(--mon); letter-spacing:1px; }
+  .step b { display:block; font-size:16px; margin:4px 0 2px; }
+  .step span { color:var(--dim); font-size:14px; }
+
+  /* report */
+  .tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .tab { font:600 14px Inter; padding:8px 14px; border-radius:999px; border:1px solid var(--line); background:var(--panel); color:var(--dim); cursor:pointer; }
+  .tab.on { background:var(--mon); border-color:var(--mon); color:#0b0a12; }
+  .report { background:var(--panel); border:1px solid var(--line); border-radius:18px; overflow:hidden; }
+  .rhead { display:grid; grid-template-columns:auto 1fr auto; gap:28px; align-items:center; padding:26px 28px; border-bottom:1px solid var(--line); }
+  @media (max-width:860px) { .rhead { grid-template-columns:1fr; } }
+  .ring { width:132px; height:132px; position:relative; }
+  .ring svg { transform:rotate(-90deg); }
+  .ring .val { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .ring .val b { font:800 40px Montserrat,sans-serif; line-height:1; }
+  .ring .val span { color:var(--faint); font-size:13px; }
+  .tname { font:800 28px Montserrat,sans-serif; letter-spacing:-.5px; }
+  .tmeta { color:var(--dim); font-size:14px; margin-top:2px; }
+  .band { display:inline-block; font:700 13px Inter; padding:4px 10px; border-radius:6px; margin-top:12px; }
+  .verdict { margin-top:10px; font-size:17px; color:#d9d6ea; max-width:560px; }
+  .facts { display:grid; grid-template-columns:auto auto; gap:6px 16px; font-size:14px; align-self:start; }
+  .facts .k { color:var(--faint); } .facts .v { text-align:right; }
+  .dims { display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); }
+  .dim { padding:22px 26px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .dim h3 { display:flex; justify-content:space-between; align-items:baseline; font:700 18px Inter; }
+  .dim h3 .s { font:800 24px Montserrat,sans-serif; }
+  .dim .what { color:var(--faint); font-size:13px; margin:2px 0 12px; }
+  .meter { height:6px; background:var(--panel2); border-radius:99px; overflow:hidden; margin-bottom:14px; }
+  .meter i { display:block; height:100%; border-radius:99px; }
+  .row { display:grid; grid-template-columns:1fr auto 56px; gap:10px; align-items:center; font-size:14px; padding:6px 0; border-top:1px dashed #221e33; }
+  .row .lbl { color:#d4d1e4; }
+  .row .val { font:500 13px 'JetBrains Mono',monospace; color:#fff; text-align:right; }
+  .row .pts { font:700 12px 'JetBrains Mono',monospace; text-align:right; }
+  .skip { font-size:13px; color:var(--faint); padding:6px 0; border-top:1px dashed #221e33; }
+  .skip b { color:#8c87a6; font-weight:500; }
+  .notscored { color:var(--warn); font-size:14px; }
+  .receipt { display:flex; flex-wrap:wrap; gap:8px 22px; padding:16px 28px; font-size:14px; color:var(--dim); background:#0e0c16; }
+  .receipt b { color:var(--ink); font-weight:600; }
+
+  /* trust + try */
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width:860px) { .grid2 { grid-template-columns:1fr; } }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:22px 24px; overflow-x:auto; }
+  .agent pre { font:12px/1.6 'JetBrains Mono',monospace; color:#cfcbe3; background:#07060c; border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-top:10px; overflow-x:auto; }
+  .agent pre .k2 { color:var(--mon); } .agent pre .n2 { color:var(--ok); }
+  .label { font:700 12px 'JetBrains Mono',monospace; letter-spacing:2px; text-transform:uppercase; color:var(--mon); margin-bottom:12px; }
+  .kv { display:grid; grid-template-columns:120px 1fr; gap:8px 14px; font-size:14px; }
+  .kv .k { color:var(--faint); }
+  .addr { font:13px 'JetBrains Mono',monospace; word-break:break-all; }
   .big { font:800 44px Montserrat,sans-serif; letter-spacing:-1px; }
-  .muted { color:var(--dim); }
   table { width:100%; border-collapse:collapse; font-size:14px; }
   th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); }
   th { color:var(--faint); font:600 12px Inter; text-transform:uppercase; letter-spacing:1px; }
-  .score { font:700 14px 'JetBrains Mono',monospace; color:var(--gold); }
-  .try { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:20px; }
-  @media (max-width:820px) { .try { grid-template-columns:1fr; } }
+  .try { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:20px; }
+  @media (max-width:860px) { .try { grid-template-columns:1fr; } }
   label { display:block; font-size:13px; color:var(--dim); margin:14px 0 6px; }
   select, input { width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:11px 12px; font:14px 'JetBrains Mono',monospace; }
-  .btns { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+  .btns { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
   button { font:600 15px Inter; border-radius:10px; padding:11px 18px; border:1px solid var(--line); background:var(--panel2); color:var(--ink); cursor:pointer; }
   button.primary { background:var(--mon); border-color:var(--mon); color:#0b0a12; }
   button:disabled { opacity:.45; cursor:not-allowed; }
-  .log { background:#07060c; border:1px solid var(--line); border-radius:12px; padding:16px 18px; font:13px/1.7 'JetBrains Mono',monospace; color:#d6d3e6; min-height:300px; white-space:pre-wrap; word-break:break-word; }
-  .log .s { color:var(--mon); font-weight:700; } .log .p { color:var(--ok); font-weight:700; } .log .f { color:var(--bad); font-weight:700; } .log .v { color:var(--gold); }
-  .bars { margin-top:10px; }
-  .bar { display:grid; grid-template-columns:110px 1fr 40px; gap:10px; align-items:center; font-size:13px; margin:6px 0; }
-  .bar .track { height:8px; background:var(--panel2); border-radius:99px; overflow:hidden; }
-  .bar .fill { height:100%; background:var(--mon); border-radius:99px; }
+  .log { background:#07060c; border:1px solid var(--line); border-radius:12px; padding:16px 18px; font:13px/1.7 'JetBrains Mono',monospace; color:#d6d3e6; min-height:290px; white-space:pre-wrap; word-break:break-word; }
+  .log .s { color:var(--mon); font-weight:700; } .log .p { color:var(--good); font-weight:700; } .log .f { color:var(--bad); font-weight:700; } .log .v { color:var(--ok); }
+  #mine { margin-top:20px; }
   footer { margin-top:64px; color:var(--faint); font-size:13px; }
 </style>
 </head>
@@ -59,43 +100,51 @@
 <div class="wrap">
   <div class="eyebrow">Monad Metropolis · Trust, Identity &amp; AI Infrastructure</div>
   <h1>Token Health Scan<br><span>on Monad</span></h1>
-  <p class="lede">Token risk scores that AI agents <b>pay for</b> per call, <b>0.02 USDC on Monad over x402</b>, from a service they can <b>verify onchain</b> through ERC-8004 before they sign. Everything on this page is read live from Monad mainnet.</p>
-  <div class="chips">
-    <span class="chip"><b>ERC-8004</b> agent #10387</span>
-    <span class="chip"><b>x402</b> v2 · exact · EIP-3009</span>
-    <span class="chip"><b>Monad</b> chain 143</span>
-    <span class="chip"><a href="https://github.com/gogrowth-co/token-health-radar/tree/feat/x402-monad">Source on GitHub</a></span>
+  <p class="lede">Before an AI agent buys a token, it buys a <b>risk report</b>: a 0-100 score across five dimensions, with the evidence behind every point. <b>0.02 USDC on Monad over x402</b>, no account. And it checks who it's paying first, through <b>ERC-8004 agent #10387</b>.</p>
+
+  <div class="steps">
+    <div class="step"><div class="n">IDENTIFY</div><b>Read the registry</b><span>ERC-8004 identity + reputation on Monad</span></div>
+    <div class="step"><div class="n">QUOTE</div><b>HTTP 402</b><span>Monad or Solana USDC, one response</span></div>
+    <div class="step"><div class="n">VERIFY</div><b>payTo == agent wallet</b><span>a lookalike endpoint fails here</span></div>
+    <div class="step"><div class="n">PAY &amp; RATE</div><b>Gasless, pay only for a score</b><span>then rate onchain, linked to the payment</span></div>
   </div>
 
   <section>
-    <h2>1. Who you'd be paying</h2>
-    <p class="hint">Read from the ERC-8004 registries on Monad, in your browser. No server in between.</p>
-    <div class="grid">
+    <h2>What 2 cents buys: a real paid report</h2>
+    <p class="hint">These are the actual scans agents paid for on Monad mainnet, with the evidence the API returned. Pick one.</p>
+    <div class="tabs" id="tabs"></div>
+    <div id="report" class="report"><div style="padding:28px" class="hint">Loading paid scans…</div></div>
+  </section>
+
+  <section>
+    <h2>Who you'd be paying</h2>
+    <p class="hint">Read live from the ERC-8004 registries on Monad, in your browser. No server in between.</p>
+    <div class="grid2">
       <div class="card">
         <div class="label">Identity Registry</div>
         <div class="kv" id="identity"><span class="k">loading</span><span>reading Monad…</span></div>
       </div>
       <div class="card">
         <div class="label">Reputation Registry</div>
-        <div id="rep-summary"><span class="muted">reading Monad…</span></div>
-        <table style="margin-top:14px"><thead><tr><th>#</th><th>Scanned chain</th><th>Value</th><th>Rated by</th></tr></thead><tbody id="rep-rows"></tbody></table>
+        <div id="rep-summary"><span class="hint">reading Monad…</span></div>
+        <table style="margin-top:12px"><thead><tr><th>#</th><th>Scanned chain</th><th>Rating</th><th>Rated by</th></tr></thead><tbody id="rep-rows"></tbody></table>
       </div>
     </div>
   </section>
 
   <section>
-    <h2>2. Try it: buy one scan for 0.02 USDC</h2>
-    <p class="hint">Get a quote for free. Paying needs a browser wallet with a little USDC on Monad. You sign an authorization; Monad's x402 facilitator pays the gas and settles only if the scan returns a score.</p>
+    <h2>Try it with your own wallet</h2>
+    <p class="hint">The quote and the payee check are free. Paying needs a browser wallet with 0.02 USDC on Monad. You sign an authorization; Monad's x402 facilitator pays the gas and settles only if the scan returns a score.</p>
     <div class="try">
       <div class="card">
         <div class="label">Token</div>
         <label for="preset">Pick one</label>
         <select id="preset">
+          <option value="ethereum|0x6982508145454ce325ddbe47a25d4ec3d2311933">PEPE · Ethereum</option>
           <option value="base|0x940181a94a35a4569e4529a3cdfb74e38fd98631">AERO · Base</option>
           <option value="ethereum|0x1f9840a85d5af5bf1d1762f925bdaddc4201f984">UNI · Ethereum</option>
           <option value="arbitrum|0x912ce59144191c1204e64559fe8253a0e49e6548">ARB · Arbitrum</option>
           <option value="solana|JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN">JUP · Solana</option>
-          <option value="ethereum|0x6982508145454ce325ddbe47a25d4ec3d2311933">PEPE · Ethereum</option>
           <option value="custom|">Custom…</option>
         </select>
         <label for="chain">Chain</label>
@@ -107,20 +156,22 @@
           <button id="pay" class="primary" disabled>Connect wallet &amp; pay 0.02 USDC</button>
         </div>
         <div class="btns"><button id="rate" disabled>Rate the service onchain</button></div>
-        <div id="result" class="bars"></div>
       </div>
       <div class="log" id="log">Pick a token and get a quote.</div>
     </div>
+    <div id="mine"></div>
   </section>
 
   <section>
-    <h2>3. Every paid scan settled on Monad</h2>
-    <p class="hint">From the public ledger. Each row links to its USDC transfer on Monad.</p>
-    <div class="card"><table><thead><tr><th>When (UTC)</th><th>Token</th><th>Chain scanned</th><th>Score</th><th>Paid</th><th>Tx</th></tr></thead><tbody id="ledger"><tr><td colspan="6" class="muted">loading…</td></tr></tbody></table></div>
+    <h2>Every paid scan settled on Monad</h2>
+    <p class="hint">From the public ledger. Each row links to its USDC transfer.</p>
+    <div class="card"><table><thead><tr><th>When (UTC)</th><th>Token</th><th>Chain scanned</th><th>Score</th><th>Paid</th><th>Tx</th></tr></thead><tbody id="ledger"><tr><td colspan="6" class="hint">loading…</td></tr></tbody></table></div>
   </section>
 
   <footer>
-    Token Health Scan by Gabriel Mangabeira · MIT · <a href="https://tokenhealthscan.com">tokenhealthscan.com</a> ·
+    Token Health Scan by Gabriel Mangabeira · MIT ·
+    <a href="https://github.com/gogrowth-co/token-health-radar/tree/feat/x402-monad">source</a> ·
+    <a href="https://tokenhealthscan.com">tokenhealthscan.com</a> ·
     <a href="https://8004scan.io/agents/monad/10387">8004scan</a> ·
     <a href="https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/x402-ledger">ledger JSON</a>
   </footer>
@@ -147,26 +198,129 @@ const repAbi = [
   { type: "function", name: "getClients", stateMutability: "view", inputs: [{ type: "uint256" }], outputs: [{ type: "address[]" }] },
   { type: "function", name: "readAllFeedback", stateMutability: "view", inputs: [{ type: "uint256" }, { type: "address[]" }, { type: "string" }, { type: "string" }, { type: "bool" }],
     outputs: [{ type: "address[]" }, { type: "uint64[]" }, { type: "int128[]" }, { type: "uint8[]" }, { type: "string[]" }, { type: "string[]" }, { type: "bool[]" }] },
-  { type: "event", name: "NewFeedback", inputs: [
-    { indexed: true, name: "agentId", type: "uint256" }, { indexed: true, name: "clientAddress", type: "address" }, { indexed: false, name: "feedbackIndex", type: "uint64" },
-    { indexed: false, name: "value", type: "int128" }, { indexed: false, name: "valueDecimals", type: "uint8" }, { indexed: true, name: "indexedTag1", type: "string" },
-    { indexed: false, name: "tag1", type: "string" }, { indexed: false, name: "tag2", type: "string" }, { indexed: false, name: "endpoint", type: "string" },
-    { indexed: false, name: "feedbackURI", type: "string" }, { indexed: false, name: "feedbackHash", type: "bytes32" }] },
   { type: "function", name: "giveFeedback", stateMutability: "nonpayable", inputs: [
     { type: "uint256" }, { type: "int128" }, { type: "uint8" }, { type: "string" }, { type: "string" }, { type: "string" }, { type: "string" }, { type: "bytes32" }], outputs: [] },
 ];
 
 const pub = createPublicClient({ chain: monad, transport: http() });
 const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const short = (a) => a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "";
-const addrLink = (a) => `<a class="mono" href="https://monadvision.com/address/${a}" target="_blank" rel="noopener">${a}</a>`;
 const txLink = (h, label) => `<a class="mono" href="https://monadvision.com/tx/${h}" target="_blank" rel="noopener">${label ?? short(h)}</a>`;
-const logEl = $("log");
-const log = (html) => { logEl.innerHTML += "\n" + html; logEl.scrollTop = logEl.scrollHeight; };
-const S = (c, t) => `<span class="${c}">${t}</span>`;
+const addrLink = (a, label) => `<a class="addr" href="https://monadvision.com/address/${a}" target="_blank" rel="noopener">${label ?? a}</a>`;
 
-let agentWallet = null, endpoint = null, lastQuote = null, lastPaid = null, lastResource = null;
+// ---------- the report ----------
+const DIMS = {
+  security:    { title: "Security",    what: "Can the contract be used against holders?" },
+  liquidity:   { title: "Liquidity",   what: "Can you get in and out without moving the price?" },
+  tokenomics:  { title: "Tokenomics",  what: "Who holds the supply, and what unlocks next?" },
+  community:   { title: "Community",   what: "Are real people paying attention?" },
+  development: { title: "Development", what: "Is the team still shipping code?" },
+};
+const usd = (v) => v >= 1e9 ? `$${(v / 1e9).toFixed(2)}B` : v >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `$${(v / 1e3).toFixed(0)}K` : `$${Math.round(v)}`;
+const pct = (v, d = 1) => `${Number(v).toFixed(d)}%`;
+const num = (v) => Number(v).toLocaleString("en-US");
+const yn = (v, yes = "Yes", no = "No") => v === true ? yes : v === false ? no : String(v);
+const INPUTS = {
+  honeypot: ["Honeypot (can't sell)", (v) => yn(v)],
+  mint_authority_active: ["Supply can be minted", (v) => typeof v === "boolean" ? yn(v) : String(v)],
+  freeze_authority_active: ["Wallets can be frozen", (v) => yn(v)],
+  permanent_delegate: ["Permanent delegate", (v) => yn(v)],
+  transfer_hook: ["Transfer hook", (v) => yn(v)],
+  pausable: ["Transfers can be paused", (v) => typeof v === "boolean" ? yn(v) : String(v)],
+  blacklist: ["Blacklist function", (v) => typeof v === "boolean" ? yn(v) : String(v)],
+  upgradeable_proxy: ["Upgradeable contract", (v) => yn(v)],
+  transfer_tax_pct: ["Transfer tax", (v) => pct(v, 1)],
+  max_tax_pct: ["Highest buy/sell tax", (v) => pct(v, 1)],
+  circulating_ratio: ["Supply circulating", (v) => pct(v * 100, 0)],
+  top10_pct: ["Held by top 10 wallets", (v) => pct(v, 0)],
+  unlock_90d_pct_of_circ: ["Unlocks in next 90 days", (v) => pct(v, 1) + " of circ."],
+  dex_liquidity_usd: ["DEX liquidity", usd],
+  slippage_100k_pct: ["Slippage on a $100K sell", (v) => pct(v, 2)],
+  volume_24h_usd: ["24h volume", usd],
+  liquidity_locked_pct: ["Liquidity locked", (v) => pct(v, 0)],
+  sentiment: ["Social sentiment", (v) => `${Math.round(v)}/100`],
+  social_dominance: ["Share of crypto social talk", (v) => pct(v, 2)],
+  trend: ["Attention trend", (v) => String(v)],
+  discord_members: ["Discord members", num],
+  telegram_members: ["Telegram members", num],
+  commits_30d: ["Commits, last 30 days", num],
+  last_push_age_days: ["Last code push", (v) => v < 1 ? "today" : `${Math.round(v)} days ago`],
+  issue_close_ratio: ["Issues closed", (v) => pct(v * 100, 0)],
+  stars: ["GitHub stars", num],
+  forks: ["Forks", num],
+  contributors_count: ["Contributors", num],
+  not_archived: ["Repo archived", (v) => yn(v)],
+};
+const SKIP = { missing_input: "no data", disputed: "sources disagree", unknown: "unknown", stale: "data too old" };
+const colorFor = (s) => s == null ? "var(--faint)" : s >= 80 ? "var(--good)" : s >= 60 ? "var(--ok)" : s >= 40 ? "var(--warn)" : "var(--bad)";
+const bandFor = (s) => s >= 80 ? "Healthy" : s >= 60 ? "Moderate risk" : s >= 40 ? "Elevated risk" : "High risk";
+const label = (k) => INPUTS[k]?.[0] ?? k.replace(/_/g, " ");
+const fmt = (k, v) => { try { return v == null ? "n/a" : (INPUTS[k]?.[1] ?? String)(v); } catch { return String(v); } };
+
+function ring(score) {
+  const r = 56, c = 2 * Math.PI * r, f = score == null ? 0 : score / 100;
+  return `<div class="ring"><svg width="132" height="132"><circle cx="66" cy="66" r="${r}" fill="none" stroke="#221e33" stroke-width="12"/>
+    <circle cx="66" cy="66" r="${r}" fill="none" stroke="${colorFor(score)}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${c * f} ${c}"/></svg>
+    <div class="val"><b style="color:${colorFor(score)}">${score ?? "–"}</b><span>/ 100</span></div></div>`;
+}
+
+function renderReport(r) {
+  const ev = r.evidence?.dimensions ?? {};
+  const scored = Object.entries(r.scores ?? {}).filter(([, v]) => typeof v === "number").sort((a, b) => a[1] - b[1]);
+  const weakest = scored[0], strongest = scored[scored.length - 1];
+  const dims = Object.keys(DIMS).map((k) => {
+    const d = ev[k] ?? {}, s = r.scores?.[k] ?? d.score ?? null;
+    const used = Object.entries(d.inputs_used ?? {}).sort((a, b) => (a[1].points / a[1].max) - (b[1].points / b[1].max));
+    const skipped = Object.entries(d.inputs_excluded ?? {});
+    return `<div class="dim">
+      <h3><span>${DIMS[k].title}</span><span class="s" style="color:${colorFor(s)}">${s ?? "–"}</span></h3>
+      <div class="what">${DIMS[k].what}</div>
+      <div class="meter"><i style="width:${s ?? 0}%;background:${colorFor(s)}"></i></div>
+      ${s == null ? `<div class="notscored">Not scored: ${esc(d.reason ?? "not enough verified data")}. It doesn't count toward the total.</div>` : ""}
+      ${used.map(([n, u]) => `<div class="row"><span class="lbl">${esc(label(n))}</span><span class="val">${esc(fmt(n, u.value))}</span>
+        <span class="pts" style="color:${colorFor(u.max ? (u.points / u.max) * 100 : null)}">${u.points}/${u.max}</span></div>`).join("")}
+      ${skipped.length ? `<div class="skip">Not counted: ${skipped.map(([n, why]) => `<b>${esc(label(n))}</b> (${esc(SKIP[why] ?? why.replace(/_/g, " "))})`).join(", ")}</div>` : ""}
+    </div>`;
+  }).join("");
+  const s = r.overall_score;
+  const weakDim = weakest ? weakest[0] : "tokenomics";
+  const sample = Object.entries(ev[weakDim]?.inputs_used ?? {})[0];
+  const agentCell = `<div class="dim agent"><h3><span>For agents</span></h3>
+    <div class="what">This report is the JSON the API returns. An agent can branch on any input, not only the total.</div>
+    <pre><span class="k2">overall_score</span>: <span class="n2">${s}</span>
+<span class="k2">scores.${weakDim}</span>: <span class="n2">${r.scores?.[weakDim] ?? "null"}</span>
+${sample ? `<span class="k2">evidence.dimensions.${weakDim}
+  .inputs_used.${esc(sample[0])}</span>:
+  { value: <span class="n2">${esc(typeof sample[1].value === "number" ? +sample[1].value.toFixed(4) : sample[1].value)}</span>, points: <span class="n2">${sample[1].points}</span>, max: <span class="n2">${sample[1].max}</span> }` : ""}</pre>
+    <div class="what" style="margin-top:10px">Over HTTP (<span class="mono">x402-scan</span>) or MCP (<span class="mono">token-health-mcp</span>).</div></div>`;
+  return `
+    <div class="rhead">
+      ${ring(s)}
+      <div>
+        <div class="tname">${r.name && r.name !== r.symbol ? `${esc(r.name)} <span class="accent">${esc(r.symbol ?? "")}</span>` : `<span class="accent">${esc(r.symbol ?? "Token")}</span>`}</div>
+        <div class="tmeta">${esc(r.chain)} · <span class="mono">${esc(short(r.address))}</span></div>
+        <span class="band" style="background:${colorFor(s)}22;color:${colorFor(s)}">${bandFor(s)}</span>
+        <div class="verdict">${weakest ? `Weakest: <b>${esc(DIMS[weakest[0]].title)}</b> at ${weakest[1]}. ` : ""}${strongest && strongest !== weakest ? `Strongest: <b>${esc(DIMS[strongest[0]].title)}</b> at ${strongest[1]}.` : ""}</div>
+      </div>
+      <div class="facts">
+        <span class="k">Data completeness</span><span class="v mono">${r.evidence?.completeness_pct != null ? pct(r.evidence.completeness_pct, 0) : "n/a"}</span>
+        <span class="k">Dimensions scored</span><span class="v mono">${scored.length} of 5</span>
+        <span class="k">Scoring</span><span class="v mono">v${esc(r.scoring_version ?? "?")}</span>
+      </div>
+    </div>
+    <div class="dims">${dims}${agentCell}</div>
+    <div class="receipt">
+      <span>Paid <b>0.02 USDC</b> on Monad</span>
+      ${r.tx ? `<span>tx ${txLink(r.tx)}</span>` : ""}
+      ${r.payer ? `<span>by ${addrLink(r.payer, short(r.payer))}</span>` : ""}
+      ${r.at ? `<span>${esc(r.at.replace("T", " ").slice(0, 16))} UTC</span>` : ""}
+      <span>Gas paid by Monad's x402 facilitator</span>
+    </div>`;
+}
+
+// ---------- data ----------
+let agentWallet = null, endpoint = null, lastQuote = null, lastPaid = null;
 
 async function loadIdentity() {
   const [uri, wallet, owner] = await Promise.all([
@@ -178,21 +332,26 @@ async function loadIdentity() {
   agentWallet = wallet;
   endpoint = card.services.find((s) => s.name === "x402")?.endpoint;
   $("identity").innerHTML = `
-    <span class="k">Agent</span><span><b>#${AGENT_ID}</b> · ${esc(card.name)} ${card.active ? S("p", "active") : ""}</span>
-    <span class="k">Agent wallet</span><span>${addrLink(wallet)}<br><span class="muted" style="font-size:13px">x402 payments must go here</span></span>
+    <span class="k">Agent</span><span><b>#${AGENT_ID}</b> · ${esc(card.name)} ${card.active ? '<span style="color:var(--good)">active</span>' : ""}</span>
+    <span class="k">Agent wallet</span><span>${addrLink(wallet)}<br><span class="hint" style="font-size:13px">x402 payments must go here</span></span>
     <span class="k">Owner</span><span>${addrLink(owner)}</span>
-    <span class="k">x402 endpoint</span><span class="mono">${esc(endpoint)}</span>
-    <span class="k">Card</span><span class="muted">stored onchain as a data: URI · x402Support ${card.x402Support}</span>`;
+    <span class="k">x402 endpoint</span><span class="addr">${esc(endpoint)}</span>
+    <span class="k">Agent card</span><span class="hint" style="margin:0">stored onchain as a data: URI</span>`;
 }
 
 async function loadReputation() {
   const clients = await pub.readContract({ address: REPUTATION, abi: repAbi, functionName: "getClients", args: [AGENT_ID] });
-  if (!clients.length) { $("rep-summary").innerHTML = `<span class="muted">No feedback yet.</span>`; return; }
-  const [cl, idx, vals, decs, , tag2s, revoked] = await pub.readContract({ address: REPUTATION, abi: repAbi, functionName: "readAllFeedback", args: [AGENT_ID, clients, "", "", false] });
+  if (!clients.length) { $("rep-summary").innerHTML = `<span class="hint">No feedback yet.</span>`; return; }
+  const [cl, idx, vals, decs, , tag2s] = await pub.readContract({ address: REPUTATION, abi: repAbi, functionName: "readAllFeedback", args: [AGENT_ID, clients, "", "", false] });
   const n = vals.length, avg = vals.reduce((s, v, i) => s + Number(v) / 10 ** decs[i], 0) / n;
-  $("rep-summary").innerHTML = `<span class="big">${avg.toFixed(0)}</span><span class="muted"> / 100 average · ${n} rating${n > 1 ? "s" : ""} from ${clients.length} paying client${clients.length > 1 ? "s" : ""}</span>`;
+  $("rep-summary").innerHTML = `<span class="big">${avg.toFixed(0)}</span><span class="hint"> / 100 average · ${n} rating${n > 1 ? "s" : ""} from ${clients.length} paying client${clients.length > 1 ? "s" : ""}. Each rating links to the payment it reviews.</span>`;
   $("rep-rows").innerHTML = vals.map((v, i) =>
-    `<tr><td>${idx[i]}</td><td>${esc(tag2s[i])}</td><td class="score">${Number(v) / 10 ** decs[i]}</td><td><a class="mono" href="https://monadvision.com/address/${cl[i]}" target="_blank" rel="noopener">${short(cl[i])}</a></td></tr>`).join("");
+    `<tr><td>${idx[i]}</td><td>${esc(tag2s[i])}</td><td class="mono" style="color:var(--ok)">${Number(v) / 10 ** decs[i]}</td><td>${addrLink(cl[i], short(cl[i]))}</td></tr>`).join("");
+}
+
+function fromLedger(p) {
+  return { name: null, symbol: p.token_symbol, chain: p.chain, address: p.token_address, overall_score: p.overall_score, scores: p.scores,
+    scoring_version: p.scoring_version, evidence: p.evidence, tx: p.tx_signature, payer: p.payer, at: p.settled_at };
 }
 
 async function loadLedger() {
@@ -200,25 +359,34 @@ async function loadLedger() {
   const rows = data.payments.filter((p) => p.network === NETWORK);
   $("ledger").innerHTML = rows.length ? rows.map((p) => `<tr>
     <td class="mono">${esc(p.settled_at.replace("T", " ").slice(0, 16))}</td><td>${esc(p.token_symbol ?? "?")}</td><td>${esc(p.chain)}</td>
-    <td class="score">${p.overall_score}</td><td>${p.usdc} USDC</td><td>${txLink(p.tx_signature)}</td></tr>`).join("")
-    : `<tr><td colspan="6" class="muted">No Monad payments yet.</td></tr>`;
+    <td class="mono" style="color:${colorFor(p.overall_score)}">${p.overall_score}</td><td>${p.usdc} USDC</td><td>${txLink(p.tx_signature)}</td></tr>`).join("")
+    : `<tr><td colspan="6" class="hint">No Monad payments yet.</td></tr>`;
+  const reports = rows.filter((p) => p.evidence).map(fromLedger);
+  if (!reports.length) { $("report").innerHTML = `<div style="padding:28px" class="hint">No paid scans yet.</div>`; return; }
+  const show = (i) => {
+    document.querySelectorAll(".tab").forEach((t, j) => t.classList.toggle("on", i === j));
+    $("report").innerHTML = renderReport(reports[i]);
+  };
+  $("tabs").innerHTML = reports.map((r) => `<button class="tab">${esc(r.symbol)} · ${esc(r.chain)} · <span style="color:inherit">${r.overall_score}</span></button>`).join("");
+  document.querySelectorAll(".tab").forEach((t, i) => t.addEventListener("click", () => show(i)));
+  show(0);
 }
 
-// token picker
+// ---------- try it ----------
+const logEl = $("log");
+const log = (html) => { logEl.innerHTML += "\n" + html; logEl.scrollTop = logEl.scrollHeight; };
+const S = (c, t) => `<span class="${c}">${t}</span>`;
 function applyPreset() {
   const [chain, addr] = $("preset").value.split("|");
-  if (chain !== "custom") { $("chain").value = chain; $("addr").value = addr; }
-  else { $("addr").value = ""; $("addr").focus(); }
+  if (chain !== "custom") { $("chain").value = chain; $("addr").value = addr; } else { $("addr").value = ""; $("addr").focus(); }
 }
 $("preset").addEventListener("change", applyPreset);
 applyPreset();
-
-function b64json(obj) { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
-function unb64(s) { return JSON.parse(decodeURIComponent(escape(atob(s)))); }
+const b64json = (obj) => btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+const unb64 = (s) => JSON.parse(decodeURIComponent(escape(atob(s))));
 
 $("quote").addEventListener("click", async () => {
-  lastQuote = null; $("pay").disabled = true; $("result").innerHTML = "";
-  logEl.innerHTML = "";
+  lastQuote = null; $("pay").disabled = true; logEl.innerHTML = "";
   if (!endpoint) { log(S("f", "Identity not loaded yet, try again in a second.")); return; }
   const url = `${endpoint}?chain=${encodeURIComponent($("chain").value)}&address=${encodeURIComponent($("addr").value.trim())}`;
   log(S("s", "[quote] GET x402-scan (no payment)"));
@@ -238,7 +406,7 @@ $("quote").addEventListener("click", async () => {
   if (checks.some(([, ok]) => !ok)) { log(S("f", "\nRefusing to pay.")); return; }
   lastQuote = { url, required, q };
   $("pay").disabled = false;
-  log("\nQuote verified. Paying is optional and needs a wallet with 0.02 USDC on Monad.");
+  log("\nQuote verified. Paying needs a wallet with 0.02 USDC on Monad.");
 });
 
 async function wallet() {
@@ -271,10 +439,11 @@ $("pay").addEventListener("click", async () => {
     const text = await r.text(); const body = JSON.parse(text);
     if (r.status === 422) { log(S("v", "  not scored: not enough verified data. You were not charged.")); return; }
     if (r.status !== 200) { log(S("f", `  HTTP ${r.status}: `) + esc(body.error ?? text)); $("pay").disabled = false; return; }
-    lastPaid = { body, text }; lastResource = url;
+    lastPaid = { body, text };
     log(`  ${esc(body.name)} (${esc(body.symbol)}): ` + S("v", esc(body.verdict)));
-    log(`  paid: ${txLink(body.payment.transaction)}`);
-    $("result").innerHTML = Object.entries(body.scores).map(([k, v]) => `<div class="bar"><span>${k}</span><span class="track"><span class="fill" style="width:${v ?? 0}%"></span></span><span class="score">${v ?? "n/a"}</span></div>`).join("");
+    log(`  paid: ${txLink(body.payment.transaction)}  · full report below`);
+    $("mine").innerHTML = `<div class="report">${renderReport({ ...body, tx: body.payment.transaction, payer: body.payment.payer, at: new Date().toISOString() })}</div>`;
+    $("mine").scrollIntoView({ behavior: "smooth" });
     $("rate").disabled = false;
     loadLedger();
   } catch (e) { log(S("f", "  " + esc(e.shortMessage ?? e.message))); $("pay").disabled = false; }
@@ -296,8 +465,8 @@ $("rate").addEventListener("click", async () => {
 });
 
 loadIdentity().catch((e) => { $("identity").innerHTML = `<span class="k">error</span><span>${esc(e.message)}</span>`; });
-loadReputation().catch((e) => { $("rep-summary").innerHTML = `<span class="muted">${esc(e.shortMessage ?? e.message)}</span>`; });
-loadLedger().catch(() => { $("ledger").innerHTML = `<tr><td colspan="6" class="muted">ledger unavailable</td></tr>`; });
+loadReputation().catch((e) => { $("rep-summary").innerHTML = `<span class="hint">${esc(e.shortMessage ?? e.message)}</span>`; });
+loadLedger().catch(() => { $("ledger").innerHTML = `<tr><td colspan="6" class="hint">ledger unavailable</td></tr>`; $("report").innerHTML = `<div style="padding:28px" class="hint">ledger unavailable</div>`; });
 </script>
 </body>
 </html>
