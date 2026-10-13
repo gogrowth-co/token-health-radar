@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "12.2.3"
   }
   public: {
     Tables: {
@@ -301,6 +301,27 @@ export type Database = {
         }
         Relationships: []
       }
+      pro_scan_unlocks: {
+        Row: {
+          chain_id: string
+          token_address: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          chain_id: string
+          token_address: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          chain_id?: string
+          token_address?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           agent_scans_used: number | null
@@ -309,6 +330,7 @@ export type Database = {
           name: string | null
           plan: string | null
           pro_scan_limit: number | null
+          scans_period_start: string
           scans_used: number | null
           source: string | null
           stripe_customer_id: string | null
@@ -322,6 +344,7 @@ export type Database = {
           name?: string | null
           plan?: string | null
           pro_scan_limit?: number | null
+          scans_period_start?: string
           scans_used?: number | null
           source?: string | null
           stripe_customer_id?: string | null
@@ -335,6 +358,7 @@ export type Database = {
           name?: string | null
           plan?: string | null
           pro_scan_limit?: number | null
+          scans_period_start?: string
           scans_used?: number | null
           source?: string | null
           stripe_customer_id?: string | null
@@ -714,32 +738,50 @@ export type Database = {
       }
       token_scans: {
         Row: {
+          canonical_address: string | null
           chain_id: string
+          completeness_pct: number | null
+          data_quality: Json | null
+          dimension_scores: Json | null
+          field_data: Json | null
           id: string
           is_anonymous: boolean | null
           pro_scan: boolean | null
           scanned_at: string | null
           score_total: number | null
+          scoring_version: string | null
           token_address: string | null
           user_id: string | null
         }
         Insert: {
+          canonical_address?: string | null
           chain_id?: string
+          completeness_pct?: number | null
+          data_quality?: Json | null
+          dimension_scores?: Json | null
+          field_data?: Json | null
           id?: string
           is_anonymous?: boolean | null
           pro_scan?: boolean | null
           scanned_at?: string | null
           score_total?: number | null
+          scoring_version?: string | null
           token_address?: string | null
           user_id?: string | null
         }
         Update: {
+          canonical_address?: string | null
           chain_id?: string
+          completeness_pct?: number | null
+          data_quality?: Json | null
+          dimension_scores?: Json | null
+          field_data?: Json | null
           id?: string
           is_anonymous?: boolean | null
           pro_scan?: boolean | null
           scanned_at?: string | null
           score_total?: number | null
+          scoring_version?: string | null
           token_address?: string | null
           user_id?: string | null
         }
@@ -829,6 +871,48 @@ export type Database = {
             referencedColumns: ["token_address", "chain_id"]
           },
         ]
+      }
+      token_social_overrides: {
+        Row: {
+          chain_id: string
+          created_at: string
+          discord: string | null
+          github: string | null
+          note: string | null
+          source_url: string
+          telegram: string | null
+          token_address: string
+          twitter: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          chain_id: string
+          created_at?: string
+          discord?: string | null
+          github?: string | null
+          note?: string | null
+          source_url: string
+          telegram?: string | null
+          token_address: string
+          twitter?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          chain_id?: string
+          created_at?: string
+          discord?: string | null
+          github?: string | null
+          note?: string | null
+          source_url?: string
+          telegram?: string | null
+          token_address?: string
+          twitter?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
       }
       token_tokenomics_cache: {
         Row: {
@@ -967,6 +1051,72 @@ export type Database = {
         }
         Relationships: []
       }
+      x402_payments: {
+        Row: {
+          amount_atomic: string
+          asset: string
+          chain: string
+          channel: string
+          created_at: string
+          error: string | null
+          id: string
+          network: string
+          overall_score: number | null
+          pay_to: string
+          payer: string | null
+          payload_hash: string
+          scores: Json | null
+          scoring_version: string | null
+          settled_at: string | null
+          status: string
+          token_address: string
+          token_symbol: string | null
+          tx_signature: string | null
+        }
+        Insert: {
+          amount_atomic: string
+          asset: string
+          chain: string
+          channel: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          network: string
+          overall_score?: number | null
+          pay_to: string
+          payer?: string | null
+          payload_hash: string
+          scores?: Json | null
+          scoring_version?: string | null
+          settled_at?: string | null
+          status: string
+          token_address: string
+          token_symbol?: string | null
+          tx_signature?: string | null
+        }
+        Update: {
+          amount_atomic?: string
+          asset?: string
+          chain?: string
+          channel?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          network?: string
+          overall_score?: number | null
+          pay_to?: string
+          payer?: string | null
+          payload_hash?: string
+          scores?: Json | null
+          scoring_version?: string | null
+          settled_at?: string | null
+          status?: string
+          token_address?: string
+          token_symbol?: string | null
+          tx_signature?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       hubspot_contact_data: {
@@ -1008,8 +1158,45 @@ export type Database = {
         }
         Relationships: []
       }
+      scanner_quality_latest: {
+        Row: {
+          all_required_present: boolean | null
+          canonical_address: string | null
+          chain_id: string | null
+          completeness_pct: number | null
+          plausibility_errors: number | null
+          provider_failures: Json | null
+          required_missing: Json | null
+          scanned_at: string | null
+          score_total: number | null
+          scoring_version: string | null
+          token_address: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "token_scans_token_address_chain_id_fkey"
+            columns: ["token_address", "chain_id"]
+            isOneToOne: false
+            referencedRelation: "token_data_cache"
+            referencedColumns: ["token_address", "chain_id"]
+          },
+        ]
+      }
+      scanner_quality_summary: {
+        Row: {
+          avg_completeness_pct: number | null
+          pct_all_required: number | null
+          tokens: number | null
+          tokens_with_plausibility_errors: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      consume_pro_scan: {
+        Args: { p_chain_id: string; p_token_address: string; p_user_id: string }
+        Returns: Json
+      }
       get_admin_hubspot_data: {
         Args: never
         Returns: {
@@ -1068,6 +1255,11 @@ export type Database = {
         }
         Returns: boolean
       }
+      hubspot_sync_bearer: { Args: never; Returns: string }
+      persist_token_scan: {
+        Args: { p_caches: Json; p_scan: Json }
+        Returns: string
+      }
       refresh_token_sitemap: { Args: never; Returns: undefined }
       sync_all_users_to_hubspot: { Args: never; Returns: undefined }
       sync_all_users_to_hubspot_debug: { Args: never; Returns: Json }
@@ -1098,12 +1290,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1127,11 +1319,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1152,11 +1344,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1177,11 +1369,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1194,11 +1386,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
