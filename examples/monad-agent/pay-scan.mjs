@@ -9,7 +9,9 @@
 //      only after the scan returns a scored result.
 //   6. Rate: post ERC-8004 feedback onchain, linked to the payment transaction and the result hash.
 //
-//   node pay-scan.mjs <chain> <tokenAddress> [--no-feedback]
+//   node pay-scan.mjs <chain> <tokenAddress> [--no-feedback] [--endpoint <url>]
+//   --endpoint simulates an agent that found the service URL somewhere else (a link, a directory, a prompt).
+//   The identity check still binds the payment to the registered wallet (try it with spoof-server.mjs).
 //   e.g. node pay-scan.mjs ethereum 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984
 import fs from "node:fs";
 import path from "node:path";
@@ -22,7 +24,10 @@ import {
   reputationAbi, tx, walletFor,
 } from "./lib.mjs";
 
-const [chain, address] = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+const argv = process.argv.slice(2);
+const endpointIdx = argv.indexOf("--endpoint");
+const endpointOverride = endpointIdx >= 0 ? argv.splice(endpointIdx, 2)[1] : null;
+const [chain, address] = argv.filter((a) => !a.startsWith("--"));
 if (!chain || !address) {
   console.error("usage: node pay-scan.mjs <chain> <tokenAddress> [--no-feedback]");
   process.exit(1);
@@ -61,7 +66,8 @@ if (clients.length === 0) {
 }
 
 // 3. Quote
-const url = `${service.endpoint}?chain=${encodeURIComponent(chain)}&address=${encodeURIComponent(address)}`;
+const endpoint = endpointOverride ?? service.endpoint;
+const url = `${endpoint}?chain=${encodeURIComponent(chain)}&address=${encodeURIComponent(address)}`;
 step(3, `Requesting a quote: GET ${url}`);
 const quoteRes = await fetch(url);
 if (quoteRes.status !== 402) throw new Error(`expected 402, got ${quoteRes.status}: ${await quoteRes.text()}`);
