@@ -1,6 +1,6 @@
 /**
  * x402-ledger: public, read-only list of settled pay-per-scan payments.
- * Every row links to a Solana transaction anyone can open on a block explorer.
+ * Every row links to a Solana or Monad transaction anyone can open on a block explorer.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.7";
 import { explorerUrl } from "../_shared/x402.ts";

@@ -5,6 +5,9 @@
  * USDC only moves after the scan succeeded. A payment that fails verification or a scan that
  * fails never reaches /settle, so the payer is not charged for a result they did not get.
  *
+ * The 402 offers one quote per configured rail (Solana and/or Monad); the payer picks one and the
+ * verify/settle calls go to that rail's facilitator.
+ *
  * Every attempt is written to public.x402_payments. payload_hash is unique, so a signed
  * payment can buy exactly one scan.
  */
@@ -15,6 +18,7 @@ import {
   buildRequirements,
   explorerUrl,
   getFeePayer,
+  isEvm,
   loadX402Config,
   matchesRequirements,
   settlePayment,
@@ -23,6 +27,7 @@ import {
   type PaymentPayload,
   type PaymentRequired,
   type PaymentRequirements,
+  type Rail,
   type ResourceInfo,
   type SettleResponse,
   type X402Config,
@@ -132,19 +137,30 @@ export async function executePaidScan(req: PaidScanRequest): Promise<PaidScanOut
   const cfg: X402Config | null = loadX402Config();
   if (!cfg) return { kind: "not_configured" };
 
-  let requirements: PaymentRequirements;
-  try {
-    requirements = buildRequirements(cfg, await getFeePayer(cfg), `ths:${norm.chainName}:${norm.address}`);
-  } catch (e) {
-    return { kind: "facilitator_down", message: (e as Error).message };
+  // Quote every configured rail. A rail whose facilitator is down is left out; only all-down is an outage.
+  const memo = `ths:${norm.chainName}:${norm.address}`;
+  const quotes: { rail: Rail; requirements: PaymentRequirements }[] = [];
+  const failures: string[] = [];
+  for (const rail of cfg.rails) {
+    try {
+      const feePayer = isEvm(rail.network) ? undefined : await getFeePayer(rail);
+      quotes.push({ rail, requirements: buildRequirements(cfg, rail, feePayer, memo) });
+    } catch (e) {
+      failures.push(`${rail.network}: ${(e as Error).message}`);
+    }
   }
+  if (quotes.length === 0) return { kind: "facilitator_down", message: failures.join("; ") };
+  const networks = quotes.map((q) => (isEvm(q.rail.network) ? "Monad" : "Solana")).join(" or ");
   const required = (error?: string) => ({
     kind: "payment_required" as const,
-    required: buildPaymentRequired(requirements, req.resource, error ?? "Payment required: pay per scan in USDC on Solana"),
+    required: buildPaymentRequired(quotes.map((q) => q.requirements), req.resource, error ?? `Payment required: pay per scan in USDC on ${networks}`),
   });
 
   if (!req.payment) return required();
-  if (!matchesRequirements(req.payment.accepted, requirements)) return required("Payment does not match the requirements");
+  // The client echoes the requirements it chose; it must be exactly one of the quotes.
+  const chosen = quotes.find((q) => q.requirements.network === req.payment!.accepted?.network);
+  if (!chosen || !matchesRequirements(req.payment.accepted, chosen.requirements)) return required("Payment does not match the requirements");
+  const { rail, requirements } = chosen;
   // Bind the payment to the scan it was signed for: the client echoes the resource it was quoted.
   if (req.payment.resource?.url !== req.resource.url) return required("Payment was signed for a different resource");
 
@@ -152,7 +168,7 @@ export async function executePaidScan(req: PaidScanRequest): Promise<PaidScanOut
   const payloadHash = await sha256Hex(JSON.stringify(req.payment.payload));
   const base = {
     channel: req.channel,
-    network: cfg.network,
+    network: rail.network,
     asset: requirements.asset,
     amount_atomic: requirements.amount,
     pay_to: requirements.payTo,
@@ -181,7 +197,7 @@ export async function executePaidScan(req: PaidScanRequest): Promise<PaidScanOut
 
   let verified: Awaited<ReturnType<typeof verifyPayment>>;
   try {
-    verified = await verifyPayment(cfg, req.payment, requirements);
+    verified = await verifyPayment(rail, req.payment, requirements);
   } catch (e) {
     // Nothing was settled: free the payment for a retry.
     await mark({ status: "void", error: `verify: ${(e as Error).message}`.slice(0, 500) });
@@ -209,7 +225,7 @@ export async function executePaidScan(req: PaidScanRequest): Promise<PaidScanOut
 
   let settle: SettleResponse;
   try {
-    settle = await settlePayment(cfg, req.payment, requirements);
+    settle = await settlePayment(rail, req.payment, requirements);
   } catch (e) {
     // The facilitator may or may not have broadcast. Keep the row retryable and flag it for reconciliation.
     await mark({ status: "unsettled", payer: verified.payer ?? null, error: `settle: no response (${(e as Error).message})`.slice(0, 500) });
