@@ -3,10 +3,11 @@
  *
  *   GET /functions/v1/x402-onchain
  *
- * Two HyperSync queries over the full history since the agent was registered (a public RPC refuses
+ * Three HyperSync queries over the full history since the agent was registered (a public RPC refuses
  * eth_getLogs over this range):
  *   1. Every ERC-8004 NewFeedback event for agent #10387, decoded, with the payment tx each rating links to.
- *   2. Every USDC Transfer into the agent wallet (the x402 payee).
+ *   2. Every FeedbackRevoked event for that agent, so revoked ratings never count.
+ *   3. Every USDC Transfer into the agent wallet (the x402 payee).
  * Then it reconciles our own ledger against the chain: every settled Monad payment in x402_payments must
  * appear onchain as a Transfer of the same amount from the same payer to the payee.
  *
@@ -32,8 +33,9 @@ const CORS = {
 const pad32 = (hex: string) => "0x" + hex.replace(/^0x/, "").toLowerCase().padStart(64, "0");
 const NEW_FEEDBACK = keccak256(toHex("NewFeedback(uint256,address,uint64,int128,uint8,string,string,string,string,string,bytes32)"));
 const TRANSFER = keccak256(toHex("Transfer(address,address,uint256)"));
+const FEEDBACK_REVOKED = keccak256(toHex("FeedbackRevoked(uint256,address,uint64)"));
 
-type Log = { block_number: number; transaction_hash: string; log_index: number; topic1?: string; topic2?: string; data: string };
+type Log = { block_number: number; transaction_hash: string; log_index: number; topic1?: string; topic2?: string; topic3?: string; data: string };
 
 /** Follows next_block until HyperSync reaches its archive height. */
 async function hypersync(token: string, logFilter: Record<string, unknown>) {
@@ -48,7 +50,7 @@ async function hypersync(token: string, logFilter: Record<string, unknown>) {
         from_block: from,
         logs: [logFilter],
         field_selection: {
-          log: ["block_number", "transaction_hash", "log_index", "topic1", "topic2", "data"],
+          log: ["block_number", "transaction_hash", "log_index", "topic1", "topic2", "topic3", "data"],
           block: ["number", "timestamp"],
         },
       }),
@@ -68,24 +70,30 @@ async function hypersync(token: string, logFilter: Record<string, unknown>) {
 }
 
 /**
- * A rating counts as payment-backed only if the payment it links to is a USDC transfer into the agent wallet
- * FROM the rater's own address (x402 exact on EVM is an EIP-3009 transfer from the payer, so payer == rater),
- * and each payment backs at most one rating (the earliest). Linking someone else's payment, or reusing one,
- * leaves the rating unverified.
+ * A rating counts as payment-backed only if it links to a settled x402 paid scan: a ledger payment that is also a
+ * USDC transfer into the agent wallet onchain, with the full quoted amount, made FROM the rater's own address
+ * (x402 exact on EVM is an EIP-3009 transfer from the payer, so payer == rater). Each payment backs at most one
+ * rating (the earliest). Revoked ratings never count. A direct USDC transfer that never bought a scan, someone
+ * else's payment, or a reused one leaves the rating unverified.
  */
-function verifyFeedback<F extends { client: string | null; payment_tx: string | null }>(
+function verifyFeedback<F extends { client: string | null; payment_tx: string | null; revoked: boolean }>(
   feedback: F[],
-  transfers: { tx: string; from: string | null }[],
+  transfers: { tx: string; from: string | null; amount_atomic: string }[],
+  ledger: { tx_signature: string; payer: string | null; amount_atomic: string }[],
 ) {
-  const byTx = new Map(transfers.map((t) => [t.tx.toLowerCase(), t]));
+  const onchain = new Map(transfers.map((t) => [t.tx.toLowerCase(), t]));
+  const paid = new Map(ledger.map((r) => [String(r.tx_signature).toLowerCase(), r]));
   const used = new Set<string>();
   return feedback.map((f) => {
     const key = f.payment_tx?.toLowerCase() ?? "";
-    const t = byTx.get(key);
+    const t = onchain.get(key), l = paid.get(key);
+    const rater = f.client?.toLowerCase() ?? "";
     let reason: string | null = null;
-    if (!f.payment_tx) reason = "no payment linked";
-    else if (!t) reason = "linked tx is not a USDC payment to the agent";
-    else if (!f.client || t.from !== f.client.toLowerCase()) reason = "payment was made by a different address";
+    if (f.revoked) reason = "revoked by the rater";
+    else if (!f.payment_tx) reason = "no payment linked";
+    else if (!l) reason = "linked tx is not a paid scan";
+    else if (!t || t.amount_atomic !== String(l.amount_atomic)) reason = "paid scan not found onchain";
+    else if (t.from !== rater || (l.payer && String(l.payer).toLowerCase() !== rater)) reason = "payment was made by a different address";
     else if (used.has(key)) reason = "payment already backs another rating";
     const ok = reason === null;
     if (ok) used.add(key);
@@ -106,13 +114,15 @@ Deno.serve(async (req) => {
   const PAYEE = (payee?.pay_to ?? Deno.env.get("X402_PAYEE_MONAD") ?? "").toLowerCase();
 
   try {
-    const [fb, tr, ledgerRes] = await Promise.all([
+    const [fb, rv, tr, ledgerRes] = await Promise.all([
       hypersync(token, { address: [REPUTATION], topics: [[NEW_FEEDBACK], [pad32(AGENT_ID.toString(16))]] }),
+      hypersync(token, { address: [REPUTATION], topics: [[FEEDBACK_REVOKED], [pad32(AGENT_ID.toString(16))]] }),
       hypersync(token, { address: [USDC], topics: [[TRANSFER], [], [pad32(PAYEE)]] }),
       db.from("x402_payments").select("tx_signature, payer, amount_atomic, token_symbol, chain, settled_at")
         .eq("status", "settled").eq("network", "eip155:143"),
     ]);
 
+    const revoked = new Set(rv.logs.map((l) => `${addr(l.topic2)}-${l.topic3 ? BigInt(l.topic3).toString() : ""}`));
     const feedback = fb.logs.map((l) => {
       const [index, value, decimals, tag1, tag2, endpoint, feedbackURI, feedbackHash] = decodeAbiParameters(
         [{ type: "uint64" }, { type: "int128" }, { type: "uint8" }, { type: "string" }, { type: "string" },
@@ -124,6 +134,7 @@ Deno.serve(async (req) => {
         block: l.block_number, at: iso(fb.time.get(l.block_number)), tx: l.transaction_hash,
         client: addr(l.topic2), index: Number(index), value: Number(value) / 10 ** Number(decimals),
         tag1, tag2, endpoint, feedbackURI, feedbackHash, payment_tx: paymentTx,
+        revoked: revoked.has(`${addr(l.topic2)}-${Number(index)}`),
       };
     });
 
@@ -146,7 +157,7 @@ Deno.serve(async (req) => {
       source: "Envio HyperSync (monad.hypersync.xyz)",
       agent_id: Number(AGENT_ID),
       payee: PAYEE,
-      scanned: { from_block: FROM_BLOCK, to_block: Math.max(fb.height, tr.height) },
+      scanned: { from_block: FROM_BLOCK, to_block: Math.max(fb.height, rv.height, tr.height) },
       reconciliation: {
         ledger_payments: rows.length,
         found_onchain: rows.filter((r) => r.onchain).length,
@@ -154,7 +165,7 @@ Deno.serve(async (req) => {
         onchain_not_in_ledger: transfers.filter((t) => !ledgerTx.has(t.tx.toLowerCase())).length,
         rows,
       },
-      feedback: verifyFeedback(feedback, transfers),
+      feedback: verifyFeedback(feedback, transfers, ledger.map((r) => ({ tx_signature: r.tx_signature, payer: r.payer, amount_atomic: String(r.amount_atomic) }))),
       transfers,
     }), { headers: CORS });
   } catch (e) {
