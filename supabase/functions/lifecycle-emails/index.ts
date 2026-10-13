@@ -23,6 +23,8 @@ const SITE = "https://tokenhealthscan.com";
 const FROM = "Gabriel from Token Health Scan <team@tokenhealthscan.com>";
 const FN_URL = "https://qaqebpcqespvzbfwawlp.supabase.co/functions/v1/lifecycle-emails";
 const MAX_ATTEMPTS = 3;
+// Postal address required in commercial email (CAN-SPAM).
+const ADDRESS = "Token Health Scan · Rod. José Carlos Daux, 4150, Florianópolis, CEP 88032-005, Brazil";
 
 type Key = "welcome" | "day3" | "pro";
 
@@ -92,7 +94,7 @@ function render(preview: string, blocks: Block[], footer = ""): { html: string; 
       `<p style="margin:0 0 24px;font-size:15px;font-weight:700;color:#3B66FF;">Token Health Scan</p>` +
       html.join("") + sig + foot + `</div></div>`,
     text: text.join("\n\n") + "\n\nGabriel\nFounder, Token Health Scan" +
-      (footer ? "\n\n" + footer.replace(/<a href="([^"]+)"[^>]*>([^<]+)<\/a>/g, "$2: $1").replace(/<[^>]+>/g, "") : ""),
+      (footer ? "\n\n" + footer.replace(/<br>/g, "\n").replace(/<a href="([^"]+)"[^>]*>([^<]+)<\/a>/g, "$2: $1").replace(/<[^>]+>/g, "") : ""),
   };
 }
 
@@ -133,7 +135,7 @@ async function buildEmail(key: Key, userId: string) {
         { p: "You have 3 Pro Scans on your account. When you need more, PRO gives you 10 Pro Scans per month, plus PDF and CSV export. It's $20 per month, or $120 per year." },
         { button: ["See PRO plans", link("/pricing", "day3")] },
         { p: "If a result confused you, reply and I'll walk you through it." },
-      ], `You got this because you created a Token Health Scan account. <a href="${unsub}" style="color:#6B7280;">Unsubscribe from tips</a>.`),
+      ], `You got this because you created a Token Health Scan account. <a href="${unsub}" style="color:#6B7280;">Unsubscribe from tips</a>.<br>${ADDRESS}`),
     };
   }
   return {
