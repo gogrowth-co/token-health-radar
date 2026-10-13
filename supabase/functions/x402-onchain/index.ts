@@ -124,7 +124,14 @@ Deno.serve(async (req) => {
         .eq("status", "settled").eq("network", "eip155:143"),
     ]);
 
-    const revoked = new Set(rv.logs.map((l) => `${addr(l.topic2)}-${l.topic3 ? BigInt(l.topic3).toString() : ""}`));
+    // ERC-8004 v2.0.0 ABI (erc-8004-contracts/abis/ReputationRegistry.json, verified against the deployed registry):
+    // FeedbackRevoked(uint256 indexed agentId, address indexed clientAddress, uint64 indexed feedbackIndex), so the
+    // index is topic3. Fall back to the data field in case a registry version emits it unindexed.
+    const revokedIndex = (l: Log) =>
+      l.topic3 ? BigInt(l.topic3).toString()
+      : l.data && l.data !== "0x" ? (decodeAbiParameters([{ type: "uint64" }], l.data as `0x${string}`)[0] as bigint).toString()
+      : null;
+    const revoked = new Set(rv.logs.map((l) => revokedIndex(l)).map((i, k) => (i === null ? null : `${addr(rv.logs[k].topic2)}-${i}`)).filter(Boolean));
     const feedback = fb.logs.map((l) => {
       const [index, value, decimals, tag1, tag2, endpoint, feedbackURI, feedbackHash] = decodeAbiParameters(
         [{ type: "uint64" }, { type: "int128" }, { type: "uint8" }, { type: "string" }, { type: "string" },
