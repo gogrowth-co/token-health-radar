@@ -69,7 +69,8 @@ function fmtInput(key: string, val: Any): string {
   if (typeof val === "boolean") return val ? "Yes" : "No";
   if (val === null || val === undefined) return "n/a";
   if (key.endsWith("_usd")) return money(val);
-  if (key.endsWith("_pct") || key.endsWith("_pct_of_circ") || key === "issue_close_ratio") return `${Number(val).toFixed(1)}%`;
+  if (key === "issue_close_ratio") return `${Math.round(Number(val) * 100)}%`;
+  if (key.endsWith("_pct") || key.endsWith("_pct_of_circ")) return `${Number(val).toFixed(1)}%`;
   if (key === "circulating_ratio") return `${Math.round(Number(val) * 100)}%`;
   if (key === "sentiment") return `${val}/100`;
   if (typeof val === "number") return Math.round(val).toLocaleString("en-US");
@@ -86,13 +87,15 @@ function findings(dims: Any, fd: Any, symbol: string): { t: string; h: string; b
   const out: { t: string; h: string; b: string; s: number }[] = [];
   const sec = dims.security;
   if (sec?.score !== null && sec?.score !== undefined) {
-    const lost = Object.entries(sec.inputs_used || {}).filter(([, v]: Any) => v.points < v.max).map(([k]) => INPUT_LABEL[k] || k);
+    // Built from the checks this chain actually ran (EVM and Solana differ).
+    const entries = Object.entries(sec.inputs_used || {}) as [string, Any][];
+    const lost = entries.filter(([, v]) => v.points < v.max).map(([k]) => INPUT_LABEL[k] || k);
+    const passed = entries.filter(([, v]) => v.points >= v.max).map(([k]) => INPUT_LABEL[k] || k);
     out.push({
       s: sec.score, t: tone(sec.score),
       h: lost.length ? "Contract has risk flags" : "Contract checks passed",
-      b: lost.length
-        ? `Points lost on: ${lost.join(", ")}. Check these before trading.`
-        : "No honeypot, no active mint function, transfers can't be paused, no blacklist, not an upgradeable proxy, and no buy/sell tax.",
+      b: (lost.length ? `Points lost on: ${lost.join(", ")}. Check these before trading. ` : "") +
+        (passed.length ? `No issue found on: ${passed.join(", ")}.` : ""),
     });
   }
   const liq = dims.liquidity;
