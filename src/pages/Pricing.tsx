@@ -173,7 +173,8 @@ export default function Pricing() {
                   "Tokenomics deep dive",
                   "Community signal tracking",
                   "Developer activity checks",
-                  "Liquidity analysis"
+                  "Liquidity analysis",
+                  "Download reports as PDF"
                 ]}
                 popular={true}
                 cta={isLoading && processingPlan === "monthly" ? (
@@ -196,6 +197,7 @@ export default function Pricing() {
                   "Community signal tracking",
                   "Developer activity checks",
                   "Liquidity analysis",
+                  "Download reports as PDF",
                   "Priority support"
                 ]}
                 cta={isLoading && processingPlan === "annual" ? (

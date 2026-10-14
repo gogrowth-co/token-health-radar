@@ -11,6 +11,7 @@ import ScanLimitIndicator from "@/components/ScanLimitIndicator";
 import UpgradeModal from "@/components/UpgradeModal";
 import RefreshScanButton from "@/components/RefreshScanButton";
 import GenerateReportButton from "@/components/GenerateReportButton";
+import DownloadReportButton from "@/components/DownloadReportButton";
 import TestSocialLinksButton from "@/components/TestSocialLinksButton";
 import CopilotPanel from "@/components/copilot/CopilotPanel";
 import { isMcpEnabled } from "@/lib/config/mcp-config";
@@ -553,6 +554,17 @@ export default function ScanResult() {
             chainId={chainId}
             agentToken={scanData?.agentToken}
           />
+
+          <div className="flex justify-end">
+            <DownloadReportButton
+              tokenAddress={tokenAddress}
+              chainId={chainId}
+              plan={scanLimitData?.plan}
+              isAuthenticated={isAuthenticated}
+              onUpgrade={() => (isAuthenticated ? setShowUpgradeModal(true) : navigate('/auth'))}
+              className={isMobile ? 'w-full' : ''}
+            />
+          </div>
 
           {/* Update Frequency Note */}
           {scanData?.lastUpdated && (

@@ -126,3 +126,6 @@ verify_jwt = false
 
 [functions.lifecycle-emails]
 verify_jwt = false
+
+[functions.scan-report]
+verify_jwt = false
