@@ -197,6 +197,57 @@ export type Database = {
         }
         Relationships: []
       }
+      lifecycle_emails: {
+        Row: {
+          attempts: number
+          claimed_at: string | null
+          created_at: string
+          email_key: string
+          error: string | null
+          resend_id: string | null
+          sent_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          claimed_at?: string | null
+          created_at?: string
+          email_key: string
+          error?: string | null
+          resend_id?: string | null
+          sent_at?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          claimed_at?: string | null
+          created_at?: string
+          email_key?: string
+          error?: string | null
+          resend_id?: string | null
+          sent_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lifecycle_emails_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "hubspot_contact_data"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "lifecycle_emails_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       page_translations: {
         Row: {
           content: string | null
@@ -326,6 +377,7 @@ export type Database = {
         Row: {
           agent_scans_used: number | null
           created_at: string | null
+          email_opt_out: boolean
           id: string
           name: string | null
           plan: string | null
@@ -340,6 +392,7 @@ export type Database = {
         Insert: {
           agent_scans_used?: number | null
           created_at?: string | null
+          email_opt_out?: boolean
           id: string
           name?: string | null
           plan?: string | null
@@ -354,6 +407,7 @@ export type Database = {
         Update: {
           agent_scans_used?: number | null
           created_at?: string | null
+          email_opt_out?: boolean
           id?: string
           name?: string | null
           plan?: string | null
@@ -1059,6 +1113,7 @@ export type Database = {
           channel: string
           created_at: string
           error: string | null
+          evidence: Json | null
           id: string
           network: string
           overall_score: number | null
@@ -1080,6 +1135,7 @@ export type Database = {
           channel: string
           created_at?: string
           error?: string | null
+          evidence?: Json | null
           id?: string
           network: string
           overall_score?: number | null
@@ -1101,6 +1157,7 @@ export type Database = {
           channel?: string
           created_at?: string
           error?: string | null
+          evidence?: Json | null
           id?: string
           network?: string
           overall_score?: number | null
@@ -1256,6 +1313,24 @@ export type Database = {
         Returns: boolean
       }
       hubspot_sync_bearer: { Args: never; Returns: string }
+      lifecycle_claim: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempts: number
+          email: string
+          email_key: string
+          user_id: string
+        }[]
+      }
+      lifecycle_due: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempts: number
+          email: string
+          email_key: string
+          user_id: string
+        }[]
+      }
       persist_token_scan: {
         Args: { p_caches: Json; p_scan: Json }
         Returns: string
