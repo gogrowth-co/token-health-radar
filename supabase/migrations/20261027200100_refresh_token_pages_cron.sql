@@ -1,4 +1,4 @@
--- Token pages follow their latest complete scan (2026-10-27): every 5 minutes the oldest due token (latest scan past 20 h, or one that
+-- Token pages follow their latest complete scan (2026-10-27): every 2 minutes (see the end) the oldest due token (latest scan past 20 h, or one that
 -- lost inputs to a provider failure) is rescanned and its report, score card and page rebuilt by refresh-token-page. 288 slots a day for
 -- 54 tokens. It replaces weekly-token-refresh (scans only, 6-day cycle, 110 s budget: LDO went unscored for weeks) and the GitHub
 -- workflow fresh-token-page.yml. The job authenticates with the service key the database already keeps in Supabase Vault for its edge
@@ -21,3 +21,6 @@ $job$);
 
 -- the old weekly scan-only job: its scans are now part of the refresh above
 select cron.unschedule(jobid) from cron.job where command like '%functions/v1/weekly-token-refresh%';
+
+-- every 2 minutes (applied 2026-10-27 19:55): 54 tokens catch up in under two hours after a backlog; a run with nothing due returns at once
+select cron.alter_job((select jobid from cron.job where jobname = 'refresh-token-pages'), schedule := '*/2 * * * *');
