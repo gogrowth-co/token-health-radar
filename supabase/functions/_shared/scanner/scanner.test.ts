@@ -1319,3 +1319,23 @@ Deno.test('unlocks: a schedule still emitting that ends inside 12 months gives a
   assertEquals(u.unlock_365d_amount.bound, 'lower');
   assertEquals(u.unlock_365d_amount.value, 2000);
 });
+
+// 2026-10-27: an org-only GitHub link resolves to the org's most-starred live repository, not a keyword match (JUP read a 0-star side repo).
+Deno.test('findMainRepository picks the most-starred live repository of an org', async () => {
+  const { findMainRepository } = await import('../githubAPI.ts');
+  const recent = new Date(Date.now() - 5 * 86400_000).toISOString();
+  const repos = [
+    { name: 'zk-elgamal-proof-v4-compat', fork: false, archived: false, stargazers_count: 0, pushed_at: recent, owner: { login: 'jup-ag' } },
+    { name: 'jupiter-swap-api-client', fork: false, archived: false, stargazers_count: 203, pushed_at: recent, owner: { login: 'jup-ag' } },
+    { name: 'metis-binary', fork: false, archived: false, stargazers_count: 264, pushed_at: recent, owner: { login: 'jup-ag' } },
+    { name: 'old-core', fork: false, archived: true, stargazers_count: 900, pushed_at: recent, owner: { login: 'jup-ag' } },
+    { name: 'forked-core', fork: true, archived: false, stargazers_count: 5000, pushed_at: recent, owner: { login: 'jup-ag' } },
+  ];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async () => new Response(JSON.stringify(repos), { status: 200 })) as typeof fetch;
+  try {
+    assertEquals(await findMainRepository('jup-ag', {}), { owner: 'jup-ag', repo: 'metis-binary' });
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

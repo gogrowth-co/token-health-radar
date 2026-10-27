@@ -31,6 +31,18 @@ export async function findMainRepository(owner: string, headers: any) {
     // Filter out forks and find the main repository
     const nonForkRepos = repos.filter((repo: any) => !repo.fork);
     const targetRepos = nonForkRepos.length > 0 ? nonForkRepos : repos;
+
+    // An org's flagship is its most-starred live repository: not archived, pushed in the last year, starred at least once.
+    // 2026-10-27: the keyword scoring below picked jup-ag/zk-elgamal-proof-v4-compat (0 stars) over metis-binary (264) and
+    // jupiter-swap-api-client (203), so JUP's Development dimension read a side repository. Keywords now only decide
+    // when no repository is live.
+    const yearAgo = Date.now() - 365 * 24 * 60 * 60 * 1000;
+    const live = targetRepos.filter((r: any) => !r.archived && Date.parse(r.pushed_at || '') > yearAgo && (r.stargazers_count || 0) > 0);
+    if (live.length > 0) {
+      live.sort((a: any, b: any) => (b.stargazers_count || 0) - (a.stargazers_count || 0) || Date.parse(b.pushed_at) - Date.parse(a.pushed_at));
+      console.log(`[GITHUB] ✅ SELECTED (most-starred live repository): ${live[0].name} (${live[0].stargazers_count} stars)`);
+      return { owner: live[0].owner.login, repo: live[0].name };
+    }
     
     // Enhanced repository selection algorithm with keyword-based scoring
     targetRepos.sort((a: any, b: any) => {
