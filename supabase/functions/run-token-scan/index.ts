@@ -18,7 +18,6 @@ import { fetchTelegramMembers } from '../_shared/apifyAPI.ts';
 import { fetchLunarCrushWithCache } from '../_shared/lunarcrushAPI.ts';
 import { fetchDiscordMemberCount } from '../_shared/discordAPI.ts';
 import { requireAuthOrInternal, getClientIp } from '../_shared/authGuard.ts';
-import { checkRateLimit, createRateLimitError } from '../_shared/rateLimit.ts';
 import { AddressResolutionError, collectToken, normalizeChain, quality } from '../_shared/scanner/collect.ts';
 import { scoreRecord } from '../_shared/scanner/scoring.ts';
 import { buildRows } from '../_shared/scanner/persist.ts';
@@ -33,6 +32,10 @@ const corsHeaders = {
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
 const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+const ANON_REUSE_MS = 60 * 60 * 1000;
+const ANON_PER_IP_HOUR = Number(Deno.env.get('ANON_SCANS_PER_IP_HOUR') ?? 10);
+const ANON_DAILY_CAP = Number(Deno.env.get('ANON_SCANS_DAILY_CAP') ?? 300);
+const USER_PER_HOUR = Number(Deno.env.get('USER_SCANS_PER_HOUR') ?? 30);
 
 Deno.serve(async (req) => {
   const startTime = Date.now();
@@ -42,8 +45,6 @@ Deno.serve(async (req) => {
 
   const auth = await requireAuthOrInternal(req, corsHeaders);
   if (auth.blocked) return auth.blocked;
-  const rl = await checkRateLimit({ maxRequests: auth.via === 'internal' ? 1000 : 30, windowSeconds: 3600, identifier: auth.userId || getClientIp(req), namespace: 'run-token-scan' });
-  if (!rl.allowed) return createRateLimitError(rl, corsHeaders);
 
   try {
     const bodyText = await req.text();
@@ -52,6 +53,32 @@ Deno.serve(async (req) => {
     const chainId = normalizeChain(chain_id || '0x1');
     if (!chainId) return json({ success: false, error: 'Unsupported chain' }, 400);
     if (!rawAddress || typeof rawAddress !== 'string') return json({ success: false, error: 'Invalid token address' }, 400);
+
+    // Who pays for a fresh scan (2026-10-27): every scan spends paid provider credits, and the old limiter never ran (no Upstash).
+    // Anonymous visitors: a scan of the same token from the last hour is returned as is; otherwise one slot per IP per hour and
+    // one shared daily cap. Signed-in users: one slot per user per hour. Internal callers (service role, internal secret): no limit.
+    if (auth.via === 'anon') {
+      const recent = await supabase.from('token_scans').select('id, scanned_at, score_total, dimension_scores').eq('token_address', rawAddress.trim().toLowerCase()).eq('chain_id', chainId)
+        .not('dimension_scores', 'is', null).gte('scanned_at', new Date(Date.now() - ANON_REUSE_MS).toISOString()).order('scanned_at', { ascending: false }).limit(1).maybeSingle();
+      if (recent.data) {
+        const dims = (recent.data.dimension_scores as any)?.dimensions ?? {};
+        return json({ success: true, cached: true, scan_id: recent.data.id, scanned_at: recent.data.scanned_at, token_address: rawAddress.trim().toLowerCase(), chain_id: chainId,
+          overall_score: (recent.data.dimension_scores as any)?.overall ?? recent.data.score_total ?? null,
+          scores: Object.fromEntries(['security', 'liquidity', 'tokenomics', 'community', 'development'].map((k) => [k, dims[k]?.score ?? null])), request_id: requestId });
+      }
+    }
+    const quotas: Array<[string, number, number]> = auth.via === 'anon'
+      ? [[`anon-ip:${getClientIp(req)}`, 3600, ANON_PER_IP_HOUR], ['anon-day', 86400, ANON_DAILY_CAP]]
+      : auth.via === 'jwt' ? [[`user:${auth.userId ?? getClientIp(req)}`, 3600, USER_PER_HOUR]] : [];
+    for (const [bucket, windowSeconds, limit] of quotas) {
+      const { data: q, error: qErr } = await supabase.rpc('scan_quota_take', { p_bucket: bucket, p_window_seconds: windowSeconds, p_limit: limit });
+      if (qErr) { console.error(`[${requestId}] quota check failed`, qErr.message); return json({ success: false, error: 'Scan limit check failed, try again shortly', request_id: requestId }, 503); }
+      const row = Array.isArray(q) ? q[0] : q;
+      if (!row?.allowed) {
+        if (bucket === 'anon-day') console.error(`[${requestId}] ANON_DAILY_CAP reached (${limit})`);
+        return json({ success: false, error: bucket === 'anon-day' ? 'Free scans are paused for today. Sign in to keep scanning.' : 'Too many scans in the last hour. Try again later or sign in.', error_code: 'rate_limited', request_id: requestId }, 429);
+      }
+    }
 
     // Previous scan (for the supply-jump plausibility rule). Tolerates the v2 columns not existing yet.
     const prev = await supabase.from('token_scans').select('field_data, scanned_at').eq('token_address', rawAddress.trim().toLowerCase()).eq('chain_id', chainId).not('field_data', 'is', null).order('scanned_at', { ascending: false }).limit(1).maybeSingle();

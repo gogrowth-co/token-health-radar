@@ -129,3 +129,6 @@ verify_jwt = false
 
 [functions.scan-report]
 verify_jwt = false
+
+[functions.refresh-token-page]
+verify_jwt = false
