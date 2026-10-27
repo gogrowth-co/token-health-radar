@@ -27,6 +27,8 @@ const SAY = {
   circulating_ratio: (v) => `${n(v * 100, 1)}% of supply is circulating.`,
   unlock_90d_pct_of_circ: (v) => `Unlocks in the next 90 days: ${n(v, 1)}% of circulating supply.`,
   sentiment: (v) => `Social sentiment: ${n(v)}% positive (LunarCrush).`,
+  interactions_24h: (v) => `Social interactions in the last 24 hours: ${n(v)} (LunarCrush).`,
+  watchlist_users: (v) => `CoinGecko users following it: ${n(v)}.`,
   social_dominance: (v) => `Share of crypto social volume: ${n(v, 3)}%.`,
   trend: (v) => `Social trend: ${v}.`,
   discord_members: (v) => `Discord members: ${n(v)}.`,
@@ -44,9 +46,9 @@ const NAMES = { top10_pct: "top-10 holder share", circulating_ratio: "circulatin
   dex_liquidity_usd: "DEX liquidity", volume_24h_usd: "trading volume", slippage_100k_pct: "price impact of a $100K sale", upgradeable_proxy: "upgradeability",
   max_tax_pct: "taxes", transfer_tax_pct: "transfer tax", mint_authority_active: "mint authority", freeze_authority_active: "freeze authority", social_dominance: "share of social volume",
   commits_30d: "recent commits", last_push_age_days: "time since the last code push", contributors_count: "contributors", issue_close_ratio: "closed issues", not_archived: "repository status",
-  discord_members: "Discord members", telegram_members: "Telegram members" };
+  discord_members: "Discord members", telegram_members: "Telegram members", interactions_24h: "social interactions", watchlist_users: "CoinGecko followers" };
 const LABEL = (k) => NAMES[k] || k.replace(/_/g, " ");
-const WHY = { missing_input: "no data", no_data: "no data", not_found: "not found", provider_failed: "data provider failed", rate_limited: "data provider busy", timeout: "data provider timed out", not_listed: "not listed", not_supported_on_chain: "not available on this chain", sources_disagree: "sources disagree", failed_plausibility: "failed our plausibility check" };
+const WHY = { missing_input: "no data", no_data: "no data", not_found: "not found", provider_failed: "data provider failed", rate_limited: "data provider busy", timeout: "data provider timed out", not_supported_on_chain: "not available on this chain", sources_disagree: "sources disagree", failed_plausibility: "failed our plausibility check", link_dead: "the listed link is dead", not_listed: "not tracked by the source", not_published: "not published by the project", blocked: "the site blocks automated reads" };
 const why = (r) => WHY[r] || (/^not_corroborated/.test(r) ? "only one source, we need two" : /^disputed/.test(r) ? "sources disagree" : String(r).replace(/_/g, " "));
 const TITLE = { security: "Security", liquidity: "Liquidity", tokenomics: "Tokenomics", community: "Community", development: "Development" };
 

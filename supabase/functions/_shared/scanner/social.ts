@@ -26,7 +26,9 @@ export interface GithubFacts {
 export interface CommunityFacts {
   sentiment: Field<number>;
   social_dominance: Field<number>;
+  interactions_24h: Field<number>;
   trend: Field<string>;
+  watchlist_users: Field<number>;
   discord_members: Field<number>;
   telegram_members: Field<number>;
 }
@@ -107,35 +109,35 @@ export async function collectGithub(ctx: ScanContext, githubUrl: string | undefi
 }
 
 /** Community fields from the legacy providers' results. A zero or a missing answer is unknown, never a low score. */
+/**
+ * Community inputs (2026-10-27): LunarCrush's structured coin list (sentiment, social dominance, interactions; trend from its 7-day
+ * series), CoinGecko's watchlist count, and the Discord and Telegram communities found and checked by links.ts. A token LunarCrush
+ * does not track is 'not_listed' (a fact); only a LunarCrush call that did not answer is a provider failure.
+ */
 export function communityFields(raw: {
-  symbol: string | null;
-  lunar: { sentiment: number | null; social_dominance: number | null; trend: string | null; fetched_at?: string } | null;
-  discordLinked: boolean;
-  discordMembers: number | null;
-  telegramLinked: boolean;
-  telegramMembers: number | null;
+  lunar: { sentiment: number | null; social_dominance: number | null; interactions_24h: number | null; trend: string | null; fetched_at?: string; lookup?: 'ok' | 'not_listed' | 'failed'; detail?: string } | null;
+  watchlist: Field<number>;
+  discord: Field<number>;
+  telegram: Field<number>;
 }, nowIso: string): CommunityFacts {
   // A provider timestamp in the future is invalid provenance: the reading is dropped instead of being reused as fresh.
   const futureLunar = !!raw.lunar?.fetched_at && Date.parse(raw.lunar.fetched_at) > Date.parse(nowIso) + FUTURE_SKEW_MS;
-  const input = { ...raw, lunar: futureLunar ? null : raw.lunar };
-  // A cached LunarCrush answer keeps the time it was really obtained; a scan never renews it (Codex round 2, finding 8).
-  const lc: SourceRef = { source: 'lunarcrush', fetched_at: input.lunar?.fetched_at ?? nowIso };
-  const noLunar = (why: string) => unknown<any>(input.symbol ? 'no_data' : 'missing_input', why, [lc]);
+  const lunar = futureLunar ? null : raw.lunar;
+  const lc: SourceRef = { source: 'lunarcrush', fetched_at: lunar?.fetched_at ?? nowIso };
+  const absent = (what: string): Field<any> =>
+    !lunar || lunar.lookup === 'failed' ? unknown('provider_failed', `LunarCrush did not answer${lunar?.detail ? ` (${lunar.detail})` : ''}`, [lc])
+    : lunar.lookup === 'not_listed' ? unknown('not_listed', 'LunarCrush does not track this token', [lc])
+    : unknown('no_data', `LunarCrush has no ${what} for this token`, [lc]);
   // A measured 0 is a reading (sentiment 0, dominance 0); only null/non-numeric/out-of-range is missing.
-  const num = (v: number | null | undefined, what: string, max = 100): Field<number> =>
-    typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= max
-      ? ok(v, lc, { confidence: 'medium' })
-      : input.lunar ? unknown('no_data', `LunarCrush returned no ${what}`, [lc]) : noLunar(input.symbol ? 'LunarCrush returned nothing for this symbol' : 'no symbol to look up');
-  const social = (linked: boolean, members: number | null, source: string): Field<number> => {
-    const ref: SourceRef = { source, fetched_at: nowIso };
-    if (!linked) return unknown('not_found', `no ${source.replace('_', ' ')} link listed for this token`, [ref], { unit: 'members' });
-    return typeof members === 'number' && members > 0 ? ok(members, ref, { unit: 'members', confidence: 'medium' }) : unknown('provider_failed', `${source}: no member count returned`, [ref], { unit: 'members' });
-  };
+  const num = (v: number | null | undefined, what: string, max = Infinity): Field<number> =>
+    lunar?.lookup === 'ok' && typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= max ? ok(v, lc, { confidence: 'medium' }) : absent(what);
   return {
-    sentiment: num(input.lunar?.sentiment, 'sentiment'),
-    social_dominance: num(input.lunar?.social_dominance, 'social dominance'),
-    trend: input.lunar?.trend === 'up' || input.lunar?.trend === 'down' || input.lunar?.trend === 'flat' ? ok(input.lunar.trend, lc, { confidence: 'medium' }) : input.lunar ? unknown('no_data', 'LunarCrush returned no trend', [lc]) : noLunar('LunarCrush returned nothing'),
-    discord_members: social(input.discordLinked, input.discordMembers, 'discord'),
-    telegram_members: social(input.telegramLinked, input.telegramMembers, 'apify_telegram'),
+    sentiment: num(lunar?.sentiment, 'sentiment', 100),
+    social_dominance: num(lunar?.social_dominance, 'social dominance', 100),
+    interactions_24h: num(lunar?.interactions_24h, '24-hour interactions'),
+    trend: lunar?.lookup === 'ok' && (lunar.trend === 'up' || lunar.trend === 'down' || lunar.trend === 'flat') ? ok(lunar.trend, lc, { confidence: 'medium' }) : absent('7-day trend'),
+    watchlist_users: raw.watchlist,
+    discord_members: raw.discord,
+    telegram_members: raw.telegram,
   };
 }

@@ -121,6 +121,9 @@ export function buildConcentration(opts: {
 
 /** Nansen labeled holders (5 credits/call). Returns address -> label. Never used for amounts. */
 export async function fetchNansenLabels(ctx: ScanContext, chain: string, address: string): Promise<{ labels: Map<string, string>; amounts: number[]; ref: SourceRef | null; reason?: any }> {
+  // Dropped 2026-10-27 (Gabriel: "Nansen: drop it"): the account is out of credits, so every call answered 403 insufficient_credits
+  // and the retry repeated it. Labels and the backup top-10 come from Chainbase, Ethplorer and GoPlus; set NANSEN_ENABLED=true to restore.
+  if (Deno.env.get('NANSEN_ENABLED') !== 'true') return { labels: new Map(), amounts: [], ref: null, reason: 'not_configured' };
   const key = Deno.env.get('NANSEN_API_KEY');
   if (!key) return { labels: new Map(), amounts: [], ref: null, reason: 'provider_failed' };
   const r = await ctx.fetchJson('nansen', 'https://api.nansen.ai/api/v1/tgm/holders', {

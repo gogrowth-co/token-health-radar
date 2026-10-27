@@ -15,7 +15,7 @@ import { type Field, usable } from './field.ts';
 import { isRenounced } from './evm.ts';
 import type { ScanRecord } from './types.ts';
 
-export const SCORING_VERSION = '2.2.0'; // 2.1.0 -> 2.2.0: concentration scored on raw top-10 with corroborated supply; measured zeros count; EVM absence claims earn nothing
+export const SCORING_VERSION = '2.3.0'; // 2.2.0 -> 2.3.0: Community on structured LunarCrush + CoinGecko watchlist, live-checked Discord/Telegram; // 2.1.0 -> 2.2.0: concentration scored on raw top-10 with corroborated supply; measured zeros count; EVM absence claims earn nothing
 
 export interface DimensionScore {
   score: number | null;
@@ -119,12 +119,16 @@ export function scoreRecord(rec: ScanRecord): ScoreResult {
   // Community and development read Fields from rec.social (social.ts): a failed provider call or a zero reading is
   // unknown and earns nothing; only usable inputs are scored, and at least two are needed.
   const so = rec.social?.community;
+  // 2.3.0 (2026-10-27): structured LunarCrush inputs plus CoinGecko's watchlist, which every listed token has; Discord and Telegram
+  // count when a live community is found and drop out of the denominator when there is none (never a penalty).
   const community = dimension([
-    { name: 'sentiment', field: so?.sentiment, max: 35, points: (v) => (v >= 75 ? 35 : v >= 60 ? 22 : v >= 45 ? 12 : v > 0 ? 5 : 0) },
-    { name: 'social_dominance', field: so?.social_dominance, max: 25, points: (v) => (v >= 2 ? 25 : v >= 0.5 ? 15 : v >= 0.1 ? 8 : v > 0 ? 3 : 0) },
+    { name: 'sentiment', field: so?.sentiment, max: 25, points: (v) => (v >= 75 ? 25 : v >= 60 ? 16 : v >= 45 ? 9 : v > 0 ? 4 : 0) },
+    { name: 'social_dominance', field: so?.social_dominance, max: 15, points: (v) => (v >= 2 ? 15 : v >= 0.5 ? 10 : v >= 0.1 ? 6 : v > 0 ? 2 : 0) },
+    { name: 'interactions_24h', field: so?.interactions_24h, max: 15, points: (v) => (v > 1e6 ? 15 : v > 1e5 ? 12 : v > 1e4 ? 8 : v > 1e3 ? 4 : v > 0 ? 1 : 0) },
     { name: 'trend', field: so?.trend, max: 10, points: (v) => (v === 'up' ? 10 : v === 'flat' ? 5 : 0) },
-    { name: 'discord_members', field: so?.discord_members, max: 18, points: (v) => (v > 50000 ? 18 : v > 10000 ? 14 : v > 5000 ? 10 : v > 1000 ? 6 : 3) },
-    { name: 'telegram_members', field: so?.telegram_members, max: 12, points: (v) => (v > 50000 ? 12 : v > 10000 ? 9 : v > 5000 ? 6 : v > 1000 ? 4 : 2) },
+    { name: 'watchlist_users', field: so?.watchlist_users, max: 15, points: (v) => (v > 500e3 ? 15 : v > 100e3 ? 12 : v > 25e3 ? 8 : v > 5e3 ? 4 : 1) },
+    { name: 'discord_members', field: so?.discord_members, max: 10, points: (v) => (v > 50000 ? 10 : v > 10000 ? 8 : v > 5000 ? 6 : v > 1000 ? 4 : 2) },
+    { name: 'telegram_members', field: so?.telegram_members, max: 10, points: (v) => (v > 50000 ? 10 : v > 10000 ? 8 : v > 5000 ? 6 : v > 1000 ? 4 : 2) },
   ], { minInputs: 2 });
 
   const gh = rec.social?.github;

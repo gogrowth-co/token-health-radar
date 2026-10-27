@@ -48,7 +48,7 @@ export class ScanContext {
   async fetchJson<T = any>(
     provider: string,
     url: string,
-    init: RequestInit & { timeoutMs?: number; retries?: number; credits?: number; excerpt?: (d: any) => Record<string, unknown> } = {},
+    init: RequestInit & { timeoutMs?: number; retries?: number; credits?: number; excerpt?: (d: any) => Record<string, unknown>; asText?: boolean } = {},
   ): Promise<FetchResult<T>> {
     const fetched_at = this.now().toISOString();
     const ref: SourceRef = { source: provider, fetched_at };
@@ -90,6 +90,17 @@ export class ScanContext {
         if (res.status === 429) {
           last = { ok: false, reason: 'rate_limited', status: 429, ref };
           continue;
+        }
+        // A page read (asText: a project website, a public Telegram page): the body and the final URL after redirects are the answer.
+        if (init.asText) {
+          if (!res.ok) {
+            last = { ok: false, reason: res.status === 403 ? 'blocked' : 'provider_failed', status: res.status, ref, detail: `HTTP ${res.status}` };
+            if (res.status >= 400 && res.status < 500 && res.status !== 408) break;
+            continue;
+          }
+          ref.raw_ref = await shortHash(text);
+          breaker.delete(provider);
+          return { ok: true, data: { text, url: res.url } as any, ref, status: res.status };
         }
         // GeckoTerminal intermittently serves a Cloudflare challenge page with 403.
         const isHtml = /^\s*</.test(text);

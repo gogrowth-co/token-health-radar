@@ -22,6 +22,7 @@ export interface MarketData {
   circulating_supply: Field<number>;
   total_supply_market: Field<number>;
   max_supply: Field<number>;
+  watchlist_users: Field<number>; // CoinGecko watchlist + portfolio users
 }
 
 const CG_BASE = 'https://api.coingecko.com/api/v3';
@@ -67,10 +68,13 @@ export async function fetchMarketData(ctx: ScanContext, cgPlatform: string, addr
       circulating_supply: num(m.circulating_supply, 'tokens', 'circulating supply'),
       total_supply_market: num(m.total_supply, 'tokens', 'total supply'),
       max_supply: num(m.max_supply, 'tokens', 'max supply'),
+      // how many CoinGecko users follow the coin (watchlists and portfolios): a community size every listed token has (2026-10-27)
+      watchlist_users: typeof d.watchlist_portfolio_users === 'number' && d.watchlist_portfolio_users > 0
+        ? ok(d.watchlist_portfolio_users, cg.ref, { unit: 'users', confidence: 'medium' }) : unknown('no_data', 'CoinGecko has no watchlist count', [cg.ref], { unit: 'users' }),
     };
   } else {
     const f = miss<any>(cg);
-    cgF = Object.fromEntries(['coingecko_id', 'name', 'symbol', 'logo_url', 'links', 'categories', 'platform_count', 'canonical_address', 'price_usd', 'market_cap_usd', 'fdv_usd', 'volume_24h_usd', 'circulating_supply', 'total_supply_market', 'max_supply'].map((k) => [k, f]));
+    cgF = Object.fromEntries(['coingecko_id', 'name', 'symbol', 'logo_url', 'links', 'categories', 'platform_count', 'canonical_address', 'price_usd', 'market_cap_usd', 'fdv_usd', 'volume_24h_usd', 'circulating_supply', 'total_supply_market', 'max_supply', 'watchlist_users'].map((k) => [k, f]));
   }
 
   return {

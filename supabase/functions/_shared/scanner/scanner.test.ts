@@ -10,6 +10,7 @@ import { evmAdapter } from './evm.ts';
 import { computeUnlocks, datasetMatches, unlockSlugCandidates } from './market.ts';
 import { applyLabel, buildConcentration, classifyLabel, type Holder } from './holders.ts';
 import { runPlausibility } from './plausibility.ts';
+import { bestCommunity, checkDiscord, checkTelegram, extractLinks } from './links.ts';
 import { AddressResolutionError, collectLiquidity, collectToken, inferNoUnlocks } from './collect.ts';
 import { fetchUnlocks, resetUnlockCache } from './market.ts';
 import { buildRows, vestingText } from './persist.ts';
@@ -28,6 +29,7 @@ function stubFetch(handler: (url: string, body: any) => { status?: number; json?
     return Promise.resolve(new Response(r.text ?? JSON.stringify(r.json ?? {}), { status: r.status ?? 200 }));
   }) as typeof fetch;
 }
+const noCommunity = { lunar: null, watchlist: unknown('no_data'), discord: unknown('not_found'), telegram: unknown('not_found') } as any;
 const restore = () => {
   globalThis.fetch = realFetch;
   resetBreakers();
@@ -123,7 +125,7 @@ Deno.test('labels: conservative classification', () => {
 function fakeRecord(over: Partial<Record<string, any>> = {}): ScanRecord {
   const u = unknown<any>('no_data');
   const chainKeys = ['decimals', 'total_supply_onchain', 'token_standard', 'mint_authority_active', 'freeze_authority_active', 'permanent_delegate', 'transfer_hook', 'transfer_tax_pct', 'buy_tax_pct', 'sell_tax_pct', 'honeypot', 'upgradeable_proxy', 'owner_address', 'pausable', 'blacklist', 'liquidity_locked_pct', 'creator_holding_pct', 'burned_supply', 'metadata_update_authority_active', 'holder_count', 'top1_pct', 'top5_pct', 'top10_pct', 'top20_pct', 'top10_excl_noncirculating_pct', 'noncirculating_labeled_pct', 'gini_coefficient', 'top_holders'];
-  const marketKeys = ['coingecko_id', 'name', 'symbol', 'logo_url', 'links', 'categories', 'platform_count', 'canonical_address', 'price_usd', 'market_cap_usd', 'fdv_usd', 'volume_24h_usd', 'circulating_supply', 'total_supply_market', 'max_supply'];
+  const marketKeys = ['coingecko_id', 'name', 'symbol', 'logo_url', 'links', 'categories', 'platform_count', 'canonical_address', 'price_usd', 'market_cap_usd', 'fdv_usd', 'volume_24h_usd', 'circulating_supply', 'total_supply_market', 'max_supply', 'watchlist_users'];
   const rec: any = {
     schema_version: 1,
     scanned_at: '2026-09-24T00:00:00Z',
@@ -152,7 +154,7 @@ Deno.test('scoring: missing required inputs -> dimension not scored, overall nul
   assertEquals(s.dimensions.community.score, null);
   assertEquals(s.dimensions.development.score, null);
   assertEquals(s.overall, null);
-  assertEquals(s.scoring_version, '2.2.0');
+  assertEquals(s.scoring_version, '2.3.0');
 });
 
 Deno.test('scoring: disputed input is excluded and blocks a required slot', () => {
@@ -656,7 +658,7 @@ Deno.test('github: sub-request failures are unknown with a reason, never zero co
     }
     assertEquals(gh.stars.value, 500); // metadata call succeeded
     const rec = fakeRecord();
-    rec.social = { github: gh, community: communityFields({ symbol: null, lunar: null, discordLinked: false, discordMembers: null, telegramLinked: false, telegramMembers: null }, NOW.toISOString()) };
+    rec.social = { github: gh, community: communityFields(noCommunity, NOW.toISOString()) };
     const s = scoreRecord(rec);
     assertEquals(s.dimensions.development.score, null);
     assert(s.dimensions.development.reason!.includes('commits_30d'));
@@ -673,7 +675,7 @@ Deno.test('github: healthy repo scores from real values; a future pushed_at earn
     assertEquals(gh.commits_30d.value, 12);
     assertEquals(gh.issue_close_ratio.value, 2 / 3); // the pull request is not an issue
     const rec = fakeRecord();
-    rec.social = { github: gh, community: communityFields({ symbol: null, lunar: null, discordLinked: false, discordMembers: null, telegramLinked: false, telegramMembers: null }, NOW.toISOString()) };
+    rec.social = { github: gh, community: communityFields(noCommunity, NOW.toISOString()) };
     assert((scoreRecord(rec).dimensions.development.score ?? 0) > 50);
   } finally {
     restore();
@@ -683,7 +685,7 @@ Deno.test('github: healthy repo scores from real values; a future pushed_at earn
     const gh = await collectGithub(new ScanContext(), 'https://github.com/acme/tok', NOW);
     assertEquals(gh.last_push_age_days.status, 'unknown');
     const rec = fakeRecord();
-    rec.social = { github: gh, community: communityFields({ symbol: null, lunar: null, discordLinked: false, discordMembers: null, telegramLinked: false, telegramMembers: null }, NOW.toISOString()) };
+    rec.social = { github: gh, community: communityFields(noCommunity, NOW.toISOString()) };
     assertEquals(scoreRecord(rec).dimensions.development.score, null);
   } finally {
     restore();
@@ -697,31 +699,68 @@ Deno.test('github: no link and no key are unknown with a reason', async () => {
   assertEquals((await collectGithub(new ScanContext(), 'https://github.com/a/b', NOW)).commits_30d.reason, 'provider_failed');
 });
 
-Deno.test('community: missing providers are unknown, a single input is not enough, a measured zero is a reading', () => {
+Deno.test('community 2.3.0: structured LunarCrush + CoinGecko watchlist; Discord/Telegram count only when found; a single input is not enough', () => {
   const rec = fakeRecord();
-  const mk = (over: Record<string, unknown>) => ({ symbol: 'TOK', lunar: null, discordLinked: false, discordMembers: null, telegramLinked: false, telegramMembers: null, ...over }) as any;
-  rec.social = { github: undefined as any, community: communityFields(mk({ telegramLinked: true, telegramMembers: 50_000 }), NOW.toISOString()) };
+  const lunar = (o: Record<string, unknown>) => ({ sentiment: null, social_dominance: null, interactions_24h: null, trend: null, lookup: 'ok', ...o }) as any;
+  const mk = (over: Record<string, unknown>) => ({ ...noCommunity, ...over }) as any;
+  rec.social = { github: undefined as any, community: communityFields(mk({ telegram: ok(50_000, ref, { unit: 'members' }) }), NOW.toISOString()) };
   const one = scoreRecord(rec).dimensions.community;
   assertEquals(one.score, null);
   assert(one.reason!.includes('at least 2'));
-  rec.social.community = communityFields(mk({ lunar: { sentiment: 80, social_dominance: 1, trend: 'up' } }), NOW.toISOString());
-  const three = scoreRecord(rec).dimensions.community;
-  assertEquals(three.score, Math.round(((35 + 15 + 10) / 70) * 100));
-  // A measured zero is a reading and scores 0 points; it must not be dropped (that used to leave only full-point inputs).
-  rec.social.community = communityFields(mk({ lunar: { sentiment: 0, social_dominance: 0, trend: 'up' }, discordLinked: true, discordMembers: 100_000 }), NOW.toISOString());
+  rec.social.community = communityFields(mk({ lunar: lunar({ sentiment: 80, social_dominance: 1, interactions_24h: 200_000, trend: 'up' }), watchlist: ok(150_000, ref) }), NOW.toISOString());
+  const five = scoreRecord(rec).dimensions.community;
+  assertEquals(five.score, Math.round(((25 + 10 + 12 + 10 + 12) / (25 + 15 + 15 + 10 + 15)) * 100));
+  assert(!('discord_members' in five.inputs_used) && !('telegram_members' in five.inputs_used));   // missing = out of the denominator
+  // A measured zero is a reading and scores 0 points; it must not be dropped.
+  rec.social.community = communityFields(mk({ lunar: lunar({ sentiment: 0, social_dominance: 0, interactions_24h: 0, trend: 'up' }), discord: ok(100_000, ref, { unit: 'members' }) }), NOW.toISOString());
   assertEquals(rec.social.community.sentiment.value, 0);
-  assertEquals(scoreRecord(rec).dimensions.community.score, Math.round(((0 + 0 + 10 + 18) / (35 + 25 + 10 + 18)) * 100));
-  // Missing / null / out-of-range is unknown.
-  rec.social.community = communityFields(mk({ lunar: { sentiment: null, social_dominance: -1, trend: null } }), NOW.toISOString());
-  assertEquals(rec.social.community.sentiment.status, 'unknown');
-  assertEquals(rec.social.community.social_dominance.status, 'unknown');
-  assertEquals(scoreRecord(rec).dimensions.community.score, null);
-  // A cached answer keeps its original fetch time.
-  const cached = communityFields(mk({ lunar: { sentiment: 60, social_dominance: 1, trend: 'up', fetched_at: '2026-09-23T18:00:00Z' } }), NOW.toISOString());
-  assertEquals(cached.sentiment.sources[0].fetched_at, '2026-09-23T18:00:00Z');
+  assertEquals(scoreRecord(rec).dimensions.community.score, Math.round(((0 + 0 + 0 + 10 + 10) / (25 + 15 + 15 + 10 + 10)) * 100));
+  // LunarCrush not tracking the token is a fact (not_listed); LunarCrush not answering is a provider failure.
+  assertEquals(communityFields(mk({ lunar: lunar({ lookup: 'not_listed' }) }), NOW.toISOString()).sentiment.reason, 'not_listed');
+  assertEquals(communityFields(mk({ lunar: lunar({ lookup: 'failed', detail: 'page 0 did not answer' }) }), NOW.toISOString()).sentiment.reason, 'provider_failed');
+  assertEquals(communityFields(mk({ lunar: null }), NOW.toISOString()).trend.reason, 'provider_failed');
   // A future provider timestamp is invalid provenance: the reading is dropped, not reused as fresh.
-  const future = communityFields(mk({ lunar: { sentiment: 60, social_dominance: 1, trend: 'up', fetched_at: '2030-01-01T00:00:00Z' } }), NOW.toISOString());
+  const future = communityFields(mk({ lunar: lunar({ sentiment: 60, fetched_at: '2030-01-01T00:00:00Z' }) }), NOW.toISOString());
   assertEquals(future.sentiment.status, 'unknown');
+});
+
+// 2026-10-27: CoinGecko's links are often dead (PENDLE/IQ/FRAX expired invites; WLD a person, BGB a bot). A dead link is 'link_dead',
+// never a provider failure; a live community anywhere wins; only a source that did not answer is a provider failure.
+Deno.test('links: extraction skips bots and non-repo paths; Discord and Telegram checks tell dead from failed', async () => {
+  const c = extractLinks('<a href="https://discord.gg/abc123">d</a> t.me/pendlefinance t.me/Bitget_NewMarket_Bot github.com/orgs/x github.com/pendle-finance/core t.me/s/x', 'website');
+  assertEquals(c.map((x) => `${x.kind}:${x.url}`), ['github:https://github.com/pendle-finance/core', 'discord:https://discord.gg/abc123', 'telegram:https://t.me/pendlefinance']);
+  stubFetch((url) => {
+    if (url.includes('/invites/dead')) return { status: 404, json: { message: 'Unknown Invite' } };
+    if (url.includes('/invites/live')) return { json: { approximate_member_count: 32795, guild: { name: 'Pendle' } } };
+    if (url.includes('/invites/busy')) return { status: 503, text: 'busy' };
+    if (url.endsWith('/group')) return { text: '<div class="tgme_page_extra">7 015 subscribers</div>' };
+    if (url.endsWith('/person')) return { text: '<a class="tgme_action_button_new shine">Send Message</a><div class="tgme_page_extra"></div>' };
+    return { status: 500, text: 'x' };
+  });
+  try {
+    const ctx = new ScanContext();
+    assertEquals((await checkDiscord(ctx, 'https://discord.gg/dead')).status, 'dead');
+    const live = await checkDiscord(ctx, 'https://discord.com/invite/live');
+    assertEquals(live.status === 'ok' ? live.members : null, 32795);
+    assertEquals((await checkDiscord(ctx, 'https://discord.gg/busy')).status, 'failed');
+    const g = await checkTelegram(ctx, 'https://t.me/group');
+    assertEquals(g.status === 'ok' ? g.members : null, 7015);
+    assertEquals((await checkTelegram(ctx, 'https://t.me/person')).status, 'dead');
+    // the best community: a live one wins over a dead one; all dead = link_dead; none listed = not_found naming what was checked
+    const search = (urls: string[]) => ({ candidates: urls.map((url, i) => ({ kind: 'discord' as const, url, source: i ? 'website_redirect' : 'coingecko' })), read: ['coingecko', 'coinmarketcap', 'defillama', 'website'], unread: [] });
+    const best = await bestCommunity(ctx, search(['https://discord.gg/dead', 'https://discord.gg/live']), 'discord');
+    assertEquals([best.field.value, best.url], [32795, 'https://discord.gg/live']);
+    assertEquals((await bestCommunity(ctx, search(['https://discord.gg/dead']), 'discord')).field.reason, 'link_dead');
+    const none = await bestCommunity(ctx, search([]), 'discord');
+    assertEquals(none.field.reason, 'not_found');
+    assert(none.field.detail!.includes('coingecko, coinmarketcap, defillama, website'));
+    assertEquals((await bestCommunity(ctx, search(['https://discord.gg/busy']), 'discord')).field.reason, 'provider_failed');
+    // nothing found while a source could not be read this run: retried, not concluded
+    const unreadSearch = { candidates: [], read: ['coingecko'], unread: [{ source: 'coinmarketcap', reason: 'timeout' }] };
+    assertEquals((await bestCommunity(ctx, unreadSearch, 'discord')).field.reason, 'timeout');
+  } finally {
+    restore();
+  }
 });
 
 Deno.test('rpc: a JSON-RPC error under HTTP 200 is counted as a provider failure and opens the breaker', async () => {
