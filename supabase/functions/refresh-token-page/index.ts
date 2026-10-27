@@ -228,8 +228,11 @@ Deno.serve(async (req) => {
       // rank 1: past the age limit, missing, or the latest scan lost inputs to a provider failure: a rescan
       // a provider gap is retried once the incomplete scan is an hour old (each refresh already tries RESCANS times): a provider that
       // keeps failing must not trigger a paid rescan every 2 minutes
-      if (age > maxAge || (scan && transientGaps(scan).length && age > GAP_RETRY_HOURS)) due.push({ symbol: r.token_symbol, age, rank: 1 });
-      else if (scan && (r as any).scanId !== scan.id) due.push({ symbol: r.token_symbol, age, rank: 0 });
+      const gaps = scan ? transientGaps(scan).length : 0;
+      if (age > maxAge || (gaps && age > GAP_RETRY_HOURS)) due.push({ symbol: r.token_symbol, age, rank: 1 });
+      // only a COMPLETE newer scan makes a page due for a rebuild: an incomplete one waits for its hourly retry above (2026-10-27: PENDLE
+      // and WLD were rescanned every 2 minutes through this branch, two paid scans each time)
+      else if (scan && !gaps && (r as any).scanId !== scan.id) due.push({ symbol: r.token_symbol, age, rank: 0 });
     }
     due.sort((a, b) => a.rank - b.rank || b.age - a.age);
     refs = due.slice(0, Math.max(1, Math.min(5, Number(body.limit ?? 2)))).map((d) => ({ symbol: d.symbol }));
