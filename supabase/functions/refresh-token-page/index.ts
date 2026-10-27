@@ -19,6 +19,7 @@ const URL_ = Deno.env.get('SUPABASE_URL')!;
 const supabase = createClient(URL_, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 const SITE = 'https://tokenhealthscan.com';
 const RESCANS = 2;
+const GAP_RETRY_HOURS = 1;
 const BUDGET_MS = 120_000;
 const TRANSIENT = /^(provider_failed|timeout|rate_limited)/;
 const CHAIN_LABEL: Record<string, string> = { '0x1': 'Ethereum', '0x38': 'BNB Chain', '0x89': 'Polygon', '0xa4b1': 'Arbitrum', '0x2105': 'Base', solana: 'Solana' };
@@ -208,26 +209,38 @@ Deno.serve(async (req) => {
     catch (e) { return json({ ok: false, error: (e as Error).message }, 500); }
   }
   const started = Date.now();
+  // every call leaves a row (token_page_refresh_runs): monitoring matches each cron run to its own result
+  const { data: run } = await supabase.from('token_page_refresh_runs').insert({ trigger: body.due ? 'due' : 'tokens' }).select('id').single();
+  const finish = async (ok: boolean, results: any[]) => {
+    if (run?.id) await supabase.from('token_page_refresh_runs').update({ finished_at: new Date().toISOString(), ok, results }).eq('id', run.id);
+  };
   const maxAge = Number(body.max_age_hours ?? (body.due ? 20 : 24));
   const opts = { maxAge, noRescan: !!body.no_rescan, force: !!body.force };
   let refs: any[] = Array.isArray(body.tokens) ? body.tokens : [];
   if (body.due) {
     // the cron: tokens whose latest scan is oldest and past the limit (or lost inputs to a provider failure), a few per call
-    const { data: reports } = await supabase.from('token_reports').select('token_symbol, token_address, chain_id');
-    const due: Array<{ symbol: string; age: number }> = [];
+    const { data: reports } = await supabase.from('token_reports').select('token_symbol, token_address, chain_id, report_content->metadata->>scanId');
+    const due: Array<{ symbol: string; age: number; rank: number }> = [];
     for (const r of reports ?? []) {
       const scan = await latestScan({ symbol: r.token_symbol, address: r.token_address, chain: r.chain_id, report: null });
       const age = scan ? ageHours(scan) : Infinity;
-      if (age > maxAge || (scan && transientGaps(scan).length)) due.push({ symbol: r.token_symbol, age });
+      // rank 0: the page does not show the latest scan and that scan is complete (a visitor's scan on the site): a rebuild, no rescan
+      // rank 1: past the age limit, missing, or the latest scan lost inputs to a provider failure: a rescan
+      // a provider gap is retried once the incomplete scan is an hour old (each refresh already tries RESCANS times): a provider that
+      // keeps failing must not trigger a paid rescan every 2 minutes
+      if (age > maxAge || (scan && transientGaps(scan).length && age > GAP_RETRY_HOURS)) due.push({ symbol: r.token_symbol, age, rank: 1 });
+      else if (scan && (r as any).scanId !== scan.id) due.push({ symbol: r.token_symbol, age, rank: 0 });
     }
-    due.sort((a, b) => b.age - a.age);
+    due.sort((a, b) => a.rank - b.rank || b.age - a.age);
     refs = due.slice(0, Math.max(1, Math.min(5, Number(body.limit ?? 2)))).map((d) => ({ symbol: d.symbol }));
   }
-  if (!refs.length) return json({ ok: true, results: [], note: body.due ? 'nothing due' : 'no tokens given' });
+  if (!refs.length) { await finish(true, []); return json({ ok: true, results: [], note: body.due ? 'nothing due' : 'no tokens given' }); }
   const results: any[] = [];
   for (const ref of refs) {
     if (Date.now() - started > BUDGET_MS) { results.push({ token: String(ref.symbol ?? ref.address).toUpperCase(), ok: false, error: 'skipped: time budget used, call again' }); continue; }
     results.push(await refresh(ref, opts));
   }
-  return json({ ok: results.every((r) => r.ok), results, ms: Date.now() - started });
+  const ok = results.every((r) => r.ok);
+  await finish(ok, results.map((r) => ({ token: r.token, ok: r.ok, rescanned: r.rescanned ?? 0, unchanged: !!r.unchanged, error: r.error ?? null, gaps: r.gaps ?? null })));
+  return json({ ok, results, ms: Date.now() - started });
 });
