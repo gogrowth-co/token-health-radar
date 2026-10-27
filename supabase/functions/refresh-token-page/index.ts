@@ -156,9 +156,15 @@ async function refresh(ref: any, opts: { maxAge: number; noRescan: boolean; forc
       overall: rc.metadata.overallScore ?? null, scores: rc.metadata.scores, price: fmtPrice(cache?.current_price_usd ?? rc.metadata.currentPrice ?? null),
       mcap: fmtCap(cache?.market_cap_usd ?? rc.metadata.marketCap ?? null), date: at.slice(0, 10),
     };
-    await upload('reports', `${base}/og_1200x630.png`, await svgToPng(ogCardSvg(card), 2), 'image/png');
-    await upload('reports', `${base}/hero_1200x630.png`, await svgToPng(heroBgSvg(card), 2), 'image/png');
-    await upload('reports', `${base}/hero_1080x1920.png`, await svgToPng(storySvg(card), 1), 'image/png');
+    // one image per request: an edge worker's CPU budget covers one rasterisation, not three (WORKER_RESOURCE_LIMIT, 2026-10-27)
+    const renders = await Promise.all((['og', 'hero', 'story'] as const).map(async (kind) => {
+      const r = await fetch(`${URL_}/functions/v1/refresh-token-page`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-internal-secret': Deno.env.get('INTERNAL_API_SECRET') ?? '' },
+        body: JSON.stringify({ render: { kind, base, card } }), signal: AbortSignal.timeout(60_000) }).catch((e) => ({ ok: false, status: 0, json: async () => ({ error: e.message }) }) as any);
+      const b = await r.json().catch(() => ({}));
+      return r.ok && b.ok ? null : `${kind}: ${b.error ?? `HTTP ${r.status}`}`;
+    }));
+    const failed = renders.filter(Boolean);
+    if (failed.length) throw new Error(`score card render failed (${failed.join('; ')}): the current page stays`);
     out.card = rc.hero_image_url;
 
     if (t.report) {
@@ -193,6 +199,14 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return json({ ok: false, error: 'POST only' }, 405);
   if (!(await authorized(req))) return json({ ok: false, error: 'Unauthorized' }, 401);
   const body = await req.json().catch(() => ({}));
+  if (body.render) {   // one card image, called by refresh() for each of the three
+    const { kind, base, card } = body.render;
+    const IMAGES: Record<string, [string, (c: CardInput) => string, number]> = { og: ['og_1200x630.png', ogCardSvg, 2], hero: ['hero_1200x630.png', heroBgSvg, 2], story: ['hero_1080x1920.png', storySvg, 1] };
+    const spec = IMAGES[kind];
+    if (!spec || typeof base !== 'string' || !/^[a-z0-9x]+\/[a-z0-9]+$/i.test(base)) return json({ ok: false, error: 'bad render request' }, 400);
+    try { await upload('reports', `${base}/${spec[0]}`, await svgToPng(spec[1](card), spec[2]), 'image/png'); return json({ ok: true }); }
+    catch (e) { return json({ ok: false, error: (e as Error).message }, 500); }
+  }
   const started = Date.now();
   const maxAge = Number(body.max_age_hours ?? (body.due ? 20 : 24));
   const opts = { maxAge, noRescan: !!body.no_rescan, force: !!body.force };
