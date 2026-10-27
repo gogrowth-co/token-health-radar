@@ -43,10 +43,13 @@ const SLOTS = {
 };
 // 4-byte selectors (keccak256, computed 2026-09-24). Matched as PUSH4 operands (0x63 + selector).
 const SEL = {
-  mint: ['40c10f19', 'a0712d68', 'cc872b66'], // mint(address,uint256), mint(uint256), issue(uint256)
+  mint: ['40c10f19', 'a0712d68', 'cc872b66', '827f32c0'], // mint(address,uint256), mint(uint256), issue(uint256), generateTokens(address,uint256) (MiniMe / Aragon)
   pause: ['8456cb59', '5c975abb'], // pause(), paused()
   blacklist: ['f9f92be4', '404e5129', 'fe575a87', '44337ea1', 'dbac26e9', '0ecb93c0', 'e47d6060', '153b0d1e', '16c02129'],
 };
+// MiniMe tokens (Aragon DAOs: LDO, ANT...) mint through generateTokens, callable only by controller(). Function + live controller is
+// direct on-chain proof the mint authority is active; a zero controller proves nobody can mint (2026-10-27: GoPlus read LDO as not mintable).
+const MINIME = { generateTokens: '827f32c0', controller: 'f77c4791' };
 const DEAD = new Set(['0x0000000000000000000000000000000000000000', '0x000000000000000000000000000000000000dead']);
 
 // Decode instruction boundaries so PUSH operands (constants, addresses, metadata) are not mistaken for opcodes.
@@ -209,6 +212,27 @@ export const evmAdapter: ChainAdapter = {
       if (!inspectionComplete) return unknown('no_data', `${label}: not found in the bytecode that was read, but inspection was incomplete (${problems.join('; ')}), so absence is not established`, [ref], { unit: 'bool' });
       return ok(false, ref, { unit: 'bool', confidence: 'medium', detail: `${label}: none of the known function selectors is in the complete bytecode (token${impls.length ? ' + implementation' : ''}); a differently named function would not be caught, so this needs a second source` });
     };
+
+    // MiniMe mint authority: the controller is read through a different RPC operator than the bytecode, so the verdict rests on two
+    // operators' readings of the chain (the code and the key holder), not on one provider's interpretation.
+    let miniMeMint: Field<boolean> | null = null;
+    if (code.ok && has([MINIME.generateTokens]) && has([MINIME.controller])) {
+      const others = chain.rpcs.filter((r) => `evm_rpc_${chain.goplus}:${r.name}` !== code.ref.source);
+      const ctl = await ctx.rpc<string>(`evm_rpc_${chain.goplus}`, others.length ? others : chain.rpcs, 'eth_call', [{ to: a, data: '0x' + MINIME.controller }, 'latest']);
+      if (ctl.ok && ctl.data && ctl.data !== '0x' && ctl.ref.source !== code.ref.source) {
+        const controller = addrFromWord(ctl.data);
+        const live = !DEAD.has(controller);
+        const ctlRef: SourceRef = { ...ctl.ref, raw_excerpt: { controller } };
+        const codeSel: SourceRef = { ...codeRef, raw_excerpt: { ...codeRef.raw_excerpt, matched: [MINIME.generateTokens, MINIME.controller] } };
+        miniMeMint = {
+          value: live, status: 'ok', confidence: 'high', corroborated: true, unit: 'bool',
+          detail: live
+            ? `MiniMe token: generateTokens(address,uint256) is in the bytecode and controller() is ${controller}: the controller can create new tokens (for an Aragon DAO, through a governance vote)`
+            : 'MiniMe token: generateTokens(address,uint256) is in the bytecode but controller() is the zero address, so nobody can call it',
+          sources: [{ ...codeSel, value: live }, { ...ctlRef, value: live }],
+        };
+      }
+    }
 
     // Owner: owner() or getOwner(); zero/dead = renounced.
     const ownerHex = own.ok && own.data && own.data !== '0x' ? own.data : getOwn.ok && getOwn.data && getOwn.data !== '0x' ? getOwn.data : null;
@@ -373,7 +397,7 @@ export const evmAdapter: ChainAdapter = {
       decimals: decF,
       total_supply_onchain: total,
       token_standard: ok('erc20', code.ref),
-      mint_authority_active: withSourcify(selField(SEL.mint, 'mint'), gpBool(g?.is_mintable, 'is_mintable'), sfCaps.mint, 'mint'),
+      mint_authority_active: miniMeMint ?? withSourcify(selField(SEL.mint, 'mint'), gpBool(g?.is_mintable, 'is_mintable'), sfCaps.mint, 'mint'),
       freeze_authority_active: unknown('not_applicable', 'EVM tokens have no freeze authority; see blacklist and pausable', [], { unit: 'bool' }),
       permanent_delegate: unknown('not_applicable', 'Solana-only concept', [], { unit: 'bool' }),
       transfer_hook: unknown('not_applicable', 'Solana-only concept', [], { unit: 'bool' }),
