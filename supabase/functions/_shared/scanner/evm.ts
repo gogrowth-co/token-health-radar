@@ -256,13 +256,13 @@ export const evmAdapter: ChainAdapter = {
     // ---- honeypot.is (buy/sell simulation)
     let hpBuy: Field<number>, hpSell: Field<number>, hpTransfer: Field<number>, hpFlag: Field<boolean>;
     if (chain.honeypot) {
-      const hp = await ctx.fetchJson('honeypot_is', `https://api.honeypot.is/v2/IsHoneypot?address=${a}&chainID=${chain.goplus}`, { retries: 1, timeoutMs: 15_000, excerpt: (d) => ({ simulationSuccess: d.simulationSuccess, isHoneypot: d.honeypotResult?.isHoneypot, simulationResult: d.simulationResult }) });
+      const hp = await ctx.fetchJson('honeypot_is', `https://api.honeypot.is/v2/IsHoneypot?address=${a}&chainID=${chain.goplus}`, { retries: 1, timeoutMs: 15_000, excerpt: (d) => ({ simulationSuccess: d.simulationSuccess, isHoneypot: d.honeypotResult?.isHoneypot, honeypotReason: d.honeypotResult?.honeypotReason, simulationResult: d.simulationResult, flags: d.summary?.flags, holderAnalysis: d.holderAnalysis ? { holders: d.holderAnalysis.holders, failed: d.holderAnalysis.failed } : undefined }) });
       const sim = hp.ok && hp.data?.simulationSuccess ? hp.data.simulationResult : null;
       const hpN = (v: unknown, label: string): Field<number> => (sim && typeof v === 'number' ? ok(round(v, 3), hp.ref, { unit: 'pct' }) : unknown(hp.ok ? 'no_data' : hp.reason, `honeypot.is: ${label} not simulated`, [hp.ref], { unit: 'pct' }));
       hpBuy = hpN(sim?.buyTax, 'buy tax');
       hpSell = hpN(sim?.sellTax, 'sell tax');
       hpTransfer = hpN(sim?.transferTax, 'transfer tax');
-      hpFlag = hp.ok && typeof hp.data?.honeypotResult?.isHoneypot === 'boolean' ? ok(hp.data.honeypotResult.isHoneypot, hp.ref, { unit: 'bool' }) : unknown(hp.ok ? 'no_data' : hp.reason, 'honeypot.is gave no verdict', [hp.ref], { unit: 'bool' });
+      hpFlag = hp.ok ? honeypotIsVerdict(hp.data, hp.ref) : unknown(hp.reason, 'honeypot.is gave no verdict', [hp.ref], { unit: 'bool' });
     } else {
       hpBuy = hpSell = hpTransfer = unknown('not_supported_on_chain', `honeypot.is does not cover ${chain.name}`, [], { unit: 'pct' });
       hpFlag = unknown('not_supported_on_chain', `honeypot.is does not cover ${chain.name}`, [], { unit: 'bool' });
@@ -444,4 +444,25 @@ function crossCheckOwner(onchain: Field<string>, gpOwner: unknown, gpRef: Source
 export function isRenounced(owner: Field<string>): boolean | null {
   if (!usable(owner)) return null;
   return DEAD.has(owner.value);
+}/**
+ * honeypot.is's verdict, read from its own buy/sell simulation (2026-10-28). Its isHoneypot is also raised by a holder-history heuristic:
+ * FXS, USDe, SKL, ASTER and AITECH came back isHoneypot=true with a successful simulation that sold at 0% tax, flagged only
+ * "low_fail_rate" (FXS: 8 of 444 recent sellers failed, on a $15k Uniswap pool). That disagreed with GoPlus and left Security unscored.
+ * A simulated sell that went through, with every flag at most medium severity, is "not a honeypot" (the flag stays in the detail);
+ * a sell that did not simulate, a sell tax of 100%, or a high-severity flag keeps honeypot.is's own answer.
+ */
+export function honeypotIsVerdict(d: any, ref: SourceRef): Field<boolean> {
+  const verdict = d?.honeypotResult?.isHoneypot;
+  if (typeof verdict !== 'boolean') return unknown('no_data', 'honeypot.is gave no verdict', [ref], { unit: 'bool' });
+  if (!verdict) return ok(false, ref, { unit: 'bool' });
+  const sim = d?.simulationSuccess ? d.simulationResult : null;
+  const sold = sim && typeof sim.sellTax === 'number' && sim.sellTax < 100 && sim.sellGas != null;
+  const flags: any[] = Array.isArray(d?.summary?.flags) ? d.summary.flags : [];
+  const severe = flags.some((f) => !/^(low|medium)$/i.test(String(f?.severity ?? '')));
+  if (!sold || severe) return ok(true, ref, { unit: 'bool', detail: String(d?.honeypotResult?.honeypotReason ?? 'honeypot.is: honeypot') });
+  const h = d?.holderAnalysis;
+  const history = h ? `; ${h.failed} of ${h.holders} recent sellers failed` : '';
+  return ok(false, ref, { unit: 'bool', detail: `honeypot.is simulated a sell at ${sim.sellTax}% tax; its holder-history flag (${flags.map((f) => f.flag).join(', ') || 'none'}${history}) is not a block` });
 }
+
+
