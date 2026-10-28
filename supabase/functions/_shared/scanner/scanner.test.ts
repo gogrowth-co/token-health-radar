@@ -6,7 +6,7 @@ import { assert, assertEquals } from 'jsr:@std/assert@1';
 import { crossCheckBool, crossCheckNumber, ok, unknown, usable as usable_ } from './field.ts';
 import { resetBreakers, ScanContext } from './http.ts';
 import { solanaAdapter } from './solana.ts';
-import { evmAdapter } from './evm.ts';
+import { evmAdapter, honeypotIsVerdict } from './evm.ts';
 import { computeUnlocks, datasetMatches, unlockSlugCandidates } from './market.ts';
 import { applyLabel, buildConcentration, classifyLabel, type Holder } from './holders.ts';
 import { runPlausibility } from './plausibility.ts';
@@ -1423,4 +1423,22 @@ Deno.test('findMainRepository picks the most-starred live repository of an org',
   } finally {
     globalThis.fetch = realFetch;
   }
+});
+
+Deno.test('honeypot.is: a simulated sell that went through outranks its holder-history flag; a failed sell or a severe flag stays a honeypot', () => {
+  const ref = { source: 'honeypot_is', fetched_at: NOW.toISOString() };
+  // FXS on 2026-10-28, as honeypot.is answered it
+  const fxs = { simulationSuccess: true, honeypotResult: { isHoneypot: true, honeypotReason: 'HONEYPOT DETECTED' }, simulationResult: { buyTax: 0, sellTax: 0, transferTax: 0, buyGas: '420588', sellGas: '166150' }, summary: { flags: [{ flag: 'low_fail_rate', severity: 'medium' }] }, holderAnalysis: { holders: '444', failed: '8' } };
+  const v = honeypotIsVerdict(fxs, ref);
+  assertEquals(v.value, false);
+  assert(v.detail!.includes('low_fail_rate; 8 of 444 recent sellers failed'));
+  // the sell did not simulate, or sold at 100% tax, or a high-severity flag: honeypot.is's own answer stands
+  assertEquals(honeypotIsVerdict({ ...fxs, simulationSuccess: false }, ref).value, true);
+  assertEquals(honeypotIsVerdict({ ...fxs, simulationResult: { buyTax: 0, sellTax: 100, buyGas: '1', sellGas: '1' } }, ref).value, true);
+  assertEquals(honeypotIsVerdict({ ...fxs, simulationResult: { buyTax: 0, buyGas: '1' } }, ref).value, true);
+  assertEquals(honeypotIsVerdict({ ...fxs, summary: { flags: [{ flag: 'high_fail_rate', severity: 'high' }] } }, ref).value, true);
+  assertEquals(honeypotIsVerdict({ ...fxs, summary: { flags: [{ flag: 'x', severity: 'critical' }, { flag: 'low_fail_rate', severity: 'low' }] } }, ref).value, true);
+  // a plain "not a honeypot" and no verdict at all
+  assertEquals(honeypotIsVerdict({ honeypotResult: { isHoneypot: false } }, ref).value, false);
+  assertEquals(honeypotIsVerdict({}, ref).status, 'unknown');
 });
