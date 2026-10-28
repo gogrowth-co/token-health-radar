@@ -7,6 +7,7 @@ import { fetchMarketData, fetchUnlocks } from './market.ts';
 import { runPlausibility } from './plausibility.ts';
 import { isValidSolanaAddress, solanaAdapter } from './solana.ts';
 import { EVM_CHAINS, evmAdapter } from './evm.ts';
+import { settleCirculating } from './supply.ts';
 import type { ChainAdapter, DataQuality, LiquidityFacts, ScanRecord } from './types.ts';
 
 // Required for a trustworthy scan (drives scoring; see scoring.ts).
@@ -85,6 +86,8 @@ export async function collectToken(
     if (usedHint) return collectToken(addressInput, chainIdInput, { ...opts, canonicalHint: null });
     throw new AddressResolutionError(`could not confirm a token mint at ${address} (exact case): ${chain.token_standard.reason ?? 'unknown'}${chain.token_standard.detail ? ' - ' + chain.token_standard.detail : ''}. Nothing was written.`);
   }
+  // CoinGecko vs CoinMarketCap dispute: the project's own published supply settles it when we have one (supply.ts).
+  marketFinal.circulating_supply = await settleCirculating(ctx, chainId, address, marketFinal.circulating_supply, chain.decimals);
   const liquidity = await collectLiquidity(ctx, chainId, address, adapter, chain.decimals, marketFinal.price_usd);
   // The raw DeFiLlama dataset is cached in market.ts (24h from its original fetch); time-dependent values are recomputed every scan.
   const unlocks = await fetchUnlocks(ctx, usable(marketFinal.coingecko_id) ? marketFinal.coingecko_id.value : null, usable(marketFinal.name) ? marketFinal.name.value : null, chainId, address, new Date(scannedAt));

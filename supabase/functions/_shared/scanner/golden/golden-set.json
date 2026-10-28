@@ -338,11 +338,9 @@
         "market.circulating_supply": {
           "approx": 766849970,
           "rel": 0.03,
-          "status_any": [
-            "ok",
-            "disputed"
-          ],
-          "evidence": "Re-verified 2026-10-28 after the October quarterly reserve release (18,750,000 LINK): totalSupply() 1,000,000,000 minus the balanceOf() of the 33 non-circulating wallets listed on chain.link/circulating-supply = 766,849,970.42 (public RPC, standalone script); chain.link/circulating-supply and supply.chain.link/supply say 766,849,970.42; CoinGecko 766,849,970.42. CoinMarketCap id 1975 still says 748,099,970.42 (not updated since the release around 2026-10-10), so the scanner may mark the field disputed until CMC books it. Was 748,099,970 (2026-09-24)."
+          "evidence": "Re-verified 2026-10-28 after the October quarterly reserve release (18,750,000 LINK): totalSupply() 1,000,000,000 minus the balanceOf() of the 33 non-circulating wallets listed on chain.link/circulating-supply = 766,849,970.42 (public RPC, standalone script); chain.link/circulating-supply and supply.chain.link/supply say 766,849,970.42; CoinGecko 766,849,970.42. CoinMarketCap id 1975 still says 748,099,970.42 (not updated since the release around 2026-10-10), so the scanner may mark the field disputed until CMC books it. Was 748,099,970 (2026-09-24). Since the supply tiebreaker (2026-10-28) Chainlink's own supply API and wallet sum settle the dispute, so the field must be ok and corroborated.",
+          "status": "ok",
+          "corroborated": true
         },
         "chain.top10_pct": {
           "approx": 31.51,
