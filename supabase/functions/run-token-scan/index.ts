@@ -14,16 +14,15 @@
 // - The SEO snapshot is only regenerated when the caller passes
 //   `regenerate_snapshot: true` (bot-facing HTML is published content).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { fetchTelegramMembers } from '../_shared/apifyAPI.ts';
 import { fetchLunarCrushWithCache } from '../_shared/lunarcrushAPI.ts';
-import { fetchDiscordMemberCount } from '../_shared/discordAPI.ts';
 import { requireAuthOrInternal, getClientIp } from '../_shared/authGuard.ts';
 import { AddressResolutionError, collectToken, normalizeChain, quality } from '../_shared/scanner/collect.ts';
 import { scoreRecord } from '../_shared/scanner/scoring.ts';
 import { buildRows } from '../_shared/scanner/persist.ts';
 import { ok, usable } from '../_shared/scanner/field.ts';
 import { ScanContext } from '../_shared/scanner/http.ts';
-import { collectGithub, communityFields } from '../_shared/scanner/social.ts';
+import { collectGithub, communityFields, EMPTY_REPO } from '../_shared/scanner/social.ts';
+import { bestCommunity, gatherLinks, githubCandidates, type LinkSearch } from '../_shared/scanner/links.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,6 +31,25 @@ const corsHeaders = {
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
 const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+
+// The repository Development reads: the first candidate, in trust order, whose repository exists, is not empty and was pushed in the last year;
+// if none was, the first one that exists (a stale repository is a reading too); none found names every place checked.
+async function bestGithub(ctx: ScanContext, urls: string[], search: LinkSearch) {
+  let first: { facts: Awaited<ReturnType<typeof collectGithub>>; url: string } | null = null;
+  for (const url of urls.slice(0, 3)) {
+    const facts = await collectGithub(ctx, url);
+    if (!usable(facts.repo)) continue;
+    first ??= { facts, url };
+    if (usable(facts.last_push_age_days) && facts.last_push_age_days.value < 365 && facts.commits_30d.detail !== EMPTY_REPO) return { facts, url };
+  }
+  if (first) return first;
+  const facts = await collectGithub(ctx, undefined);
+  if (!urls.length) {
+    const where = `checked: ${search.read.join(', ')}${search.unread.length ? `; could not read ${search.unread.map((u) => `${u.source} (${u.reason})`).join(', ')}` : ''}`;
+    for (const k of Object.keys(facts) as Array<keyof typeof facts>) if (!usable(facts[k] as any)) (facts[k] as any) = { ...(facts[k] as any), detail: `no GitHub repository listed anywhere (${where})` };
+  }
+  return { facts, url: null as string | null };
+}
 const ANON_REUSE_MS = 60 * 60 * 1000;
 const ANON_PER_IP_HOUR = Number(Deno.env.get('ANON_SCANS_PER_IP_HOUR') ?? 10);
 const ANON_DAILY_CAP = Number(Deno.env.get('ANON_SCANS_DAILY_CAP') ?? 300);
@@ -100,28 +118,31 @@ Deno.serve(async (req) => {
       return json({ success: false, error: (e as Error).message, error_code: unresolved ? 'address_not_resolved' : 'invalid_request', request_id: requestId }, unresolved ? 422 : 400);
     }
 
-    // Social + GitHub inputs for the community/development dimensions (unchanged providers).
-    let links = usable(rec.market.links) ? rec.market.links.value : {};
-    // Verified corrections for tokens whose CoinGecko links point at the wrong channels.
-    // A lookup failure (or no row) keeps the CoinGecko links; the scan never fails on it.
+    // Social + GitHub inputs (2026-10-27): links are gathered from the verified overrides, CoinGecko, CoinMarketCap, DefiLlama and the
+    // project's website and checked live on every scan (links.ts); LunarCrush is read from its structured coin list by contract address.
+    const links = usable(rec.market.links) ? rec.market.links.value : {};
+    // Verified corrections for tokens whose listed links point at the wrong channels: the first candidate of their kind.
     const { data: ov } = await supabase.from('token_social_overrides').select('telegram, discord, twitter, github, website, source_url').eq('token_address', rec.address_key).eq('chain_id', chainId).maybeSingle();
-    if (ov) {
-      const fix = Object.fromEntries(Object.entries({ telegram: ov.telegram, discord: ov.discord, twitter: ov.twitter, github: ov.github, website: ov.website }).filter(([, v]) => !!v));
-      links = { ...links, ...fix };
-      const ref = { source: 'social_override', fetched_at: new Date().toISOString(), raw_excerpt: { source_url: ov.source_url, fields: Object.keys(fix) } };
-      rec.market.links = ok(links, [...(rec.market.links.sources ?? []), ref]);
-    }
     const symbol = usable(rec.market.symbol) ? rec.market.symbol.value : null;
-    const [lunar, telegram, discord, github] = await Promise.all([
-      symbol ? fetchLunarCrushWithCache(symbol, rec.address_key, chainId, supabase, !!force_refresh).catch(() => null) : Promise.resolve(null),
-      links.telegram ? fetchTelegramMembers(links.telegram).catch(() => ({ members: null })) : Promise.resolve({ members: null }),
-      links.discord ? fetchDiscordMemberCount(links.discord).catch(() => null) : Promise.resolve(null),
-      collectGithub(ctx, links.github),
+    const addressForLookup = usable(rec.address_canonical) ? rec.address_canonical.value : rec.address_key;
+    const search = await gatherLinks(ctx, {
+      address: addressForLookup, coingeckoId: usable(rec.market.coingecko_id) ? rec.market.coingecko_id.value : null, website: links.website ?? null,
+      base: { github: links.github, discord: links.discord, telegram: links.telegram }, overrides: ov ?? undefined,
+    });
+    const [lunar, telegram, discord, githubPick] = await Promise.all([
+      fetchLunarCrushWithCache(symbol ?? '', addressForLookup, chainId, supabase).catch(() => null),
+      bestCommunity(ctx, search, 'telegram'),
+      bestCommunity(ctx, search, 'discord'),
+      bestGithub(ctx, githubCandidates(search), search),
     ]);
+    const github = githubPick.facts;
+    // the links the scan actually used, with every source it read
+    rec.market.links = ok({ ...links, telegram: telegram.url ?? undefined, discord: discord.url ?? undefined, github: githubPick.url ?? undefined },   // only live links; dead ones are named in the community fields
+      [...(usable(rec.market.links) ? rec.market.links.sources ?? [] : []), { source: 'link_search', fetched_at: rec.scanned_at, raw_excerpt: { read: search.read, unread: search.unread, candidates: search.candidates.length, override: ov?.source_url ?? null } }]);
     // Community and development are Fields like everything else: a failed call is unknown with a reason, not 0 (Codex finding 8).
     rec.social = {
       github,
-      community: communityFields({ symbol, lunar, discordLinked: !!links.discord, discordMembers: discord ?? null, telegramLinked: !!links.telegram, telegramMembers: telegram?.members ?? null }, rec.scanned_at),
+      community: communityFields({ lunar, watchlist: rec.market.watchlist_users, discord: discord.field, telegram: telegram.field }, rec.scanned_at),
     };
     rec.quality = quality(rec, ctx, rec.quality.flags);
     const score = scoreRecord(rec);

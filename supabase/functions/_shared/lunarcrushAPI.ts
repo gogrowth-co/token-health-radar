@@ -1,6 +1,12 @@
-// LunarCrush integration via the free lunarcrush.ai markdown endpoint
-// Parses the LLM-optimized markdown response to extract social metrics
-
+// LunarCrush social metrics from the structured API our plan includes (2026-10-27). The old reader pattern-matched the text summary
+// at lunarcrush.ai/topic/<symbol>: social dominance and trend came back empty in 70-78% of scans, and a symbol can name several coins.
+//
+// - GET /api4/public/coins/list/v1 (sorted by market cap, 1000 a page): sentiment, social_dominance, galaxy_score, alt_rank,
+//   interactions_24h for every coin, each with its contract addresses, so a token is matched by ADDRESS, never by symbol.
+// - GET /api4/public/topic/<symbol>/time-series/v1?bucket=day&interval=1w: 8 daily points; the trend compares the last 3 days of
+//   interactions with the 4 before, and is used only when the series belongs to the same coin (config.asset = coins::<id>).
+// Read fresh on every scan (Gabriel: no stale data); a list page is shared for 10 minutes inside one isolate. The single-coin and
+// topic endpoints answer 402 on our plan.
 export interface LunarCrushData {
   galaxy_score: number | null;
   alt_rank: number | null;
@@ -10,211 +16,87 @@ export interface LunarCrushData {
   contributors_active: number | null;
   social_dominance: number | null;
   trend: string | null;
-  fetched_at?: string; // when the numbers were ACTUALLY obtained (a cache hit keeps its original time)
+  fetched_at?: string;
+  coin_id?: number | null;
+  lookup?: 'ok' | 'not_listed' | 'failed';
+  detail?: string;
 }
 
-/**
- * Fetch social metrics from the free lunarcrush.ai/topic endpoint.
- * Returns markdown which we parse for key metrics.
- */
-export async function fetchLunarCrush(tokenSymbol: string): Promise<LunarCrushData | null> {
-  if (!tokenSymbol || tokenSymbol === 'UNKNOWN' || tokenSymbol === 'SPL') {
-    console.log(`[LUNARCRUSH] Invalid symbol "${tokenSymbol}" — skipping`);
-    return null;
+const BASE = 'https://lunarcrush.com/api4/public';
+const PAGE_TTL_MS = 10 * 60 * 1000;
+const MAX_PAGES = 6;   // 5,537 coins on 2026-10-27
+const pages = new Map<number, { at: number; rows: any[] }>();
+
+async function getJson(url: string, key: string, tries = 3): Promise<{ ok: boolean; status: number; data?: any }> {
+  let status = 0;
+  for (let i = 0; i < tries; i++) {
+    if (i) await new Promise((r) => setTimeout(r, i * 4000));   // LunarCrush answers 429 after a burst of calls in one minute
+    try {
+      const r = await fetch(url, { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(12_000) });
+      status = r.status;
+      if (r.ok) return { ok: true, status, data: await r.json() };
+      await r.body?.cancel();
+      if (r.status !== 429 && r.status < 500) break;
+    } catch { status = 0; }
   }
-
-  const symbolLower = tokenSymbol.toLowerCase();
-  const url = `https://lunarcrush.ai/topic/${symbolLower}`;
-
-  console.log(`[LUNARCRUSH] Fetching from: ${url}`);
-
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { 'Accept': 'text/plain' }
-    });
-
-    clearTimeout(timeout);
-
-    if (!res.ok) {
-      console.log(`[LUNARCRUSH] Failed: ${res.status}`);
-      return null;
-    }
-
-    const markdown = await res.text();
-
-    if (!markdown || markdown.length < 100) {
-      console.log(`[LUNARCRUSH] Empty or too-short response`);
-      return null;
-    }
-
-    // Helper to parse a value, returning null for redacted [---] patterns
-    const parseVal = (match: RegExpMatchArray | null): number | null => {
-      if (!match) return null;
-      const raw = match[1].trim();
-      if (/^\[[-]+\]$/.test(raw)) return null;
-      const cleaned = raw.replace(/,/g, '').replace(/%/g, '');
-      const num = parseFloat(cleaned);
-      return isNaN(num) ? null : num;
-    };
-
-    // Sentiment: "### Sentiment: 87%"
-    const sentiment = parseVal(markdown.match(/### Sentiment:\s*([\d.,]+%|\[[-]+\])/));
-
-    // AltRank: "AltRank #511"
-    const altRankMatch = markdown.match(/AltRank\s*#(\d+)/);
-    const altRank = altRankMatch ? parseInt(altRankMatch[1], 10) : null;
-
-    // Galaxy Score: "### Galaxy Score: 65" or "### Galaxy Score: [-----]"
-    const galaxyScoreMatch = markdown.match(/### Galaxy Score:\s*(.+)/);
-    let galaxyScore: number | null = null;
-    if (galaxyScoreMatch) {
-      const val = galaxyScoreMatch[1].trim();
-      if (!/^\[[-]+\]$/.test(val)) {
-        const parsed = parseFloat(val);
-        if (!isNaN(parsed)) galaxyScore = parsed;
-      }
-    }
-
-    // Engagements: "### Engagements: 123,456 (24h)"
-    const engagementsMatch = markdown.match(/### Engagements:\s*(.+?)\s*\(24h\)/);
-    let interactions24h: number | null = null;
-    if (engagementsMatch) {
-      const val = engagementsMatch[1].trim();
-      if (!/^\[[-]+\]$/.test(val)) {
-        const parsed = parseFloat(val.replace(/,/g, ''));
-        if (!isNaN(parsed)) interactions24h = parsed;
-      }
-    }
-
-    // Mentions: "### Mentions: 456 (24h)"
-    const mentionsMatch = markdown.match(/### Mentions:\s*(.+?)\s*\(24h\)/);
-    let postsActive: number | null = null;
-    if (mentionsMatch) {
-      const val = mentionsMatch[1].trim();
-      if (!/^\[[-]+\]$/.test(val)) {
-        const parsed = parseFloat(val.replace(/,/g, ''));
-        if (!isNaN(parsed)) postsActive = parsed;
-      }
-    }
-
-    // Creators: "### Creators: 234 (24h)"
-    const creatorsMatch = markdown.match(/### Creators:\s*(.+?)\s*\(24h\)/);
-    let contributorsActive: number | null = null;
-    if (creatorsMatch) {
-      const val = creatorsMatch[1].trim();
-      if (!/^\[[-]+\]$/.test(val)) {
-        const parsed = parseFloat(val.replace(/,/g, ''));
-        if (!isNaN(parsed)) contributorsActive = parsed;
-      }
-    }
-
-    // Social Dominance: "### Social Dominance: 0.534%"
-    const socialDomMatch = markdown.match(/### Social Dominance:\s*([\d.,]+%|\[[-]+\])/);
-    const socialDominance = parseVal(socialDomMatch);
-
-    // Trend: infer from multiple signals in the markdown
-    let trend: string | null = null;
-    
-    // 1. Explicit "Trend:" header
-    const trendMatch = markdown.match(/(?:###\s*)?Trend[:\s]+(\w+)/i);
-    if (trendMatch) {
-      const t = trendMatch[1].toLowerCase();
-      if (['up', 'bullish', 'rising'].includes(t)) trend = 'up';
-      else if (['down', 'bearish', 'falling'].includes(t)) trend = 'down';
-      else if (['flat', 'neutral', 'stable'].includes(t)) trend = 'flat';
-    }
-    
-    // 2. Sentiment delta: "sentiment is up X%" or "sentiment is down X%"
-    if (!trend) {
-      const sentDelta = markdown.match(/sentiment\s+is\s+(up|down)\s+[\d.]+%/i);
-      if (sentDelta) {
-        trend = sentDelta[1].toLowerCase() === 'up' ? 'up' : 'down';
-      }
-    }
-    
-    // 3. Broader keyword inference
-    if (!trend) {
-      const lower = markdown.toLowerCase();
-      if (lower.includes('trending up') || lower.includes('bullish trend') || lower.includes('positive social sentiment')) trend = 'up';
-      else if (lower.includes('trending down') || lower.includes('bearish trend') || lower.includes('negative social sentiment')) trend = 'down';
-    }
-
-    console.log(`[LUNARCRUSH] Parsed: sentiment=${sentiment}, altRank=${altRank}, galaxyScore=${galaxyScore}, interactions=${interactions24h}, posts=${postsActive}, contributors=${contributorsActive}, socialDominance=${socialDominance}, trend=${trend}`);
-
-    // If we got nothing at all, return null
-    if (sentiment === null && altRank === null && galaxyScore === null && 
-        interactions24h === null && postsActive === null && contributorsActive === null &&
-        socialDominance === null) {
-      console.log(`[LUNARCRUSH] No parseable data for ${symbolLower}`);
-      return null;
-    }
-
-    return {
-      galaxy_score: galaxyScore,
-      alt_rank: altRank,
-      sentiment,
-      interactions_24h: interactions24h,
-      posts_active: postsActive,
-      contributors_active: contributorsActive,
-      social_dominance: socialDominance,
-      trend
-    };
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : String(error);
-    console.error(`[LUNARCRUSH] Error: ${msg}`);
-    return null;
-  }
+  return { ok: false, status };
 }
 
-/**
- * Fetch LunarCrush data with 6-hour cache check.
- */
-export async function fetchLunarCrushWithCache(
-  tokenSymbol: string,
-  tokenAddress: string,
-  chainId: string,
-  supabase: any,
-  forceRefresh: boolean = false
-): Promise<LunarCrushData | null> {
-  try {
-    const { data: cached } = await supabase
-      .from('token_community_cache')
-      .select('galaxy_score, alt_rank, sentiment, interactions_24h, posts_active, contributors_active, social_dominance, trend, lunarcrush_fetched_at')
-      .eq('token_address', tokenAddress)
-      .eq('chain_id', chainId)
-      .single();
+async function listPage(page: number, key: string): Promise<any[] | null> {
+  const hit = pages.get(page);
+  if (hit && Date.now() - hit.at < PAGE_TTL_MS) return hit.rows;
+  // the default order is rank 1 first (the API's 'desc' flag reads backwards)
+  const r = await getJson(`${BASE}/coins/list/v1?limit=1000&page=${page}&sort=market_cap_rank`, key);
+  if (!r.ok) return null;
+  const rows = Array.isArray(r.data?.data) ? r.data.data : [];
+  pages.set(page, { at: Date.now(), rows });
+  return rows;
+}
 
-    if (cached?.lunarcrush_fetched_at && !forceRefresh) {
-      const fetchedAt = new Date(cached.lunarcrush_fetched_at);
-      const ageHours = (Date.now() - fetchedAt.getTime()) / (1000 * 60 * 60);
-      
-      if (ageHours >= 0 && ageHours < 6) { // a cache timestamp in the future is never 'fresh'
-        console.log(`[LUNARCRUSH] Using cached data (${ageHours.toFixed(1)}h old) for ${tokenSymbol}`);
-        return {
-          galaxy_score: cached.galaxy_score,
-          alt_rank: cached.alt_rank,
-          sentiment: cached.sentiment,
-          interactions_24h: cached.interactions_24h,
-          posts_active: cached.posts_active,
-          contributors_active: cached.contributors_active,
-          social_dominance: cached.social_dominance,
-          trend: cached.trend,
-          fetched_at: cached.lunarcrush_fetched_at
-        };
-      }
-    }
+function trendOf(points: any[]): string | null {
+  const v = points.map((p) => Number(p?.interactions)).filter((n) => Number.isFinite(n));
+  if (v.length < 7) return null;
+  const recent = v.slice(-3).reduce((s, n) => s + n, 0) / 3;
+  const before = v.slice(-7, -3).reduce((s, n) => s + n, 0) / 4;
+  if (!(before > 0)) return null;
+  const change = recent / before - 1;
+  return change > 0.1 ? 'up' : change < -0.1 ? 'down' : 'flat';
+}
 
-    console.log(`[LUNARCRUSH] Cache miss for ${tokenSymbol} — fetching fresh data`);
-    const fresh = await fetchLunarCrush(tokenSymbol);
-    return fresh ? { ...fresh, fetched_at: new Date().toISOString() } : null;
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : String(error);
-    console.error(`[LUNARCRUSH] Cache check error: ${msg} — fetching fresh`);
-    const fresh = await fetchLunarCrush(tokenSymbol);
-    return fresh ? { ...fresh, fetched_at: new Date().toISOString() } : null;
+/** The token's LunarCrush reading, matched by contract address. `lookup` says whether it was found, absent, or not answered. */
+export async function fetchLunarCrushCoin(address: string, symbol: string | null): Promise<LunarCrushData> {
+  const empty = (lookup: LunarCrushData['lookup'], detail: string): LunarCrushData => ({ galaxy_score: null, alt_rank: null, sentiment: null, interactions_24h: null, posts_active: null, contributors_active: null, social_dominance: null, trend: null, fetched_at: new Date().toISOString(), coin_id: null, lookup, detail });
+  const key = Deno.env.get('LUNARCRUSH_API_KEY');
+  if (!key) return empty('failed', 'LUNARCRUSH_API_KEY not configured');
+  const addr = address.toLowerCase();
+  let coin: any = null;
+  for (let page = 0; page < MAX_PAGES && !coin; page++) {
+    const rows = await listPage(page, key);
+    if (!rows) return empty('failed', `LunarCrush coin list page ${page} did not answer`);
+    coin = rows.find((c) => (c.blockchains ?? []).some((b: any) => String(b?.address ?? '').toLowerCase() === addr)) ?? null;
+    if (rows.length < 1000) break;
   }
+  if (!coin) return empty('not_listed', 'LunarCrush does not track this contract');
+  let trend: string | null = null, contributors: number | null = null, posts: number | null = null;
+  if (symbol) {
+    const ts = await getJson(`${BASE}/topic/${encodeURIComponent(symbol.toLowerCase())}/time-series/v1?bucket=day&interval=1w`, key, 2);
+    if (ts.ok && new RegExp(`^coins:+${coin.id}$`).test(String(ts.data?.config?.asset ?? ''))) {   // the API writes 'coins::3154'
+      const pts = Array.isArray(ts.data.data) ? ts.data.data : [];
+      trend = trendOf(pts);
+      const last = pts[pts.length - 1];
+      contributors = Number.isFinite(Number(last?.contributors_active)) ? Number(last.contributors_active) : null;
+      posts = Number.isFinite(Number(last?.posts_active)) ? Number(last.posts_active) : null;
+    }
+  }
+  const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+  return {
+    galaxy_score: num(coin.galaxy_score), alt_rank: num(coin.alt_rank), sentiment: num(coin.sentiment), interactions_24h: num(coin.interactions_24h),
+    posts_active: posts, contributors_active: contributors, social_dominance: num(coin.social_dominance), trend,
+    fetched_at: new Date().toISOString(), coin_id: coin.id ?? null, lookup: 'ok',
+  };
+}
+
+/** Kept for run-token-scan's call site: always a fresh reading (the 6-hour cache reuse is gone). */
+export async function fetchLunarCrushWithCache(tokenSymbol: string, tokenAddress: string, _chainId: string, _supabase: unknown, _forceRefresh = false): Promise<LunarCrushData | null> {
+  return await fetchLunarCrushCoin(tokenAddress, tokenSymbol);
 }

@@ -20,7 +20,10 @@ export type ReasonCode =
   | 'sources_disagree' // two independent sources differ beyond tolerance
   | 'failed_plausibility' // value failed a plausibility rule
   | 'not_corroborated' // a single source answered; the scoring rule requires two independent sources
-  | 'missing_input'; // a derived field could not be computed because an input is null
+  | 'missing_input' // a derived field could not be computed because an input is null
+  | 'link_dead' // the listed link points to nothing usable: an expired invite, a person or bot instead of a group (2026-10-27)
+  | 'blocked' // the site refuses automated reads (403, bot wall): not an outage, retrying does not help
+  | 'not_published'; // the project does not publish this data (e.g. an unlock schedule) in any source we read
 
 export type Confidence = 'high' | 'medium' | 'low';
 
