@@ -10,11 +10,11 @@ import { evmAdapter } from './evm.ts';
 import { computeUnlocks, datasetMatches, unlockSlugCandidates } from './market.ts';
 import { applyLabel, buildConcentration, classifyLabel, type Holder } from './holders.ts';
 import { runPlausibility } from './plausibility.ts';
-import { bestCommunity, checkDiscord, checkTelegram, extractLinks } from './links.ts';
+import { bestCommunity, checkDiscord, checkTelegram, extractLinks, gatherLinks } from './links.ts';
 import { AddressResolutionError, collectLiquidity, collectToken, inferNoUnlocks } from './collect.ts';
 import { fetchUnlocks, resetUnlockCache } from './market.ts';
 import { buildRows, vestingText } from './persist.ts';
-import { collectGithub, communityFields } from './social.ts';
+import { collectGithub, communityFields, EMPTY_REPO } from './social.ts';
 import { scoreRecord } from './scoring.ts';
 import type { ScanRecord } from './types.ts';
 
@@ -26,7 +26,7 @@ function stubFetch(handler: (url: string, body: any) => { status?: number; json?
     const url = String(input instanceof Request ? input.url : input);
     const body = init?.body ? JSON.parse(String(init.body)) : null;
     const r = handler(url, body);
-    return Promise.resolve(new Response(r.text ?? JSON.stringify(r.json ?? {}), { status: r.status ?? 200 }));
+    return Promise.resolve(new Response(r.status === 204 ? null : r.text ?? JSON.stringify(r.json ?? {}), { status: r.status ?? 200 }));
   }) as typeof fetch;
 }
 const noCommunity = { lunar: null, watchlist: unknown('no_data'), discord: unknown('not_found'), telegram: unknown('not_found') } as any;
@@ -690,6 +690,52 @@ Deno.test('github: healthy repo scores from real values; a future pushed_at earn
   } finally {
     restore();
     Deno.env.delete('GITHUB_API_KEY');
+  }
+});
+
+Deno.test('github: an empty repository reads as zero commits and contributors, not a provider failure', async () => {
+  Deno.env.set('GITHUB_API_KEY', 'test-key-not-real');
+  stubFetch((url) => {
+    if (/\/commits\?/.test(url)) return { status: 409, json: { message: 'Git Repository is empty.', status: '409' } };
+    if (/\/contributors\?/.test(url)) return { status: 204 };
+    if (/\/issues\?/.test(url)) return { json: [] };
+    return { json: { stargazers_count: 3, forks_count: 0, pushed_at: '2026-10-20T00:00:00Z', archived: false, fork: false, created_at: '2025-01-01T00:00:00Z' } };
+  });
+  try {
+    const gh = await collectGithub(new ScanContext(), 'https://github.com/acme/empty', NOW);
+    assertEquals(gh.commits_30d.value, 0);
+    assertEquals(gh.commits_30d.status, 'ok');
+    assertEquals(gh.commits_30d.detail, EMPTY_REPO);
+    assertEquals(gh.contributors_count.value, 0);
+  } finally {
+    restore();
+    Deno.env.delete('GITHUB_API_KEY');
+  }
+  // a 409 for any other reason is still a failure
+  Deno.env.set('GITHUB_API_KEY', 'test-key-not-real');
+  stubFetch((url) => (/\/commits\?/.test(url) ? { status: 409, json: { message: 'Conflict' } } : /\/contributors\?|\/issues\?/.test(url) ? { json: [] } : { json: { stargazers_count: 3, pushed_at: '2026-10-20T00:00:00Z' } }));
+  try {
+    assertEquals((await collectGithub(new ScanContext(), 'https://github.com/acme/x', NOW)).commits_30d.reason, 'provider_failed');
+  } finally {
+    restore();
+    Deno.env.delete('GITHUB_API_KEY');
+  }
+});
+
+Deno.test('links: CoinMarketCap 400 for an unlisted contract counts as read; a 500 stays unread', async () => {
+  Deno.env.set('COINMARKETCAP_API_KEY', 'test-key-not-real');
+  const run = async (cmc: { status: number; json: unknown }) => {
+    stubFetch((url) => (url.includes('coinmarketcap') ? cmc : url.includes('llama.fi') ? { json: [] } : { status: 404, text: 'nope' }));
+    try { return await gatherLinks(new ScanContext(), { address: '0xabc', coingeckoId: null, base: {} }); } finally { restore(); }
+  };
+  try {
+    const unlisted = await run({ status: 400, json: { status: { error_code: 400, error_message: "Invalid value for 'slug': 'null'" } } });
+    assert(unlisted.read.includes('coinmarketcap'));
+    assert(!unlisted.unread.some((u) => u.source === 'coinmarketcap'));
+    const down = await run({ status: 500, json: {} });
+    assert(down.unread.some((u) => u.source === 'coinmarketcap'));
+  } finally {
+    Deno.env.delete('COINMARKETCAP_API_KEY');
   }
 });
 

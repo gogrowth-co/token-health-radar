@@ -7,6 +7,8 @@ import { type Field, ok, type SourceRef, unknown } from './field.ts';
 import type { ScanContext } from './http.ts';
 import { findMainRepository } from '../githubAPI.ts';
 
+export const EMPTY_REPO = 'the repository is empty (no commits)';
+
 export interface GithubFacts {
   repo: Field<string>; // owner/repo actually read
   stars: Field<number>;
@@ -82,7 +84,10 @@ export async function collectGithub(ctx: ScanContext, githubUrl: string | undefi
   const d = meta.data;
   const pushed = typeof d.pushed_at === 'string' && Number.isFinite(Date.parse(d.pushed_at)) ? d.pushed_at : null;
   const futurePush = pushed !== null && Date.parse(pushed) > now.getTime() + FUTURE_SKEW_MS;
-  const listOf = (r: typeof commits, what: string): { ok: true; items: any[] } | { ok: false; f: Field<any> } => (r.ok && Array.isArray(r.data) ? { ok: true, items: r.data } : { ok: false, f: fail(r, what) });
+  // An empty repository is an answer, not a failure: GitHub says 409 "Git Repository is empty" for commits and 204 No Content for
+  // contributors (ATH, 2026-10-28: read as provider_failed, so its page was held back and rescanned every hour).
+  const emptyRepo = (r: typeof commits) => !r.ok && (r.status === 204 || (r.status === 409 && /repository is empty/i.test(r.detail ?? '')));
+  const listOf = (r: typeof commits, what: string): { ok: true; items: any[] } | { ok: false; f: Field<any> } => (r.ok && Array.isArray(r.data) ? { ok: true, items: r.data } : emptyRepo(r) ? { ok: true, items: [] } : { ok: false, f: fail(r, what) });
   const c = listOf(commits, 'commits');
   const i = listOf(issues, 'issues');
   const k = listOf(contributors, 'contributors');
@@ -93,7 +98,7 @@ export async function collectGithub(ctx: ScanContext, githubUrl: string | undefi
     repo: repoF,
     stars: ok(d.stargazers_count, meta.ref, { unit: 'stars' }),
     forks: typeof d.forks_count === 'number' ? ok(d.forks_count, meta.ref, { unit: 'forks' }) : unknown('no_data', 'no forks_count', [meta.ref]),
-    commits_30d: c.ok ? ok(c.items.length, commits.ref, { unit: 'commits', detail: c.items.length >= 100 ? 'at least 100 (first page)' : undefined }) : c.f,
+    commits_30d: c.ok ? ok(c.items.length, commits.ref, { unit: 'commits', detail: emptyRepo(commits) ? EMPTY_REPO : c.items.length >= 100 ? 'at least 100 (first page)' : undefined }) : c.f,
     contributors_count: k.ok ? ok(k.items.length, contributors.ref, { unit: 'contributors', detail: k.items.length >= 100 ? 'at least 100 (first page)' : undefined }) : k.f,
     // No issues at all is no evidence about issue handling (it used to be worth 15 points), so it is unknown, not scored.
     issue_close_ratio: i.ok ? (closed + open > 0 ? ok(closed / (closed + open), issues.ref, { unit: 'ratio', detail: `sample metric: ${closed} closed / ${open} open among the latest ${i.items.length} issue items` }) : unknown('no_data', 'repository has no issues to judge', [issues.ref])) : i.f,

@@ -53,7 +53,8 @@ export async function gatherLinks(ctx: ScanContext, a: {
   // CoinMarketCap: the project's own listed chat, source code and website
   if (cmcKey) tasks.push((async () => {
     const r = await ctx.fetchJson('coinmarketcap_info', `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?address=${encodeURIComponent(a.address)}`, { headers: { 'X-CMC_PRO_API_KEY': cmcKey }, retries: 2 });
-    if (!r.ok) { if (r.reason !== 'not_found') unread.push({ source: 'coinmarketcap', reason: r.reason }); else read.push('coinmarketcap'); return; }
+    // CoinMarketCap answers 400 "Invalid value for 'slug'" for a contract it does not list (AITECH on BNB, 2026-10-28): an answer, not a failure
+    if (!r.ok) { if (r.reason !== 'not_found' && r.status !== 400) unread.push({ source: 'coinmarketcap', reason: r.reason }); else read.push('coinmarketcap'); return; }
     read.push('coinmarketcap');
     for (const coin of Object.values<any>(r.data?.data ?? {})) {
       const urls = coin?.urls ?? {};

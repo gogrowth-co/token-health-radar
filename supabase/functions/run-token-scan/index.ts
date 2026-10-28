@@ -21,7 +21,7 @@ import { scoreRecord } from '../_shared/scanner/scoring.ts';
 import { buildRows } from '../_shared/scanner/persist.ts';
 import { ok, usable } from '../_shared/scanner/field.ts';
 import { ScanContext } from '../_shared/scanner/http.ts';
-import { collectGithub, communityFields } from '../_shared/scanner/social.ts';
+import { collectGithub, communityFields, EMPTY_REPO } from '../_shared/scanner/social.ts';
 import { bestCommunity, gatherLinks, githubCandidates, type LinkSearch } from '../_shared/scanner/links.ts';
 
 const corsHeaders = {
@@ -32,7 +32,7 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 
 const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
-// The repository Development reads: the first candidate, in trust order, whose repository exists and was pushed in the last year;
+// The repository Development reads: the first candidate, in trust order, whose repository exists, is not empty and was pushed in the last year;
 // if none was, the first one that exists (a stale repository is a reading too); none found names every place checked.
 async function bestGithub(ctx: ScanContext, urls: string[], search: LinkSearch) {
   let first: { facts: Awaited<ReturnType<typeof collectGithub>>; url: string } | null = null;
@@ -40,7 +40,7 @@ async function bestGithub(ctx: ScanContext, urls: string[], search: LinkSearch) 
     const facts = await collectGithub(ctx, url);
     if (!usable(facts.repo)) continue;
     first ??= { facts, url };
-    if (usable(facts.last_push_age_days) && facts.last_push_age_days.value < 365) return { facts, url };
+    if (usable(facts.last_push_age_days) && facts.last_push_age_days.value < 365 && facts.commits_30d.detail !== EMPTY_REPO) return { facts, url };
   }
   if (first) return first;
   const facts = await collectGithub(ctx, undefined);
