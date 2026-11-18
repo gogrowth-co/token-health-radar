@@ -74,7 +74,7 @@ async function fetchTokenReport(symbol: string): Promise<TokenReportResponse> {
   // Load report data
   const { data: reportResult, error: reportError } = await supabase
     .from('token_reports')
-    .select('*')
+    .select('id, token_address, chain_id, token_symbol, token_name, report_content, created_at, updated_at')
     .eq('token_symbol', normalizedSymbol) // Use exact match since DB triggers enforce lowercase
     .maybeSingle();
 

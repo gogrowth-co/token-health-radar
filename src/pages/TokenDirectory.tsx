@@ -106,7 +106,7 @@ export default function TokenDirectory() {
         // First, fetch all token reports
         const { data: reports, error: reportsError } = await supabase
           .from('token_reports')
-          .select('*')
+          .select('id, token_address, chain_id, token_symbol, token_name, report_content, created_at, updated_at')
           .order('created_at', { ascending: false });
 
         if (reportsError) {
