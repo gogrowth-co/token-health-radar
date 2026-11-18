@@ -1,3 +1,4 @@
+import { track } from "@/lib/analytics";
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
@@ -129,6 +130,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       console.log('Auth signup successful');
+      track('sign_up', { method: 'email' });
       toast({
         title: "Registration successful",
         description: "Please check your email for the confirmation link.",

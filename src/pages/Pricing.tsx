@@ -1,3 +1,4 @@
+import { trackBeginCheckout } from "@/lib/analytics";
 
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
@@ -57,6 +58,7 @@ export default function Pricing() {
     try {
       console.log(`Creating checkout session for ${planType} plan with priceId: ${priceId}`);
       
+      trackBeginCheckout(planType, priceId);
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           priceId,
