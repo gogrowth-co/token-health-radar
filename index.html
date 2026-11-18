@@ -35,6 +35,13 @@
         }
         gtag('set', 'ads_data_redaction', true);
         if (choice === 'deny' || (!choice && tzInside)) denyClarity();
+        // a refuser's page starts clean: TikTok rewrites its session cookies (ttcsid) after Decline on the page where it ran, so any
+        // tool cookie still here is removed before a tag loads (src/lib/consent.ts keeps the same list)
+        if (choice === 'deny') document.cookie.split('; ').forEach(function (c) {
+          var n = c.split('=')[0], h = location.hostname.replace(/^www\./, '');
+          if (/^(_ga|_gid|_gcl|_clck|_clsk|_ttp|_rdt_uuid|_rdt_em|_twclid|_tt_enable_cookie|ttcsid|muc_ads|personalization_id|guest_id)/.test(n))
+            ['', '; Domain=.' + h, '; Domain=' + h].forEach(function (d) { document.cookie = n + '=; Max-Age=0; Path=/' + d; });
+        });
         else if (choice === 'allow') window.clarity('consentv2', { ad_Storage: 'granted', analytics_Storage: 'granted' });
         // Cloudflare's country for the visitors the time zone missed (a European IP on a device set elsewhere). The loader waits
         // for it (at most 1.5 s), so the denied state is queued before GTM or Clarity run.
