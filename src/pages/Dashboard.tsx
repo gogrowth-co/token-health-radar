@@ -1,3 +1,4 @@
+import { trackPurchaseOnce } from "@/lib/analytics";
 
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
@@ -23,6 +24,10 @@ type ScanHistory = {
 }
 
 export default function Dashboard() {
+  // the Stripe checkout returns here with ?subscription=success: purchase, once per checkout this browser started
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("subscription") === "success") trackPurchaseOnce();
+  }, []);
   const { user, isAuthenticated } = useAuth();
   const { isAdmin } = useUserRole();
   const [scans, setScans] = useState<ScanHistory[]>([]);

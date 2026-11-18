@@ -1,3 +1,4 @@
+import { scoreBucket, track } from "@/lib/analytics";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -141,6 +142,7 @@ export default function ScanLoading() {
         supported: getChainDisplayName(finalChainId)
       });
 
+      if (retryAttempt === 0) track('scan_started', { chain: scanParams.chain_id });
       // Call the run-token-scan edge function for comprehensive analysis
       const { data: scanResult, error: scanError } = await supabase.functions.invoke('run-token-scan', {
         body: scanParams
@@ -157,6 +159,7 @@ export default function ScanLoading() {
       }
 
       console.log('[SCAN-LOADING] Comprehensive scan completed successfully:', scanResult);
+      track('scan_completed', { chain: scanParams.chain_id, score_bucket: scoreBucket(scanResult?.overall_score), cached: !!scanResult?.cached });
       setScanStatus('success');
       
       // Wait a moment then navigate to results

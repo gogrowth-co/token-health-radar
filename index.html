@@ -108,19 +108,19 @@
 
     <div id="root"></div>
     
-    <!-- Deferred Google Analytics -->
+    <!-- Deferred Google Analytics. The queue and its config start now (no network); gtag.js itself still loads 1.5 s after the load
+         event. Product events (src/lib/analytics.ts) are queued behind the config, so one fired before the library arrives is sent. -->
     <script>
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = window.gtag || function(){dataLayer.push(arguments);};
+      gtag('js', new Date());
+      gtag('config', 'G-X9EQHXBVCS');
       window.addEventListener('load', function() {
         setTimeout(function() {
           var script = document.createElement('script');
           script.async = true;
           script.src = 'https://www.googletagmanager.com/gtag/js?id=G-X9EQHXBVCS';
           document.head.appendChild(script);
-          
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-X9EQHXBVCS');
         }, 1500);
       });
     </script>
