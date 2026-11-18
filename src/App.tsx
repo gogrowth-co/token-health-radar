@@ -3,8 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { HelmetProvider } from "react-helmet-async";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Helmet, HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Landing from "./pages/Landing";
@@ -90,6 +90,18 @@ const RSSFeedRoute = () => {
   return null;
 };
 
+// Every route's own canonical (2026-11-18). A page's SeoHead canonical, rendered deeper, wins (react-helmet-async keeps one
+// rel=canonical); a page without one still points at itself, never at the home page from index.html.
+const RouteCanonical = () => {
+  const { pathname } = useLocation();
+  const path = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
+  return (
+    <Helmet>
+      <link rel="canonical" href={`https://tokenhealthscan.com${path}`} />
+    </Helmet>
+  );
+};
+
 const App = () => {
   return (
     <ErrorBoundary>
@@ -100,6 +112,7 @@ const App = () => {
               <Toaster />
               <Sonner />
               <BrowserRouter>
+                <RouteCanonical />
                 <ErrorBoundary>
                   <Routes>
                     {/* Static file routes - handle these first to prevent React rendering */}

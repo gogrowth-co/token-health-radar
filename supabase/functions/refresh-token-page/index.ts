@@ -13,6 +13,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { projectKeyRole } from '../_shared/authGuard.ts';
 import { DIMS, reportFromScan, scanTime } from '../_shared/tokenPage/report.ts';
 import { renderTokenPage } from '../_shared/tokenPage/page.ts';
+import { BREAKER_WINDOW_H, PROBE_EVERY_H, RESCAN_TOKENS_PER_HOUR, breakerFrom } from './breaker.ts';
 import { heroBgSvg, ogCardSvg, storySvg, svgToPng, type CardInput } from '../_shared/tokenPage/card.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!;
@@ -80,6 +81,12 @@ export function transientGaps(scan: any): string[] {
   return gaps;
 }
 
+async function breaker() {
+  const { data } = await supabase.from('token_page_refresh_runs').select('started_at, results').gte('started_at', new Date(Date.now() - BREAKER_WINDOW_H * 3600000).toISOString())
+    .not('results', 'is', null).order('started_at', { ascending: false }).limit(1000);
+  return breakerFrom((data ?? []) as any);
+}
+
 async function runScan(t: Token) {
   const r = await fetch(`${URL_}/functions/v1/run-token-scan`, {
     method: 'POST', headers: { 'Content-Type': 'application/json', 'x-internal-secret': Deno.env.get('INTERNAL_API_SECRET') ?? '' },
@@ -118,7 +125,8 @@ async function upload(bucket: string, key: string, body: Uint8Array | string, co
 }
 
 // ---------- one token ----------
-async function refresh(ref: any, opts: { maxAge: number; noRescan: boolean; force: boolean }) {
+async function refresh(ref: any, opts: { maxAge: number; noRescan: boolean; force: boolean; rescans?: number }) {
+  const rescans = opts.rescans ?? RESCANS;
   const out: Record<string, any> = { token: String(ref.symbol ?? ref.address ?? '').toUpperCase(), ok: false };
   try {
     const t = await findToken(ref);
@@ -128,7 +136,8 @@ async function refresh(ref: any, opts: { maxAge: number; noRescan: boolean; forc
     out.previous_scan = scan ? scanTime(scan) : null;
     // rescan when there is no scan, it is past the age limit, or it lost inputs to a provider failure; a gap that survives RESCANS
     // fresh scans is reported and nothing is published
-    for (let attempt = 0; !opts.noRescan && (!scan || ageHours(scan) > opts.maxAge || transientGaps(scan).length) && attempt < RESCANS; attempt++) {
+    for (let attempt = 0; !opts.noRescan && (!scan || ageHours(scan) > opts.maxAge || transientGaps(scan).length) && attempt < rescans; attempt++) {
+      out.scan_attempts = (out.scan_attempts ?? 0) + 1;
       await runScan(t);
       scan = await latestScan(t);
       if (!scan || ageHours(scan) > 1) throw new Error('the scan ran but no new scan was stored');
@@ -136,7 +145,7 @@ async function refresh(ref: any, opts: { maxAge: number; noRescan: boolean; forc
     }
     if (!scan) throw new Error('no scan on record');
     const gaps = transientGaps(scan);
-    if (gaps.length) { out.gaps = gaps; throw new Error(`scan incomplete after ${RESCANS} fresh scans (data provider failed: ${gaps.join('; ')}): the current page stays`); }
+    if (gaps.length) { out.gaps = gaps; throw new Error(`scan incomplete after ${out.rescanned ?? 0} fresh scan(s) (data provider failed: ${gaps.join('; ')}): the current page stays`); }
     const at = scanTime(scan);
     out.scan = { id: scan.id, scanned_at: at, overall: scan.dimension_scores?.overall ?? scan.score_total ?? null, scores: Object.fromEntries(DIMS.map((k) => [k, scan.dimension_scores?.dimensions?.[k]?.score ?? null])) };
 
@@ -158,12 +167,20 @@ async function refresh(ref: any, opts: { maxAge: number; noRescan: boolean; forc
       mcap: fmtCap(cache?.market_cap_usd ?? rc.metadata.marketCap ?? null), date: at.slice(0, 10),
     };
     // one image per request: an edge worker's CPU budget covers one rasterisation, not three (WORKER_RESOURCE_LIMIT, 2026-10-27)
-    const renders = await Promise.all((['og', 'hero', 'story'] as const).map(async (kind) => {
+    // one after the other, with one retry: three rasterising workers at once answered HTTP 546 (WORKER_LIMIT) for every image of
+    // about 120 refreshes on 9 to 12 Nov
+    const renderOne = async (kind: string) => {
       const r = await fetch(`${URL_}/functions/v1/refresh-token-page`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-internal-secret': Deno.env.get('INTERNAL_API_SECRET') ?? '' },
         body: JSON.stringify({ render: { kind, base, card } }), signal: AbortSignal.timeout(60_000) }).catch((e) => ({ ok: false, status: 0, json: async () => ({ error: e.message }) }) as any);
       const b = await r.json().catch(() => ({}));
-      return r.ok && b.ok ? null : `${kind}: ${b.error ?? `HTTP ${r.status}`}`;
-    }));
+      return { ok: r.ok && b.ok, status: r.status as number, why: `${kind}: ${b.error ?? `HTTP ${r.status}`}` };
+    };
+    const renders: Array<string | null> = [];
+    for (const kind of ['og', 'hero', 'story'] as const) {
+      let res = await renderOne(kind);
+      if (!res.ok && (res.status === 546 || res.status === 0 || res.status >= 502)) { await new Promise((ok) => setTimeout(ok, 3000)); res = await renderOne(kind); }
+      renders.push(res.ok ? null : res.why);
+    }
     const failed = renders.filter(Boolean);
     if (failed.length) throw new Error(`score card render failed (${failed.join('; ')}): the current page stays`);
     out.card = rc.hero_image_url;
@@ -216,7 +233,8 @@ Deno.serve(async (req) => {
   };
   const maxAge = Number(body.max_age_hours ?? (body.due ? 20 : 24));
   const opts = { maxAge, noRescan: !!body.no_rescan, force: !!body.force };
-  let refs: any[] = Array.isArray(body.tokens) ? body.tokens : [];
+  let refs: any[] = Array.isArray(body.tokens) ? body.tokens.map((t: any) => ({ ...t, probe: false })) : [];
+  let breakerNote: any = null;
   if (body.due) {
     // the cron: tokens whose latest scan is oldest and past the limit (or lost inputs to a provider failure), a few per call
     const { data: reports } = await supabase.from('token_reports').select('token_symbol, token_address, chain_id, report_content->metadata->>scanId');
@@ -235,15 +253,33 @@ Deno.serve(async (req) => {
       else if (scan && !gaps && (r as any).scanId !== scan.id) due.push({ symbol: r.token_symbol, age, rank: 0 });
     }
     due.sort((a, b) => a.rank - b.rank || b.age - a.age);
-    refs = due.slice(0, Math.max(1, Math.min(5, Number(body.limit ?? 2)))).map((d) => ({ symbol: d.symbol }));
+    const limit = Math.max(1, Math.min(5, Number(body.limit ?? 2)));
+    const rebuilds = due.filter((d) => d.rank === 0), rescans = due.filter((d) => d.rank === 1);
+    const b = await breaker();
+    breakerNote = { open: b.open, inputs: b.inputs, tokens: b.tokens, rescanned_last_hour: b.rescannedLastHour, rescans_due: rescans.length };
+    // breaker open: no rescan can complete, so only the hourly probe (one token, one scan); closed: the ramp cap per rolling hour
+    const allowed = b.open ? (b.probeDue ? 1 : 0) : Math.max(0, RESCAN_TOKENS_PER_HOUR - b.rescannedLastHour);
+    const picked = [...rebuilds, ...rescans.slice(0, allowed).map((d) => ({ ...d, probe: b.open }))].slice(0, limit);
+    refs = picked.map((d: any) => ({ symbol: d.symbol, probe: !!d.probe }));
+    if (!refs.length && rescans.length && b.open) {
+      // held by the breaker: the run still fails (monitoring keeps seeing the outage), with one line instead of a paid rescan
+      const held = [{ token: 'BREAKER', ok: false, rescanned: 0, unchanged: false, gaps: b.inputs.map((i) => `${i}: provider_failed`),
+        error: `breaker open: ${b.inputs.join(', ')} failed on the latest refreshes of ${b.tokens.join(', ')}; ${rescans.length} token(s) wait, next probe within ${PROBE_EVERY_H} h; pages keep their last complete scan` }];
+      await finish(false, held);
+      return json({ ok: false, results: held, breaker: breakerNote });
+    }
   }
-  if (!refs.length) { await finish(true, []); return json({ ok: true, results: [], note: body.due ? 'nothing due' : 'no tokens given' }); }
+  if (!refs.length) {
+    await finish(true, []);
+    return json({ ok: true, results: [], note: !body.due ? 'no tokens given' : breakerNote?.rescans_due ? `ramp: ${breakerNote.rescans_due} token(s) due, ${RESCAN_TOKENS_PER_HOUR} rescans per hour` : 'nothing due', breaker: breakerNote });
+  }
   const results: any[] = [];
   for (const ref of refs) {
     if (Date.now() - started > BUDGET_MS) { results.push({ token: String(ref.symbol ?? ref.address).toUpperCase(), ok: false, error: 'skipped: time budget used, call again' }); continue; }
-    results.push(await refresh(ref, opts));
+    results.push(ref.probe ? { ...(await refresh(ref, { ...opts, rescans: 1 })), probe: true } : await refresh(ref, opts));
   }
   const ok = results.every((r) => r.ok);
-  await finish(ok, results.map((r) => ({ token: r.token, ok: r.ok, rescanned: r.rescanned ?? 0, unchanged: !!r.unchanged, error: r.error ?? null, gaps: r.gaps ?? null })));
-  return json({ ok, results, ms: Date.now() - started });
+  await finish(ok, results.map((r) => ({ token: r.token, ok: r.ok, rescanned: r.rescanned ?? 0, scan_attempts: r.scan_attempts ?? 0, probe: !!r.probe,
+    unchanged: !!r.unchanged, error: r.error ?? null, gaps: r.gaps ?? null })));
+  return json({ ok, results, ms: Date.now() - started, breaker: breakerNote });
 });
