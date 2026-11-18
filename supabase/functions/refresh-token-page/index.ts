@@ -167,12 +167,20 @@ async function refresh(ref: any, opts: { maxAge: number; noRescan: boolean; forc
       mcap: fmtCap(cache?.market_cap_usd ?? rc.metadata.marketCap ?? null), date: at.slice(0, 10),
     };
     // one image per request: an edge worker's CPU budget covers one rasterisation, not three (WORKER_RESOURCE_LIMIT, 2026-10-27)
-    const renders = await Promise.all((['og', 'hero', 'story'] as const).map(async (kind) => {
+    // one after the other, with one retry: three rasterising workers at once answered HTTP 546 (WORKER_LIMIT) for every image of
+    // about 120 refreshes on 9 to 12 Nov
+    const renderOne = async (kind: string) => {
       const r = await fetch(`${URL_}/functions/v1/refresh-token-page`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-internal-secret': Deno.env.get('INTERNAL_API_SECRET') ?? '' },
         body: JSON.stringify({ render: { kind, base, card } }), signal: AbortSignal.timeout(60_000) }).catch((e) => ({ ok: false, status: 0, json: async () => ({ error: e.message }) }) as any);
       const b = await r.json().catch(() => ({}));
-      return r.ok && b.ok ? null : `${kind}: ${b.error ?? `HTTP ${r.status}`}`;
-    }));
+      return { ok: r.ok && b.ok, status: r.status as number, why: `${kind}: ${b.error ?? `HTTP ${r.status}`}` };
+    };
+    const renders: Array<string | null> = [];
+    for (const kind of ['og', 'hero', 'story'] as const) {
+      let res = await renderOne(kind);
+      if (!res.ok && (res.status === 546 || res.status === 0 || res.status >= 502)) { await new Promise((ok) => setTimeout(ok, 3000)); res = await renderOne(kind); }
+      renders.push(res.ok ? null : res.why);
+    }
     const failed = renders.filter(Boolean);
     if (failed.length) throw new Error(`score card render failed (${failed.join('; ')}): the current page stays`);
     out.card = rc.hero_image_url;
