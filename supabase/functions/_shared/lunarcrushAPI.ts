@@ -32,6 +32,25 @@ const pages = new Map<number, { at: number; rows: any[] }>();
 // "page 0 did not answer" with no status)
 const pageFailures = new Map<number, { at: number; status: number }>();
 
+// Two keys (2026-11-18): LUNARCRUSH_API_KEY and LUNARCRUSH_API_KEY_2, each with its own daily allowance (about 929 calls, reset 00:00
+// UTC). A key that answers 429 is set aside until the next reset and the call goes to the other one.
+const spentUntil = new Map<string, number>();
+const nextUtcMidnight = () => { const d = new Date(); d.setUTCHours(24, 0, 0, 0); return d.getTime(); };
+function keys(): string[] {
+  return [Deno.env.get('LUNARCRUSH_API_KEY'), Deno.env.get('LUNARCRUSH_API_KEY_2')].filter((k): k is string => !!k);
+}
+async function getJsonAnyKey(url: string, tries = 3): Promise<{ ok: boolean; status: number; data?: any }> {
+  const all = keys();
+  const live = all.filter((k) => (spentUntil.get(k) ?? 0) < Date.now());
+  let last: { ok: boolean; status: number; data?: any } = { ok: false, status: 429 };
+  for (const k of live.length ? live : all.slice(0, 1)) {
+    last = await getJson(url, k, tries);
+    if (last.ok || last.status !== 429) return last;
+    spentUntil.set(k, nextUtcMidnight());
+  }
+  return last;
+}
+
 async function getJson(url: string, key: string, tries = 3): Promise<{ ok: boolean; status: number; data?: any }> {
   let status = 0;
   for (let i = 0; i < tries; i++) {
@@ -47,13 +66,13 @@ async function getJson(url: string, key: string, tries = 3): Promise<{ ok: boole
   return { ok: false, status };
 }
 
-async function listPage(page: number, key: string): Promise<{ rows: any[] | null; status: number }> {
+async function listPage(page: number): Promise<{ rows: any[] | null; status: number }> {
   const hit = pages.get(page);
   if (hit && Date.now() - hit.at < PAGE_TTL_MS) return { rows: hit.rows, status: 200 };
   const miss = pageFailures.get(page);
   if (miss && Date.now() - miss.at < FAIL_TTL_MS) return { rows: null, status: miss.status };
   // the default order is rank 1 first (the API's 'desc' flag reads backwards)
-  const r = await getJson(`${BASE}/coins/list/v1?limit=1000&page=${page}&sort=market_cap_rank`, key);
+  const r = await getJsonAnyKey(`${BASE}/coins/list/v1?limit=1000&page=${page}&sort=market_cap_rank`);
   if (!r.ok) { pageFailures.set(page, { at: Date.now(), status: r.status }); return { rows: null, status: r.status }; }
   pageFailures.delete(page);
   const rows = Array.isArray(r.data?.data) ? r.data.data : [];
@@ -74,12 +93,11 @@ function trendOf(points: any[]): string | null {
 /** The token's LunarCrush reading, matched by contract address. `lookup` says whether it was found, absent, or not answered. */
 export async function fetchLunarCrushCoin(address: string, symbol: string | null): Promise<LunarCrushData> {
   const empty = (lookup: LunarCrushData['lookup'], detail: string): LunarCrushData => ({ galaxy_score: null, alt_rank: null, sentiment: null, interactions_24h: null, posts_active: null, contributors_active: null, social_dominance: null, trend: null, fetched_at: new Date().toISOString(), coin_id: null, lookup, detail });
-  const key = Deno.env.get('LUNARCRUSH_API_KEY');
-  if (!key) return empty('failed', 'LUNARCRUSH_API_KEY not configured');
+  if (!keys().length) return empty('failed', 'LUNARCRUSH_API_KEY not configured');
   const addr = address.toLowerCase();
   let coin: any = null;
   for (let page = 0; page < MAX_PAGES && !coin; page++) {
-    const { rows, status } = await listPage(page, key);
+    const { rows, status } = await listPage(page);
     if (!rows) return empty('failed', `LunarCrush coin list page ${page} did not answer (${status ? `HTTP ${status}` : 'no response'})`);
     coin = rows.find((c) => (c.blockchains ?? []).some((b: any) => String(b?.address ?? '').toLowerCase() === addr)) ?? null;
     if (rows.length < 1000) break;
@@ -87,7 +105,7 @@ export async function fetchLunarCrushCoin(address: string, symbol: string | null
   if (!coin) return empty('not_listed', 'LunarCrush does not track this contract');
   let trend: string | null = null, contributors: number | null = null, posts: number | null = null;
   if (symbol) {
-    const ts = await getJson(`${BASE}/topic/${encodeURIComponent(symbol.toLowerCase())}/time-series/v1?bucket=day&interval=1w`, key, 2);
+    const ts = await getJsonAnyKey(`${BASE}/topic/${encodeURIComponent(symbol.toLowerCase())}/time-series/v1?bucket=day&interval=1w`, 2);
     if (ts.ok && new RegExp(`^coins:+${coin.id}$`).test(String(ts.data?.config?.asset ?? ''))) {   // the API writes 'coins::3154'
       const pts = Array.isArray(ts.data.data) ? ts.data.data : [];
       trend = trendOf(pts);
