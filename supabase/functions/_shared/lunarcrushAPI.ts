@@ -25,7 +25,12 @@ export interface LunarCrushData {
 const BASE = 'https://lunarcrush.com/api4/public';
 const PAGE_TTL_MS = 10 * 60 * 1000;
 const MAX_PAGES = 6;   // 5,537 coins on 2026-10-27
+const FAIL_TTL_MS = 10 * 60 * 1000;
 const pages = new Map<number, { at: number; rows: any[] }>();
+// a page that did not answer is not asked again for 10 minutes inside one isolate (each ask is 3 tries with backoff); the answer names
+// the HTTP status, so a dead key (401), a lapsed plan (402) and a rate limit (429) read differently in the scan (2026-11-18: 8 days of
+// "page 0 did not answer" with no status)
+const pageFailures = new Map<number, { at: number; status: number }>();
 
 async function getJson(url: string, key: string, tries = 3): Promise<{ ok: boolean; status: number; data?: any }> {
   let status = 0;
@@ -42,15 +47,18 @@ async function getJson(url: string, key: string, tries = 3): Promise<{ ok: boole
   return { ok: false, status };
 }
 
-async function listPage(page: number, key: string): Promise<any[] | null> {
+async function listPage(page: number, key: string): Promise<{ rows: any[] | null; status: number }> {
   const hit = pages.get(page);
-  if (hit && Date.now() - hit.at < PAGE_TTL_MS) return hit.rows;
+  if (hit && Date.now() - hit.at < PAGE_TTL_MS) return { rows: hit.rows, status: 200 };
+  const miss = pageFailures.get(page);
+  if (miss && Date.now() - miss.at < FAIL_TTL_MS) return { rows: null, status: miss.status };
   // the default order is rank 1 first (the API's 'desc' flag reads backwards)
   const r = await getJson(`${BASE}/coins/list/v1?limit=1000&page=${page}&sort=market_cap_rank`, key);
-  if (!r.ok) return null;
+  if (!r.ok) { pageFailures.set(page, { at: Date.now(), status: r.status }); return { rows: null, status: r.status }; }
+  pageFailures.delete(page);
   const rows = Array.isArray(r.data?.data) ? r.data.data : [];
   pages.set(page, { at: Date.now(), rows });
-  return rows;
+  return { rows, status: r.status };
 }
 
 function trendOf(points: any[]): string | null {
@@ -71,8 +79,8 @@ export async function fetchLunarCrushCoin(address: string, symbol: string | null
   const addr = address.toLowerCase();
   let coin: any = null;
   for (let page = 0; page < MAX_PAGES && !coin; page++) {
-    const rows = await listPage(page, key);
-    if (!rows) return empty('failed', `LunarCrush coin list page ${page} did not answer`);
+    const { rows, status } = await listPage(page, key);
+    if (!rows) return empty('failed', `LunarCrush coin list page ${page} did not answer (${status ? `HTTP ${status}` : 'no response'})`);
     coin = rows.find((c) => (c.blockchains ?? []).some((b: any) => String(b?.address ?? '').toLowerCase() === addr)) ?? null;
     if (rows.length < 1000) break;
   }
