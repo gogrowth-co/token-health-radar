@@ -7,8 +7,9 @@ export const BREAKER_TOKENS = 3;
 export const BREAKER_WINDOW_H = 6;
 export const PROBE_EVERY_H = 1;
 // Recovery ramp: at most this many tokens rescanned by the cron per rolling hour (steady state needs 54 / 20 h = 2.7). After an
-// outage every token is due at once; the cap spreads the rebuilt cards and moved scores over about 14 hours instead of one.
-export const RESCAN_TOKENS_PER_HOUR = 4;
+// outage every token is due at once; the cap spreads the rebuilt cards and moved scores over about 4.5 hours instead of one (12 an hour,
+// Gabriel 2026-11-18 "make it recover now"; LunarCrush: about 3 to 7 calls a scan, 2 keys of about 929 a day).
+export const RESCAN_TOKENS_PER_HOUR = 12;
 const SCAN_ERROR = /^(run-token-scan answered|the scan ran but no new scan|.*signal timed out|.*aborted)/i;
 /** The breaker, read from the run log itself (no extra state): the latest refresh of each token that rescanned, newest first. */
 export function breakerFrom(runs: Array<{ started_at: string; results: any[] | null }>, now = Date.now()) {
