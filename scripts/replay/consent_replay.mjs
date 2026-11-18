@@ -32,7 +32,7 @@ v = await visit(ctx, '/token/jup');
 names = v.cookies;
 const ga = v.reqs.filter((r) => /g\/collect/.test(r.u));
 check(ga.length > 0 && ga.every((r) => /gcs=G100/.test(r.u)), `after Refuse GA4 still collects, cookieless (gcs=G100, ${ga.length} hits)`);
-check(!names.some((n) => /^_ga|^_clck|^_clsk|^_ttp|^_rdt|^_twclid|^muc_ads/.test(n)), `after Refuse, next page: no tool cookies (cookies: ${names.join(',')})`);
+check(!names.some((n) => /^_ga|^_clck|^_clsk|^_ttp|^ttcsid|^_rdt|^_twclid|^muc_ads/.test(n)), `after Refuse, next page: no tool cookies (cookies: ${names.join(',')})`);
 check(!(await v.p.locator('[data-consent-bar]').isVisible()), 'the bar stays closed after a choice');
 const pix = v.reqs.filter((r) => PIX.test(r.u)).map((r) => r.u.slice(0, 60));
 check(pix.length === 0, `after Refuse no pixel request (${pix.length}: ${pix.slice(0, 2).join(' ')})`);

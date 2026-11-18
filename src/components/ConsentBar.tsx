@@ -20,7 +20,7 @@ function choose(value: "allow" | "deny") {
     // cookies the tools already set on this visit go too; measurement continues without them
     for (const c of document.cookie.split("; ")) {
       const name = c.split("=")[0];
-      if (/^(_ga|_gid|_gcl|_clck|_clsk|_ttp|_rdt_uuid|_twclid|_tt_enable_cookie|muc_ads|personalization_id|guest_id)/.test(name)) {
+      if (/^(_ga|_gid|_gcl|_clck|_clsk|_ttp|_rdt_uuid|_twclid|_tt_enable_cookie|ttcsid|muc_ads|personalization_id|guest_id)/.test(name)) {
         for (const domain of ["", "; Domain=.tokenhealthscan.com", "; Domain=tokenhealthscan.com"]) document.cookie = `${name}=; Max-Age=0; Path=/${domain}`;
       }
     }
