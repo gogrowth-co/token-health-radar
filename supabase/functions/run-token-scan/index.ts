@@ -21,7 +21,7 @@ import { scoreRecord } from '../_shared/scanner/scoring.ts';
 import { buildRows } from '../_shared/scanner/persist.ts';
 import { ok, usable } from '../_shared/scanner/field.ts';
 import { ScanContext } from '../_shared/scanner/http.ts';
-import { collectGithub, communityFields, EMPTY_REPO } from '../_shared/scanner/social.ts';
+import { collectGithub, communityFields, EMPTY_REPO, MEMBER_REUSE_HOURS, reuseMemberCount, TRANSIENT_MEMBER_REASONS } from '../_shared/scanner/social.ts';
 import { bestCommunity, gatherLinks, githubCandidates, type LinkSearch } from '../_shared/scanner/links.ts';
 
 const corsHeaders = {
@@ -140,9 +140,19 @@ Deno.serve(async (req) => {
     rec.market.links = ok({ ...links, telegram: telegram.url ?? undefined, discord: discord.url ?? undefined, github: githubPick.url ?? undefined },   // only live links; dead ones are named in the community fields
       [...(usable(rec.market.links) ? rec.market.links.sources ?? [] : []), { source: 'link_search', fetched_at: rec.scanned_at, raw_excerpt: { read: search.read, unread: search.unread, candidates: search.candidates.length, override: ov?.source_url ?? null } }]);
     // Community and development are Fields like everything else: a failed call is unknown with a reason, not 0 (Codex finding 8).
+    // a Discord or Telegram count that this scan could not read (rate limit, provider failure) is taken from a scan in the last 24 h
+    const priorCount = async (kind: 'discord_members' | 'telegram_members') => {
+      if (!TRANSIENT_MEMBER_REASONS.has(String((kind === 'discord_members' ? discord.field : telegram.field)?.reason))) return null;
+      const { data } = await supabase.from('token_scans').select(`scanned_at, field_data->social->community->${kind}`).eq('token_address', rec.address_key).eq('chain_id', chainId)
+        .eq(`field_data->social->community->${kind}->>status`, 'ok').gte('scanned_at', new Date(Date.parse(rec.scanned_at) - MEMBER_REUSE_HOURS * 3600000).toISOString())
+        .order('scanned_at', { ascending: false }).limit(1).maybeSingle();
+      return data ? { field: (data as any)[kind] ?? null, scanned_at: (data as any).scanned_at } : null;
+    };
+    const [priorDiscord, priorTelegram] = await Promise.all([priorCount('discord_members'), priorCount('telegram_members')]).catch(() => [null, null]);
     rec.social = {
       github,
-      community: communityFields({ lunar, watchlist: rec.market.watchlist_users, discord: discord.field, telegram: telegram.field }, rec.scanned_at),
+      community: communityFields({ lunar, watchlist: rec.market.watchlist_users,
+        discord: reuseMemberCount(discord.field, priorDiscord, rec.scanned_at), telegram: reuseMemberCount(telegram.field, priorTelegram, rec.scanned_at) }, rec.scanned_at),
     };
     rec.quality = quality(rec, ctx, rec.quality.flags);
     const score = scoreRecord(rec);

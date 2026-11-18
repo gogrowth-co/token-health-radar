@@ -1504,3 +1504,19 @@ Deno.test('supply: the project API and its wallet sum must agree, or nothing is 
     } finally { restore(); }
   }
 });
+
+// Member-count reuse (Gabriel 2026-11-18): a rate-limited Discord/Telegram count takes the count of a scan in the last 24 h.
+Deno.test('member count: a rate-limited read reuses a count from the last 24 h, dated', async () => {
+  const { reuseMemberCount } = await import('./social.ts');
+  const nowIso = '2026-11-18T18:00:00Z';
+  const limited = unknown<number>('rate_limited', 'discord.gg/x: 429', [{ source: 'discord', fetched_at: nowIso }]);
+  const prior = { field: ok(12345, { source: 'discord', fetched_at: '2026-11-18T06:00:00Z' }), scanned_at: '2026-11-18T06:00:00Z' };
+  const r = reuseMemberCount(limited, prior, nowIso);
+  assertEquals(r.status, 'ok'); assertEquals(r.value, 12345); assert(String(r.detail).includes('reused from the scan of 2026-11-18T06:00:00Z'));
+  assertEquals(reuseMemberCount(limited, { ...prior, scanned_at: '2026-11-17T17:00:00Z' }, nowIso).status, 'unknown', 'older than 24 h: the gap stays');
+  assertEquals(reuseMemberCount(limited, null, nowIso).status, 'unknown', 'no prior count: the gap stays');
+  const dead = unknown<number>('link_dead', 'expired');
+  assertEquals(reuseMemberCount(dead, prior, nowIso).reason, 'link_dead', 'a dead link is an answer, never replaced');
+  const fresh = ok(99, { source: 'discord', fetched_at: nowIso });
+  assertEquals(reuseMemberCount(fresh, prior, nowIso).value, 99, 'a fresh count always wins');
+});

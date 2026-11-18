@@ -3,7 +3,7 @@
 // These used to bypass the reliability layer: GitHub sub-request failures became empty arrays (and the legacy
 // scorer then awarded points for "no issues"), and missing community inputs were replaced by 0. Here every
 // metric is a Field: a failed call is unknown with a reason, never a zero, and scoring uses only usable inputs.
-import { type Field, ok, type SourceRef, unknown } from './field.ts';
+import { type Field, ok, type SourceRef, unknown, usable } from './field.ts';
 import type { ScanContext } from './http.ts';
 import { findMainRepository } from '../githubAPI.ts';
 
@@ -144,5 +144,21 @@ export function communityFields(raw: {
     watchlist_users: raw.watchlist,
     discord_members: raw.discord,
     telegram_members: raw.telegram,
+  };
+}
+
+// Member-count reuse (Gabriel 2026-11-18): when Discord or Telegram rate-limit or fail on this scan, the count from a scan in the last
+// 24 h stands in, dated and named as reused. Member counts move slowly; older than 24 h, the gap stays and the scan is not published.
+export const MEMBER_REUSE_HOURS = 24;
+export const TRANSIENT_MEMBER_REASONS = new Set(['rate_limited', 'provider_failed', 'timeout', 'circuit_open']);
+export function reuseMemberCount(fresh: Field<number>, prior: { field: Field<number> | null | undefined; scanned_at: string } | null, nowIso: string): Field<number> {
+  if (!fresh || fresh.status === 'ok' || !TRANSIENT_MEMBER_REASONS.has(String(fresh.reason))) return fresh;
+  if (!prior?.field || !usable(prior.field)) return fresh;
+  const age = Date.parse(nowIso) - Date.parse(prior.scanned_at);
+  if (!(age >= 0 && age <= MEMBER_REUSE_HOURS * 3600000)) return fresh;
+  return {
+    ...prior.field,
+    detail: `reused from the scan of ${prior.scanned_at} (this scan: ${fresh.detail ?? fresh.reason})`,
+    sources: [...prior.field.sources, ...fresh.sources],
   };
 }
