@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import ConsentBar from "@/components/ConsentBar";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Confirm from "./pages/Confirm";
@@ -113,6 +114,7 @@ const App = () => {
               <Sonner />
               <BrowserRouter>
                 <RouteCanonical />
+                <ConsentBar />
                 <ErrorBoundary>
                   <Routes>
                     {/* Static file routes - handle these first to prevent React rendering */}

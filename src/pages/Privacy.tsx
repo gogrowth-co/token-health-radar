@@ -18,7 +18,7 @@ export default function Privacy() {
         <div className="container mx-auto px-4 md:px-6 py-16 max-w-4xl">
           <div className="prose prose-gray max-w-none">
             <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
-            <p className="text-muted-foreground mb-8">Last updated: May 27th, 2025</p>
+            <p className="text-muted-foreground mb-8">Last updated: November 18th, 2026</p>
             
             <p className="mb-6">
               This Privacy Policy explains how Token Health Scan ("we", "our", or "us") collects, uses, and protects your personal information when you use our website and services (the "Service").
@@ -77,9 +77,24 @@ export default function Privacy() {
               These services may collect data in accordance with their own privacy policies.
             </p>
 
-            <h2 className="text-2xl font-semibold mt-8 mb-4">5. Cookies and Tracking</h2>
+            <h2 id="cookies" className="text-2xl font-semibold mt-8 mb-4">5. Cookies and Tracking</h2>
+            <p className="mb-4">
+              We measure how the site is used so we can improve it, and we use advertising pixels to measure our campaigns. These tools load for every
+              visitor once the page has finished loading. Outside the EU, EEA, UK and Switzerland they set cookies from the first visit until you
+              choose "Refuse" in the cookie bar. Inside those regions they set no cookies unless you choose "Accept". If you refuse, Google Analytics
+              and Microsoft Clarity keep measuring without cookies, the advertising pixels stop, and we remember your choice for 6 months
+              (cookie <code>ths_consent</code>). To change it, delete that cookie and choose again in the bar.
+            </p>
+            <ul className="list-disc pl-6 mb-4 space-y-2">
+              <li><strong>Google Analytics 4</strong> (Google LLC, USA): pages viewed, scans started and completed (chain and score range only), sign-ups and checkouts. Cookies <code>_ga</code>, <code>_ga_*</code>, up to 2 years.</li>
+              <li><strong>Microsoft Clarity</strong> (Microsoft Corporation, USA): clicks, scrolls and anonymised session replays. Cookies <code>_clck</code> (1 year) and <code>_clsk</code> (1 day).</li>
+              <li><strong>TikTok pixel</strong> (TikTok Pte. Ltd.), <strong>Reddit pixel</strong> (Reddit, Inc., USA) and <strong>X (Twitter) pixel</strong> (X Corp., USA): page visits and site events, to measure ads. Cookies such as <code>_ttp</code>, <code>_rdt_uuid</code>, <code>_twclid</code> and <code>muc_ads</code>, up to 13 months. They only run with cookie consent.</li>
+              <li><strong>Session and preferences</strong>: our own local storage for sign-in and settings, kept until you sign out or clear it.</li>
+            </ul>
             <p className="mb-6">
-              We may use minimal cookies or local storage for session handling and user preferences. No third-party advertising or behavioral tracking cookies are used.
+              These providers process data outside your country, including in the United States. Measurement without cookies is based on our
+              legitimate interest in running and improving the service (LGPD art. 7, IX; GDPR art. 6(1)(f)); cookies and pixels are based on your
+              consent where the law requires it (LGPD art. 7, I; GDPR art. 6(1)(a)), and you can object at any time with "Refuse".
             </p>
 
             <h2 className="text-2xl font-semibold mt-8 mb-4">6. Your Rights</h2>

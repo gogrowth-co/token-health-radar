@@ -5,13 +5,47 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-P84WRMG9');</script>
-    <!-- End Google Tag Manager -->
+    <!-- Consent and tag loader (2026-11-18, manga-os-v4 docs/standards/third-party-scripts.md, the EkkoGreen opt-out model).
+         Consent Mode v2: granted by default, denied by default in the EU/EEA/UK/CH, all denied after "Refuse" (cookie ths_consent=deny,
+         6 months); "Accept" grants analytics and ad storage. Refusing takes away cookies, never measurement: GA4 keeps cookieless pings and
+         Clarity records without cookies (consentv2 denied). The cookie-only pixels (TikTok, Reddit, X) need ad_storage in GTM.
+         GTM and gtag.js load after the load event, two frames and the first idle moment, or at the first interaction, whichever
+         comes first (10 s safety net); never in the first paint. The bar itself is src/components/ConsentBar.tsx. -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = window.gtag || function(){dataLayer.push(arguments);};
+      (function () {
+        var refused = /(?:^|; )ths_consent=deny/.test(document.cookie), accepted = /(?:^|; )ths_consent=allow/.test(document.cookie);
+        var all = function (v) { return { ad_storage: v, analytics_storage: v, ad_user_data: v, ad_personalization: v }; };
+        var strict = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB','CH'];
+        if (refused) gtag('consent', 'default', all('denied'));
+        else if (accepted) gtag('consent', 'default', all('granted'));
+        else { gtag('consent', 'default', Object.assign(all('denied'), { region: strict, wait_for_update: 500 })); gtag('consent', 'default', all('granted')); }
+        gtag('set', 'ads_data_redaction', true);
+        window.clarity = window.clarity || function () { (window.clarity.q = window.clarity.q || []).push(arguments); };
+        if (refused) window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'denied' });
+        else if (accepted) window.clarity('consentv2', { ad_Storage: 'granted', analytics_Storage: 'granted' });
+      })();
+      gtag('js', new Date());
+      gtag('config', 'G-X9EQHXBVCS');
+      (function () {
+        var done = false;
+        function fire() {
+          if (done) return; done = true;
+          dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+          var g = document.createElement('script'); g.async = true; g.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-P84WRMG9'; document.head.appendChild(g);
+          var a = document.createElement('script'); a.async = true; a.src = 'https://www.googletagmanager.com/gtag/js?id=G-X9EQHXBVCS'; document.head.appendChild(a);
+        }
+        function afterLoad() {
+          requestAnimationFrame(function () { requestAnimationFrame(function () {
+            if ('requestIdleCallback' in window) requestIdleCallback(fire, { timeout: 1500 }); else setTimeout(fire, 200);
+          }); });
+        }
+        ['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(function (e) { window.addEventListener(e, fire, { once: true, passive: true }); });
+        if (document.readyState === 'complete') afterLoad(); else window.addEventListener('load', afterLoad);
+        setTimeout(fire, 10000);
+      })();
+    </script>
     
     <title>Token Health Scan — Crypto Token Risk Analysis & Health Scoring</title>
     <meta data-rh="true" name="description" content="Scan any crypto token across security, liquidity, tokenomics, community and development. Independent health scores in seconds for Ethereum, Solana, Base, BSC and more.">
@@ -108,22 +142,7 @@
 
     <div id="root"></div>
     
-    <!-- Deferred Google Analytics. The queue and its config start now (no network); gtag.js itself still loads 1.5 s after the load
-         event. Product events (src/lib/analytics.ts) are queued behind the config, so one fired before the library arrives is sent. -->
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      window.gtag = window.gtag || function(){dataLayer.push(arguments);};
-      gtag('js', new Date());
-      gtag('config', 'G-X9EQHXBVCS');
-      window.addEventListener('load', function() {
-        setTimeout(function() {
-          var script = document.createElement('script');
-          script.async = true;
-          script.src = 'https://www.googletagmanager.com/gtag/js?id=G-X9EQHXBVCS';
-          document.head.appendChild(script);
-        }, 1500);
-      });
-    </script>
+
     
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
