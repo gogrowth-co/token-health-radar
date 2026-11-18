@@ -5,26 +5,54 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- Consent and tag loader (2026-11-18, manga-os-v4 docs/standards/third-party-scripts.md, the EkkoGreen opt-out model).
-         Consent Mode v2: granted by default, denied by default in the EU/EEA/UK/CH, all denied after "Refuse" (cookie ths_consent=deny,
-         6 months); "Accept" grants analytics and ad storage. Refusing takes away cookies, never measurement: GA4 keeps cookieless pings and
-         Clarity records without cookies (consentv2 denied). The cookie-only pixels (TikTok, Reddit, X) need ad_storage in GTM.
+    <!-- Consent and tag loader (manga-os-v4 docs/standards/third-party-scripts.md, the EkkoGreen opt-out model; Gabriel 2026-11-18).
+         Outside the EU/EEA/UK/CH list: Consent Mode v2 granted by default, every tag runs from the first visit, a notice offers "Decline".
+         Inside the list: denied by default and THS's own bar asks Accept/Decline. "Decline" (cookie ths_consent=deny, 6 months) denies
+         every storage at once and on every later page; "Accept" (ths_consent=allow) grants. Declining takes away cookies, never
+         measurement (rule 0): GA4 keeps cookieless pings and Clarity records without cookies (consentv2 denied, queued here before GTM
+         loads Clarity). Only the cookie-only pixels (TikTok, Reddit, X) stop: they need ad_storage in GTM-P84WRMG9.
+         Who is "inside": Google decides by IP for GA4 and GTM (region defaults below); for Clarity and the bar this page uses the
+         device time zone (at once) or Cloudflare's country (/cdn-cgi/trace), whichever says inside.
          GTM and gtag.js load after the load event, two frames and the first idle moment, or at the first interaction, whichever
-         comes first (10 s safety net); never in the first paint. The bar itself is src/components/ConsentBar.tsx. -->
+         comes first (10 s safety net); never in the first paint. The bar is src/components/ConsentBar.tsx, the shared code src/lib/consent.ts. -->
     <script>
       window.dataLayer = window.dataLayer || [];
       window.gtag = window.gtag || function(){dataLayer.push(arguments);};
       (function () {
-        var refused = /(?:^|; )ths_consent=deny/.test(document.cookie), accepted = /(?:^|; )ths_consent=allow/.test(document.cookie);
+        var m = /(?:^|; )ths_consent=(deny|allow)/.exec(document.cookie), choice = m ? m[1] : null;
         var all = function (v) { return { ad_storage: v, analytics_storage: v, ad_user_data: v, ad_personalization: v }; };
-        var strict = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB','CH'];
-        if (refused) gtag('consent', 'default', all('denied'));
-        else if (accepted) gtag('consent', 'default', all('granted'));
-        else { gtag('consent', 'default', Object.assign(all('denied'), { region: strict, wait_for_update: 500 })); gtag('consent', 'default', all('granted')); }
-        gtag('set', 'ads_data_redaction', true);
+        var list = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB','CH'];
+        var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+        var tzInside = /^(Europe\/(Vienna|Brussels|Sofia|Zagreb|Nicosia|Prague|Copenhagen|Tallinn|Helsinki|Mariehamn|Paris|Monaco|Berlin|Busingen|Athens|Budapest|Dublin|Rome|Vatican|San_Marino|Riga|Vilnius|Luxembourg|Malta|Amsterdam|Warsaw|Lisbon|Bucharest|Bratislava|Ljubljana|Madrid|Andorra|Stockholm|Oslo|Vaduz|London|Belfast|Guernsey|Jersey|Isle_of_Man|Gibraltar|Zurich)|Asia\/(Nicosia|Famagusta)|Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe|Jan_Mayen)|Africa\/Ceuta|Arctic\/Longyearbyen|GB|GB-Eire|Eire|Iceland|Portugal|Poland)$/.test(tz);
+        var state = window.__thsConsent = { choice: choice, inside: tzInside, list: list, ready: null, global: null, loaded: false };
+        var denyClarity = function () { window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'denied' }); };
         window.clarity = window.clarity || function () { (window.clarity.q = window.clarity.q || []).push(arguments); };
-        if (refused) window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'denied' });
-        else if (accepted) window.clarity('consentv2', { ad_Storage: 'granted', analytics_Storage: 'granted' });
+        if (choice === 'deny') gtag('consent', 'default', all('denied'));
+        else if (choice === 'allow') gtag('consent', 'default', all('granted'));
+        else {
+          gtag('consent', 'default', Object.assign(all('denied'), { region: list, wait_for_update: 500 }));
+          gtag('consent', 'default', state.global = all(tzInside ? 'denied' : 'granted'));
+        }
+        gtag('set', 'ads_data_redaction', true);
+        if (choice === 'deny' || (!choice && tzInside)) denyClarity();
+        else if (choice === 'allow') window.clarity('consentv2', { ad_Storage: 'granted', analytics_Storage: 'granted' });
+        // Cloudflare's country for the visitors the time zone missed (a European IP on a device set elsewhere). The loader waits
+        // for it (at most 1.5 s), so the denied state is queued before GTM or Clarity run.
+        state.ready = (window.fetch ? fetch('/cdn-cgi/trace', { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }) : Promise.resolve(''))
+          .then(function (t) {
+            var c = (/(?:^|\n)loc=([A-Z]{2})/.exec(t) || [])[1];
+            if (c && list.indexOf(c) >= 0 && !state.inside) {
+              state.inside = true;
+              if (!choice) {
+                // Before the loader runs nothing has read the queue yet, so the queued default itself turns to denied (GTM settles
+                // consent from the defaults before it reads queued updates: an update alone let the pixels fire). Later, an update.
+                if (state.global && !state.loaded) for (var k in state.global) state.global[k] = 'denied';
+                else gtag('consent', 'update', all('denied'));
+                denyClarity();
+              }
+            }
+            return state.inside;
+          }, function () { return state.inside; });
       })();
       gtag('js', new Date());
       gtag('config', 'G-X9EQHXBVCS');
@@ -32,6 +60,10 @@
         var done = false;
         function fire() {
           if (done) return; done = true;
+          var go = function () { if (go.ran) return; go.ran = true; window.__thsConsent.loaded = true; load(); };
+          window.__thsConsent.ready.then(go, go); setTimeout(go, 1500);
+        }
+        function load() {
           dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
           var g = document.createElement('script'); g.async = true; g.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-P84WRMG9'; document.head.appendChild(g);
           var a = document.createElement('script'); a.async = true; a.src = 'https://www.googletagmanager.com/gtag/js?id=G-X9EQHXBVCS'; document.head.appendChild(a);

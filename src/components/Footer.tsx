@@ -1,5 +1,6 @@
 
 import { Link } from "react-router-dom";
+import { ConsentLink } from "@/components/ConsentBar";
 
 export default function Footer() {
   return (
@@ -32,6 +33,7 @@ export default function Footer() {
             <Link to="/terms" className="text-sm text-muted-foreground hover:underline underline-offset-4">
               Terms
             </Link>
+            <ConsentLink className="text-sm text-muted-foreground hover:underline underline-offset-4" />
           </nav>
         </div>
         

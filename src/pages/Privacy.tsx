@@ -2,6 +2,67 @@
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { ConsentLink } from "@/components/ConsentBar";
+
+// Every tool the browser loads (manga-os-v4 docs/standards/third-party-scripts.md rule 3). Keep in step with index.html and GTM-P84WRMG9.
+const TOOLS = [
+  {
+    name: "Google Analytics 4",
+    records: "Pages viewed, scans started and completed (chain and score range only, never a wallet or token address), sign-ups, checkouts and purchases, device and browser type, approximate location. IP addresses are not stored. With cookies allowed, Google signals may link visits to signed-in Google accounts for aggregated reports.",
+    cookies: "_ga and _ga_X9EQHXBVCS, 13 months. None after Decline, or before Accept inside the EU, EEA, UK and Switzerland.",
+    processor: "Google LLC, USA (Google Ireland Ltd. for the EU, EEA and UK). Data Privacy Framework.",
+    runs: "Every visit. Without cookies after Decline (anonymous pings, no visitor identifier).",
+    basis: "Legitimate interest without cookies; consent for cookies inside the EU, EEA, UK and Switzerland; legitimate interest with the right to object elsewhere.",
+  },
+  {
+    name: "Microsoft Clarity",
+    records: "Clicks, scrolls, page layout and session replays with typed text masked, device and browser type.",
+    cookies: "_clck, 1 year; _clsk, 1 day; on clarity.ms and bing.com, CLID (1 year), MUID (13 months), MR (7 days) and SM, ANONCHK (the visit). None after Decline, or before Accept inside the EU, EEA, UK and Switzerland.",
+    processor: "Microsoft Corporation, USA (Microsoft Ireland Operations Ltd. for the EU, EEA and UK). Data Privacy Framework.",
+    runs: "Every visit. Without cookies after Decline, so it cannot recognise you on a later visit.",
+    basis: "Legitimate interest without cookies; consent for cookies inside the EU, EEA, UK and Switzerland; legitimate interest with the right to object elsewhere.",
+  },
+  {
+    name: "TikTok pixel",
+    records: "Page visits and site events, to measure and target our TikTok ads.",
+    cookies: "_ttp, _tt_enable_cookie, ttcsid and ttcsid_D0IEQ6RC77U6ANESEF5G on this site, and _ttp on tiktok.com, 13 months.",
+    processor: "TikTok Pte. Ltd., Singapore (TikTok Technology Ltd., Ireland, for the EU, EEA and UK). Transfers to Singapore, Malaysia and the USA under Standard Contractual Clauses.",
+    runs: "Only with cookies allowed: never after Decline, never before Accept inside the EU, EEA, UK and Switzerland.",
+    basis: "Consent inside the EU, EEA, UK and Switzerland; legitimate interest with the right to object elsewhere.",
+  },
+  {
+    name: "Reddit pixel",
+    records: "Page visits and site events, to measure and target our Reddit ads.",
+    cookies: "_rdt_uuid on this site, 90 days; rbu on reddit.com, 13 months.",
+    processor: "Reddit, Inc., USA. Standard Contractual Clauses.",
+    runs: "Only with cookies allowed: never after Decline, never before Accept inside the EU, EEA, UK and Switzerland.",
+    basis: "Consent inside the EU, EEA, UK and Switzerland; legitimate interest with the right to object elsewhere.",
+  },
+  {
+    name: "X (Twitter) pixel",
+    records: "Page visits, to measure and target our X ads.",
+    cookies: "_twclid on this site when you arrive from an X ad; on x.com and twitter.com, muc_ads, personalization_id and guest_id; up to 13 months.",
+    processor: "X Corp., USA (Twitter International Unlimited Company, Ireland, for the EU, EEA and UK). Standard Contractual Clauses.",
+    runs: "Only with cookies allowed: never after Decline, never before Accept inside the EU, EEA, UK and Switzerland.",
+    basis: "Consent inside the EU, EEA, UK and Switzerland; legitimate interest with the right to object elsewhere.",
+  },
+  {
+    name: "Cloudflare Web Analytics",
+    records: "Page views, load times and referring site, counted without identifying the visitor.",
+    cookies: "None.",
+    processor: "Cloudflare, Inc., USA. Data Privacy Framework.",
+    runs: "Every visit, whatever you choose.",
+    basis: "Legitimate interest in running and improving the service.",
+  },
+  {
+    name: "What the site needs to work",
+    records: "Your cookie choice, your sign-in session, protection against bots, and which version of the site you are served.",
+    cookies: "ths_consent, 6 months; __cf_bm (Cloudflare bot protection), 30 minutes; __dpl (hosting, the site version), 7 days; the Supabase sign-in session in local storage, until you sign out.",
+    processor: "Cloudflare, Inc., USA; Lovable (hosting); Supabase, Inc., USA. Data Privacy Framework or Standard Contractual Clauses.",
+    runs: "Always: the site cannot work without them, and Decline does not remove them.",
+    basis: "Contract and legitimate interest in a secure service; strictly necessary, so no consent is needed.",
+  },
+];
 
 export default function Privacy() {
   return (
@@ -72,6 +133,7 @@ export default function Privacy() {
               <li><strong>Stripe:</strong> Payment processing</li>
               <li><strong>CoinGecko, GoPlus, Etherscan, GeckoTerminal, Apify, GitHub:</strong> Data APIs</li>
               <li><strong>Supabase:</strong> Authentication, database, and user management</li>
+              <li><strong>HubSpot</strong> (HubSpot, Inc., USA): your account email, name, plan and scan usage, for account and product emails</li>
             </ul>
             <p className="mb-6">
               These services may collect data in accordance with their own privacy policies.
@@ -79,23 +141,50 @@ export default function Privacy() {
 
             <h2 id="cookies" className="text-2xl font-semibold mt-8 mb-4">5. Cookies and Tracking</h2>
             <p className="mb-4">
-              We measure how the site is used so we can improve it, and we use advertising pixels to measure our campaigns. These tools load for every
-              visitor once the page has finished loading. Outside the EU, EEA, UK and Switzerland they set cookies from the first visit until you
-              choose "Refuse" in the cookie bar. Inside those regions they set no cookies unless you choose "Accept". If you refuse, Google Analytics
-              and Microsoft Clarity keep measuring without cookies, the advertising pixels stop, and we remember your choice for 6 months
-              (cookie <code>ths_consent</code>). To change it, delete that cookie and choose again in the bar.
+              We measure how the site is used so we can improve it, and we use advertising pixels to measure our campaigns. These tools load
+              for every visitor once the page has finished loading (or at your first tap, scroll or key press, if that comes sooner).
             </p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
-              <li><strong>Google Analytics 4</strong> (Google LLC, USA): pages viewed, scans started and completed (chain and score range only), sign-ups and checkouts. Cookies <code>_ga</code>, <code>_ga_*</code>, up to 2 years.</li>
-              <li><strong>Microsoft Clarity</strong> (Microsoft Corporation, USA): clicks, scrolls and anonymised session replays. Cookies <code>_clck</code> (1 year) and <code>_clsk</code> (1 day).</li>
-              <li><strong>TikTok pixel</strong> (TikTok Pte. Ltd.), <strong>Reddit pixel</strong> (Reddit, Inc., USA) and <strong>X (Twitter) pixel</strong> (X Corp., USA): page visits and site events, to measure ads. Cookies such as <code>_ttp</code>, <code>_rdt_uuid</code>, <code>_twclid</code> and <code>muc_ads</code>, up to 13 months. They only run with cookie consent.</li>
-              <li><strong>Session and preferences</strong>: our own local storage for sign-in and settings, kept until you sign out or clear it.</li>
+              <li>
+                <strong>Outside the EU, the EEA, the UK and Switzerland</strong>, they set cookies from your first visit. You can say no at
+                any time with "Decline" in the notice or the "Decline cookies" link at the bottom of every page.
+              </li>
+              <li>
+                <strong>Inside the EU, the EEA, the UK and Switzerland</strong>, they set no cookies and the advertising pixels stay off
+                until you choose "Accept" in the cookie bar.
+              </li>
+              <li>
+                <strong>After "Decline"</strong>, every cookie we control is refused at once and on every later page, and we remember the
+                choice for 6 months (cookie <code>ths_consent</code>). Google Analytics and Microsoft Clarity keep measuring without cookies
+                or other device storage, and the TikTok, Reddit and X pixels stop. The same link lets you change your mind later.
+              </li>
             </ul>
-            <p className="mb-6">
-              These providers process data outside your country, including in the United States. Measurement without cookies is based on our
-              legitimate interest in running and improving the service (LGPD art. 7, IX; GDPR art. 6(1)(f)); cookies and pixels are based on your
-              consent where the law requires it (LGPD art. 7, I; GDPR art. 6(1)(a)), and you can object at any time with "Refuse".
-            </p>
+            <p className="mb-4"><ConsentLink className="rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-muted" /></p>
+
+            <h3 className="text-xl font-medium mt-6 mb-3">The tools, one by one</h3>
+            <div className="space-y-4 mb-6 not-prose">
+              {TOOLS.map((t) => (
+                <div key={t.name} className="rounded-lg border border-border p-4 text-sm">
+                  <p className="font-semibold mb-2">{t.name}</p>
+                  <dl className="grid gap-1 sm:grid-cols-[10rem_1fr]">
+                    <dt className="text-muted-foreground">What it records</dt><dd>{t.records}</dd>
+                    <dt className="text-muted-foreground">Cookies and lifetime</dt><dd>{t.cookies}</dd>
+                    <dt className="text-muted-foreground">Processor and transfer</dt><dd>{t.processor}</dd>
+                    <dt className="text-muted-foreground">When it runs</dt><dd>{t.runs}</dd>
+                    <dt className="text-muted-foreground">Legal basis</dt><dd>{t.basis}</dd>
+                  </dl>
+                </div>
+              ))}
+            </div>
+
+            <h3 className="text-xl font-medium mt-6 mb-3">Legal bases</h3>
+            <ul className="list-disc pl-6 mb-4 space-y-2">
+              <li><strong>What the site needs to work</strong> (security, sign-in, remembering your cookie choice): performance of our contract with you and our legitimate interest in a secure service (GDPR art. 6(1)(b) and (f); LGPD art. 7, V and IX). These need no consent under the ePrivacy rules because they are strictly necessary.</li>
+              <li><strong>Measurement without cookies</strong> (Google Analytics and Clarity after "Decline", or before your choice inside the EU, EEA, UK and Switzerland): our legitimate interest in running and improving the service (GDPR art. 6(1)(f); LGPD art. 7, IX, and art. 10). You can object by writing to the address below.</li>
+              <li><strong>Analytics cookies and advertising pixels inside the EU, EEA, UK and Switzerland</strong>: your consent (GDPR art. 6(1)(a); ePrivacy Directive art. 5(3); UK PECR reg. 6), which you can withdraw at any time with "Decline cookies".</li>
+              <li><strong>Analytics cookies and advertising pixels elsewhere</strong>: our legitimate interest in measuring the site and our campaigns (LGPD art. 7, IX, and art. 10), with your right to object at any time through "Decline" (LGPD art. 18, § 2).</li>
+              <li><strong>International transfers</strong>: these providers process data outside your country, mainly in the United States (and Singapore for TikTok). They rely on the EU-US Data Privacy Framework where they are certified, or on Standard Contractual Clauses (GDPR art. 46; LGPD art. 33).</li>
+            </ul>
 
             <h2 className="text-2xl font-semibold mt-8 mb-4">6. Your Rights</h2>
             <p className="mb-4">You may:</p>
