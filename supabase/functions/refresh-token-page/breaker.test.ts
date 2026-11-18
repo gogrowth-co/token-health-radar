@@ -55,7 +55,7 @@ Deno.test('a scan that errored is not a success: it cannot close the breaker, an
 });
 
 Deno.test('the ramp counts every token refresh that started a scan in the rolling hour', () => {
-  const runs = [1, 10, 20, 30, 70].map((m, i) => ({ started_at: at(m), results: [{ token: `T${i}`, ok: true, rescanned: 1 }] }));
+  const runs = Array.from({ length: RESCAN_TOKENS_PER_HOUR }, (_, i) => 1 + i * 4).concat([70]).map((m, i) => ({ started_at: at(m), results: [{ token: `T${i}`, ok: true, rescanned: 1 }] }));
   const b = breakerFrom(runs, NOW);
-  assertEquals(b.open, false); assertEquals(b.rescannedLastHour, 4); assert(RESCAN_TOKENS_PER_HOUR - b.rescannedLastHour <= 0);
+  assertEquals(b.open, false); assertEquals(b.rescannedLastHour, RESCAN_TOKENS_PER_HOUR); assert(RESCAN_TOKENS_PER_HOUR - b.rescannedLastHour <= 0);
 });
