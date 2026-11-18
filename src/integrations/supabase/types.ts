@@ -373,6 +373,24 @@ export type Database = {
         }
         Relationships: []
       }
+      scan_quota: {
+        Row: {
+          bucket: string
+          used: number
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          used?: number
+          window_start: string
+        }
+        Update: {
+          bucket?: string
+          used?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           agent_scans_used: number | null
@@ -723,6 +741,33 @@ export type Database = {
             referencedColumns: ["token_address", "chain_id"]
           },
         ]
+      }
+      token_page_refresh_runs: {
+        Row: {
+          finished_at: string | null
+          id: number
+          ok: boolean | null
+          results: Json | null
+          started_at: string
+          trigger: string
+        }
+        Insert: {
+          finished_at?: string | null
+          id?: never
+          ok?: boolean | null
+          results?: Json | null
+          started_at?: string
+          trigger: string
+        }
+        Update: {
+          finished_at?: string | null
+          id?: never
+          ok?: boolean | null
+          results?: Json | null
+          started_at?: string
+          trigger?: string
+        }
+        Relationships: []
       }
       token_reports: {
         Row: {
@@ -1336,6 +1381,13 @@ export type Database = {
         Returns: string
       }
       refresh_token_sitemap: { Args: never; Returns: undefined }
+      scan_quota_take: {
+        Args: { p_bucket: string; p_limit: number; p_window_seconds: number }
+        Returns: {
+          allowed: boolean
+          used: number
+        }[]
+      }
       sync_all_users_to_hubspot: { Args: never; Returns: undefined }
       sync_all_users_to_hubspot_debug: { Args: never; Returns: Json }
       upsert_subscriber_by_email: {
