@@ -35,13 +35,17 @@ export function checkExpectations(rec: ScanRecord, expect: Record<string, any>):
     }
     const where = `${path} = ${JSON.stringify(f.value)} [${f.status}${f.reason ? ':' + f.reason : ''}]`;
     if (e.status && f.status !== e.status) errors.push(`${where}: expected status ${e.status}${f.detail ? ' (' + f.detail + ')' : ''}`);
+    // status_any: a field whose sources legitimately lag each other (a quarterly release one aggregator has not booked yet) may be
+    // disputed; its displayed value is still checked against the hand-verified truth.
+    const okStatuses: string[] = e.status_any ?? ['ok'];
+    if (e.status_any && !okStatuses.includes(f.status)) errors.push(`${where}: expected status in ${okStatuses.join('|')}`);
     if (e.reason && f.reason !== e.reason) errors.push(`${where}: expected reason ${e.reason}`);
     if ('corroborated' in e && (f.corroborated === true) !== e.corroborated) errors.push(`${where}: expected corroborated=${e.corroborated}, got ${f.corroborated}`);
     // A value only counts when the field is usable: a disputed field keeps its primary value for display.
-    if ('eq' in e && !e.status && f.status !== 'ok') errors.push(`${where}: expected ${JSON.stringify(e.eq)} with status ok`);
+    if ('eq' in e && !e.status && !okStatuses.includes(f.status)) errors.push(`${where}: expected ${JSON.stringify(e.eq)} with status ${okStatuses.join('|')}`);
     if ('eq' in e && f.value !== e.eq) errors.push(`${where}: expected ${JSON.stringify(e.eq)}${f.detail ? ' (' + f.detail + ')' : ''}`);
     if ('approx' in e) {
-      if (typeof f.value !== 'number' || f.status !== 'ok') errors.push(`${where}: expected ~${e.approx} (status ok)${f.detail ? ' (' + f.detail + ')' : ''}`);
+      if (typeof f.value !== 'number' || !okStatuses.includes(f.status)) errors.push(`${where}: expected ~${e.approx} (status ${okStatuses.join('|')})${f.detail ? ' (' + f.detail + ')' : ''}`);
       else {
         const diff = Math.abs(f.value - e.approx);
         const tol = 'abs' in e ? e.abs : Math.abs(e.approx) * (e.rel ?? 0.02);

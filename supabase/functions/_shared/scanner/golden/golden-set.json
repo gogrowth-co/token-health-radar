@@ -10,7 +10,8 @@
     "reason": "field reason code must be this",
     "not_eq_path": "value must NOT equal the value at this other path (e.g. circulating must not be defaulted to total)",
     "flag_absent": "no plausibility flag with this rule at severity warning or error",
-    "flag_present": "a plausibility flag with this rule (any severity) must exist"
+    "flag_present": "a plausibility flag with this rule (any severity) must exist",
+    "status_any": "field status must be one of these (default ['ok'] for eq/approx); the value is still checked. For a supply that one aggregator books later than another."
   },
   "tokens": [
     {
@@ -335,9 +336,11 @@
           "evidence": "eth_call totalSupply()"
         },
         "market.circulating_supply": {
-          "approx": 748099970,
+          "approx": 766849970,
           "rel": 0.03,
-          "evidence": "CoinGecko 748099970.42; CoinMarketCap id 1975 748099970.42"
+          "evidence": "Re-verified 2026-10-28 after the October quarterly reserve release (18,750,000 LINK): totalSupply() 1,000,000,000 minus the balanceOf() of the 33 non-circulating wallets listed on chain.link/circulating-supply = 766,849,970.42 (public RPC, standalone script); chain.link/circulating-supply and supply.chain.link/supply say 766,849,970.42; CoinGecko 766,849,970.42. CoinMarketCap id 1975 still says 748,099,970.42 (not updated since the release around 2026-10-10), so the scanner may mark the field disputed until CMC books it. Was 748,099,970 (2026-09-24). Since the supply tiebreaker (2026-10-28) Chainlink's own supply API and wallet sum settle the dispute, so the field must be ok and corroborated.",
+          "status": "ok",
+          "corroborated": true
         },
         "chain.top10_pct": {
           "approx": 31.51,
@@ -365,9 +368,9 @@
         },
         "unlocks.unscheduled_supply": {
           "status": "ok",
-          "approx": 251990421,
+          "approx": 233240421,
           "rel": 0.05,
-          "evidence": "DeFiLlama emissions/chainlink supplyMetrics.tbdAmount"
+          "evidence": "DeFiLlama emissions/chainlink supplyMetrics.tbdAmount 233,240,421.01 on 2026-10-28 (was 251,990,421 before the October release); on-chain non-circulating balance 233,150,029.58 agrees within 0.04%."
         }
       }
     },
@@ -636,5 +639,8 @@
         }
       }
     }
-  ]
+  ],
+  "tokens_reverified": {
+    "LINK": "2026-10-28"
+  }
 }

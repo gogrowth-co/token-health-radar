@@ -17,6 +17,7 @@ import { buildRows, vestingText } from './persist.ts';
 import { collectGithub, communityFields, EMPTY_REPO } from './social.ts';
 import { scoreRecord } from './scoring.ts';
 import type { ScanRecord } from './types.ts';
+import { decodeAggregate, encodeAggregate, NO_PROJECT_SOURCE, projectSupply, settleCirculating, tiebreak } from './supply.ts';
 
 const ref = { source: 'test', fetched_at: '2026-09-24T00:00:00Z' };
 const refB = { source: 'test_b', fetched_at: '2026-09-24T00:00:00Z' }; // a second, independent source
@@ -1441,4 +1442,65 @@ Deno.test('honeypot.is: a simulated sell that went through outranks its holder-h
   // a plain "not a honeypot" and no verdict at all
   assertEquals(honeypotIsVerdict({ honeypotResult: { isHoneypot: false } }, ref).value, false);
   assertEquals(honeypotIsVerdict({}, ref).status, 'unknown');
+});
+
+// ---- third reader for circulating supply (2026-10-28, LINK: CoinMarketCap one quarterly release behind for 18 days)
+const disputedCirc = (cg: number, cmc: number): any => ({
+  value: cg, status: 'disputed', reason: 'sources_disagree', confidence: 'low', corroborated: false, unit: 'tokens', detail: 'circulating supply (CoinGecko vs CoinMarketCap): differ',
+  sources: [{ source: 'coingecko', fetched_at: '', value: cg }, { source: 'coinmarketcap', fetched_at: '', value: cmc }],
+});
+const projectRef = { source: 'project_supply:supply.example', fetched_at: '' };
+
+Deno.test('supply tiebreak: the project figure confirms one aggregator, which wins and is corroborated', () => {
+  const t = tiebreak(disputedCirc(766.85e6, 748.1e6), ok(766.85e6, projectRef), 'Chainlink');
+  assertEquals(t.status, 'ok');
+  assertEquals(t.value, 766.85e6);
+  assertEquals(t.corroborated, true);
+  assert(t.detail!.includes('CoinMarketCap 748.10M is out of date'));
+  const u = tiebreak(disputedCirc(766.85e6, 748.1e6), ok(748.2e6, projectRef), 'Chainlink');
+  assertEquals(u.value, 748.1e6); // it can side with CoinMarketCap too
+});
+
+Deno.test('supply tiebreak: never overrides both aggregators, and a token without an entry stays disputed and says so', () => {
+  const neither = tiebreak(disputedCirc(1e9, 6.46e8), ok(8e8, projectRef), 'Nexo');
+  assertEquals(neither.status, 'disputed');
+  assert(neither.detail!.includes('agrees with neither'));
+  const none = tiebreak(disputedCirc(1e9, 6.46e8), null, '');
+  assertEquals(none.status, 'disputed');
+  assert(none.detail!.includes(NO_PROJECT_SOURCE));
+  const failed = tiebreak(disputedCirc(766.85e6, 748.1e6), unknown('timeout', 'slow', [projectRef]), 'Chainlink');
+  assertEquals(failed.status, 'disputed');
+  const agreed = ok(5, ref, { corroborated: true });
+  assertEquals(tiebreak(agreed, ok(9, projectRef), 'x'), agreed); // only a dispute is touched
+});
+
+Deno.test('supply: multicall encode/decode round trip, and settleCirculating makes no call when the aggregators agree', async () => {
+  const enc = encodeAggregate([{ target: '0xabc', data: '0x18160ddd' }, { target: '0xabc', data: '0x70a08231' + '0'.repeat(64) }]);
+  assert(enc.startsWith('0x252dba42'));
+  assertEquals((enc.length - 10) / 64, 2 + 2 + 2 * 5); // head(offset,len) + 2 offsets + 2 tuples of 5 words
+  const w = (n: bigint | number) => BigInt(n).toString(16).padStart(64, '0');
+  const ret = '0x' + w(123) + w(0x40) + w(2) + w(0x40) + w(0x80) + w(32) + w(1000n * 10n ** 18n) + w(32) + w(250n * 10n ** 18n);
+  assertEquals(decodeAggregate(ret), [1000n * 10n ** 18n, 250n * 10n ** 18n]);
+  let calls = 0;
+  stubFetch(() => { calls++; return { json: {} }; });
+  try {
+    const f = ok(1, ref);
+    assertEquals(await settleCirculating(new ScanContext(), '0x1', '0x514910771af9ca656af840dff83e8264ecf986ca', f, ok(18, ref)), f);
+    assertEquals(calls, 0);
+  } finally { restore(); }
+});
+
+Deno.test('supply: the project API and its wallet sum must agree, or nothing is settled (stale wallet list)', async () => {
+  const w = (n: bigint) => n.toString(16).padStart(64, '0');
+  const src = { name: 'Demo', api: { url: 'https://supply.example/s', field: 'circulatingSupply', decimals: 18 }, wallets: ['0x' + '1'.repeat(40)], evidence: '', verified_at: '2026-10-28' };
+  const mc = (held: bigint) => '0x' + w(1n) + w(0x40n) + w(2n) + w(0x40n) + w(0x80n) + w(32n) + w(1000n * 10n ** 18n) + w(32n) + w(held * 10n ** 18n);
+  for (const [held, status] of [[250n, 'ok'], [200n, 'unknown']] as const) {
+    stubFetch((url, body) => url.startsWith('https://supply.example') ? { json: { circulatingSupply: (750n * 10n ** 18n).toString() } } : { json: { jsonrpc: '2.0', id: body?.id ?? 1, result: mc(held) } });
+    try {
+      const p = await projectSupply(new ScanContext(), '0x1', '0x' + '2'.repeat(40), 18, src);
+      assertEquals(p.status, status);
+      if (status === 'ok') assertEquals(p.value, 750);
+      else assert(p.detail!.includes('wallet list may be out of date'));
+    } finally { restore(); }
+  }
 });
