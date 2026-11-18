@@ -46,6 +46,8 @@ export async function isInside(): Promise<boolean> {
 // first-party cookies the tools set; Decline removes the ones already set on this visit
 const TOOL_COOKIES = /^(_ga|_gid|_gcl|_clck|_clsk|_ttp|_rdt_uuid|_rdt_em|_twclid|_tt_enable_cookie|ttcsid|muc_ads|personalization_id|guest_id)/;
 
+let holding = 0;
+
 function clearToolCookies() {
   const host = location.hostname.replace(/^www\./, "");
   for (const c of document.cookie.split("; ")) {
@@ -67,8 +69,12 @@ export function choose(value: Choice): void {
       w.ttq?.revokeConsent?.();
       w.ttq?.disableCookie?.();
       clearToolCookies();
-      // TikTok writes its session cookies again a moment after revoke; clear once more after it settles
-      setTimeout(clearToolCookies, 1500);
+      // TikTok's loaded script keeps writing its session cookies (ttcsid) on this document after revoke: clear them for as long as
+      // the document lives (index.html clears any leftover on the next page load)
+      if (!holding) {
+        holding = window.setInterval(() => { if (readChoice() === "deny") clearToolCookies(); else { clearInterval(holding); holding = 0; } }, 1000);
+        window.addEventListener("pagehide", () => { if (readChoice() === "deny") clearToolCookies(); });
+      }
     } else {
       w.ttq?.enableCookie?.();
       w.ttq?.grantConsent?.();
