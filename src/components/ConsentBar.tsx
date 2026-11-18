@@ -1,52 +1,82 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { CONSENT_EVENT, choose, closeNotice, isInside, noticeClosed, readChoice, type Choice } from "@/lib/consent";
 
-// The consent bar (2026-11-18, the EkkoGreen opt-out model of manga-os-v4 docs/standards/third-party-scripts.md). index.html sets the
-// Consent Mode defaults before any tag loads; this bar only records the visitor's choice (cookie ths_consent, 6 months) and tells
-// Google and Clarity at once. "Refuse" takes away cookies, never measurement: GA4 and Clarity keep running without cookies, and the
-// cookie-only pixels in GTM stop (they need ad_storage).
-const COOKIE = "ths_consent";
-const SIX_MONTHS = 60 * 60 * 24 * 182;
-
-type W = Window & { gtag?: (...a: unknown[]) => void; clarity?: (...a: unknown[]) => void };
-
-function choose(value: "allow" | "deny") {
-  document.cookie = `${COOKIE}=${value}; Max-Age=${SIX_MONTHS}; Path=/; SameSite=Lax; Secure`;
-  const w = window as W;
-  const v = value === "allow" ? "granted" : "denied";
-  w.gtag?.("consent", "update", { ad_storage: v, analytics_storage: v, ad_user_data: v, ad_personalization: v });
-  w.clarity?.("consentv2", { ad_Storage: v, analytics_Storage: v });
-  if (value === "deny") {
-    // cookies the tools already set on this visit go too; measurement continues without them
-    for (const c of document.cookie.split("; ")) {
-      const name = c.split("=")[0];
-      if (/^(_ga|_gid|_gcl|_clck|_clsk|_ttp|_rdt_uuid|_twclid|_tt_enable_cookie|ttcsid|muc_ads|personalization_id|guest_id)/.test(name)) {
-        for (const domain of ["", "; Domain=.tokenhealthscan.com", "; Domain=tokenhealthscan.com"]) document.cookie = `${name}=; Max-Age=0; Path=/${domain}`;
-      }
-    }
-  }
-}
+// The consent bar (manga-os-v4 docs/standards/third-party-scripts.md, the EkkoGreen opt-out model; Gabriel 2026-11-18).
+// Inside the EU/EEA/UK/CH list it asks: nothing sets a cookie until "Accept". Outside it is a notice: the tools already run with
+// cookies, and "Decline" denies every storage at once and on every later page. Either way GA4 and Clarity keep measuring without
+// cookies after Decline; only the advertising pixels stop. index.html holds the defaults and the loader; src/lib/consent.ts the choice.
+type Mode = "ask" | "notice" | null;
 
 export default function ConsentBar() {
-  const [open, setOpen] = useState(false);
-  useEffect(() => { setOpen(!new RegExp(`(?:^|; )${COOKIE}=`).test(document.cookie)); }, []);
-  if (!open) return null;
-  const pick = (v: "allow" | "deny") => { choose(v); setOpen(false); };
+  const [mode, setMode] = useState<Mode>(null);
+  useEffect(() => {
+    let live = true;
+    const decide = async () => {
+      if (readChoice()) { if (live) setMode(null); return; }
+      const inside = await isInside();
+      if (!live) return;
+      setMode(inside ? "ask" : noticeClosed() ? null : "notice");
+    };
+    decide();
+    const onChange = () => { decide(); };
+    window.addEventListener(CONSENT_EVENT, onChange);
+    return () => { live = false; window.removeEventListener(CONSENT_EVENT, onChange); };
+  }, []);
+  if (!mode) return null;
+  const pick = (v: Choice) => { choose(v); setMode(null); };
   return (
-    <div role="region" aria-label="Cookie choice" data-consent-bar
+    <div role="region" aria-label="Cookie choice" data-consent-bar={mode}
       className="fixed inset-x-0 bottom-0 z-[60] border-t border-border bg-background/95 backdrop-blur px-4 py-3 shadow-lg">
       <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-muted-foreground">
-          We measure how the site is used with Google Analytics, Microsoft Clarity and the TikTok, Reddit and X pixels, which set cookies.
-          If you refuse, we keep measuring without cookies and the pixels stop. <Link to="/privacy#cookies" className="underline">Privacy policy</Link>
-        </p>
+        {mode === "ask" ? (
+          <p className="text-sm text-muted-foreground">
+            May we use cookies? Google Analytics, Microsoft Clarity and the TikTok, Reddit and X ad pixels would set them to measure the
+            site and our ads. If you decline, we only measure without cookies and the ad pixels stay off.{" "}
+            <Link to="/privacy#cookies" className="underline">Privacy policy</Link>
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            We measure how the site is used with Google Analytics, Microsoft Clarity and the TikTok, Reddit and X ad pixels, which set
+            cookies. Decline and we keep measuring without cookies and the pixels stop.{" "}
+            <Link to="/privacy#cookies" className="underline">Privacy policy</Link>
+          </p>
+        )}
         <div className="flex shrink-0 gap-2">
           <button type="button" onClick={() => pick("deny")} data-consent="deny"
-            className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-muted">Refuse</button>
-          <button type="button" onClick={() => pick("allow")} data-consent="allow"
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Accept</button>
+            className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-muted">Decline</button>
+          {mode === "ask" ? (
+            <button type="button" onClick={() => pick("allow")} data-consent="allow"
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Accept</button>
+          ) : (
+            <button type="button" onClick={() => { closeNotice(); setMode(null); }} data-consent="ok"
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">OK</button>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+/** The Decline link every visitor gets (footer, privacy page): Decline, or after it, the way back to Accept. */
+export function ConsentLink({ className = "" }: { className?: string }) {
+  const [choice, setChoice] = useState<Choice | null>(null);
+  useEffect(() => {
+    const read = () => setChoice(readChoice());
+    read();
+    window.addEventListener(CONSENT_EVENT, read);
+    return () => window.removeEventListener(CONSENT_EVENT, read);
+  }, []);
+  if (choice === "deny") {
+    return (
+      <button type="button" data-consent-link="allow" onClick={() => choose("allow")} className={className}>
+        Cookies declined (allow cookies)
+      </button>
+    );
+  }
+  return (
+    <button type="button" data-consent-link="deny" onClick={() => choose("deny")} className={className}>
+      Decline cookies
+    </button>
   );
 }
