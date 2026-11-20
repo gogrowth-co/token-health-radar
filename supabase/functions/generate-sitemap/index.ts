@@ -58,6 +58,8 @@ serve(async (req) => {
       { url: '/ethereum-launchpads', lastmod: '2026-05-22', changefreq: 'monthly', priority: '0.8' },
       { url: '/pricing', lastmod: '2026-05-22', changefreq: 'monthly', priority: '0.7' },
       { url: '/ai-agents', lastmod: '2026-05-22', changefreq: 'monthly', priority: '0.6' },
+      { url: '/agent-scan', lastmod: '2026-11-20', changefreq: 'weekly', priority: '0.7' },
+      { url: '/agent-directory', lastmod: '2026-11-20', changefreq: 'daily', priority: '0.7' },
       { url: '/copilot', lastmod: '2026-05-22', changefreq: 'monthly', priority: '0.6' },
       { url: '/privacy', lastmod: '2026-05-22', changefreq: 'yearly', priority: '0.3' },
       { url: '/terms', lastmod: '2026-05-22', changefreq: 'yearly', priority: '0.3' },
