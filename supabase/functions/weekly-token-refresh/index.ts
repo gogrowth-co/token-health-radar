@@ -1,3 +1,4 @@
+import { serviceKey } from '../_shared/keys.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.7';
 import { requireCronSecret } from '../_shared/authGuard.ts';
 
@@ -53,7 +54,7 @@ async function callFn(supabaseUrl: string, serviceKey: string, name: string, bod
   try {
     const res = await fetch(`${supabaseUrl}/functions/v1/${name}`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json', ...extraHeaders },
+      headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json', ...extraHeaders },
       body: JSON.stringify(body),
       signal: ctrl.signal,
     });
@@ -93,7 +94,7 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseServiceKey = serviceKey()!;
     const adminUserId = Deno.env.get('ADMIN_USER_ID');
     // run-token-scan accepts a user JWT or x-internal-secret only. SUPABASE_SERVICE_ROLE_KEY is no
     // longer a JWT, so without this header every scan in this job was rejected with 401.

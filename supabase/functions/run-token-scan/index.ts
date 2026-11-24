@@ -13,6 +13,7 @@
 // - Cache rows get a real updated_at, and all rows of a scan are written in one transaction (persist_token_scan).
 // - The SEO snapshot is only regenerated when the caller passes
 //   `regenerate_snapshot: true` (bot-facing HTML is published content).
+import { serviceKey } from '../_shared/keys.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { fetchLunarCrushWithCache } from '../_shared/lunarcrushAPI.ts';
 import { requireAuthOrInternal, getClientIp } from '../_shared/authGuard.ts';
@@ -30,7 +31,7 @@ const corsHeaders = {
 };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+const supabase = createClient(Deno.env.get('SUPABASE_URL')!, serviceKey()!);
 
 // The repository Development reads: the first candidate, in trust order, whose repository exists, is not empty and was pushed in the last year;
 // if none was, the first one that exists (a stale repository is a reading too); none found names every place checked.
@@ -235,7 +236,7 @@ Deno.serve(async (req) => {
       if (!error && allowInternalOptions && regenerate_snapshot === true && symbol) {
         fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/regenerate-seo-snapshot`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
+          headers: { 'Content-Type': 'application/json', apikey: serviceKey(), Authorization: `Bearer ${serviceKey()}` },
           body: JSON.stringify({ kind: 'token', symbol }),
         }).catch((e) => console.warn(`[${requestId}] snapshot regen failed:`, e?.message));
       }

@@ -2,6 +2,7 @@
  * x402-ledger: public, read-only list of settled pay-per-scan payments.
  * Every row links to a Solana, Base or Monad transaction anyone can open on a block explorer.
  */
+import { serviceKey } from '../_shared/keys.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.7";
 import { explorerUrl } from "../_shared/x402.ts";
 
@@ -18,7 +19,7 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "GET") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: CORS });
 
   const limit = Math.min(Math.max(Number(new URL(req.url).searchParams.get("limit") ?? 100) || 100, 1), 500);
-  const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const db = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey()!);
 
   const { data, error } = await db
     .from("x402_payments")

@@ -9,6 +9,7 @@
 // Auth: x-refresh-secret = TOKEN_PAGE_REFRESH_SECRET (the V4 server: it can only ask for page refreshes), x-internal-secret, or the
 // service role key. Body: { tokens: [{ symbol } | { address, chain }], max_age_hours?: 24, no_rescan?: bool, force?: bool }
 // or { due: true, limit?: 2, max_age_hours?: 20 } (the cron: the tokens whose scan is oldest past the limit).
+import { serviceKey } from '../_shared/keys.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { projectKeyRole } from '../_shared/authGuard.ts';
 import { DIMS, reportFromScan, scanTime } from '../_shared/tokenPage/report.ts';
@@ -17,7 +18,7 @@ import { BREAKER_WINDOW_H, PROBE_EVERY_H, RESCAN_TOKENS_PER_HOUR, breakerFrom } 
 import { heroBgSvg, ogCardSvg, storySvg, svgToPng, type CardInput } from '../_shared/tokenPage/card.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!;
-const supabase = createClient(URL_, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+const supabase = createClient(URL_, serviceKey()!);
 const SITE = 'https://tokenhealthscan.com';
 const RESCANS = 2;
 const GAP_RETRY_HOURS = 1;
@@ -205,7 +206,8 @@ async function refresh(ref: any, opts: { maxAge: number; noRescan: boolean; forc
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''}`,
+        apikey: serviceKey(),
+        Authorization: `Bearer ${serviceKey()}`,
         ...(Deno.env.get('INTERNAL_API_SECRET') ? { 'x-internal-secret': Deno.env.get('INTERNAL_API_SECRET')! } : {}),
       },
       body: JSON.stringify({ trigger_source: 'refresh_token_page' }),

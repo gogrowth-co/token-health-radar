@@ -2,6 +2,7 @@
 // Generates complete branded hero images with token data and scores using OpenAI
 // Replaces both ai-hero-background and compose-hero with single unified function
 
+import { serviceKey } from '../_shared/keys.ts';
 import "https://deno.land/x/xhr@0.4.0/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { privilegedAccess } from "../_shared/adminAccess.ts";
@@ -48,12 +49,12 @@ Deno.serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    if (!supabaseUrl || !serviceKey) {
+    const secretKey = serviceKey();
+    if (!supabaseUrl || !secretKey) {
       return json({ ok: false, error: 'missing_env' }, 503);
     }
 
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = createClient(supabaseUrl, secretKey);
     const access = await privilegedAccess(req, supabase);
     if (!access.allowed) {
       return json({ ok: false, error: 'Admin or internal authorization required' }, access.status);

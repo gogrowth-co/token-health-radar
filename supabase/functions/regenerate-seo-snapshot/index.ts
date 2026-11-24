@@ -3,7 +3,7 @@
  * Storage bucket so bots get first-byte HTML without a live build.
  *
  * Auth: requires either
- *   - Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>
+ *   - Authorization: Bearer <project secret key> (new sb_secret_ key; legacy service_role only until the switch-off)
  *   - x-internal-secret: <INTERNAL_API_SECRET>
  *
  * Body:
@@ -19,6 +19,8 @@
  *   - admin one-off backfill
  */
 
+import { projectKeyRole } from '../_shared/authGuard.ts';
+import { serviceKey } from '../_shared/keys.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   pathToStorageKey,
@@ -37,16 +39,16 @@ const corsHeaders = {
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  serviceKey()!,
 );
 
-function isAuthorized(req: Request): boolean {
+async function isAuthorized(req: Request): Promise<boolean> {
   const internal = req.headers.get("x-internal-secret");
   if (internal && internal === Deno.env.get("INTERNAL_API_SECRET")) return true;
 
   const auth = req.headers.get("Authorization") || "";
   const token = auth.replace(/^Bearer\s+/i, "");
-  if (token && token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) return true;
+  if (token && (await projectKeyRole(token)) === "service_role") return true;
 
   return false;
 }
@@ -202,7 +204,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  if (!isAuthorized(req)) {
+  if (!(await isAuthorized(req))) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -1,3 +1,4 @@
+import { serviceKey } from '../_shared/keys.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.7";
 import { privilegedAccess } from "../_shared/adminAccess.ts";
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-secret, x-cron-secret", "Access-Control-Allow-Methods": "POST, OPTIONS" };
@@ -6,7 +7,7 @@ function strip(html: string) { return (html || "").replace(/<[^>]+>/g, " ").repl
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
   if (req.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey()!);
   try {
     const access = await privilegedAccess(req, supabase);
     if (!access.allowed) return new Response(JSON.stringify({ error: "Admin or internal authorization required" }), { status: access.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });

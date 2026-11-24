@@ -1,3 +1,4 @@
+import { serviceKey } from '../_shared/keys.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { privilegedAccess } from "../_shared/adminAccess.ts"
@@ -35,7 +36,7 @@ serve(async (req: Request) => {
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      serviceKey()!,
     );
     const access = await privilegedAccess(req, supabase);
     if (!access.allowed) {

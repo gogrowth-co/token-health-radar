@@ -13,6 +13,7 @@
  *
  * Public, read-only. The HyperSync token stays server-side (ENVIO_API_TOKEN).
  */
+import { serviceKey } from '../_shared/keys.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.7";
 import { decodeAbiParameters, keccak256, toHex } from "https://esm.sh/viem@2.21.0";
 
@@ -113,7 +114,7 @@ Deno.serve(async (req) => {
   const token = Deno.env.get("ENVIO_API_TOKEN");
   if (!token) return new Response(JSON.stringify({ error: "not configured" }), { status: 503, headers: CORS });
 
-  const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const db = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey()!);
   const { data: payee } = await db.from("x402_payments").select("pay_to").eq("network", "eip155:143").limit(1).maybeSingle();
   const PAYEE = (payee?.pay_to ?? Deno.env.get("X402_PAYEE_MONAD") ?? "").toLowerCase();
 

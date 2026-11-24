@@ -1,3 +1,5 @@
+import { projectKeyRole } from '../_shared/authGuard.ts';
+import { serviceKey } from '../_shared/keys.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const AIRTABLE_ACCESS_TOKEN = Deno.env.get('AIRTABLE_ACCESS_TOKEN');
@@ -36,7 +38,7 @@ const handler = async (req: Request): Promise<Response> => {
   console.log('[AIRTABLE-SYNC] Validating authentication...');
 
   const authHeader = req.headers.get('Authorization');
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const serviceRoleKey = serviceKey();
   const internalSecret = Deno.env.get('INTERNAL_API_SECRET');
 
   if (!authHeader) {
@@ -56,7 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
   const token = authHeader.replace('Bearer ', '');
 
   // Accept either service role key or internal API secret
-  const isValidServiceRole = token === serviceRoleKey;
+  const isValidServiceRole = (await projectKeyRole(token)) === 'service_role';
   const isValidInternal = internalSecret && token === internalSecret;
 
   if (!isValidServiceRole && !isValidInternal) {

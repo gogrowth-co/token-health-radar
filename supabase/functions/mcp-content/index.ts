@@ -1,3 +1,4 @@
+import { serviceKey } from '../_shared/keys.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.7";
 
 const CORS_HEADERS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, accept, x-mcp-secret", "Content-Type": "application/json" };
@@ -15,11 +16,11 @@ const TOOLS = [
 ];
 function safeEqual(a: string, b: string) { if (a.length !== b.length) return false; let out = 0; for (let i = 0; i < a.length; i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i); return out === 0; }
 function slugify(s: string) { return s.toLowerCase().trim().replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 120); }
-function supabase() { return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!); }
+function supabase() { return createClient(Deno.env.get("SUPABASE_URL")!, serviceKey()!); }
 async function regenerate(slug?: string) {
   const base = Deno.env.get("SUPABASE_URL")!;
-  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const H = { Authorization: `Bearer ${key}`, "Content-Type": "application/json" };
+  const key = serviceKey()!;
+  const H = { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" };
   const post = (fn: string, body?: unknown) =>
     fetch(`${base}/functions/v1/${fn}`, { method: "POST", headers: H, body: body ? JSON.stringify(body) : JSON.stringify({}) });
   // Publishing/updating a page must refresh EVERY derived surface.

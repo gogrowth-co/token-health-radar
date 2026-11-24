@@ -1,3 +1,4 @@
+import { serviceKey } from '../_shared/keys.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { privilegedAccess } from '../_shared/adminAccess.ts'
 
@@ -9,7 +10,7 @@ const corsHeaders = {
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  serviceKey()!
 )
 
 Deno.serve(async (req) => {

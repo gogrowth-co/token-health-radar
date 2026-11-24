@@ -8,6 +8,7 @@
  * - Request logging
  */
 
+import { serviceKey } from './keys.ts';
 import { corsHeaders } from './cors.ts';
 import {
   checkRateLimit,
@@ -161,7 +162,7 @@ async function checkAuthentication(
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    serviceKey()!
   );
 
   const authHeader = req.headers.get('Authorization');

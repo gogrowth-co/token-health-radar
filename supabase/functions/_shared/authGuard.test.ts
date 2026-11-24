@@ -6,14 +6,26 @@ import { projectKeyRole } from './authGuard.ts';
 const b64 = (o: unknown) => btoa(JSON.stringify(o)).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 const jwt = (claims: Record<string, unknown>) => `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64(claims)}.sig${Math.random().toString(36).slice(2)}`;
 Deno.env.set('SUPABASE_URL', 'https://proj.supabase.test');
-Deno.env.set('SUPABASE_ANON_KEY', 'anon-key-exact');
-Deno.env.set('SUPABASE_SERVICE_ROLE_KEY', 'sb_secret_exact');
+Deno.env.set('SUPABASE_SECRET_KEYS', JSON.stringify({ default: 'sb_secret_exact', ops: 'sb_secret_ops' }));
+Deno.env.set('SUPABASE_PUBLISHABLE_KEYS', JSON.stringify({ default: 'sb_publishable_exact' }));
 const later = Math.floor(Date.now() / 1000) + 3600;
+// the runtime keeps injecting the legacy JWTs after the legacy keys are switched off (F1, 2026-11-23)
+const leakedLegacy = jwt({ role: 'service_role', exp: later });
+Deno.env.set('SUPABASE_SERVICE_ROLE_KEY', leakedLegacy);
+Deno.env.set('SUPABASE_ANON_KEY', jwt({ role: 'anon', exp: later }));
 
-Deno.test('the project keys match exactly without a network call', async () => {
+Deno.test('the new project keys match exactly without a network call', async () => {
   const never = (() => { throw new Error('must not fetch'); }) as unknown as typeof fetch;
-  assertEquals(await projectKeyRole('anon-key-exact', never), 'anon');
+  assertEquals(await projectKeyRole('sb_publishable_exact', never), 'anon');
   assertEquals(await projectKeyRole('sb_secret_exact', never), 'service_role');
+  assertEquals(await projectKeyRole('sb_secret_ops', never), 'service_role');
+  assertEquals(await projectKeyRole('sb_secret_exac', never), null);
+  assertEquals(await projectKeyRole('sb_secret_wrong', never), null);
+});
+
+Deno.test('a switched-off legacy key equal to the env var is refused: Supabase rejects it on the probe', async () => {
+  const reject = (async () => new Response('no', { status: 401 })) as unknown as typeof fetch;
+  assertEquals(await projectKeyRole(leakedLegacy, reject), null);
 });
 
 Deno.test('a forged token is refused: Supabase rejects it on the probe', async () => {

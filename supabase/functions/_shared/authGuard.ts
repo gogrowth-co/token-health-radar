@@ -9,6 +9,7 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.7";
+import { callerToken, newKeyRole, publishableKey } from "./keys.ts";
 
 export interface AuthResult {
   ok: boolean;
@@ -46,10 +47,16 @@ function claims(token: string): Record<string, unknown> | null {
   try { return JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"))); } catch { return null; }
 }
 
-/** "anon" or "service_role" when the token is a real key of this project, else null. */
+/**
+ * "anon" or "service_role" when the token is a real key of this project, else null.
+ * New keys (sb_secret_/sb_publishable_) match exactly against SUPABASE_SECRET_KEYS / SUPABASE_PUBLISHABLE_KEYS.
+ * Legacy JWTs are never matched by equality with the legacy env vars: the runtime keeps injecting the legacy (leaked) JWTs there
+ * after the switch-off (F1, 2026-11-23). A legacy key counts only while Supabase itself still accepts it (the probe), so the
+ * switch-off closes this path with no redeploy.
+ */
 export async function projectKeyRole(token: string, fetchImpl: typeof fetch = fetch): Promise<string | null> {
-  if (token && token === Deno.env.get("SUPABASE_ANON_KEY")) return "anon";
-  if (token && token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) return "service_role";
+  const fresh = newKeyRole(token);
+  if (fresh) return fresh;
   const c = claims(token);
   const role = typeof c?.role === "string" ? c.role : null;
   if (role !== "anon" && role !== "service_role") return null;
@@ -71,15 +78,16 @@ export async function projectKeyRole(token: string, fetchImpl: typeof fetch = fe
 }
 
 export async function verifyJwt(req: Request): Promise<{ userId?: string; valid: boolean; role?: "user" | "anon" | "service_role" }> {
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) return { valid: false };
-  const token = authHeader.replace("Bearer ", "");
+  // Bearer token, or the apikey header alone (the documented way to send a new secret key)
+  const token = callerToken(req);
+  if (!token) return { valid: false };
+  const authHeader = `Bearer ${token}`;
 
   try {
     // Path 1: a signed-in user's session; Supabase Auth verifies it.
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
+      publishableKey(),
       { global: { headers: { Authorization: authHeader } } }
     );
     const { data, error } = await supabase.auth.getUser(token);

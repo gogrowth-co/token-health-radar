@@ -12,6 +12,7 @@
  * payment can buy exactly one scan.
  */
 
+import { serviceKey } from './keys.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.7";
 import {
   buildPaymentRequired,
@@ -94,7 +95,7 @@ export interface ScanEvidence {
  */
 async function loadEvidence(scanId: string | null, address: string, chainId: string): Promise<ScanEvidence | null> {
   try {
-    const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const db = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey()!);
     let query = db.from("token_scans").select("dimension_scores, completeness_pct");
     query = scanId
       ? query.eq("id", scanId)
@@ -162,7 +163,7 @@ export interface PaidScanRequest {
 }
 
 function ledger() {
-  return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  return createClient(Deno.env.get("SUPABASE_URL")!, serviceKey()!);
 }
 
 export async function executePaidScan(req: PaidScanRequest): Promise<PaidScanOutcome> {

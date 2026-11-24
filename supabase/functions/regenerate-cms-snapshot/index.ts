@@ -1,3 +1,4 @@
+import { serviceKey } from '../_shared/keys.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.7";
 import { adminAccess } from "../_shared/adminAccess.ts";
 
@@ -29,7 +30,7 @@ function snapshot(page: any) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
   if (req.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey()!);
   try {
     const access = await adminAccess(req, supabase);
     if (!access.allowed) return new Response(JSON.stringify({ error: "Admin access required" }), { status: access.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });

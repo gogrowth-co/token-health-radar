@@ -1,3 +1,5 @@
+import { projectKeyRole } from '../_shared/authGuard.ts';
+import { serviceKey } from '../_shared/keys.ts';
 /**
  * regenerate-static-snapshots — cron entry point.
  *
@@ -20,13 +22,13 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-function isAuthorized(req: Request): boolean {
+async function isAuthorized(req: Request): Promise<boolean> {
   const cron = req.headers.get("x-cron-secret");
   if (cron && cron === Deno.env.get("CRON_SECRET")) return true;
   const internal = req.headers.get("x-internal-secret");
   if (internal && internal === Deno.env.get("INTERNAL_API_SECRET")) return true;
   const auth = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
-  if (auth && auth === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) return true;
+  if (auth && (await projectKeyRole(auth)) === "service_role") return true;
   return false;
 }
 
@@ -34,7 +36,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders, status: 204 });
   }
-  if (!isAuthorized(req)) {
+  if (!(await isAuthorized(req))) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -47,7 +49,8 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        apikey: serviceKey(),
+        Authorization: `Bearer ${serviceKey()}`,
       },
       body: JSON.stringify({ kind: "all-static" }),
     });
