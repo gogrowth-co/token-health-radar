@@ -21,6 +21,7 @@
  * unsubscribed would opt people out silently. A GET here redirects to the confirm page.
  * A bad signature gets 403.
  */
+import { serviceKey } from '../_shared/keys.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { privilegedAccess } from "../_shared/adminAccess.ts";
 
@@ -35,7 +36,7 @@ type Key = "welcome" | "day3" | "pro";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  serviceKey()!,
 );
 
 async function isAuthorized(req: Request): Promise<{ allowed: boolean; status: number }> {

@@ -1,3 +1,4 @@
+import { serviceKey } from '../_shared/keys.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.7";
 import { checkRateLimit, createRateLimitError } from "../_shared/rateLimit.ts";
 import { getClientIp } from "../_shared/authGuard.ts";
@@ -85,7 +86,7 @@ async function handleGetCachedScores(args: { address: string; chain: string }) {
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    serviceKey()!,
   );
 
   const [dataCache, secCache, liqCache, tokCache, comCache, devCache] = await Promise.all([

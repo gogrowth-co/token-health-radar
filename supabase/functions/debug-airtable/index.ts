@@ -1,3 +1,4 @@
+import { serviceKey } from '../_shared/keys.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -8,7 +9,7 @@ const corsHeaders = {
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  serviceKey()!
 );
 
 const handler = async (req: Request): Promise<Response> => {
@@ -101,7 +102,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log('Environment check:', {
       SUPABASE_URL: !!Deno.env.get('SUPABASE_URL'),
-      SUPABASE_SERVICE_ROLE_KEY: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+      SUPABASE_SERVICE_ROLE_KEY: !!serviceKey(),
       AIRTABLE_ACCESS_TOKEN: !!airtableToken,
       tokenLength: airtableToken?.length || 0
     });

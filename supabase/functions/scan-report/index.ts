@@ -7,12 +7,13 @@
  * token. The browser opens it and saves it as PDF (vector text, A4).
  * Every number comes from the scan row; nothing is typed in by hand.
  */
+import { serviceKey } from '../_shared/keys.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getChainConfigByMoralisId } from "../_shared/chainConfig.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  serviceKey()!,
 );
 
 const corsHeaders = {

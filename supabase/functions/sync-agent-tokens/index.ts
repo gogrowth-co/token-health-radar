@@ -1,3 +1,5 @@
+import { projectKeyRole } from '../_shared/authGuard.ts';
+import { serviceKey, publishableKey } from '../_shared/keys.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
@@ -30,7 +32,7 @@ serve(async (req: Request) => {
   console.log('[SYNC-AGENT-TOKENS] Validating authentication...');
 
   const authHeader = req.headers.get('Authorization');
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const serviceRoleKey = serviceKey();
   const internalSecret = Deno.env.get('INTERNAL_API_SECRET');
 
   if (!authHeader) {
@@ -45,7 +47,7 @@ serve(async (req: Request) => {
   }
 
   const token = authHeader.replace('Bearer ', '');
-  const isValidServiceRole = token === serviceRoleKey;
+  const isValidServiceRole = (await projectKeyRole(token)) === 'service_role';
   const isValidInternal = internalSecret && token === internalSecret;
 
   let authenticated = isValidServiceRole || isValidInternal;
@@ -55,7 +57,7 @@ serve(async (req: Request) => {
     try {
       const supabaseAuth = createClient(
         Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_ANON_KEY')!,
+        publishableKey()!,
         { global: { headers: { Authorization: authHeader } } }
       );
 
@@ -67,7 +69,7 @@ serve(async (req: Request) => {
         // Check admin role using the service-role client (created below)
         const adminClient = createClient(
           Deno.env.get('SUPABASE_URL')!,
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+          serviceKey()!
         );
         const { data: roleData, error: roleError } = await adminClient.rpc('has_role', {
           _user_id: userId,
@@ -112,7 +114,7 @@ serve(async (req: Request) => {
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    serviceKey()!
   );
 
   try {

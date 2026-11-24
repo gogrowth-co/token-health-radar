@@ -1,4 +1,5 @@
 
+import { serviceKey } from '../_shared/keys.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { adminAccess } from "../_shared/adminAccess.ts";
@@ -43,7 +44,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const db = createClient(Deno.env.get('SUPABASE_URL') || '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '');
+    const db = createClient(Deno.env.get('SUPABASE_URL') || '', serviceKey() || '');
     const access = await adminAccess(req, db);
     if (!access.allowed) return new Response(JSON.stringify({ error: 'Unauthorized', success: false }), { status: access.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     const hubspotApiKey = Deno.env.get('HUBSPOT_API_KEY');
@@ -65,7 +66,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseServiceKey = serviceKey()!;
     console.log('📊 Supabase connection configured:', !!supabaseUrl && !!supabaseServiceKey);
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);

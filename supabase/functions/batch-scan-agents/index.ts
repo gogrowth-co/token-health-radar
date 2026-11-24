@@ -1,3 +1,5 @@
+import { projectKeyRole } from '../_shared/authGuard.ts';
+import { serviceKey, publishableKey } from '../_shared/keys.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
@@ -9,7 +11,7 @@ serve(async (req: Request) => {
 
   // --- Authentication (same pattern as sync-agent-tokens) ---
   const authHeader = req.headers.get('Authorization');
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const serviceRoleKey = serviceKey();
   const internalSecret = Deno.env.get('INTERNAL_API_SECRET');
 
   if (!authHeader) {
@@ -20,13 +22,13 @@ serve(async (req: Request) => {
   }
 
   const token = authHeader.replace('Bearer ', '');
-  let authenticated = token === serviceRoleKey || (internalSecret && token === internalSecret);
+  let authenticated = (await projectKeyRole(token)) === 'service_role' || (internalSecret && token === internalSecret);
 
   if (!authenticated) {
     try {
       const supabaseAuth = createClient(
         Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_ANON_KEY')!,
+        publishableKey()!,
         { global: { headers: { Authorization: authHeader } } }
       );
       const { data: userData, error: userError } = await supabaseAuth.auth.getUser(token);
@@ -95,6 +97,7 @@ serve(async (req: Request) => {
         // is no longer a JWT, so the bearer alone is rejected with 401.
         headers: {
           'Authorization': `Bearer ${serviceRoleKey}`,
+          apikey: serviceRoleKey ?? '',
           'Content-Type': 'application/json',
           ...(internalSecret ? { 'x-internal-secret': internalSecret } : {}),
         },

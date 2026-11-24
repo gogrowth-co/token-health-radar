@@ -1,4 +1,5 @@
 import { projectKeyRole } from './authGuard.ts';
+import { callerToken } from './keys.ts';
 
 type AdminClient = {
   auth: { getUser: (token: string) => Promise<{ data: { user: { id: string } | null }; error: unknown }> };
@@ -16,7 +17,7 @@ export function safeSecretEqual(a: string, b: string): boolean {
 export async function adminAccess(req: Request, db: AdminClient, keyRole = projectKeyRole): Promise<
   { allowed: true; via: 'service' | 'admin'; userId?: string } | { allowed: false; status: number }
 > {
-  const token = req.headers.get('Authorization')?.match(/^Bearer\s+(.+)$/i)?.[1];
+  const token = callerToken(req);
   if (!token) return { allowed: false, status: 401 };
   if (await keyRole(token) === 'service_role') return { allowed: true, via: 'service' };
   const { data: { user }, error } = await db.auth.getUser(token);

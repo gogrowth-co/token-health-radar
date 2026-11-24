@@ -1,8 +1,10 @@
+import { projectKeyRole } from '../_shared/authGuard.ts';
+import { serviceKey } from '../_shared/keys.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabaseServiceKey = serviceKey()!;
 const AIRTABLE_BASE_ID = Deno.env.get('AIRTABLE_BASE_ID') || 'app4JRfXh5wCJcqBj';
 const AIRTABLE_TABLE_ID = Deno.env.get('AIRTABLE_TABLE_ID') || 'tblnIbszxeVftpsiU';
 
@@ -55,7 +57,7 @@ const handler = async (req: Request): Promise<Response> => {
   const token = authHeader.replace('Bearer ', '');
 
   // Accept either service role key or internal API secret
-  const isValidServiceRole = token === supabaseServiceKey;
+  const isValidServiceRole = (await projectKeyRole(token)) === 'service_role';
   const isValidInternal = internalSecret && token === internalSecret;
 
   if (!isValidServiceRole && !isValidInternal) {

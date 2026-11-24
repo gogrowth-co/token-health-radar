@@ -1,3 +1,4 @@
+import { serviceKey } from '../_shared/keys.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { checkRateLimit, createRateLimitError } from '../_shared/rateLimit.ts';
 import { getClientIp, verifyJwt } from '../_shared/authGuard.ts';
@@ -727,7 +728,7 @@ async function fetchCommunityData(coingeckoId: string, tokenAddress: string, cha
     
     // First check Supabase cache
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabaseKey = serviceKey();
     
     if (supabaseUrl && supabaseKey) {
       const cacheRes = await fetch(
@@ -857,7 +858,7 @@ async function fetchSecurityData(tokenAddress: string, chainId: string): Promise
     
     // First check Supabase cache
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabaseKey = serviceKey();
     
     if (supabaseUrl && supabaseKey) {
       const cacheRes = await fetch(
@@ -986,7 +987,7 @@ async function fetchDevelopmentData(coingeckoId: string, tokenAddress: string, c
     
     // First check Supabase cache
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabaseKey = serviceKey();
     
     if (supabaseUrl && supabaseKey) {
       const cacheRes = await fetch(
