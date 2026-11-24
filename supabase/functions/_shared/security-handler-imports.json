@@ -1,0 +1,10 @@
+{
+  "imports": {
+    "https://deno.land/std@0.168.0/http/server.ts": "./security-test-fixtures.ts",
+    "https://deno.land/x/xhr@0.1.0/mod.ts": "./security-test-fixtures.ts",
+    "https://esm.sh/@supabase/supabase-js@2": "./security-test-fixtures.ts",
+    "https://esm.sh/@supabase/supabase-js@2.7.1": "./security-test-fixtures.ts",
+    "https://esm.sh/@supabase/supabase-js@2.49.7": "./security-test-fixtures.ts",
+    "https://esm.sh/stripe@12.18.0?dts": "./security-test-fixtures.ts"
+  }
+}

@@ -217,7 +217,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`[API-HEALTH] User authenticated: ${user.id} (${user.email})`);
+    console.log("[API-HEALTH] User authenticated");
 
     // Check if user is admin
     const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
@@ -242,7 +242,7 @@ Deno.serve(async (req) => {
     console.log(`[API-HEALTH] User role: ${roleData}, isAdmin: ${isAdmin}`);
 
     if (!isAdmin) {
-      console.error(`[API-HEALTH] Unauthorized access attempt by non-admin user: ${user.email}`);
+      console.error("[API-HEALTH] Non-admin request denied");
       return new Response(
         JSON.stringify({
           error: 'Forbidden - Admin access required',
@@ -264,7 +264,7 @@ Deno.serve(async (req) => {
     const chainId = testChainId || testChain || '0x1';
 
     console.log(`[API-HEALTH] Starting comprehensive API health check...`);
-    console.log(`[API-HEALTH] Requested by admin: ${user.email}`);
+    console.log("[API-HEALTH] Admin access granted");
     console.log(`[API-HEALTH] Parsed parameters - Token: ${tokenAddress}, Chain: ${chainId}`);
 
     const healthResults = await testApiHealth(tokenAddress, chainId);

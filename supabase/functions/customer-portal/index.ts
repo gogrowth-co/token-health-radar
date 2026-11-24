@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@12.18.0?dts";
+import { billingReturnUrl } from "../_shared/billingReturnUrl.ts";
 
 // Initialize Stripe with the secret key
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -64,7 +65,9 @@ serve(async (req) => {
     }
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { returnUrl } = await req.json();
+    const body = await req.json();
+    const returnUrl = billingReturnUrl(body.returnUrl);
+    if (!returnUrl) return new Response(JSON.stringify({ error: "Invalid billing return URL" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     
     if (!returnUrl) {
       logStep("ERROR: Missing return URL");

@@ -56,7 +56,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`[DEBUG-AIRTABLE] User authenticated: ${user.id} (${user.email})`);
+    console.log("[DEBUG-AIRTABLE] User authenticated");
 
     // Check if user is admin
     const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
@@ -81,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`[DEBUG-AIRTABLE] User role: ${roleData}, isAdmin: ${isAdmin}`);
 
     if (!isAdmin) {
-      console.error(`[DEBUG-AIRTABLE] Unauthorized access attempt by non-admin user: ${user.email}`);
+      console.error("[DEBUG-AIRTABLE] Non-admin request denied");
       return new Response(
         JSON.stringify({
           error: 'Forbidden - Admin access required',
@@ -94,7 +94,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`[DEBUG-AIRTABLE] Admin access granted: ${user.email}`);
+    console.log("[DEBUG-AIRTABLE] Admin access granted");
     
     // Get the token directly from environment
     const airtableToken = Deno.env.get('AIRTABLE_ACCESS_TOKEN');

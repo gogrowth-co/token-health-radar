@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.7";
+import { adminAccess } from "../_shared/adminAccess.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,9 +31,13 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   try {
+    const access = await adminAccess(req, supabase);
+    if (!access.allowed) return new Response(JSON.stringify({ error: "Admin access required" }), { status: access.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const body = await req.json().catch(() => ({}));
+    if (body.slug !== undefined && (typeof body.slug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(body.slug) || body.slug.length > 200)) return new Response(JSON.stringify({ error: "Invalid publication slug" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     if (body.remove && body.slug) {
-      await supabase.storage.from("seo-snapshots").remove([`publications/${body.slug}/index.html`]);
+      const { error: removeError } = await supabase.storage.from("seo-snapshots").remove([`publications/${body.slug}/index.html`]);
+      if (removeError) throw removeError;
       return new Response(JSON.stringify({ success: true, removed: body.slug }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     let query = supabase.from("pages").select("*, page_translations(*)").eq("status", "published").eq("page_translations.language", "en");

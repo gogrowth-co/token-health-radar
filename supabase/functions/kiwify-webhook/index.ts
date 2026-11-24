@@ -84,7 +84,7 @@ serve(async (req) => {
     // Parse webhook payload (from already-read raw body)
     const payload: KiwifyWebhookPayload = JSON.parse(rawBody)
 
-    console.log('Kiwify webhook received & verified:', JSON.stringify(payload, null, 2))
+    console.log('Kiwify webhook received and verified')
 
     // Validate event type
     if (payload.event_type !== 'checkout.approved') {
@@ -101,7 +101,7 @@ serve(async (req) => {
     const fullName = customer.full_name
     const checkoutId = checkout.id
 
-    console.log('Processing LTD purchase for:', email)
+    console.log('Processing verified purchase')
 
     // Try to find and update existing user
     const { data: userData, error: userError } = await supabase.rpc(
@@ -136,7 +136,7 @@ serve(async (req) => {
     }
 
     // Log the successful webhook processing
-    console.log(`Kiwify LTD webhook processed successfully for ${email}`)
+    console.log('Kiwify webhook processed successfully')
 
     return new Response(
       JSON.stringify({ 

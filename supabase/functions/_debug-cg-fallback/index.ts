@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
       headers: { 'Content-Type': 'application/json' }
     })
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e), stack: e?.stack }, null, 2), {
+    return new Response(JSON.stringify({ error: 'Token lookup failed' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     })

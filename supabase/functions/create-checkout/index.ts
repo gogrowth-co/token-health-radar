@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@12.18.0?dts";
+import { billingReturnUrl } from "../_shared/billingReturnUrl.ts";
 
 // Initialize Stripe with the secret key
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -66,7 +67,10 @@ serve(async (req) => {
 
     // Parse request body to get plan type
     const requestBody = await req.json();
-    const { priceId, successUrl, cancelUrl } = requestBody;
+    const { priceId } = requestBody;
+    const successUrl = billingReturnUrl(requestBody.successUrl);
+    const cancelUrl = billingReturnUrl(requestBody.cancelUrl);
+    if (!successUrl || !cancelUrl) return new Response(JSON.stringify({ error: "Invalid billing return URL" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     
     if (!priceId || !successUrl || !cancelUrl) {
       logStep("ERROR: Missing required parameters");

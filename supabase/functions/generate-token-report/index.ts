@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { adminAccess } from '../_shared/adminAccess.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -43,7 +44,10 @@ serve(async (req) => {
     console.log('=== Token Report Generation Started ===');
     
     // Parse and validate request
-    const { tokenAddress, chainId, userId } = await req.json();
+    const access = await adminAccess(req, supabase);
+    if (!access.allowed) return new Response(JSON.stringify({ error: 'Admin access required' }), { status: access.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const { tokenAddress, chainId } = await req.json();
+    const userId = access.via === 'admin' ? access.userId : Deno.env.get('ADMIN_USER_ID');
     console.log('Request parameters:', { tokenAddress, chainId, userId });
 
     if (!tokenAddress || !chainId || !userId) {

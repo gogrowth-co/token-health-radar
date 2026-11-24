@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
       console.log(`[TEST-SCAN] User role: ${roleData}, isAdmin: ${isAdmin}`);
 
       if (!isAdmin) {
-        console.error(`[TEST-SCAN] Unauthorized access attempt by non-admin user: ${user.email}`);
+        console.error("[TEST-SCAN] Non-admin request denied");
         return new Response(
           JSON.stringify({
             error: 'Forbidden - Admin access required',
@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      console.log(`[TEST-SCAN] Admin access granted: ${user.email}`);
+      console.log("[TEST-SCAN] Admin access granted");
     } else {
       console.log('[TEST-SCAN] Development/testing mode - authentication bypassed');
     }
@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: error.message,
+          error: error instanceof Error ? error.message : "Scan test failed",
           timestamp: new Date().toISOString()
         }),
         {
@@ -145,7 +145,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : "Scan test failed",
         timestamp: new Date().toISOString()
       }),
       {

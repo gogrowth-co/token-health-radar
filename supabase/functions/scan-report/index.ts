@@ -277,6 +277,7 @@ Deno.serve(async (req) => {
       .select("token_address, chain_id, scanned_at, scoring_version, dimension_scores, field_data, data_quality, completeness_pct")
       .in("token_address", [...new Set([address, address.toLowerCase()])])
       .eq("chain_id", chainId)
+      .or(`user_id.eq.${user.id},and(user_id.is.null,is_anonymous.eq.true)`)
       .not("field_data", "is", null)
       .order("scanned_at", { ascending: false })
       .limit(1);
