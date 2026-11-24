@@ -201,7 +201,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.error('Error in airtable-sync function:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: 'Airtable sync failed',
         success: false 
       }),
       {

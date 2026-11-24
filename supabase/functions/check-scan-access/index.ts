@@ -25,7 +25,10 @@ serve(async (req) => {
     // Get the authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("No authorization header");
+      return new Response(
+        JSON.stringify({ error: "Authentication required", canScan: false, canSelectToken: false, hasPro: false, proScanAvailable: false }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
     }
 
     // Extract the token
@@ -35,7 +38,10 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !user) {
-      throw new Error("Invalid user token");
+      return new Response(
+        JSON.stringify({ error: "Authentication required", canScan: false, canSelectToken: false, hasPro: false, proScanAvailable: false }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
     }
 
     console.log(`User authenticated: ${user.id}`);
@@ -151,13 +157,13 @@ serve(async (req) => {
     console.error(`Error checking scan access: ${(error as Error).message}`);
     return new Response(
       JSON.stringify({ 
-        error: (error as Error).message, 
+        error: "Could not verify scan access", 
         canScan: false, 
         canSelectToken: false,
         hasPro: false,
         proScanAvailable: false
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
 });

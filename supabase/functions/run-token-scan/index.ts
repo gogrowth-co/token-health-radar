@@ -67,16 +67,25 @@ Deno.serve(async (req) => {
   try {
     const bodyText = await req.text();
     if (!bodyText.trim()) return json({ success: false, error: 'Empty body' }, 400);
-    const { token_address: rawAddress, chain_id, user_id, force_refresh, regenerate_snapshot, dry_run } = JSON.parse(bodyText);
+    const { token_address: rawAddress, chain_id, force_refresh, regenerate_snapshot, dry_run } = JSON.parse(bodyText);
     const chainId = normalizeChain(chain_id || '0x1');
     if (!chainId) return json({ success: false, error: 'Unsupported chain' }, 400);
     if (!rawAddress || typeof rawAddress !== 'string') return json({ success: false, error: 'Invalid token address' }, 400);
+    // Never trust a caller-supplied account ID: take ownership strictly from the verified session.
+    const verifiedUserId = auth.via === 'jwt' && auth.userId ? auth.userId : null;
+    const allowInternalOptions = auth.via === 'internal';
+    const scopeScanRead = <T extends { eq: (col: string, val: unknown) => T; is: (col: string, val: unknown) => T; or: (filter: string) => T }>(q: T): T =>
+      verifiedUserId
+        ? q.or(`user_id.eq.${verifiedUserId},and(user_id.is.null,is_anonymous.eq.true)`)
+        : q.is('user_id', null).eq('is_anonymous', true);
 
     // Who pays for a fresh scan (2026-10-27): every scan spends paid provider credits, and the old limiter never ran (no Upstash).
     // Anonymous visitors: a scan of the same token from the last hour is returned as is; otherwise one slot per IP per hour and
     // one shared daily cap. Signed-in users: one slot per user per hour. Internal callers (service role, internal secret): no limit.
     if (auth.via === 'anon') {
-      const recent = await supabase.from('token_scans').select('id, scanned_at, score_total, dimension_scores').eq('token_address', rawAddress.trim().toLowerCase()).eq('chain_id', chainId)
+      const recent = await scopeScanRead(
+        supabase.from('token_scans').select('id, scanned_at, score_total, dimension_scores').eq('token_address', rawAddress.trim().toLowerCase()).eq('chain_id', chainId)
+      )
         .not('dimension_scores', 'is', null).gte('scanned_at', new Date(Date.now() - ANON_REUSE_MS).toISOString()).order('scanned_at', { ascending: false }).limit(1).maybeSingle();
       if (recent.data) {
         const dims = (recent.data.dimension_scores as any)?.dimensions ?? {};
@@ -99,12 +108,16 @@ Deno.serve(async (req) => {
     }
 
     // Previous scan (for the supply-jump plausibility rule). Tolerates the v2 columns not existing yet.
-    const prev = await supabase.from('token_scans').select('field_data, scanned_at').eq('token_address', rawAddress.trim().toLowerCase()).eq('chain_id', chainId).not('field_data', 'is', null).order('scanned_at', { ascending: false }).limit(1).maybeSingle();
+    const prev = await scopeScanRead(
+      supabase.from('token_scans').select('field_data, scanned_at').eq('token_address', rawAddress.trim().toLowerCase()).eq('chain_id', chainId)
+    ).not('field_data', 'is', null).order('scanned_at', { ascending: false }).limit(1).maybeSingle();
     const previous = prev.data?.field_data ? { total_supply_onchain: prev.data.field_data?.chain?.total_supply_onchain?.value ?? null, scanned_at: prev.data.scanned_at, record: prev.data.field_data } : null;
 
     // Exact-case Solana mint stored by an earlier scan (the DB lowercases addresses). Ignored if the column doesn't exist yet.
     const canon = chainId === 'solana'
-      ? await supabase.from('token_scans').select('canonical_address').eq('token_address', rawAddress.trim().toLowerCase()).eq('chain_id', chainId).not('canonical_address', 'is', null).order('scanned_at', { ascending: false }).limit(1).maybeSingle()
+      ? await scopeScanRead(
+          supabase.from('token_scans').select('canonical_address').eq('token_address', rawAddress.trim().toLowerCase()).eq('chain_id', chainId)
+        ).not('canonical_address', 'is', null).order('scanned_at', { ascending: false }).limit(1).maybeSingle()
       : null;
     const canonicalHint: string | null = canon?.data?.canonical_address ?? null;
 
@@ -115,7 +128,13 @@ Deno.serve(async (req) => {
     } catch (e) {
       // Nothing is written when the address cannot be resolved: a failed scan must not replace cached data.
       const unresolved = e instanceof AddressResolutionError;
-      return json({ success: false, error: (e as Error).message, error_code: unresolved ? 'address_not_resolved' : 'invalid_request', request_id: requestId }, unresolved ? 422 : 400);
+      console.warn(`[${requestId}] collectToken rejected:`, (e as Error)?.message ?? e);
+      return json({
+        success: false,
+        error: unresolved ? 'Could not resolve the exact token address for this chain' : 'Invalid scan request',
+        error_code: unresolved ? 'address_not_resolved' : 'invalid_request',
+        request_id: requestId,
+      }, unresolved ? 422 : 400);
     }
 
     // Social + GitHub inputs (2026-10-27): links are gathered from the verified overrides, CoinGecko, CoinMarketCap, DefiLlama and the
@@ -143,7 +162,9 @@ Deno.serve(async (req) => {
     // a Discord or Telegram count that this scan could not read (rate limit, provider failure) is taken from a scan in the last 24 h
     const priorCount = async (kind: 'discord_members' | 'telegram_members') => {
       if (!TRANSIENT_MEMBER_REASONS.has(String((kind === 'discord_members' ? discord.field : telegram.field)?.reason))) return null;
-      const { data } = await supabase.from('token_scans').select(`scanned_at, field_data->social->community->${kind}`).eq('token_address', rec.address_key).eq('chain_id', chainId)
+      const { data } = await scopeScanRead(
+        supabase.from('token_scans').select(`scanned_at, field_data->social->community->${kind}`).eq('token_address', rec.address_key).eq('chain_id', chainId)
+      )
         .eq(`field_data->social->community->${kind}->>status`, 'ok').gte('scanned_at', new Date(Date.parse(rec.scanned_at) - MEMBER_REUSE_HOURS * 3600000).toISOString())
         .order('scanned_at', { ascending: false }).limit(1).maybeSingle();
       return data ? { field: (data as any)[kind] ?? null, scanned_at: (data as any).scanned_at } : null;
@@ -156,11 +177,12 @@ Deno.serve(async (req) => {
     };
     rec.quality = quality(rec, ctx, rec.quality.flags);
     const score = scoreRecord(rec);
-    const rows = buildRows(rec, score, user_id || null);
+    const rows = buildRows(rec, score, verifiedUserId);
 
     const writeErrors: Array<{ table: string; error: string }> = [];
     let scanId: string | null = null;
-    if (!dry_run) {
+    const isDryRun = allowInternalOptions && dry_run === true;
+    if (!isDryRun) {
       const key = { token_address: rec.address_key, chain_id: chainId };
       const caches = {
         token_data_cache: rows.token_data_cache,
@@ -203,11 +225,14 @@ Deno.serve(async (req) => {
       };
       // ONE transaction (migration 20260925120000): every cache row and the history row land together, or none do.
       const { data: id, error } = await supabase.rpc('persist_token_scan', { p_caches: caches, p_scan: { ...rows.token_scans, ...rows.token_scans_v2 } });
-      if (error) writeErrors.push({ table: 'persist_token_scan', error: error.message });
+      if (error) {
+        console.error(`[${requestId}] persist_token_scan failed:`, error.message);
+        writeErrors.push({ table: 'persist_token_scan', error: 'Failed to store scan' });
+      }
       else scanId = id as string;
 
       // Bot-facing snapshot only after a scan was actually stored.
-      if (!error && regenerate_snapshot === true && symbol) {
+      if (!error && allowInternalOptions && regenerate_snapshot === true && symbol) {
         fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/regenerate-seo-snapshot`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
@@ -234,12 +259,12 @@ Deno.serve(async (req) => {
       data_quality: { completeness_pct: rec.quality.completeness_pct, required_missing: rec.quality.required_missing, provider_failures: rec.quality.provider_failures, flags: rec.quality.flags, paid_credits: rec.quality.paid_credits },
       write_errors: writeErrors,
       scan_id: scanId,
-      dry_run: !!dry_run,
-      ...(dry_run ? { record: rec, rows } : {}),
+      dry_run: isDryRun,
+      ...(isDryRun ? { record: rec, rows } : {}),
       processing_time_ms: Date.now() - startTime,
     }, writeFailed ? 500 : 200); // callers (weekly refresh) key off the HTTP status
   } catch (error) {
     console.error(`[${requestId}] Error:`, error);
-    return json({ success: false, error: (error as Error).message || 'Scan failed', request_id: requestId, processing_time_ms: Date.now() - startTime }, 500);
+    return json({ success: false, error: 'Scan failed', request_id: requestId, processing_time_ms: Date.now() - startTime }, 500);
   }
 });

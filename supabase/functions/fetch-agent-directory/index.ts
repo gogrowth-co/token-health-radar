@@ -165,6 +165,6 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("[fetch-agent-directory] Error:", error);
-    return jsonResponse({ error: error instanceof Error ? error.message : "Unknown error" }, 500);
+    return jsonResponse({ error: "Failed to load agent directory" }, 500);
   }
 });

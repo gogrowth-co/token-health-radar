@@ -22,6 +22,7 @@
  * A bad signature gets 403.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { privilegedAccess } from "../_shared/adminAccess.ts";
 
 const SITE = "https://tokenhealthscan.com";
 const FROM = "Gabriel from Token Health Scan <team@tokenhealthscan.com>";
@@ -37,11 +38,11 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
-function isAuthorized(req: Request): boolean {
-  const cron = req.headers.get("x-cron-secret");
-  if (cron && cron === Deno.env.get("LIFECYCLE_CRON_SECRET")) return true;
-  const auth = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
-  return !!auth && auth === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+async function isAuthorized(req: Request): Promise<{ allowed: boolean; status: number }> {
+  const access = await privilegedAccess(req, supabase, {
+    cronEnvNames: ["LIFECYCLE_CRON_SECRET", "CRON_SECRET"],
+  });
+  return { allowed: access.allowed, status: access.allowed ? 200 : access.status };
 }
 
 async function sign(userId: string): Promise<string> {
@@ -192,8 +193,18 @@ async function sendViaResend(to: string, key: Key, userId: string, idempotencyKe
     }),
   });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(`Resend ${res.status}: ${JSON.stringify(body).slice(0, 300)}`);
+  if (!res.ok) {
+    console.error(`[lifecycle] email provider rejected request with HTTP ${res.status}`);
+    throw new Error(`Email provider error (HTTP ${res.status})`);
+  }
   return body.id as string;
+}
+
+function redactLifecycleError(e: unknown): string {
+  const raw = e instanceof Error ? e.message : String(e);
+  const httpMatch = raw.match(/Email provider error \(HTTP (\d{3})\)/);
+  if (httpMatch) return `Email provider error (HTTP ${httpMatch[1]})`;
+  return "Email delivery failed";
 }
 
 function sameHex(a: string, b: string): boolean {
@@ -248,10 +259,10 @@ async function runDue(): Promise<Record<string, number>> {
       );
       counts.sent++;
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      console.error(`[lifecycle] ${email_key} ${user_id} failed: ${msg}`);
+      const safeErr = redactLifecycleError(e);
+      console.error(`[lifecycle] ${email_key} ${user_id} failed: ${safeErr}`);
       await supabase.from("lifecycle_emails").upsert(
-        { user_id, email_key, status: attempts + 1 >= MAX_ATTEMPTS ? "failed" : "retry", attempts: attempts + 1, error: msg.slice(0, 500) },
+        { user_id, email_key, status: attempts + 1 >= MAX_ATTEMPTS ? "failed" : "retry", attempts: attempts + 1, error: safeErr },
         { onConflict: "user_id,email_key" },
       );
       counts.failed++;
@@ -265,13 +276,16 @@ Deno.serve(async (req) => {
   const url = new URL(req.url);
   if (url.searchParams.has("unsub")) return handleUnsubscribe(req, url);
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
-  if (!isAuthorized(req)) return new Response("Unauthorized", { status: 401 });
+  const auth = await isAuthorized(req);
+  if (!auth.allowed) return new Response(JSON.stringify({ error: auth.status === 403 ? "Forbidden" : "Unauthorized" }), { status: auth.status, headers: { "Content-Type": "application/json" } });
 
   try {
     const body = await req.json().catch(() => ({}));
     if (body.test_to) {
       const key = (body.key || "welcome") as Key;
-      if (!["welcome", "day3", "pro"].includes(key)) throw new Error("bad key");
+      if (!["welcome", "day3", "pro"].includes(key)) {
+        return Response.json({ error: "Invalid email key" }, { status: 400 });
+      }
       // Test sends use a fixed fake user id; its unsubscribe link signs but matches no row.
       const id = await sendViaResend(body.test_to, key, "00000000-0000-0000-0000-000000000000");
       return Response.json({ test: true, key, id });
@@ -280,8 +294,8 @@ Deno.serve(async (req) => {
     console.log(`[lifecycle] run: ${JSON.stringify(counts)}`);
     return Response.json(counts);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    console.error(`[lifecycle] error: ${msg}`);
-    return Response.json({ error: msg }, { status: 500 });
+    const safeErr = redactLifecycleError(e);
+    console.error(`[lifecycle] error: ${safeErr}`);
+    return Response.json({ error: safeErr }, { status: 500 });
   }
 });

@@ -106,7 +106,6 @@ export default function ScanLoading() {
 
       // Determine final parameters for scan - use address as primary identifier
       const scanParams: any = {
-        user_id: user?.id || null,
         force_refresh: true // Force fresh scan every time
       };
 

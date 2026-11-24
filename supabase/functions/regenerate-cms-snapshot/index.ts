@@ -55,6 +55,7 @@ Deno.serve(async (req) => {
     }
     return new Response(JSON.stringify({ success: true, written }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
-    return new Response(JSON.stringify({ error: String(error?.message || error) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    console.error("[regenerate-cms-snapshot] error:", error);
+    return new Response(JSON.stringify({ error: "Failed to regenerate CMS snapshot" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

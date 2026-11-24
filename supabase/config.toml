@@ -132,3 +132,21 @@ verify_jwt = false
 
 [functions.refresh-token-page]
 verify_jwt = false
+
+[functions.generate-sitemap]
+verify_jwt = false
+
+[functions.serve-sitemap]
+verify_jwt = false
+
+[functions.rss-feed]
+verify_jwt = false
+
+[functions.generate-hero-image]
+verify_jwt = false
+
+[functions.make-webhook]
+verify_jwt = false
+
+[functions.test-webhook-send]
+verify_jwt = false

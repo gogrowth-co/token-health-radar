@@ -16,7 +16,6 @@ export default function TestSocialLinksButton() {
         body: {
           token_address: "0x808507121b80c02388fad14726482e061b8da827",
           chain_id: "0x1",
-          user_id: null,
           is_anonymous: true
         }
       });

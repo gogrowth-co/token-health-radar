@@ -4,10 +4,11 @@
 
 import "https://deno.land/x/xhr@0.4.0/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { privilegedAccess } from "../_shared/adminAccess.ts";
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-secret, x-cron-secret",
   "Content-Type": "application/json",
 };
 
@@ -43,7 +44,19 @@ Deno.serve(async (req) => {
 
   try {
     if (req.method !== 'POST') {
-      return json({ ok: false, error: 'invalid_method' });
+      return json({ ok: false, error: 'invalid_method' }, 405);
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!supabaseUrl || !serviceKey) {
+      return json({ ok: false, error: 'missing_env' }, 503);
+    }
+
+    const supabase = createClient(supabaseUrl, serviceKey);
+    const access = await privilegedAccess(req, supabase);
+    if (!access.allowed) {
+      return json({ ok: false, error: 'Admin or internal authorization required' }, access.status);
     }
 
     const payload = (await req.json()) as HeroRequest;
@@ -59,18 +72,10 @@ Deno.serve(async (req) => {
 
     console.log('🎨 Hero image generation started:', { chain, address, name, symbol, overallScore });
 
-    if (!address) {
+    if (!address || !/^[a-z0-9x_-]+$/i.test(chain) || !/^[a-z0-9]+$/i.test(address)) {
       console.error('❌ Missing address in payload');
-      return json({ ok: false, error: 'invalid_payload' });
+      return json({ ok: false, error: 'invalid_payload' }, 400);
     }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    if (!supabaseUrl || !serviceKey) {
-      return json({ ok: false, error: 'missing_env' });
-    }
-
-    const supabase = createClient(supabaseUrl, serviceKey);
 
     // Check cache: if both files exist and are fresh, return them
     const basePath = `${chain}/${address}`;
@@ -150,12 +155,12 @@ Deno.serve(async (req) => {
 
   } catch (e) {
     console.error('Unhandled error:', e);
-    return json({ ok: false, error: 'unexpected' });
+    return json({ ok: false, error: 'unexpected' }, 500);
   }
 });
 
-function json(obj: HeroResponse | Record<string, unknown>) {
-  return new Response(JSON.stringify(obj), { headers: corsHeaders, status: 200 });
+function json(obj: HeroResponse | Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(obj), { headers: corsHeaders, status });
 }
 
 async function generateHeroImage(

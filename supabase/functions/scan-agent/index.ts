@@ -27,17 +27,26 @@ serve(async (req) => {
     const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
     const { data: cached } = await supabase
       .from("agent_scans")
-      .select("*")
+      .select("id, chain, agent_id, agent_name, raw_data, scores, created_at")
       .eq("chain", chain)
       .eq("agent_id", agentId)
       .gte("created_at", sixHoursAgo)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (cached) {
       console.log(`[scan-agent] Cache hit for ${agentId}`);
-      return new Response(JSON.stringify(cached), {
+      const safeCached = {
+        id: cached.id,
+        chain: cached.chain,
+        agent_id: cached.agent_id,
+        agent_name: cached.agent_name,
+        raw_data: cached.raw_data,
+        scores: cached.scores,
+        created_at: cached.created_at,
+      };
+      return new Response(JSON.stringify(safeCached), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -266,7 +275,7 @@ serve(async (req) => {
   } catch (error) {
     console.error(`[scan-agent] Error:`, error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Agent scan failed" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

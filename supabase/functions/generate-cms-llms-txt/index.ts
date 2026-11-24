@@ -1,11 +1,15 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.7";
-const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
+import { privilegedAccess } from "../_shared/adminAccess.ts";
+const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-secret, x-cron-secret", "Access-Control-Allow-Methods": "POST, OPTIONS" };
 const SITE_URL = "https://tokenhealthscan.com";
 function strip(html: string) { return (html || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(); }
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
+  if (req.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   try {
+    const access = await privilegedAccess(req, supabase);
+    if (!access.allowed) return new Response(JSON.stringify({ error: "Admin or internal authorization required" }), { status: access.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const { data, error } = await supabase.from("pages").select("*, page_translations(*)").eq("status", "published").eq("page_translations.language", "en").order("updated_at", { ascending: false }).limit(100);
     if (error) throw error;
     const articles = (data || []).map((page: any) => { const t = Array.isArray(page.page_translations) ? page.page_translations[0] : page.page_translations; const slug = t?.slug || page.slug; return { title: t?.title || page.slug, url: `${SITE_URL}/publications/${slug}`, description: t?.meta_description || strip(t?.content || "").slice(0, 180), content: strip(t?.content || "") }; });
@@ -21,5 +25,5 @@ Deno.serve(async (req) => {
       await supabase.storage.from(bucket).upload("llms-full.txt", new Blob([full], { type: "text/plain" }), { contentType: "text/plain; charset=utf-8", upsert: true });
     }
     return new Response(llms, { headers: { ...corsHeaders, "Content-Type": "text/plain; charset=utf-8" } });
-  } catch (error) { return new Response(JSON.stringify({ error: String(error?.message || error) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }
+  } catch (error) { console.error("[generate-cms-llms-txt] Error:", error); return new Response(JSON.stringify({ error: "Failed to generate llms.txt" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }
 });

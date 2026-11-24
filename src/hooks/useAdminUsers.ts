@@ -29,7 +29,6 @@ export function useAdminUsers() {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       console.log('useAdminUsers - Auth check:', {
         userId: user?.id,
-        email: user?.email,
         hasUser: !!user,
         authError: authError?.message
       });
@@ -44,7 +43,7 @@ export function useAdminUsers() {
         return;
       }
       
-      console.log('useAdminUsers - Checking user role for:', user.email);
+      console.log('useAdminUsers - Checking user role for:', user.id);
       const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
         _user_id: user.id
       });
@@ -53,8 +52,7 @@ export function useAdminUsers() {
         roleData,
         roleError: roleError?.message,
         isAdmin: roleData === 'admin',
-        userId: user.id,
-        email: user.email
+        userId: user.id
       });
       
       if (roleError) {
@@ -68,7 +66,7 @@ export function useAdminUsers() {
       }
       
       if (roleData !== 'admin') {
-        console.error('useAdminUsers - User is not admin:', { roleData, userId: user.id, email: user.email });
+        console.error('useAdminUsers - User is not admin:', { roleData, userId: user.id });
         toast({
           title: "Access Denied",
           description: `Admin privileges required. Current role: ${roleData || 'user'}`,

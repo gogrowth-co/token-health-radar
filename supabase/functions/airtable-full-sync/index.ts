@@ -120,7 +120,6 @@ const handler = async (req: Request): Promise<Response> => {
         JSON.stringify({ 
           error: 'Airtable API connection failed',
           status: testResponse.status,
-          details: errorText,
           version: 'v4'
         }),
         {
@@ -136,7 +135,6 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         error: 'Failed to test Airtable API',
-        details: testError.message,
         version: 'v4'
       }),
       {
@@ -349,7 +347,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.error('Error in airtable-full-sync function:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: 'Airtable full sync failed',
         success: false,
         timestamp: new Date().toISOString(),
       }),

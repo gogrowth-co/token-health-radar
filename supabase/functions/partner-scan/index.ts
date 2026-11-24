@@ -41,6 +41,7 @@ Deno.serve(async (req: Request) => {
     }
     return json(result);
   } catch (e) {
-    return json({ error: "Scan failed", detail: (e as Error).message }, 502);
+    console.error("[partner-scan] error:", e);
+    return json({ error: "Scan failed" }, 502);
   }
 });

@@ -26,8 +26,7 @@ export function useUserRole() {
       }
 
       console.log('useUserRole - Fetching role for user:', {
-        userId: user.id,
-        email: user.email
+        userId: user.id
       });
 
       try {
@@ -41,8 +40,7 @@ export function useUserRole() {
         console.log('useUserRole - Role function response:', {
           roleData,
           error: error?.message,
-          userId: user.id,
-          userEmail: user.email
+          userId: user.id
         });
 
         if (error) {
@@ -53,8 +51,7 @@ export function useUserRole() {
           console.log('useUserRole - Final role determined:', {
             finalRole,
             isAdmin: finalRole === 'admin',
-            userId: user.id,
-            userEmail: user.email
+            userId: user.id
           });
           setRole(finalRole);
         }
@@ -83,8 +80,7 @@ export function useUserRole() {
     loading,
     authLoading,
     isAuthenticated,
-    userId: user?.id,
-    userEmail: user?.email
+    userId: user?.id
   });
 
   return { role, isAdmin, loading };

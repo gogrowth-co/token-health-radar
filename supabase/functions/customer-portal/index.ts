@@ -40,7 +40,7 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
       logStep("ERROR: Missing Stripe secret key");
-      throw new Error("STRIPE_SECRET_KEY is not configured in Supabase secrets");
+      return new Response(JSON.stringify({ error: "Billing service is unavailable" }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     logStep("Stripe key verified");
 
@@ -48,7 +48,7 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       logStep("ERROR: Missing authorization header");
-      throw new Error("No authorization header");
+      return new Response(JSON.stringify({ error: "Authentication required" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     logStep("Authorization header found");
 
@@ -61,9 +61,9 @@ serve(async (req) => {
     
     if (userError || !user) {
       logStep("Authentication error", { error: userError });
-      throw new Error("Invalid user token");
+      return new Response(JSON.stringify({ error: "Authentication required" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    logStep("User authenticated", { userId: user.id });
 
     const body = await req.json();
     const returnUrl = billingReturnUrl(body.returnUrl);
@@ -85,7 +85,7 @@ serve(async (req) => {
 
     if (subscriberError || !subscriberData?.stripe_customer_id) {
       logStep("ERROR: No Stripe customer ID found", { error: subscriberError });
-      throw new Error("User does not have a Stripe customer ID");
+      return new Response(JSON.stringify({ error: "No active billing profile found" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     logStep("Found Stripe customer ID", { customerId: subscriberData.stripe_customer_id });
 
@@ -105,15 +105,14 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     } catch (stripeError) {
-      logStep("Error creating billing portal session", { error: stripeError });
-      throw new Error(`Stripe error: ${stripeError instanceof Error ? stripeError.message : 'Unknown error'}`);
+      console.error("[CUSTOMER-PORTAL] Error creating billing portal session");
+      return new Response(JSON.stringify({ error: "Could not open billing portal" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error(`Error creating portal session: ${errorMessage}`);
+    console.error("[CUSTOMER-PORTAL] Unexpected error creating portal session");
     
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Could not open billing portal" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
     );
   }

@@ -19,8 +19,7 @@ export default function AdminRoute({ children }: AdminRouteProps) {
     roleLoading,
     isAdmin,
     role,
-    userId: user?.id,
-    userEmail: user?.email
+    userId: user?.id
   });
 
   // Show loading while checking auth and role
@@ -63,7 +62,6 @@ export default function AdminRoute({ children }: AdminRouteProps) {
       hasUser: !!user?.id,
       isAdmin,
       role,
-      userEmail: user?.email,
       reason
     });
     
@@ -102,7 +100,7 @@ export default function AdminRoute({ children }: AdminRouteProps) {
     );
   }
 
-  console.log('AdminRoute - Access granted for:', user?.email);
+  console.log('AdminRoute - Access granted for:', user?.id);
 
   // Render children if admin access is confirmed
   return <>{children}</>;

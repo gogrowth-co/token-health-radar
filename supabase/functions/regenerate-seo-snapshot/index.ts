@@ -235,7 +235,7 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("[regenerate-seo-snapshot] error:", err);
-    return new Response(JSON.stringify({ ok: false, error: String((err as Error).message) }), {
+    return new Response(JSON.stringify({ ok: false, error: "Failed to regenerate SEO snapshot" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

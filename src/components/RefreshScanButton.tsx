@@ -32,8 +32,7 @@ export default function RefreshScanButton({
         body: {
           token_address: tokenAddress.toLowerCase(),
           chain_id: chainId,
-          force_refresh: true,
-          user_id: null // Anonymous refresh
+          force_refresh: true
         }
       });
 

@@ -9,6 +9,12 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed' }),
+      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
 
   try {
     console.log('📡 Serving sitemap request');
@@ -58,7 +64,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error serving sitemap:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Failed to serve sitemap' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

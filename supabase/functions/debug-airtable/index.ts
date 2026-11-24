@@ -143,7 +143,6 @@ const handler = async (req: Request): Promise<Response> => {
         JSON.stringify({ 
           error: 'Airtable API test failed',
           status: testResponse.status,
-          details: errorText,
           tokenExists: true
         }),
         {

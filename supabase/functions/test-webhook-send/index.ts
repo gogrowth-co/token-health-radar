@@ -1,8 +1,11 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { privilegedAccess } from "../_shared/adminAccess.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-internal-secret, x-cron-secret',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req: Request) => {
@@ -10,8 +13,26 @@ serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ success: false, error: 'Method not allowed' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 405 }
+    );
+  }
 
   try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+    const access = await privilegedAccess(req, supabase);
+    if (!access.allowed) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Admin or internal authorization required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: access.status }
+      );
+    }
+
     console.log('Starting test webhook send...');
     
     // Latest token report data
@@ -52,7 +73,7 @@ serve(async (req: Request) => {
     if (!makeWebhookUrl) {
       console.error('MAKE_WEBHOOK_URL secret not configured');
       return new Response(
-        JSON.stringify({ success: false, error: 'MAKE_WEBHOOK_URL not configured' }),
+        JSON.stringify({ success: false, error: 'Webhook endpoint not configured' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 503 }
       );
     }
@@ -72,15 +93,13 @@ serve(async (req: Request) => {
 
     console.log(`Make.com response status: ${response.status}`);
     
-    const result = await response.text();
-    console.log(`Make.com response: ${result}`);
+    await response.text().catch(() => '');
     
     if (response.ok) {
       console.log('✅ Successfully sent to Make.com webhook!');
       return new Response(JSON.stringify({ 
         success: true, 
-        status: response.status,
-        makeResponse: result 
+        status: response.status
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200
@@ -89,19 +108,18 @@ serve(async (req: Request) => {
       console.error('❌ Make.com webhook failed:', response.status, response.statusText);
       return new Response(JSON.stringify({ 
         success: false, 
-        error: `Webhook failed: ${response.status} ${response.statusText}`,
-        makeResponse: result 
+        error: 'Webhook delivery failed'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
+        status: 502
       });
     }
     
   } catch (error) {
-    console.error('❌ Error sending to Make.com:', error.message);
+    console.error('❌ Error sending to Make.com:', error);
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message 
+      error: 'Webhook delivery failed' 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500

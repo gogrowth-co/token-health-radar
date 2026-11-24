@@ -180,6 +180,7 @@ Deno.serve(async (req) => {
       transfers,
     }), { headers: CORS });
   } catch (e) {
-    return new Response(JSON.stringify({ error: "onchain read failed", detail: (e as Error).message }), { status: 502, headers: CORS });
+    console.error("[x402-onchain] error:", e);
+    return new Response(JSON.stringify({ error: "onchain read failed" }), { status: 502, headers: CORS });
   }
 });

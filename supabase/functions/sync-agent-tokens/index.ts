@@ -271,7 +271,7 @@ serve(async (req: Request) => {
   } catch (error: any) {
     console.error('[SYNC-AGENT-TOKENS] Fatal error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Agent token sync failed' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

@@ -249,7 +249,7 @@ serve(async (req) => {
         return response;
       } catch (error) {
         console.error('[MCP] Processing error:', error);
-        response.errors.push(`Processing failed: ${error.message}`);
+        response.errors.push('Processing failed');
         return response;
       }
     })();
@@ -296,7 +296,7 @@ serve(async (req) => {
       source: "coingecko-mcp",
       available: [],
       limited: false,
-      errors: [`Server error: ${error.message}`]
+      errors: ['Server error']
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -201,7 +201,15 @@ async function refresh(ref: any, opts: { maxAge: number; noRescan: boolean; forc
       development_analysis: rc.developmentAnalysis, how_to_buy: rc.howToBuy, faq: rc.faq,
     });
     await upload('seo-snapshots', `token/${t.symbol}/index.html`, html, 'text/html; charset=utf-8');
-    if (!t.report) out.sitemap = (await fetch(`${URL_}/functions/v1/generate-sitemap`, { method: 'POST' }).catch(() => null))?.ok ? 'regenerated' : 'FAILED';
+    if (!t.report) out.sitemap = (await fetch(`${URL_}/functions/v1/generate-sitemap`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''}`,
+        ...(Deno.env.get('INTERNAL_API_SECRET') ? { 'x-internal-secret': Deno.env.get('INTERNAL_API_SECRET')! } : {}),
+      },
+      body: JSON.stringify({ trigger_source: 'refresh_token_page' }),
+    }).catch(() => null))?.ok ? 'regenerated' : 'FAILED';
 
     const live = await livePage(t.symbol);
     const match = !!live.scores && live.scores.overall === out.scan.overall && DIMS.every((k) => live.scores![k] === out.scan.scores[k]) && live.scannedAt != null && Date.parse(live.scannedAt) === Date.parse(at);

@@ -40,7 +40,7 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
       logStep("ERROR: Missing Stripe secret key");
-      throw new Error("STRIPE_SECRET_KEY is not configured in Supabase secrets. Please add it in the Supabase dashboard under Settings > API > Edge Function Secrets.");
+      return new Response(JSON.stringify({ error: "Billing service is unavailable" }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     logStep("Stripe key verified");
 
@@ -48,7 +48,7 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       logStep("ERROR: Missing authorization header");
-      throw new Error("No authorization header provided");
+      return new Response(JSON.stringify({ error: "Authentication required" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     logStep("Authorization header found");
 
@@ -61,9 +61,9 @@ serve(async (req) => {
     
     if (userError || !user) {
       logStep("Authentication error", { error: userError });
-      throw new Error("Invalid user token");
+      return new Response(JSON.stringify({ error: "Authentication required" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    logStep("User authenticated", { userId: user.id });
 
     // Parse request body to get plan type
     const requestBody = await req.json();
@@ -74,7 +74,7 @@ serve(async (req) => {
     
     if (!priceId || !successUrl || !cancelUrl) {
       logStep("ERROR: Missing required parameters");
-      throw new Error("Missing required parameters: priceId, successUrl, or cancelUrl");
+      return new Response(JSON.stringify({ error: "Missing required checkout parameters" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     logStep("Request parameters validated", { priceId, successUrl, cancelUrl });
 
@@ -88,7 +88,7 @@ serve(async (req) => {
 
     if (subscriberError && subscriberError.code !== 'PGRST116') {
       logStep("Error fetching subscriber data", { error: subscriberError });
-      throw new Error(`Database error: ${subscriberError.message}`);
+      return new Response(JSON.stringify({ error: "Could not load billing profile" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     let customerId: string | null = null;
@@ -122,8 +122,8 @@ serve(async (req) => {
           // Continue anyway since we have the customer ID
         }
       } catch (stripeError) {
-        logStep("Error creating Stripe customer", { error: stripeError });
-        throw new Error(`Stripe error: ${stripeError instanceof Error ? stripeError.message : 'Unknown error'}`);
+        console.error("[CREATE-CHECKOUT] Error creating Stripe customer");
+        return new Response(JSON.stringify({ error: "Could not initialize billing profile" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }
 
@@ -133,8 +133,8 @@ serve(async (req) => {
       await stripe.prices.retrieve(priceId);
       logStep("Price ID is valid");
     } catch (priceError) {
-      logStep("Invalid price ID", { error: priceError });
-      throw new Error(`Invalid price ID: ${priceId}. Please check your Stripe dashboard for the correct price IDs.`);
+      console.error("[CREATE-CHECKOUT] Invalid price ID");
+      return new Response(JSON.stringify({ error: "Invalid subscription plan" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Create a checkout session
@@ -161,18 +161,10 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     } catch (stripeError: any) {
-      logStep("Stripe checkout creation error", { error: stripeError });
-      
-      // Return a more detailed error for better debugging
-      let errorMessage = "Failed to create checkout session";
-      if (stripeError instanceof Error) {
-        errorMessage = stripeError.message;
-      }
-      
-      // Check for common Stripe errors
-      if (stripeError.type === 'StripeInvalidRequestError' && stripeError.param === 'price') {
-        errorMessage = "Invalid or non-existent price ID. Please check your Stripe dashboard for correct price IDs.";
-      }
+      console.error("[CREATE-CHECKOUT] Stripe checkout creation error");
+      const errorMessage = stripeError?.type === 'StripeInvalidRequestError' && stripeError?.param === 'price'
+        ? "Invalid subscription plan"
+        : "Failed to create checkout session";
       
       return new Response(
         JSON.stringify({ error: errorMessage }),
@@ -180,11 +172,10 @@ serve(async (req) => {
       );
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error(`Error creating checkout session: ${errorMessage}`);
+    console.error("[CREATE-CHECKOUT] Unexpected error creating checkout session");
     
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Failed to create checkout session" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
     );
   }

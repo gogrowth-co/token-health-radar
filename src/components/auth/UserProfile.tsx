@@ -33,7 +33,6 @@ export function UserProfile() {
       // Debug logging for admin role investigation
       console.log('UserProfile Debug - Current user:', {
         userId: user.id,
-        email: user.email,
         isAdmin,
         role,
         roleLoading

@@ -222,6 +222,12 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    return new Response(
+      JSON.stringify({ error: "Method not allowed" }),
+      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   try {
     const supabaseClient = createClient(
@@ -236,7 +242,7 @@ serve(async (req) => {
     // Query all token reports, ordered by most recently updated first
     const { data: reports, error } = await supabaseClient
       .from("token_reports")
-      .select("*")
+      .select("id, token_address, chain_id, token_symbol, token_name, report_content, created_at, updated_at")
       .order("updated_at", { ascending: false });
 
     if (error) {

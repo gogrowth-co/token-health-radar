@@ -49,8 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             console.log('Auth Context - State change:', { 
               event, 
               hasSession: !!newSession,
-              userId: newSession?.user?.id,
-              userEmail: newSession?.user?.email
+              userId: newSession?.user?.id
             });
             
             setSession(newSession);
@@ -80,8 +79,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (mounted) {
           console.log('Auth Context - Initial session check:', { 
             hasSession: !!sessionData.session,
-            userId: sessionData.session?.user?.id,
-            userEmail: sessionData.session?.user?.email
+            userId: sessionData.session?.user?.id
           });
           
           setSession(sessionData.session);

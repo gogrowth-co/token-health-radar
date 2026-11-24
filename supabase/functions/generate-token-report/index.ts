@@ -313,8 +313,7 @@ Make the content informative, balanced, and professional. Include specific data 
       console.error('OpenAI API error:', { status: openAIResponse.status, statusText: openAIResponse.statusText, body: errorText });
       return new Response(
         JSON.stringify({ 
-          error: 'Failed to generate report content',
-          details: `OpenAI API returned ${openAIResponse.status}: ${openAIResponse.statusText}`
+          error: 'Failed to generate report content'
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -424,8 +423,7 @@ Make the content informative, balanced, and professional. Include specific data 
       console.error('Error saving report to database:', insertError);
       return new Response(
         JSON.stringify({ 
-          error: 'Failed to save report to database',
-          details: insertError.message
+          error: 'Failed to save report to database'
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -501,13 +499,11 @@ Make the content informative, balanced, and professional. Include specific data 
 
   } catch (error) {
     console.error('=== Token Report Generation Error ===');
-    console.error('Error details:', error);
-    console.error('Stack trace:', error.stack);
+    console.error('Error details:', error instanceof Error ? error.message : 'Unknown error');
     
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error during report generation',
-        details: error.message,
         timestamp: new Date().toISOString()
       }),
       { 

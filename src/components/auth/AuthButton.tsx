@@ -17,7 +17,6 @@ export function AuthButton() {
     isAdmin,
     role,
     userId: user?.id,
-    userEmail: user?.email,
     timestamp: new Date().toISOString()
   });
 
